@@ -1,0 +1,2 @@
+graia-ariadne==0.10.0
+revChatGPT==0.0.22.1

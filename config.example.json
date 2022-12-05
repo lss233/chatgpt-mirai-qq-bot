@@ -1,0 +1,12 @@
+{
+    "mirai": {
+        "qq": 123456,
+        "api_key": "<mirai-http-api 中的 verifyKey>",
+        "http_url": "http://localhost:8080",
+        "ws_url": "http://localhost:8080"
+    },
+    "openai": {
+        "Authorization": "<OpenAI API Key>",
+        "session_token": "<OpenAI session token>"
+    }
+}
