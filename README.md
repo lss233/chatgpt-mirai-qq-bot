@@ -1,5 +1,6 @@
 # ChatGPT Mirai QQ Bot
-This project uses (Ariadne)[https://github.com/GraiaProject/Ariadne] and mirai-http-api to provide a ChatGPT chatbot. 
+This project uses [Ariadne](https://github.com/GraiaProject/Ariadne) and mirai-http-api to provide a ChatGPT chatbot.   
+
 Reverse Engineered ChatGPT by OpenAI [here](https://github.com/acheong08/ChatGPT).  
 
 ## Setup  
@@ -11,8 +12,8 @@ git clone https://github.com/lss233/chatgpt-mirai-qq-bot
 cd chatgpt-mirai-qq-bot
 pip3 install -r requirements.txt
 ```
-  
-3. Rename `config.example.json` to `config.json`, and replace it by your own values.
+
+3. Rename `config.example.json` to `config.json`, and replace it by your own values.  
 You may refer [here](https://github.com/acheong08/ChatGPT/tree/4a62fee7797962277b6d137b1a7ef98d9960bbb6#development) to setup OpenAI credentials.
 
 
