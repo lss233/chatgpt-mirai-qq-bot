@@ -9,6 +9,7 @@ from graia.ariadne.message.parser.base import MentionMe
 from graia.ariadne.message.element import Plain
 from graia.ariadne.model import Friend, Group, Member
 import chatbot
+import asyncio
 
 import json
 with open("config.json", "r") as jsonfile:
@@ -23,7 +24,8 @@ app = Ariadne(
         WebsocketClientConfig(host=config_data["mirai"]["ws_url"]),
     ),
 )
-async def handle_message(id, message):
+
+def handle_message(id, message):
     if message.strip() == '':
         return "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
     bot = chatbot.find_or_create_chatbot(id)
@@ -50,12 +52,12 @@ async def handle_message(id, message):
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageChain):
-    response = await handle_message(id=f"friend-{friend.id}", message=chain.display)
+    response = await asyncio.to_thread(handle_message, id=f"friend-{friend.id}", message=chain.display)
     await app.send_message(friend, response)
 
 @app.broadcast.receiver("GroupMessage", decorators=[MentionMe()])
 async def on_mention_me(group: Group, member: Member, chain: MessageChain):
-    response = await handle_message(id=f"group-{group.id}", message=chain.display)
+    response = await asyncio.to_thread(handle_message, id=f"group-{group.id}", message=chain.display)
     await app.send_message(group, response)
 
 app.launch_blocking()

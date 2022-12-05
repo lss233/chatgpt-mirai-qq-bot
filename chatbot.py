@@ -16,6 +16,5 @@ def find_or_create_chatbot(id: str):
         print(f"Generating new chatbot session for id {id}")
         bot = Chatbot(config_data["openai"], conversation_id=None)
         bot.reset_chat()
-        bot.refresh_session()
         bots[id] = bot
         return bot
