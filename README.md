@@ -16,10 +16,15 @@
 2.  执行以下命令，启动 bot：
 ```bash
 # 修改 /path/to/config.json 为你 config.json 的位置
-docker run --name mirai-chatgpt-bot -v /path/to/config.json:/app/config.json --network host lss233/chatgpt-mirai-qq-bot:latest
+docker run --name mirai-chatgpt-bot \
+    -v /path/to/config.json:/app/config.json \
+    --network host \
+    lss233/chatgpt-mirai-qq-bot:latest
 ```
 
 ### 手动部署
+
+提示：你需要 Python >= 3.9 才能运行本项目  
 
 1. 部署 Mirai ，安装 mirai-http-api 插件
 
@@ -46,7 +51,7 @@ python3 bot.py
 
 OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
 
-```json
+```jsonc
 {
     "mirai": {
         "qq": 123456, // 机器人的 QQ 账号
