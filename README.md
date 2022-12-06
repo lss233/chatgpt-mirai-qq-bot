@@ -16,7 +16,7 @@ pip3 install -r requirements.txt
 ```
 
 3. Rename `config.example.json` to `config.json`, and replace it by your own values.  
-You may refer [here](https://github.com/acheong08/ChatGPT/tree/4a62fee7797962277b6d137b1a7ef98d9960bbb6#development) to setup OpenAI credentials.
+You may refer [here](https://github.com/acheong08/ChatGPT/wiki/Setup) to setup OpenAI credentials.
 
 
 4. Start the bot.
