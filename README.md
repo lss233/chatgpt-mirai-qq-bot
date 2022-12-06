@@ -3,8 +3,10 @@ This project uses [Ariadne](https://github.com/GraiaProject/Ariadne) and mirai-h
 
 Reverse Engineered ChatGPT by OpenAI [here](https://github.com/acheong08/ChatGPT).  
 
+![Preview](.github/preview.png)
+
 ## Setup  
-1. Make sure you have [Mirai](https://github.com/mamoe/mirai). 
+1. Make sure you have [Mirai](https://github.com/mamoe/mirai) and Python version >= 3.9.0 installed. 
 
 2. Clone this project and installing dependencies:
 ```bash
@@ -23,3 +25,4 @@ python3 bot.py
 ```
 
 5. Happy chating.
+
