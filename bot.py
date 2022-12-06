@@ -67,7 +67,7 @@ async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageCh
     await app.send_message(friend, response)
 
 @app.broadcast.receiver("GroupMessage", decorators=[MentionMe()])
-async def on_mention_me(group: Group, member: Member, chain: MessageChain):
+async def on_mention_me(group: Group, member: Member, chain: MessageChain = MentionMe()):
     response = await asyncio.to_thread(handle_message, id=f"group-{group.id}", message=chain.display)
     await app.send_message(group, response)
 
