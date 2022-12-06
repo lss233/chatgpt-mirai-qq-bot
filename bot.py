@@ -19,7 +19,7 @@ async def to_thread(func, /, *args, **kwargs):
     ctx = contextvars.copy_context()
     func_call = functools.partial(ctx.run, func, *args, **kwargs)
     return await loop.run_in_executor(None, func_call)
-if 'to_thread' not in asyncio:
+if not hasattr(asyncio, 'to_thread'):
     asyncio.to_thread = to_thread
 with open("config.json", "r") as jsonfile:
     config_data = json.load(jsonfile)
