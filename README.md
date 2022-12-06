@@ -3,6 +3,11 @@ This project uses [Ariadne](https://github.com/GraiaProject/Ariadne) and mirai-h
 
 Reverse Engineered ChatGPT by OpenAI [here](https://github.com/acheong08/ChatGPT).  
 
+## 基于
+ - [Ariadne](https://github.com/GraiaProject/Ariadne)
+ - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
+ - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
+ - 
 ![Preview](.github/preview.png)
 
 ## Setup  
@@ -26,3 +31,23 @@ python3 bot.py
 
 5. Happy chating.
 
+## 使用
+1. 部署mirai，安装mirai-http-api 插件
+
+2. 下载本项目:
+```bash
+git clone https://github.com/lss233/chatgpt-mirai-qq-bot
+cd chatgpt-mirai-qq-bot
+pip3 install -r requirements.txt
+```
+
+3. 配置
+   重命名 `config.example.json` 为 `config.json`, 更改里面的配置.  
+   token获取教程 [here](https://github.com/acheong08/ChatGPT/wiki/Setup) to setup OpenAI credentials.
+   
+4. 启动 bot.
+```
+python3 bot.py
+```
+
+5. Happy chating.   
