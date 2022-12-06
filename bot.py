@@ -46,18 +46,10 @@ def handle_message(id, message):
         resp = bot.get_chat_response(message, output="text")
         print(id, resp)
         return resp["message"]
-    except:
-        try:
-            bot.reset_chat()
-            bot.refresh_session()
-            print("Resetting chat")
-            resp = bot.get_chat_response(message, output="text")
-            return resp["message"]
-        except Exception as e:
-            return '寄了！\n' + str(e)
-
-    
-
+    except Exception as e:
+        bot.reset_chat()
+        bot.refresh_session()
+        return '出现故障！会话已重置。\n' + str(e)
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageChain):
