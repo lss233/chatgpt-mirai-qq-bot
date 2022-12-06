@@ -7,17 +7,20 @@ from graia.ariadne.connection.config import (
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import MentionMe
 from graia.ariadne.message.element import Plain
-from graia.ariadne.model import Friend, Stranger, Group, Member
+from graia.ariadne.model import Friend, Group, Member
 import chatbot
 import asyncio, functools
 import contextvars
 import json
+
+# Polyfill for Python < 3.9
 async def to_thread(func, /, *args, **kwargs):
     loop = asyncio.get_running_loop()
     ctx = contextvars.copy_context()
     func_call = functools.partial(ctx.run, func, *args, **kwargs)
     return await loop.run_in_executor(None, func_call)
-
+if 'to_thread' not in asyncio:
+    asyncio.to_thread = to_thread
 with open("config.json", "r") as jsonfile:
     config_data = json.load(jsonfile)
 
@@ -64,11 +67,8 @@ async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageCh
     await app.send_message(friend, response)
 
 @app.broadcast.receiver("GroupMessage", decorators=[MentionMe()])
-async def on_mention_me(group: Group, member: Member, chain: MessageChain = MentionMe()):
+async def on_mention_me(group: Group, member: Member, chain: MessageChain):
     response = await asyncio.to_thread(handle_message, id=f"group-{group.id}", message=chain.display)
     await app.send_message(group, response)
-@app.broadcast.receiver("StrangerMessage")
-async def friend_message_listener(app: Ariadne, friend: Stranger, chain: MessageChain):
-    response = await asyncio.to_thread(handle_message, id=f"friend-{friend.id}", message=chain.display)
-    await app.send_message(friend, response)
+
 app.launch_blocking()
