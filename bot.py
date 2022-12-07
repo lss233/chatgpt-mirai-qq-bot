@@ -39,17 +39,18 @@ app = Ariadne(
 def handle_message(id, message):
     if message.strip() == '':
         return "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
-    bot = chatbot.find_or_create_chatbot(id)
+    bot = chatbot.bot
+    session = chatbot.get_chat_session(id)
     if message.strip() == '重置会话':
-        bot.reset_chat()
-        bot.refresh_session()
+        session.reset_chat()
         return "会话已重置。"
     try:
+        session.apply(bot)
         resp = bot.get_chat_response(message, output="text")
         print(id, resp)
         return resp["message"]
     except Exception as e:
-        bot.reset_chat()
+        session.reset_conversation()
         bot.refresh_session()
         return '出现故障！会话已重置。\n' + str(e)
 
