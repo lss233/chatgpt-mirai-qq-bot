@@ -62,6 +62,13 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     "openai": {
         "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
         "password": "<YOUR_PASSWORD>" // 你的 OpenAI 账号密码
+    },
+    "text_to_image": { // 文字转图片
+        "font_size": 30, // 字体大小
+        "width": 700, // 图片宽度
+        "font_path": "fonts/sarasa-mono-sc-regular.ttf", // 字体
+        "offset_x": 50, // 起始点 X
+        "offset_y": 50 // 起始点 Y
     }
 }
 ```
