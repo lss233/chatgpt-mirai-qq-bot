@@ -65,3 +65,11 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     }
 }
 ```
+
+## 图片转文字
+
+本项目会在向 QQ 群发送消息失败时，自动将消息转为图片发送。  
+
+字体文件存放于 `fonts/` 目录中。  
+
+默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
