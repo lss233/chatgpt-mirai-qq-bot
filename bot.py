@@ -49,9 +49,9 @@ def handle_message(id, message):
         print(id, resp)
         return resp["message"]
     except Exception as e:
-        session.reset_conversation()
+        # session.reset_conversation()
         bot.refresh_session()
-        return '出现故障！会话已重置。\n' + str(e)
+        return '出现故障！如果这个问题持续出现，请和我说“重置会话”。\n' + str(e)
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageChain):
