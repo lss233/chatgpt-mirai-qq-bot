@@ -1,4 +1,4 @@
-from revChatGPT.revChatGPT import Chatbot
+from revChatGPT.revChatGPT import Chatbot, generate_uuid
 import json
 with open("config.json", "r") as jsonfile:
     config_data = json.load(jsonfile)
@@ -10,10 +10,15 @@ class ChatSession:
         self.reset_conversation()
     def reset_conversation(self):
         self.conversation_id = None
-        self.parent_id = bot.generate_uuid()
-    def apply(self, bot):
-        bot.conversation_id = self.conversation_id
-        bot.parent_id = self.parent_id
+        self.parent_id = generate_uuid()
+    def get_chat_response(self, message, output="text"):
+        try:
+            bot.conversation_id = self.conversation_id
+            bot.parent_id = self.parent_id
+            return bot.get_chat_response(message, output=output)
+        finally:
+            self.conversation_id = bot.conversation_id
+            self.parent_id = bot.parent_id
 sessions = {}
 
 

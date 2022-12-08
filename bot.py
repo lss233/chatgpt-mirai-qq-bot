@@ -45,8 +45,7 @@ def handle_message(id, message):
         session.reset_chat()
         return "会话已重置。"
     try:
-        session.apply(bot)
-        resp = bot.get_chat_response(message, output="text")
+        resp = session.get_chat_response(message)
         print(id, resp)
         return resp["message"]
     except Exception as e:
