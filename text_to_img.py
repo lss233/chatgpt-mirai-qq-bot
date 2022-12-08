@@ -96,7 +96,6 @@ class TextWrapper(textwrap.TextWrapper):
 
             while chunks:
                 l = self._strlen(chunks[-1])
-                # print(l, chunks[-1])
 
                 # Can at least squeeze this chunk onto the current line.
                 if cur_len + l <= width:
@@ -112,7 +111,6 @@ class TextWrapper(textwrap.TextWrapper):
             if chunks and self._strlen(chunks[-1]) > width:
                 self._handle_long_word(chunks, cur_line, cur_len, width)
                 cur_len = sum(map(self._strlen, cur_line))
-                print(cur_line)
 
             # If the last chunk on this line is all whitespace, drop it.
             if self.drop_whitespace and cur_line and cur_line[-1].strip() == '':

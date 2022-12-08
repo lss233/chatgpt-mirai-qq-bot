@@ -4,7 +4,7 @@ with open("config.json", "r") as jsonfile:
     config_data = json.load(jsonfile)
 
 # Refer to https://github.com/acheong08/ChatGPT
-bot = Chatbot(config_data["openai"], conversation_id=None, debug=True)
+bot = Chatbot(config_data["openai"], conversation_id=None)
 class ChatSession:
     def __init__(self):
         self.reset_conversation()
