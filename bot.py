@@ -42,7 +42,7 @@ def handle_message(id, message):
     bot = chatbot.bot
     session = chatbot.get_chat_session(id)
     if message.strip() == '重置会话':
-        session.reset_chat()
+        session.reset_conversation()
         return "会话已重置。"
     try:
         resp = session.get_chat_response(message)
