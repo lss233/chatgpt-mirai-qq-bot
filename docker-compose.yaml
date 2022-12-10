@@ -18,5 +18,5 @@ services:
     environment:
       LANG: 'C.UTF-8'
     volumes:
-      - ./fonts:/app/fonts
       - ./config.json:/app/config.json
+      # - ./fonts:/app/fonts # 如果你想自定义字体，就解除注释
