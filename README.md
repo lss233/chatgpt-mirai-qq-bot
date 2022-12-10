@@ -7,10 +7,20 @@
 
 ![Preview](.github/preview.png)
 
+[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY)  
+
 ## 使用
 
-### 通过 Docker 部署
+<details>
+  <summary>通过 Docker Compose 部署 （带 Mirai, 新人推荐)</summary>
+  
+请移步至 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89)
 
+</details>
+
+<details>
+  <summary>通过 Docker 部署 （适合已经有 Mirai 的用户)</summary>
+  
 1. 找个合适的位置，写你的 `config.json`。
 
 2.  执行以下命令，启动 bot：
@@ -21,9 +31,11 @@ docker run --name mirai-chatgpt-bot \
     --network host \
     lss233/chatgpt-mirai-qq-bot:latest
 ```
+</details>
 
-### 手动部署
-
+<details>
+  <summary>手动部署 (Windows 环境只能用这个方案）</summary>
+  
 提示：你需要 Python >= 3.9 才能运行本项目  
 
 1. 部署 Mirai ，安装 mirai-http-api 插件
@@ -37,11 +49,13 @@ pip3 install -r requirements.txt
 
 3. 重命名 `config.example.json` 为 `config.json`, 更改里面的配置.  
 
-   
+
 4. 启动 bot.
 ```bash
 python3 bot.py
 ```
+</details>
+
 
 ## 配置文件
 
@@ -72,6 +86,33 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     }
 }
 ```
+
+### 使用代理
+
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了， 可以通过配置代理的方式来连接到 OpenAI。  
+
+
+#### 正向代理  
+
+使用正向代理方式访问 OpenAI, 你需要在运行本项目的主机上有一个可以访问的 HTTTP/HTTPS 代理服务器。  
+
+  
+在 `"openai"` 中加入一条 `"proxy": <你的代理服务器地址>` 即可。  
+
+举个例子：
+```jsonc
+    // 前面别的东西
+    "openai": {
+        "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
+        "password": "<YOUR_PASSWORD>", // 你的 OpenAI 账号密码
+        "proxy": "http://localhost:1080"
+    },
+    // 后面别的东西
+```
+
+#### OpenAI 登录出错
+
+请参考 [#7](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/7) 配置 `session_token` 登录。
 
 ## 图片转文字
 

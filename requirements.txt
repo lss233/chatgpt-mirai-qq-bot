@@ -1,3 +1,3 @@
 graia-ariadne==0.10.0
-revChatGPT==0.0.32.1
+revChatGPT
 Pillow>=9.3.0
