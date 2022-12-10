@@ -5,9 +5,10 @@
  - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
  - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
 
+[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY)  
+
 ![Preview](.github/preview.png)
 
-[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY)  
 
 ## 使用
 
@@ -63,7 +64,8 @@ python3 bot.py
 
 配置文件主要包含 mirai-http-api 的连接信息和 OpenAI 的登录信息。
 
-OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
+OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html  
+
 OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
 
 ```jsonc
