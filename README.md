@@ -1,38 +1,32 @@
 # ChatGPT Mirai QQ Bot
-This project uses [Ariadne](https://github.com/GraiaProject/Ariadne) and mirai-http-api to provide a ChatGPT chatbot.   
 
-Reverse Engineered ChatGPT by OpenAI [here](https://github.com/acheong08/ChatGPT).  
-
-## 基于
+基于
  - [Ariadne](https://github.com/GraiaProject/Ariadne)
  - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
  - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
- - 
+
 ![Preview](.github/preview.png)
 
-## Setup  
-1. Make sure you have [Mirai](https://github.com/mamoe/mirai) and Python version >= 3.9.0 installed. 
-
-2. Clone this project and installing dependencies:
-```bash
-git clone https://github.com/lss233/chatgpt-mirai-qq-bot
-cd chatgpt-mirai-qq-bot
-pip3 install -r requirements.txt
-```
-
-3. Rename `config.example.json` to `config.json`, and replace it by your own values.  
-You may refer [here](https://github.com/acheong08/ChatGPT/wiki/Setup) to setup OpenAI credentials.
-
-
-4. Start the bot.
-```
-python3 bot.py
-```
-
-5. Happy chating.
-
 ## 使用
-1. 部署mirai，安装mirai-http-api 插件
+
+### 通过 Docker 部署
+
+1. 找个合适的位置，写你的 `config.json`。
+
+2.  执行以下命令，启动 bot：
+```bash
+# 修改 /path/to/config.json 为你 config.json 的位置
+docker run --name mirai-chatgpt-bot \
+    -v /path/to/config.json:/app/config.json \
+    --network host \
+    lss233/chatgpt-mirai-qq-bot:latest
+```
+
+### 手动部署
+
+提示：你需要 Python >= 3.9 才能运行本项目  
+
+1. 部署 Mirai ，安装 mirai-http-api 插件
 
 2. 下载本项目:
 ```bash
@@ -41,13 +35,48 @@ cd chatgpt-mirai-qq-bot
 pip3 install -r requirements.txt
 ```
 
-3. 配置
-   重命名 `config.example.json` 为 `config.json`, 更改里面的配置.  
-   token获取教程 [here](https://github.com/acheong08/ChatGPT/wiki/Setup) to setup OpenAI credentials.
+3. 重命名 `config.example.json` 为 `config.json`, 更改里面的配置.  
+
    
 4. 启动 bot.
-```
+```bash
 python3 bot.py
 ```
 
-5. Happy chating.   
+## 配置文件
+
+你可以参考 `config.example.json` 来写配置文件。   
+
+配置文件主要包含 mirai-http-api 的连接信息和 OpenAI 的登录信息。
+
+OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
+
+```jsonc
+{
+    "mirai": {
+        "qq": 123456, // 机器人的 QQ 账号
+        "api_key": "<mirai-http-api 中的 verifyKey>",
+        "http_url": "http://localhost:8080", // mirai-http-api 中的 http 回调地址
+        "ws_url": "http://localhost:8080" // mirai-http-api 中的 ws 回调地址
+    },
+    "openai": {
+        "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
+        "password": "<YOUR_PASSWORD>" // 你的 OpenAI 账号密码
+    },
+    "text_to_image": { // 文字转图片
+        "font_size": 30, // 字体大小
+        "width": 700, // 图片宽度
+        "font_path": "fonts/sarasa-mono-sc-regular.ttf", // 字体
+        "offset_x": 50, // 起始点 X
+        "offset_y": 50 // 起始点 Y
+    }
+}
+```
+
+## 图片转文字
+
+本项目会在向 QQ 群发送消息失败时，自动将消息转为图片发送。  
+
+字体文件存放于 `fonts/` 目录中。  
+
+默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  

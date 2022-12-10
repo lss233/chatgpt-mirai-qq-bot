@@ -8,5 +8,12 @@
     "openai": {
         "email": "<YOUR_EMAIL>",
         "password": "<YOUR_PASSWORD>"
+    },
+    "text_to_image": {
+        "font_size": 30,
+        "width": 700,
+        "font_path": "fonts/sarasa-mono-sc-regular.ttf",
+        "offset_x": 50,
+        "offset_y": 50
     }
 }

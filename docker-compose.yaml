@@ -1,0 +1,20 @@
+version: '3.4'
+services:
+  mirai:
+    image: ttionya/mirai-http:latest
+    restart: always
+    environment:
+      LANG: 'C.UTF-8'
+    volumes:
+      - ./bots:/mirai/bots
+      - ./config:/mirai/config
+      - ./data:/mirai/data
+      - ./plugin-libraries:/mirai/plugin-libraries
+  chatgpt:
+    image: lss233/chatgpt-mirai-qq-bot:latest
+    restart: always
+    environment:
+      LANG: 'C.UTF-8'
+    volumes:
+      - ./fonts:/app/fonts
+      - ./config.json:/app/config.json
