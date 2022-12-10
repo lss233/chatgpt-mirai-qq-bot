@@ -110,7 +110,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     // 后面别的东西
 ```
 
-#### OpenAI 登录出错
+### OpenAI 登录出错
 
 请参考 [#7](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/7) 配置 `session_token` 登录。
 
