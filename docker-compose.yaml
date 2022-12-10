@@ -6,10 +6,12 @@ services:
     environment:
       LANG: 'C.UTF-8'
     volumes:
-      - ./bots:/mirai/bots
-      - ./config:/mirai/config
-      - ./data:/mirai/data
-      - ./plugin-libraries:/mirai/plugin-libraries
+      - ./mirai/bots:/mirai/bots
+      - ./mirai/config:/mirai/config
+      - ./mirai/data:/mirai/data
+      - ./mirai/plugin-libraries:/mirai/plugin-libraries
+      - ./mirai/libs:/mirai/libs
+      - ./mirai/config.json:/mirai/config.json
   chatgpt:
     image: lss233/chatgpt-mirai-qq-bot:latest
     restart: always
