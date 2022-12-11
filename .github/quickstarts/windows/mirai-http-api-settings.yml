@@ -1,0 +1,23 @@
+adapters:
+  - http
+  - ws
+
+enableVerify: false
+verifyKey: 1234567890
+
+debug: false
+
+singleMode: false
+
+cacheSize: 4096
+
+adapterSettings:
+  http:
+    host: localhost
+    port: 8080
+    cors: ["*"]
+    unreadQueueMaxSize: 100
+  ws:
+    host: localhost
+    port: 8080
+    reservedSyncId: -1

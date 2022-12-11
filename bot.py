@@ -1,3 +1,6 @@
+import os, sys
+sys.path.append(os.getcwd())
+
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,
