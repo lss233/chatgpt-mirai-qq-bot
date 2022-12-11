@@ -68,7 +68,7 @@ OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
 
 OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
 
-** ！！请注意！！ 不要把 `//` 开头的注释也抄进去了！ **  
+**！！请注意！！ 不要把 `//` 开头的注释也抄进去了！**  
 
 ```jsonc
 {
@@ -104,7 +104,8 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 这可以通过 cf worker / nginx 反向代理 / vercel 等来实现，在此不作赘述。
 
-   可以参考： https://www.j000e.com/cloudflare/cfworkers_reverse_proxy.html
+   可以参考： https://www.j000e.com/cloudflare/cfworkers_reverse_proxy.html  
+
    你只需要代理 `chat.openai.com` 即可。
   
 在 `"openai"` 中加入一条 `"base_url": <你的反代URL>` 即可。  
