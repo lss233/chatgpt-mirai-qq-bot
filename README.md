@@ -94,7 +94,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 ### 使用代理
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了， 可以通过配置代理的方式来连接到 OpenAI。  
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码）， 可以通过配置代理的方式来连接到 OpenAI。  
 
 代理有两种方式，分别为 反向代理 和 正向代理，你只需要配置其中一种方式即可。 
 
@@ -103,6 +103,9 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 使用反向代理方式访问 OpenAI, 你需要准备一个可以访问到 `chat.openai.com` 的代理网站。  
 
 这可以通过 cf worker / nginx 反向代理 / vercel 等来实现，在此不作赘述。
+
+   可以参考： https://www.j000e.com/cloudflare/cfworkers_reverse_proxy.html
+   你只需要代理 `chat.openai.com` 即可。
   
 在 `"openai"` 中加入一条 `"base_url": <你的反代URL>` 即可。  
 
