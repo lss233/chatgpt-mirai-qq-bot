@@ -1,0 +1,52 @@
+name: Create Quickstart for Windows 64
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Quickstart
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Generate files
+      run: |
+        sudo apt install -yq unzip
+        echo "Creating folders..."
+        mkdir mirai chatgpt
+        echo "Downloading mcl-installer ..."
+        wget https://github.com/iTXTech/mcl-installer/releases/download/a02f711/mcl-installer-a02f711-windows-amd64.exe -O mirai/mcl-installer.exe
+    - uses: actions/checkout@v2
+      with:
+        path: 'chatgpt'
+    - name: Copy files
+      run: |
+        echo "Downloading Python3.9 ..."
+        wget https://www.python.org/ftp/python/3.9.13/python-3.9.13-embed-amd64.zip -O /tmp/python.zip
+        unzip /tmp/python.zip -d chatgpt/python3.9
+
+        echo "Downloading get-pip.py ..."
+        wget https://bootstrap.pypa.io/get-pip.py -O chatgpt/python3.9/get-pip.py
+        echo "import site" >> chatgpt/python3.9/python39._pth
+
+        echo "Moving files..."
+        mv chatgpt/.github/quickstarts/windows/ files/
+
+        echo "Replacing..."
+        sed -i 's/<mirai-http-api 中的 verifyKey>/1234567890/' chatgpt/config.example.json
+        cp files/scripts/初始化.cmd .
+
+        echo "Packing..."
+        zip -r quickstart-windows-amd64 chatgpt mirai files 初始化.cmd
+    - name: Upload compressed files to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: quickstart-windows-amd64.zip
+        asset_name: quickstart-windows-amd64.zip
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: "quickstart-windows-amd64.zip 是为 Windows x64 用户准备的快速启动包"
+        

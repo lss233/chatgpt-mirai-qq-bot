@@ -68,6 +68,8 @@ OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
 
 OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
 
+** ！！请注意！！ 不要把 `//` 开头的注释也抄进去了！ **  
+
 ```jsonc
 {
     "mirai": {
@@ -94,6 +96,26 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了， 可以通过配置代理的方式来连接到 OpenAI。  
 
+代理有两种方式，分别为 反向代理 和 正向代理，你只需要配置其中一种方式即可。 
+
+#### 反向代理  
+
+使用反向代理方式访问 OpenAI, 你需要准备一个可以访问到 `chat.openai.com` 的代理网站。  
+
+这可以通过 cf worker / nginx 反向代理 / vercel 等来实现，在此不作赘述。
+  
+在 `"openai"` 中加入一条 `"base_url": <你的反代URL>` 即可。  
+
+举个例子：
+```jsonc
+    // 前面别的东西
+    "openai": {
+        "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
+        "password": "<YOUR_PASSWORD>", // 你的 OpenAI 账号密码
+        "base_url": "https://chatgpt.proxy.lss233.com/"
+    },
+    // 后面别的东西
+```
 
 #### 正向代理  
 
