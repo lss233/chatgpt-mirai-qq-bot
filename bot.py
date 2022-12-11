@@ -19,14 +19,6 @@ from text_to_img import text_to_image
 from io import BytesIO
 import traceback
 
-# Polyfill for Python < 3.9
-async def to_thread(func, /, *args, **kwargs):
-    loop = asyncio.get_running_loop()
-    ctx = contextvars.copy_context()
-    func_call = functools.partial(ctx.run, func, *args, **kwargs)
-    return await loop.run_in_executor(None, func_call)
-if not hasattr(asyncio, 'to_thread'):
-    asyncio.to_thread = to_thread
 with open("config.json", "r") as jsonfile:
     config_data = json.load(jsonfile)
 
@@ -40,8 +32,8 @@ app = Ariadne(
     ),
 )
 
-def handle_message(id, message):
-    if message.strip() == '':
+async def handle_message(id: str, message: str) -> str:
+    if not message.strip():
         return "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
     bot = chatbot.bot
     session = chatbot.get_chat_session(id)
@@ -54,7 +46,7 @@ def handle_message(id, message):
         else:
             return "回滚失败，没有更早的记录了！"
     try:
-        resp = session.get_chat_response(message)
+        resp = await session.get_chat_response(message)
         print(id, resp)
         return resp["message"]
     except Exception as e:
@@ -67,12 +59,12 @@ def handle_message(id, message):
 async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageChain):
     if friend.id == config_data['mirai']['qq']:
         return
-    response = await asyncio.to_thread(handle_message, id=f"friend-{friend.id}", message=chain.display)
+    response = await handle_message(id=f"friend-{friend.id}", message=chain.display)
     await app.send_message(friend, response)
 
-@app.broadcast.receiver("GroupMessage", decorators=[MentionMe()])
-async def on_mention_me(group: Group, member: Member, chain: MessageChain = MentionMe()):
-    response = await asyncio.to_thread(handle_message, id=f"group-{group.id}", message=chain.display)
+@app.broadcast.receiver("GroupMessage")
+async def on_mention_me(group: Group, chain: MessageChain = MentionMe()):# type: ignore # decorator
+    response = await handle_message(id=f"group-{group.id}", message=chain.display)
     event = await app.send_message(group,  response)
     if(event.source.id < 0):
         img = text_to_image(text=response)
