@@ -10,6 +10,7 @@ from graia.ariadne.connection.config import (
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import MentionMe
 from graia.ariadne.message.element import Plain, Image
+from graia.ariadne.message import Source
 from graia.ariadne.model import Friend, Group, Member
 import chatbot
 import asyncio, functools
@@ -71,13 +72,13 @@ async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageCh
     await app.send_message(friend, response)
 
 @app.broadcast.receiver("GroupMessage", decorators=[MentionMe()])
-async def on_mention_me(group: Group, member: Member, chain: MessageChain = MentionMe()):
+async def on_mention_me(group: Group, member: Member, source: Source, chain: MessageChain = MentionMe()):
     response = await asyncio.to_thread(handle_message, id=f"group-{group.id}", message=chain.display)
-    event = await app.send_message(group,  response)
+    event = await app.send_message(group,  response, quote=source)
     if(event.source.id < 0):
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
-        await app.send_message(group, Image(data_bytes=b.getvalue()))
+        await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source)
 
 app.launch_blocking()
