@@ -42,6 +42,7 @@ docker run --name mirai-chatgpt-bot \
 
 <details>
     <summary>Windows: 快速部署包 (自带 Mirai，新人推荐）</summary>
+
 我们为 Windows 用户制作了一个快速启动包，可以在 [Release](https://github.com/lss233/chatgpt-mirai-qq-bot/releases) 中找到。    
 
 文件名为：`quickstart-windows-amd64.zip`  
