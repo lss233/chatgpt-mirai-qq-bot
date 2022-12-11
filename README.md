@@ -10,7 +10,7 @@
 ![Preview](.github/preview.png)
 
 
-## 使用
+## 🔧 使用
 
 <details>
   <summary>通过 Docker Compose 部署 （带 Mirai, 新人推荐)</summary>
@@ -58,7 +58,7 @@ python3 bot.py
 </details>
 
 
-## 配置文件
+## ⚙ 配置文件
 
 你可以参考 `config.example.json` 来写配置文件。   
 
@@ -92,7 +92,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 }
 ```
 
-### 使用代理
+### 🚀 使用代理
 
 如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码）， 可以通过配置代理的方式来连接到 OpenAI。  
 
@@ -104,9 +104,9 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 这可以通过 cf worker / nginx 反向代理 / vercel 等来实现，在此不作赘述。
 
-   可以参考： https://www.j000e.com/cloudflare/cfworkers_reverse_proxy.html  
-
-   你只需要代理 `chat.openai.com` 即可。
+> 可以参考： https://www.j000e.com/cloudflare/cfworkers_reverse_proxy.html  
+>
+>   你只需要代理 `chat.openai.com` 这一个域名即可。
   
 在 `"openai"` 中加入一条 `"base_url": <你的反代URL>` 即可。  
 
@@ -120,6 +120,8 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     },
     // 后面别的东西
 ```
+
+之后，所有发往 `chat.openai.com` 的请求都会通过 `base_url` 中配置的地址发送。  
 
 #### 正向代理  
 
@@ -139,11 +141,23 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     // 后面别的东西
 ```
 
-### OpenAI 登录出错
+### OpenAI 登录不了
 
-请参考 [#7](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/7) 配置 `session_token` 登录。
+`Captcha detect`、 `State not found` 等各种问题，都可以通过配置 `session_token` 登录。
 
-## 图片转文字
+举个例子：
+```jsonc
+    // 前面别的东西
+    "openai": {
+        "session_token": "一串ey开头的很长的东西...",
+        "proxy": "http://localhost:1080"
+    },
+    // 后面别的东西
+```
+
+请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
+
+## 📷 图片转文字
 
 本项目会在向 QQ 群发送消息失败时，自动将消息转为图片发送。  
 
