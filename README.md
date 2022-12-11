@@ -1,9 +1,19 @@
 # ChatGPT Mirai QQ Bot
 
+一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！  
+
 基于
  - [Ariadne](https://github.com/GraiaProject/Ariadne)
  - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
  - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
+
+支持：  
+* [x] 文字转图片发送  
+* [x] 群聊回复引用
+* [] 关键词触发回复
+* [x] 反向代理/正向代理
+* [x] 多种方式登录 OpenAI
+
 
 [交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY)  
 
