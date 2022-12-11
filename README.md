@@ -66,6 +66,8 @@ python3 bot.py
 OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
 OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
 
+** ！！请注意！！ 不要把 `//` 开头的注释也抄进去了！ **  
+
 ```jsonc
 {
     "mirai": {
