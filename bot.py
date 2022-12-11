@@ -17,6 +17,7 @@ import contextvars
 import json
 from text_to_img import text_to_image
 from io import BytesIO
+import traceback
 
 # Polyfill for Python < 3.9
 async def to_thread(func, /, *args, **kwargs):
@@ -59,6 +60,7 @@ def handle_message(id, message):
     except Exception as e:
         # session.reset_conversation()
         bot.refresh_session()
+        print("".join(traceback.format_exception_only(type(e), e)).strip())
         return '出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n' + str(e)
 
 @app.broadcast.receiver("FriendMessage")
