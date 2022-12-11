@@ -4,7 +4,7 @@ with open("config.json", "r") as jsonfile:
     config_data = json.load(jsonfile)
 
 # Refer to https://github.com/acheong08/ChatGPT
-bot = Chatbot(config_data["openai"], conversation_id=None)
+bot = Chatbot(config_data["openai"], conversation_id=None, base_url=config_data["base_url"] if "base_url" in config_data else "https://chat.openai.com/")
 class ChatSession:
     def __init__(self):
         self.reset_conversation()
