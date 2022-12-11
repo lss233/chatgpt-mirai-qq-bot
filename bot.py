@@ -47,6 +47,11 @@ def handle_message(id, message):
     if message.strip() == '重置会话':
         session.reset_conversation()
         return "会话已重置。"
+    if message.strip() == '回滚对话':
+        if session.rollback_conversation():
+            return "已回滚至上一条对话，你刚刚发的我就忘记啦！"
+        else:
+            return "回滚失败，没有更早的记录了！"
     try:
         resp = session.get_chat_response(message)
         print(id, resp)
@@ -54,7 +59,7 @@ def handle_message(id, message):
     except Exception as e:
         # session.reset_conversation()
         bot.refresh_session()
-        return '出现故障！如果这个问题持续出现，请和我说“重置会话”。\n' + str(e)
+        return '出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n' + str(e)
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, chain: MessageChain):
