@@ -13,14 +13,16 @@
 ## 🔧 使用
 
 <details>
-  <summary>通过 Docker Compose 部署 （带 Mirai, 新人推荐)</summary>
-  
+    <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai, 新人推荐)</summary>
+    
+可以尝试使用  
+
 请移步至 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89)
 
 </details>
 
 <details>
-  <summary>通过 Docker 部署 （适合已经有 Mirai 的用户)</summary>
+    <summary>Linux: 通过 Docker 部署 （适合已经有 Mirai 的用户)</summary>
   
 1. 找个合适的位置，写你的 `config.json`。
 
@@ -35,8 +37,15 @@ docker run --name mirai-chatgpt-bot \
 </details>
 
 <details>
-  <summary>手动部署 (Windows 环境只能用这个方案）</summary>
-  
+    <summary>Windows: 快速部署包 (自带 Mirai，新人推荐）</summary>
+我们为 Windows 用户制作了一个快速启动包，可以在 [Release](https://github.com/lss233/chatgpt-mirai-qq-bot/releases) 中找到。    
+
+文件名为：`quickstart-windows-amd64.zip`  
+</details>
+
+<details>
+    <summary>手动部署</summary>
+
 提示：你需要 Python >= 3.9 才能运行本项目  
 
 1. 部署 Mirai ，安装 mirai-http-api 插件
