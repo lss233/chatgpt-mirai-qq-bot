@@ -62,7 +62,7 @@ async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> s
     except Exception as e:
         # session.reset_conversation()
         bot.refresh_session()
-        logger.error(e)
+        logger.exception(e)
         timeout_task.cancel()
         return config.response.error_format.format(exc=e)
 
