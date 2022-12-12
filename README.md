@@ -98,13 +98,12 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 {
     "mirai": {
         "qq": 123456, // 机器人的 QQ 账号
-        "api_key": "<mirai-http-api 中的 verifyKey>",
+        "api_key": "VERIFY_KEY", // mirai-http-api 中的 verifyKey
         "http_url": "http://localhost:8080", // mirai-http-api 中的 http 回调地址
         "ws_url": "http://localhost:8080" // mirai-http-api 中的 ws 回调地址
     },
     "openai": {
-        "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
-        "password": "<YOUR_PASSWORD>" // 你的 OpenAI 账号密码
+        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
     },
     "text_to_image": { // 文字转图片
         "font_size": 30, // 字体大小
@@ -138,8 +137,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 ```jsonc
     // 前面别的东西
     "openai": {
-        "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
-        "password": "<YOUR_PASSWORD>", // 你的 OpenAI 账号密码
+        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
         "base_url": "https://chatgpt.proxy.lss233.com/"
     },
     // 后面别的东西
@@ -158,8 +156,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 ```jsonc
     // 前面别的东西
     "openai": {
-        "email": "<YOUR_EMAIL>", // 你的 OpenAI 账号邮箱
-        "password": "<YOUR_PASSWORD>", // 你的 OpenAI 账号密码
+        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
         "proxy": "http://localhost:1080"
     },
     // 后面别的东西
@@ -167,13 +164,15 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 ### OpenAI 登录不了
 
+> 由于 OpenAI 官网的修改，目前仅支持 `session_token` 登录。  
+
 `Captcha detect`、 `State not found` 等各种问题，都可以通过配置 `session_token` 登录。
 
 举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "一串ey开头的很长的东西...",
+        "session_token": "一串ey开头的很长的东西...", // 注意， ey 开头的可能有两个，别复制错了！
         "proxy": "http://localhost:1080"
     },
     // 后面别的东西
