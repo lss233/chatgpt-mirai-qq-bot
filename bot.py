@@ -34,8 +34,8 @@ with open("config.json", "rb") as f:
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
-        config.mirai.qq,  # 你的机器人的 qq 号
-        config.mirai.api_key,  # 填入 VerifyKey
+        config.mirai.qq,  # 配置详见 config.json
+        config.mirai.api_key,
         HttpClientConfig(host=config.mirai.http_url),
         WebsocketClientConfig(host=config.mirai.ws_url),
     ),
@@ -46,7 +46,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         return config.response.placeholder
 
     bot = chatbot.bot
-    session = chatbot.get_chat_session(session_id)
+    session, is_new_session = chatbot.get_chat_session(session_id)
+    if is_new_session:
+        config.initial_process(app, target, session)
 
     if message.strip() in config.trigger.reset_command:
         timeout_task.cancel()
@@ -60,6 +62,10 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             return config.response.rollback_success
         else:
             return config.response.rollback_fail
+    
+    preset_response = config.keyword_presets_process(app, target, session, message)
+    if preset_response:
+        return preset_response
             
     try:
         resp = await session.get_chat_response(message)

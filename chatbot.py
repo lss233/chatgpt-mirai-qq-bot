@@ -1,6 +1,6 @@
 from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
 from charset_normalizer import from_bytes
-from typing import Awaitable, Any, Dict
+from typing import Awaitable, Any, Dict, Tuple
 from config import Config
 import json
 
@@ -46,7 +46,10 @@ class ChatSession:
 sessions = {}
 
 
-def get_chat_session(id: str) -> ChatSession:
+def get_chat_session(id: str) -> Tuple[ChatSession, bool]:
+    is_new_session = False
     if id not in sessions:
         sessions[id] = ChatSession()
-    return sessions[id]
+        is_new_session = True
+
+    return sessions[id], is_new_session

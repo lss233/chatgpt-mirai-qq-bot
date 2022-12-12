@@ -111,3 +111,19 @@ class Config(BaseModel):
         event = await app.send_message(target, '加载人设完毕')
         """
         pass
+
+    """有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
+    def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> bool:
+        """
+        例子：
+        keyword = message.strip()
+        if keyword == '某个字符':
+            event = await app.send_message(target, '猫娘加载中...')
+            resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+            return '猫娘加载完毕'
+        elif keyword == '某个字符2':
+            event = await app.send_message(target, '猫娘加载中...')
+            resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+            return '猫娘加载完毕'
+        """
+        return None
