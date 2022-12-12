@@ -1,11 +1,17 @@
 from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
+from charset_normalizer import from_bytes
 from typing import Awaitable, Any, Dict
+from config import Config
 import json
-with open("config.json", "r") as jsonfile:
-    config_data = json.load(jsonfile)
+with open("config.json", "rb") as f:
+    guessed_json = from_bytes(f.read()).best()
+    if not guessed_json:
+        raise ValueError("无法识别 JSON 格式!")
+    
+    config = Config.parse_obj(json.loads(str(guessed_json)))
 
 # Refer to https://github.com/acheong08/ChatGPT
-bot = AsyncChatbot(config_data["openai"], conversation_id=None, base_url=config_data["base_url"] if "base_url" in config_data else "https://chat.openai.com/")
+bot = AsyncChatbot(config.openai.dict(), conversation_id=None, base_url=config.openai.base_url)
 
 class ChatSession:
     def __init__(self):
