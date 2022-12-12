@@ -14,7 +14,7 @@ from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
-from graia.ariadne.model import Friend, Group
+from graia.ariadne.model import AriadneBaseModel, Friend, Group
 import chatbot
 from loguru import logger
 from config import Config
@@ -39,24 +39,29 @@ app = Ariadne(
     ),
 )
 
-async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> str:
+async def handle_message(send_target: AriadneBaseModel, session_id: str, message: str, timeout_task: asyncio.Task) -> str:
     if not message.strip():
         return config.response.placeholder
+
     bot = chatbot.bot
-    session = chatbot.get_chat_session(id)
+    session = chatbot.get_chat_session(session_id)
+
     if message.strip() in config.trigger.reset_command:
         timeout_task.cancel()
         session.reset_conversation()
+        config.initial_process(app, send_target, session)
         return config.response.reset
+        
     if message.strip() in config.trigger.rollback_command:
         timeout_task.cancel()
         if session.rollback_conversation():
             return config.response.rollback_success
         else:
             return config.response.rollback_fail
+            
     try:
         resp = await session.get_chat_response(message)
-        logger.debug(f"{id} - {resp}")
+        logger.debug(f"{session_id} - {resp}")
         timeout_task.cancel()
         return resp["message"]
     except Exception as e:
@@ -75,7 +80,7 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, 
     if friend.id == config.mirai.qq:
         return
     task = asyncio.create_task(send_task(friend, app, source))
-    response = await handle_message(f"friend-{friend.id}", chain.display, task)
+    response = await handle_message(friend, f"friend-{friend.id}", chain.display, task)
     await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]
@@ -83,9 +88,9 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     task = asyncio.create_task(send_task(group, app, source))
-    response = await handle_message(f"group-{group.id}", chain.display, task)
+    response = await handle_message(group, f"group-{group.id}", chain.display, task)
     event = await app.send_message(group, response)
-    if(event.source.id < 0):
+    if event.source.id < 0:
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
