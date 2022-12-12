@@ -75,7 +75,12 @@ class Response(BaseModel):
 
     quote: bool = True
     """是否回复触发的那条消息"""
+    
+    timeout: float = 30.0
+    """发送提醒前允许的响应时间"""
 
+    timeout_format: str = "我还在思考中，请再等一下~"
+    """响应时间过长时要发送的提醒"""
 
 class Config(BaseModel):
     mirai: Mirai
