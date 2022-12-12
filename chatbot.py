@@ -1,10 +1,18 @@
-from revChatGPT.revChatGPT import Chatbot, generate_uuid
+from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
+from charset_normalizer import from_bytes
+from typing import Awaitable, Any, Dict
+from config import Config
 import json
-with open("config.json", "r") as jsonfile:
-    config_data = json.load(jsonfile)
+with open("config.json", "rb") as f:
+    guessed_json = from_bytes(f.read()).best()
+    if not guessed_json:
+        raise ValueError("无法识别 JSON 格式!")
+    
+    config = Config.parse_obj(json.loads(str(guessed_json)))
 
 # Refer to https://github.com/acheong08/ChatGPT
-bot = Chatbot(config_data["openai"], conversation_id=None, base_url=config_data["base_url"] if "base_url" in config_data else "https://chat.openai.com/")
+bot = AsyncChatbot(config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
+
 class ChatSession:
     def __init__(self):
         self.reset_conversation()
@@ -14,15 +22,14 @@ class ChatSession:
         self.prev_conversation_id = None
         self.prev_parent_id = None
     def rollback_conversation(self) -> bool:
-        if self.prev_parent_id is not None:
-            self.conversation_id = self.prev_conversation_id
-            self.parent_id = self.prev_parent_id
-            self.prev_conversation_id = None
-            self.prev_parent_id = None
-            return True
-        else:
+        if self.prev_parent_id is None:
             return False
-    def get_chat_response(self, message, output="text"):
+        self.conversation_id = self.prev_conversation_id
+        self.parent_id = self.prev_parent_id
+        self.prev_conversation_id = None
+        self.prev_parent_id = None
+        return True
+    def get_chat_response(self, message, output="text") -> Awaitable[Dict[str, Any]]:
         try:
             self.prev_conversation_id = self.conversation_id
             self.prev_parent_id = self.parent_id
@@ -33,7 +40,7 @@ class ChatSession:
 sessions = {}
 
 
-def get_chat_session(id: str):
+def get_chat_session(id: str) -> ChatSession:
     if id not in sessions:
         sessions[id] = ChatSession()
     return sessions[id]
