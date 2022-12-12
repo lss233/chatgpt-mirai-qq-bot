@@ -3,6 +3,7 @@ from charset_normalizer import from_bytes
 from typing import Awaitable, Any, Dict
 from config import Config
 import json
+
 with open("config.json", "rb") as f:
     guessed_json = from_bytes(f.read()).best()
     if not guessed_json:
@@ -16,11 +17,13 @@ bot = AsyncChatbot(config.openai.dict(exclude_none=True, by_alias=False), conver
 class ChatSession:
     def __init__(self):
         self.reset_conversation()
+
     def reset_conversation(self):
         self.conversation_id = None
         self.parent_id = generate_uuid()
         self.prev_conversation_id = None
         self.prev_parent_id = None
+
     def rollback_conversation(self) -> bool:
         if self.prev_parent_id is None:
             return False
@@ -29,6 +32,7 @@ class ChatSession:
         self.prev_conversation_id = None
         self.prev_parent_id = None
         return True
+
     def get_chat_response(self, message, output="text") -> Awaitable[Dict[str, Any]]:
         try:
             self.prev_conversation_id = self.conversation_id
@@ -37,6 +41,8 @@ class ChatSession:
         finally:
             self.conversation_id = bot.conversation_id
             self.parent_id = bot.parent_id
+
+
 sessions = {}
 
 

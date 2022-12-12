@@ -1,8 +1,12 @@
 import os, sys
 sys.path.append(os.getcwd())
+
+import json
 import asyncio
-from charset_normalizer import from_bytes
+from io import BytesIO
 from typing import Union
+from typing_extensions import Annotated
+from charset_normalizer import from_bytes
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,
@@ -12,15 +16,13 @@ from graia.ariadne.connection.config import (
 from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
-from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
-import chatbot
 from loguru import logger
+
+import chatbot
 from config import Config
-import json
 from text_to_img import text_to_image
-from io import BytesIO
 
 with open("config.json", "rb") as f:
     guessed_json = from_bytes(f.read()).best()

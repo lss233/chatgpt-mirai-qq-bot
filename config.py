@@ -1,7 +1,8 @@
 from chatbot import ChatSession
 from typing import List, Union, Literal
-from graia.ariadne.app import Ariadne
+
 from pydantic import BaseModel, BaseConfig, Extra, Field
+from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 
 
