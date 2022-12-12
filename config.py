@@ -1,6 +1,6 @@
 from typing import List, Union, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, BaseConfig, Extra
 
 
 class Mirai(BaseModel):
@@ -16,6 +16,8 @@ class Mirai(BaseModel):
 class OpenAIAuthBase(BaseModel):
     base_url: str = "https://chat.openai.com/"
     """OpenAI 地址，可以填入反向代理"""
+    class Config(BaseConfig):
+        extra = Extra.allow
 
 class OpenAIEmailAuth(OpenAIAuthBase):
     email: str
