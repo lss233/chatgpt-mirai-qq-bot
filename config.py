@@ -2,7 +2,7 @@ from chatbot import ChatSession
 from typing import List, Union, Literal
 from graia.ariadne.app import Ariadne
 from pydantic import BaseModel, BaseConfig, Extra, Field
-from graia.ariadne.model import AriadneBaseModel
+from graia.ariadne.model import Friend, Group
 
 
 class Mirai(BaseModel):
@@ -98,15 +98,15 @@ class Config(BaseModel):
     response: Response = Response()
 
     """有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-    def initial_process(app: Ariadne, send_target: AriadneBaseModel, session: ChatSession):
+    def initial_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession):
         """
         例子：
-        event = await app.send_message(send_target, '加载人设中...')
+        event = await app.send_message(target, '加载人设中...')
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await app.send_message(send_target, '加载人设中(1/3)')
+        event = await app.send_message(target, '加载人设中(1/3)')
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await app.send_message(send_target, '加载人设中(2/3)')
+        event = await app.send_message(target, '加载人设中(2/3)')
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await app.send_message(send_target, '加载人设完毕')
+        event = await app.send_message(target, '加载人设完毕')
         """
         pass

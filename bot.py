@@ -14,7 +14,7 @@ from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
-from graia.ariadne.model import AriadneBaseModel, Friend, Group
+from graia.ariadne.model import Friend, Group
 import chatbot
 from loguru import logger
 from config import Config
@@ -39,7 +39,7 @@ app = Ariadne(
     ),
 )
 
-async def handle_message(send_target: AriadneBaseModel, session_id: str, message: str, timeout_task: asyncio.Task) -> str:
+async def handle_message(target: Union[Friend, Group], session_id: str, message: str, timeout_task: asyncio.Task) -> str:
     if not message.strip():
         return config.response.placeholder
 
@@ -49,7 +49,7 @@ async def handle_message(send_target: AriadneBaseModel, session_id: str, message
     if message.strip() in config.trigger.reset_command:
         timeout_task.cancel()
         session.reset_conversation()
-        config.initial_process(app, send_target, session)
+        config.initial_process(app, target, session)
         return config.response.reset
         
     if message.strip() in config.trigger.rollback_command:
