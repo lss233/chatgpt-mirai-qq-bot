@@ -8,6 +8,7 @@ from graia.ariadne.connection.config import (
     WebsocketClientConfig,
     config as ariadne_config,
 )
+from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from typing_extensions import Annotated
@@ -63,22 +64,22 @@ async def handle_message(id: str, message: str) -> str:
 
 
 @app.broadcast.receiver("FriendMessage")
-async def friend_message_listener(app: Ariadne, friend: Friend, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
+async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
     response = await handle_message(id=f"friend-{friend.id}", message=chain.display)
-    await app.send_message(friend, response)
+    await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]
 
 @app.broadcast.receiver("GroupMessage")
-async def group_message_listener(group: Group, chain: GroupTrigger):
+async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     response = await handle_message(id=f"group-{group.id}", message=chain.display)
     event = await app.send_message(group,  response)
     if(event.source.id < 0):
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
-        await app.send_message(group, Image(data_bytes=b.getvalue()))
+        await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
 
 app.launch_blocking()
