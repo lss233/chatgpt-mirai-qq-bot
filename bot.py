@@ -48,12 +48,12 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     bot = chatbot.bot
     session, is_new_session = chatbot.get_chat_session(session_id)
     if is_new_session:
-        await config.initial_process(app, target, session)
+        await chatbot.initial_process(app, target, session)
 
     if message.strip() in config.trigger.reset_command:
         timeout_task.cancel()
         session.reset_conversation()
-        await config.initial_process(app, target, session)
+        await chatbot.initial_process(app, target, session)
         return config.response.reset
         
     if message.strip() in config.trigger.rollback_command:
@@ -63,7 +63,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         else:
             return config.response.rollback_fail
     
-    preset_response = await config.keyword_presets_process(app, target, session, message)
+    preset_response = await chatbot.keyword_presets_process(app, target, session, message)
     if preset_response:
         return preset_response
             

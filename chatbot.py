@@ -1,6 +1,8 @@
 from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
+from graia.ariadne.app import Ariadne
+from graia.ariadne.model import Friend, Group
 from charset_normalizer import from_bytes
-from typing import Awaitable, Any, Dict, Tuple
+from typing import Awaitable, Any, Dict, Tuple, Union
 from config import Config
 import json
 
@@ -53,3 +55,33 @@ def get_chat_session(id: str) -> Tuple[ChatSession, bool]:
         is_new_session = True
 
     return sessions[id], is_new_session
+
+"""有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
+async def initial_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession):
+    """
+    例子：
+    event = await app.send_message(target, '加载人设中...')
+    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+    event = await app.send_message(target, '加载人设中(1/3)')
+    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+    event = await app.send_message(target, '加载人设中(2/3)')
+    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+    event = await app.send_message(target, '加载人设完毕')
+    """
+    pass
+
+"""有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
+async def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> bool:
+    """
+    例子：
+    keyword = message.strip()
+    if keyword == '某个字符':
+        event = await app.send_message(target, '猫娘加载中...')
+        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+        return '猫娘加载完毕'
+    elif keyword == '某个字符2':
+        event = await app.send_message(target, '猫娘加载中...')
+        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+        return '猫娘加载完毕'
+    """
+    return None
