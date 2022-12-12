@@ -99,7 +99,7 @@ class Config(BaseModel):
     response: Response = Response()
 
     """有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-    def initial_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession):
+    async def initial_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession):
         """
         例子：
         event = await app.send_message(target, '加载人设中...')
@@ -113,7 +113,7 @@ class Config(BaseModel):
         pass
 
     """有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-    def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> bool:
+    async def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> bool:
         """
         例子：
         keyword = message.strip()
