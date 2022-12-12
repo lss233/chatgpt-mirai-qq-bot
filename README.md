@@ -67,7 +67,7 @@ docker run --name mirai-chatgpt-bot \
 
 提示：你需要 Python >= 3.9 才能运行本项目  
 
-1. 部署 Mirai ，安装 mirai-http-api 插件
+1. 部署 Mirai ，安装 mirai-http-api 插件。
 
 2. 下载本项目:
 ```bash
@@ -76,7 +76,7 @@ cd chatgpt-mirai-qq-bot
 pip3 install -r requirements.txt
 ```
 
-3. 重命名 `config.example.json` 为 `config.json`, 更改里面的配置.  
+3. 参照下文调整配置文件。
 
 
 4. 启动 bot.
@@ -95,7 +95,7 @@ python3 bot.py
 
 OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html  
 
-OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
+OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup)。
 
 **！！请注意！！ 不要把 `//` 开头的注释也抄进去了！**  
 
@@ -137,7 +137,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 ### 🚀 使用代理
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码）， 可以通过配置代理的方式来连接到 OpenAI。  
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码），可以通过配置代理的方式来连接到 OpenAI。  
 
 代理有两种方式，分别为 反向代理 和 正向代理，你只需要配置其中一种方式即可。 
 
@@ -167,7 +167,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 #### 正向代理  
 
-使用正向代理方式访问 OpenAI, 你需要在运行本项目的主机上有一个可以访问的 HTTTP/HTTPS 代理服务器。  
+使用正向代理方式访问 OpenAI，你需要在运行本项目的主机上有一个可以访问的 HTTTP/HTTPS 代理服务器。  
 
 
 在 `"openai"` 中加入一条 `"proxy": <你的代理服务器地址>` 即可。  
