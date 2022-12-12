@@ -1,6 +1,6 @@
 from typing import List, Union, Literal
 
-from pydantic import BaseModel, BaseConfig, Extra
+from pydantic import BaseModel, BaseConfig, Extra, Field
 
 
 class Mirai(BaseModel):
@@ -14,6 +14,10 @@ class Mirai(BaseModel):
     """mirai-api-http 的 ws 适配器地址"""
 
 class OpenAIAuthBase(BaseModel):
+    Authorization: Union[str, None] = Field(alias="authorization")
+    """可选的验证头"""
+    proxy: Union[str, None] = None
+    """可选的代理地址"""
     base_url: str = "https://chat.openai.com/"
     """OpenAI 地址，可以填入反向代理"""
     class Config(BaseConfig):
@@ -47,10 +51,10 @@ class Trigger(BaseModel):
     """触发响应的前缀，默认不需要"""
     require_mention: Literal["at", "mention", "none"] = "at"
     """群内 [需要 @ 机器人 / 需要 @ 或以机器人名称开头 / 不需要 @] 才响应（请注意需要先 @ 机器人后接前缀）"""
-    reset_command: List[str] = ["重置对话"]
-    """重置对话的命令"""
-    rollback_command: List[str] = ["回滚对话"]
-    """回滚对话的命令"""
+    reset_command: List[str] = ["重置会话"]
+    """重置会话的命令"""
+    rollback_command: List[str] = ["回滚会话"]
+    """回滚会话的命令"""
 
 
 class Response(BaseModel):

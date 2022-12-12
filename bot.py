@@ -45,9 +45,11 @@ async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> s
     bot = chatbot.bot
     session = chatbot.get_chat_session(id)
     if message.strip() in config.trigger.reset_command:
+        timeout_task.cancel()
         session.reset_conversation()
         return config.response.reset
     if message.strip() in config.trigger.rollback_command:
+        timeout_task.cancel()
         if session.rollback_conversation():
             return config.response.rollback_success
         else:

@@ -11,7 +11,7 @@ with open("config.json", "rb") as f:
     config = Config.parse_obj(json.loads(str(guessed_json)))
 
 # Refer to https://github.com/acheong08/ChatGPT
-bot = AsyncChatbot(config.openai.dict(), conversation_id=None, base_url=config.openai.base_url)
+bot = AsyncChatbot(config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
 
 class ChatSession:
     def __init__(self):
