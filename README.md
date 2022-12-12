@@ -180,7 +180,11 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
 
+如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了，或者不正确。  
+
 注： `session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
+
+
 
 ## 📷 图片转文字
 
