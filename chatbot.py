@@ -39,6 +39,8 @@ class ChatSession:
         try:
             self.prev_conversation_id = self.conversation_id
             self.prev_parent_id = self.parent_id
+            bot.conversation_id = self.conversation_id
+            bot.parent_id = self.parent_id
             return bot.get_chat_response(message, output=output, conversation_id=self.conversation_id, parent_id=self.parent_id)
         finally:
             self.conversation_id = bot.conversation_id
