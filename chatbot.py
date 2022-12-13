@@ -73,7 +73,7 @@ async def initial_process(app: Ariadne, target: Union[Friend, Group], session: C
     pass
 
 """有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> bool:
+async def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> Union[str, None]:
     """
     例子：
     keyword = message.strip()
