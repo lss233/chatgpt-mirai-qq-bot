@@ -2,6 +2,7 @@ from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
 from charset_normalizer import from_bytes
 from typing import Awaitable, Any, Dict
 from config import Config
+from loguru import logger
 import json
 with open("config.json", "rb") as f:
     guessed_json = from_bytes(f.read()).best()
@@ -11,7 +12,14 @@ with open("config.json", "rb") as f:
     config = Config.parse_obj(json.loads(str(guessed_json)))
 
 # Refer to https://github.com/acheong08/ChatGPT
-bot = AsyncChatbot(config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
+try:
+    logger.info("登录 OpenAI 中……")
+    logger.info("请在新打开的浏览器窗口中完成 Cloudflare 验证")
+    bot = AsyncChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
+except Exception as e:
+    logger.exception(e)
+    logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 Cloudflare 验证，建议歇息一下再重试。")
+    exit(-1)
 
 class ChatSession:
     def __init__(self):

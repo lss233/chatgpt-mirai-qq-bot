@@ -22,12 +22,16 @@ import json
 from text_to_img import text_to_image
 from io import BytesIO
 
-with open("config.json", "rb") as f:
-    guessed_json = from_bytes(f.read()).best()
-    if not guessed_json:
-        raise ValueError("无法识别 JSON 格式!")
-    
-    config = Config.parse_obj(json.loads(str(guessed_json)))
+try:
+    with open("config.json", "rb") as f:
+        guessed_json = from_bytes(f.read()).best()
+        if not guessed_json:
+            raise ValueError("无法识别 JSON 格式!")
+        
+        config = Config.parse_obj(json.loads(str(guessed_json)))
+except Exception as e:
+    logger.exception(e)
+    logger.error("配置文件有误，请重新修改！")
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
