@@ -16,6 +16,7 @@
 
 
 [交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 遇到问题请发日志和配置文件  
+[调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 本群不解答技术问题  
 
 ![Preview](.github/preview.png)
 
