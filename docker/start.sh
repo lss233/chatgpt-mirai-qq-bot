@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xpra start :99 --no-daemon >/dev/null
+xpra start :99 --no-daemon &>/dev/null &
 
 export DISPLAY=:99
 
