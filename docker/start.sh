@@ -1,9 +1,8 @@
 #!/bin/bash
 
-rm /tmp/.X11-unix/X1
-rm /tmp/.X1
-
-Xvfb :99 -ac -screen 0 -nolisten tcp &
+xpra start :99 --no-daemon --html=on &
+echo "Waiting for xpra to start"
 export DISPLAY=:99
+sleep 10
 cd /app
 python bot.py
