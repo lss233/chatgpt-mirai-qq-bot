@@ -10,17 +10,21 @@ import json
 import os, sys
 import asyncio
 
-with open("config.json", "rb") as f:
-    guessed_json = from_bytes(f.read()).best()
-    if not guessed_json:
-        raise ValueError("无法识别 JSON 格式!")
-    
-    config = Config.parse_obj(json.loads(str(guessed_json)))
+try:
+    with open("config.json", "rb") as f:
+        guessed_json = from_bytes(f.read()).best()
+        if not guessed_json:
+            raise ValueError("无法识别 JSON 格式！")
+        
+        config = Config.parse_obj(json.loads(str(guessed_json)))
+except Exception as e:
+    logger.exception(e)
+    logger.error("配置文件有误，请重新修改！")
 
 # Refer to https://github.com/acheong08/ChatGPT
 try:
     logger.info("登录 OpenAI 中...")
-    logger.info("请在新打开的浏览器窗口中完成验证")
+    logger.info("请在新打开的浏览器窗口中完成验证。")
     if 'XPRA_PASSWORD' in os.environ:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
 
@@ -41,7 +45,7 @@ try:
     logger.debug(f"获取到 session_token {bot.config['session_token']}")
 except Exception as e:
     logger.exception(e)
-    logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
+    logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议稍后重试。")
     exit(-1)
 
 if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
@@ -52,7 +56,7 @@ if config.system.auto_save_cf_clearance or config.system.auto_save_session_token
             f.write(parsed_json)
         except Exception as e:
             logger.exception(e)
-            logger.warning("配置保存失败")
+            logger.warning("配置保存失败。")
 
 class ChatSession:
 
@@ -79,7 +83,7 @@ class ChatSession:
         return True
 
     async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
-        self.__create_time_out_task()
+        self.__create_timeout_task()
 
         self.prev_conversation_id.append(self.conversation_id)
         self.prev_parent_id.append(self.parent_id)
@@ -92,7 +96,7 @@ class ChatSession:
             async for resp in await bot.get_chat_response(message, output="stream"):
                 if final_resp is None:
                     self.__cancle_timeout_task()
-                    logger.debug("已收到回应，正在接收中……")
+                    logger.debug("已收到回应，正在接收中...")
                 
                 self.conversation_id = resp["conversation_id"]
                 self.parent_id = resp["parent_id"]
@@ -108,7 +112,7 @@ class ChatSession:
             self.timeout_task.cancle()
         self.timeout_task = None
 
-    def __create_time_out_task(self):
+    def __create_timeout_task(self):
         task = asyncio.create_task(self.__handle_timeout_task())
         self.timeout_task = task
     
@@ -165,7 +169,7 @@ async def keyword_presets_process(session: ChatSession, message: str) -> Tuple[U
         """
 
         """
-        也许可以换成conv_id？无论如何先在这里留一个函数
+        也许可以换成conv_id？无论如何先在这里留一个函数大概不会有错...
         """
     except Exception as e:
         exception = e

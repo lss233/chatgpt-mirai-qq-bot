@@ -22,20 +22,10 @@ from graia.ariadne.model import Friend, Group
 from loguru import logger
 
 import chatbot
-from config import Config
 from text_to_img import text_to_image
 
-try:
-    with open("config.json", "rb") as f:
-        guessed_json = from_bytes(f.read()).best()
-        if not guessed_json:
-            raise ValueError("无法识别 JSON 格式!")
-        
-        config = Config.parse_obj(json.loads(str(guessed_json)))
-except Exception as e:
-    logger.exception(e)
-    logger.error("配置文件有误，请重新修改！")
 
+config = chatbot.config
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
