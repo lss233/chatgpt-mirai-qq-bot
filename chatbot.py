@@ -82,6 +82,12 @@ class ChatSession:
         self.parent_id = self.prev_parent_id.pop()
         return True
 
+    def jump_to_conversation(self, conversation_id, parent_id):
+        self.prev_conversation_id.append(conversation_id)
+        self.prev_parent_id.append(parent_id)
+        bot.conversation_id = conversation_id
+        bot.parent_id = parent_id
+
     async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
         self.__create_timeout_task()
 
@@ -146,6 +152,13 @@ async def initial_process(session: ChatSession) -> Exception:
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
         event = await session.app.send_message(session.target, '加载人设完毕')
         """
+
+        """
+        也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
+        """
+        conv_id = '6909b2b7-2793-455b-af64-144d32195c6c'
+        pare_id = '883c2057-9d0f-4889-9483-69cfee20d03b'
+        session.jump_to_conversation(conv_id, pare_id)
     except Exception as e:
         exception = e
 
@@ -169,7 +182,7 @@ async def keyword_presets_process(session: ChatSession, message: str) -> Tuple[U
         """
 
         """
-        也许可以换成conv_id？无论如何先在这里留一个函数大概不会有错...
+        也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
         """
     except Exception as e:
         exception = e
