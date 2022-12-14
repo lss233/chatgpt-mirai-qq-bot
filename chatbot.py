@@ -1,6 +1,6 @@
 from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
 from charset_normalizer import from_bytes
-from typing import Awaitable, Any, Dict
+from typing import Awaitable, Any, Dict, Tuple
 from config import Config
 from loguru import logger
 import json
@@ -63,15 +63,23 @@ class ChatSession:
         self.conversation_id = self.prev_conversation_id.pop()
         self.parent_id = self.prev_parent_id.pop()
         return True
-    async def get_chat_response(self, message, output="text") -> Dict[str, Any]:
+    async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
         self.prev_conversation_id.append(self.conversation_id)
         self.prev_parent_id.append(self.parent_id)
         bot.conversation_id = self.conversation_id
         bot.parent_id = self.parent_id
-        resp = await bot.get_chat_response(message, output=output)
-        self.conversation_id = resp["conversation_id"]
-        self.parent_id = resp["parent_id"]
-        return resp
+        final_resp = None
+        exception = None
+        try:
+            async for resp in await bot.get_chat_response(message, output="stream"):
+                if final_resp is None:
+                    logger.debug("已收到回应，正在接收中……")
+                self.conversation_id = resp["conversation_id"]
+                self.parent_id = resp["parent_id"]
+                final_resp = resp
+        except Exception as e:
+            exception = e
+        return final_resp, exception
 sessions = {}
 
 

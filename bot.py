@@ -59,16 +59,18 @@ async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> s
             return config.response.rollback_success
         else:
             return config.response.rollback_fail
-    try:
-        resp = await session.get_chat_response(message)
-        logger.debug(f"{id} - {resp}")
-        timeout_task.cancel()
-        return resp["message"]
-    except Exception as e:
-        # session.reset_conversation()
-        await bot.refresh_session()
+    resp, e = await session.get_chat_response(message)
+    logger.debug(f"{id} - {resp}")
+    timeout_task.cancel()
+    if e:
         logger.exception(e)
         timeout_task.cancel()
+        refresh_task = bot.refresh_session()
+        if refresh_task:
+            await refresh_task
+    if resp:
+        return resp["message"]
+    if e:
         return config.response.error_format.format(exc=e)
 
 async def send_task(target: Union[Friend, Group], app: Ariadne, source: Source):
