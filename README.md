@@ -15,7 +15,7 @@
 * [x] 多种方式登录 OpenAI
 
 
-[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY)  
+[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 遇到问题请发日志和配置文件  
 
 ![Preview](.github/preview.png)
 
@@ -43,8 +43,9 @@
 2.  执行以下命令，启动 bot：
 ```bash
 # 修改 /path/to/config.json 为你 config.json 的位置
+# XPRA_PASSWORD=123456 中的 123456 是你的 Xpra 密码，建议修改
 docker run --name mirai-chatgpt-bot \
-    -e XPRA_PASSWORD=123456 \ # XPRA 密码，建议修改
+    -e XPRA_PASSWORD=123456 \ 
     -v /path/to/config.json:/app/config.json \
     --network host \
     lss233/chatgpt-mirai-qq-bot:latest
