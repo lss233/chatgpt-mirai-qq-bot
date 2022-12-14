@@ -223,7 +223,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     // 后面别的东西
 ```
 
-搭配下面的 `自动保存 cf_clearance / session_token` 功能，可以提高后续启动的时间。  
+搭配下面的 `自动保存 cf_clearance / session_token` 功能，可以减少后续启动的时间。  
 
 ### OpenAI 手动登录
 
