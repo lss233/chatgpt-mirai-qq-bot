@@ -5,6 +5,7 @@ from config import Config
 from loguru import logger
 import json
 import os
+import asyncio
 
 with open("config.json", "rb") as f:
     guessed_json = from_bytes(f.read()).best()
@@ -20,7 +21,8 @@ try:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
     
     bot = AsyncChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
-
+    if not "cf_clearance" in bot.config:
+        asyncio.run(bot.refresh_session())
     logger.info("登录成功，保存登录信息中……")
 
     if config.system.auto_save_cf_clearance:
