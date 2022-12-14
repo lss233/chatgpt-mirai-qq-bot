@@ -68,14 +68,17 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             return config.response.rollback_success
         else:
             return config.response.rollback_fail
+
     resp, e = await session.get_chat_response(message)
     logger.debug(f"{id} - {resp}")
     timeout_task.cancel()
     if e:
         logger.exception(e)
         timeout_task.cancel()
+
     if resp:
         return resp["message"]
+        
     if e:
         refresh_task = bot.refresh_session()
         if refresh_task:

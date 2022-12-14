@@ -15,17 +15,19 @@ with open("config.json", "rb") as f:
         raise ValueError("无法识别 JSON 格式!")
     
     config = Config.parse_obj(json.loads(str(guessed_json)))
+
 # Refer to https://github.com/acheong08/ChatGPT
 try:
-    logger.info("登录 OpenAI 中……")
+    logger.info("登录 OpenAI 中...")
     logger.info("请在新打开的浏览器窗口中完成验证")
     if 'XPRA_PASSWORD' in os.environ:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
-    
+
     bot = AsyncChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
     if not "cf_clearance" in bot.config:
         asyncio.run(bot.refresh_session())
-    logger.info("登录成功，保存登录信息中……")
+
+    logger.info("登录成功，保存登录信息中...")
 
     if config.system.auto_save_cf_clearance:
         config.openai.cf_clearance = bot.config["cf_clearance"]
@@ -60,12 +62,14 @@ class ChatSession:
         self.parent_id = generate_uuid()
         self.prev_conversation_id = []
         self.prev_parent_id = []
+
     def rollback_conversation(self) -> bool:
         if len(self.prev_parent_id) <= 0:
             return False
         self.conversation_id = self.prev_conversation_id.pop()
         self.parent_id = self.prev_parent_id.pop()
         return True
+
     async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
         self.prev_conversation_id.append(self.conversation_id)
         self.prev_parent_id.append(self.parent_id)
@@ -83,6 +87,8 @@ class ChatSession:
         except Exception as e:
             exception = e
         return final_resp, exception
+
+
 sessions = {}
 
 
