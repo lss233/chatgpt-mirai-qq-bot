@@ -10,7 +10,7 @@ RUN apt-get update && \
     wget -qO /usr/share/keyrings/xpra-2022.gpg https://xpra.org/xpra-2022.gpg  && \
     echo deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/xpra-2022.gpg] https://xpra.org/ bullseye main |  tee /etc/apt/sources.list.d/xpra.list && \
     apt-get update && \
-    apt install --no-install-recommends xpra libgl1-mesa-dri -yq
+    apt install --no-install-recommends xpra xvfb libgl1-mesa-dri xauth -yq
 
 
 RUN set -eux; \
