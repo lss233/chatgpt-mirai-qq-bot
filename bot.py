@@ -12,6 +12,7 @@ from graia.ariadne.connection.config import (
 from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
+from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
@@ -94,5 +95,15 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
         b = BytesIO()
         img.save(b, format="png")
         await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+
+@app.broadcast.receiver("NewFriendRequestEvent")
+async def on_friend_request(event: NewFriendRequestEvent):
+    if config.system.accept_friend_request:
+        await event.accept()
+
+@app.broadcast.receiver("BotInvitedJoinGroupRequestEvent")
+async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
+    if config.system.accept_group_invite:
+        await event.accept()
 
 app.launch_blocking()

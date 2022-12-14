@@ -44,10 +44,14 @@
 ```bash
 # 修改 /path/to/config.json 为你 config.json 的位置
 docker run --name mirai-chatgpt-bot \
+    -e XPRA_PASSWORD=123456 \ # XPRA 密码，建议修改
     -v /path/to/config.json:/app/config.json \
     --network host \
     lss233/chatgpt-mirai-qq-bot:latest
 ```
+
+3. 启动后，在浏览器访问 `http://你的服务器IP:14500` 可以访问到登录 ChatGPT 的浏览器页面  
+
 </details>
 
 <details>
@@ -127,6 +131,12 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
         "quote": true, // 是否要回复触发指令的消息
         "timeout": 30, // 发送下面那个提醒之前的等待时间
         "timeout_format": "我还在思考中，请再等一下~" // 超过响应时间时要发送的提醒
+    },
+    "system": {
+        "auto_save_cf_clearance": true, // 是否自动保存 cf_clearance
+        "auto_save_session_token": false, // 是否自动保存 session_token
+        "accept_friend_request": false, // 是否自动接受好友请求
+        "accept_group_invite": false // 是否自动接受加群邀请
     }
 }
 ```
@@ -198,19 +208,32 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     },
     // 后面别的东西
 ```
+### OpenAI 半自动登录
 
-### OpenAI 登录不了
+最新的版本支持在通过 CloudFlare 的防火墙验证之后，跳转到 ChatGPT 的登录页面进行登录。  
 
-> 由于 OpenAI 官网的修改，目前仅支持 `session_token` 登录。  
-
-`Captcha detect`、 `State not found` 等各种问题，都可以通过配置 `session_token` 登录。
+如果您想要使用这个功能，请将 `session_token` 设置为空，像这样：
 
 举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "一串ey开头的很长的东西...", // 注意， ey 开头的可能有两个，别复制错了！
-        "proxy": "http://localhost:1080"
+        "session_token": "" // 没错，就这样
+    },
+    // 后面别的东西
+```
+
+搭配下面的 `自动保存 cf_clearance / session_token` 功能，可以提高后续启动的时间。  
+
+### OpenAI 手动登录
+
+`Captcha detect`、 `State not found` 等各种问题，都可以通过指定 `session_token` 手动登录。
+
+举个例子：
+```jsonc
+    // 前面别的东西
+    "openai": {
+        "session_token": "一串ey开头的很长的东西..." // 注意， ey 开头的可能有两个，别复制错了！
     },
     // 后面别的东西
 ```
@@ -221,7 +244,22 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 注： `session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
 
+### 自动保存 cf_clearance / session_token
 
+现在我们支持在登录 OpenAI 之后，保存 `cf_clearance` 和 `session_token` 信息。  
+
+这可以让你不用每次启动程序的时候都打开浏览器进行验证。  
+
+如果你觉得这个功能给你带来了不便，可以关闭它。  
+
+```jsonc
+    // 前面别的东西
+    "system": {
+        "auto_save_cf_clearance": true, // 是否自动保存 cf_clearance
+        "auto_save_session_token": false, // 是否自动保存 session_token
+    },
+    // 后面别的东西
+```
 
 ## 📷 图片转文字
 
