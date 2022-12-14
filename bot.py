@@ -16,6 +16,8 @@ from graia.ariadne.connection.config import (
 from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
+from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
+from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
 from loguru import logger
@@ -24,12 +26,16 @@ import chatbot
 from config import Config
 from text_to_img import text_to_image
 
-with open("config.json", "rb") as f:
-    guessed_json = from_bytes(f.read()).best()
-    if not guessed_json:
-        raise ValueError("无法识别 JSON 格式!")
-    
-    config = Config.parse_obj(json.loads(str(guessed_json)))
+try:
+    with open("config.json", "rb") as f:
+        guessed_json = from_bytes(f.read()).best()
+        if not guessed_json:
+            raise ValueError("无法识别 JSON 格式!")
+        
+        config = Config.parse_obj(json.loads(str(guessed_json)))
+except Exception as e:
+    logger.exception(e)
+    logger.error("配置文件有误，请重新修改！")
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
@@ -62,21 +68,21 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             return config.response.rollback_success
         else:
             return config.response.rollback_fail
-    
-    preset_response = await chatbot.keyword_presets_process(app, target, session, message)
-    if preset_response:
-        return preset_response
-            
-    try:
-        resp = await session.get_chat_response(message)
-        logger.debug(f"{session_id} - {resp}")
-        timeout_task.cancel()
-        return resp["message"]
-    except Exception as e:
-        # session.reset_conversation()
-        bot.refresh_session()
+
+    resp, e = await session.get_chat_response(message)
+    logger.debug(f"{id} - {resp}")
+    timeout_task.cancel()
+    if e:
         logger.exception(e)
         timeout_task.cancel()
+
+    if resp:
+        return resp["message"]
+        
+    if e:
+        refresh_task = bot.refresh_session()
+        if refresh_task:
+            await refresh_task
         return config.response.error_format.format(exc=e)
 
 async def send_task(target: Union[Friend, Group], app: Ariadne, source: Source):
@@ -103,5 +109,15 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
         b = BytesIO()
         img.save(b, format="png")
         await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+
+@app.broadcast.receiver("NewFriendRequestEvent")
+async def on_friend_request(event: NewFriendRequestEvent):
+    if config.system.accept_friend_request:
+        await event.accept()
+
+@app.broadcast.receiver("BotInvitedJoinGroupRequestEvent")
+async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
+    if config.system.accept_group_invite:
+        await event.accept()
 
 app.launch_blocking()

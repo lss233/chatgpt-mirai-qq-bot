@@ -20,6 +20,13 @@ class OpenAIAuthBase(BaseModel):
     """可选的代理地址"""
     base_url: str = "https://chat.openai.com/"
     """OpenAI 地址，可以填入反向代理"""
+
+    cf_clearance: Union[str, None] = None
+    """CloudFlare 验证 cookie"""
+
+    user_agent: Union[str, None] = None
+    """访问 OpenAI 使用的浏览器 UserAgent"""
+
     class Config(BaseConfig):
         extra = Extra.allow
 
@@ -88,9 +95,23 @@ class Response(BaseModel):
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
 
+class System(BaseModel):
+    auto_save_cf_clearance: bool = True
+    """自动保存 cf_clearance"""
+
+    auto_save_session_token: bool = False
+    """自动保存 session_token"""
+
+    accept_group_invite: bool = False
+    """自动接收邀请入群请求"""
+
+    accept_friend_request: bool = False
+    """自动接收好友请求"""
+
 class Config(BaseModel):
     mirai: Mirai
     openai: Union[OpenAIEmailAuth, OpenAISessionTokenAuth]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
+    system: System = System()
