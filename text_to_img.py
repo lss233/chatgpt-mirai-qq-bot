@@ -1,18 +1,10 @@
-from charset_normalizer import from_bytes
 from config import Config
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import itertools
 import unicodedata
-import json
-from collections import defaultdict
 
-with open("config.json", "rb") as f:
-    guessed_json = from_bytes(f.read()).best()
-    if not guessed_json:
-        raise ValueError("无法识别 JSON 格式!")
-    
-    config = Config.parse_obj(json.loads(str(guessed_json)))
+config = Config.load_config()
 
 class TextWrapper(textwrap.TextWrapper):
     char_widths = {

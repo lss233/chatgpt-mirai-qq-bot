@@ -2,25 +2,13 @@ from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
 from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.message import Source
-from charset_normalizer import from_bytes
 from typing import Awaitable, Any, Dict, Tuple, Union
 from config import Config
 from loguru import logger
-import json
-import os, sys
+import os
 import asyncio
 
-try:
-    with open("config.json", "rb") as f:
-        guessed_json = from_bytes(f.read()).best()
-        if not guessed_json:
-            raise ValueError("无法识别 JSON 格式！")
-        
-        config = Config.parse_obj(json.loads(str(guessed_json)))
-except Exception as e:
-    logger.exception(e)
-    logger.error("配置文件有误，请重新修改！")
-
+config = Config.load_config()
 # Refer to https://github.com/acheong08/ChatGPT
 try:
     logger.info("登录 OpenAI 中...")
@@ -48,15 +36,7 @@ except Exception as e:
     logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议稍后重试。")
     exit(-1)
 
-if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
-    with open("config.json", "wb") as f:
-        try:
-            logger.debug(f"配置文件编码 {guessed_json.encoding} {config.response.timeout_format}")
-            parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
-            f.write(parsed_json)
-        except Exception as e:
-            logger.exception(e)
-            logger.warning("配置保存失败。")
+Config.save_config(config)
 
 class ChatSession:
 

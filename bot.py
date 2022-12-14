@@ -22,10 +22,11 @@ from graia.ariadne.model import Friend, Group
 from loguru import logger
 
 import chatbot
+from config import Config
 from text_to_img import text_to_image
 
 
-config = chatbot.config
+config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
