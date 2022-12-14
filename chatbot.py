@@ -129,18 +129,18 @@ def get_chat_session(id: str, app: Ariadne, target: Union[Friend, Group], source
     return __sessions[id], is_new_session
 
 """有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def initial_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession) -> Exception:
+async def initial_process(session: ChatSession) -> Exception:
     exception = None
     try:
         """
         例子：
-        event = await app.send_message(target, '加载人设中...')
+        event = await session.app.send_message(session.target, '加载人设中...')
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await app.send_message(target, '加载人设中(1/3)')
+        event = await session.app.send_message(session.target, '加载人设中(1/3)')
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await app.send_message(target, '加载人设中(2/3)')
+        event = await session.app.send_message(session.target, '加载人设中(2/3)')
         resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await app.send_message(target, '加载人设完毕')
+        event = await session.app.send_message(session.target, '加载人设完毕')
         """
     except Exception as e:
         exception = e
@@ -148,20 +148,24 @@ async def initial_process(app: Ariadne, target: Union[Friend, Group], session: C
     return exception
 
 """有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def keyword_presets_process(app: Ariadne, target: Union[Friend, Group], session: ChatSession, message: str) -> Tuple[Union[str, None], Exception]:
+async def keyword_presets_process(session: ChatSession, message: str) -> Tuple[Union[str, None], Exception]:
     exception = None
     try:
         """
         例子：
         keyword = message.strip()
         if keyword == '某个字符':
-            event = await app.send_message(target, '猫娘加载中...')
+            event = await session.app.send_message(session.target, '猫娘加载中...')
             resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
             return '猫娘加载完毕'
         elif keyword == '某个字符2':
-            event = await app.send_message(target, '猫娘加载中...')
+            event = await session.app.send_message(session.target, '猫娘加载中...')
             resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
             return '猫娘加载完毕'
+        """
+
+        """
+        也许可以换成conv_id？无论如何先在这里留一个函数
         """
     except Exception as e:
         exception = e

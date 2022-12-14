@@ -52,15 +52,16 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         return config.response.placeholder
 
     bot = chatbot.bot
+    resp = None
     e = None
 
     session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
     if is_new_session:
-        e = await chatbot.initial_process(app, target, session)
+        e = await chatbot.initial_process(session)
 
     if not e and message.strip() in config.trigger.reset_command:
         session.reset_conversation()
-        e = await chatbot.initial_process(app, target, session)
+        e = await chatbot.initial_process(session)
         if not e:
             return config.response.reset
         
@@ -68,14 +69,20 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         return config.response.rollback_success if session.rollback_conversation() else config.response.rollback_fail
 
     if not e:
+        resp, e = await chatbot.keyword_presets_process(session, message)
+        logger.debug(f"{id} - {resp}")
+        if e:
+            logger.exception(e)
+        if resp:
+            return resp["message"]
+
+    if not e:
         resp, e = await session.get_chat_response(message)
         logger.debug(f"{id} - {resp}")
-
-    if e:
-        logger.exception(e)
-
-    if resp:
-        return resp["message"]
+        if e:
+            logger.exception(e)
+        if resp:
+            return resp["message"]
         
     if e:
         refresh_task = bot.refresh_session()
