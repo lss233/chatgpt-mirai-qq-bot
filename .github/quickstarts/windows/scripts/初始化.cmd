@@ -39,6 +39,9 @@ cd ..
 ECHO 安装依赖...
 %PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
+ECHO 初始化 playwright
+%PYTHON_EXECUTABLE% -m playwright install
+
 ECHO 接下来将会打开 config.json，请修改里面的信息。
 COPY config.example.json config.json
 notepad config.json
