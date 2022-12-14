@@ -17,7 +17,6 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
 from loguru import logger
@@ -47,23 +46,21 @@ app = Ariadne(
     ),
 )
 
-async def handle_message(target: Union[Friend, Group], session_id: str, message: str, timeout_task: asyncio.Task) -> str:
+async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
     if not message.strip():
         return config.response.placeholder
 
     bot = chatbot.bot
-    session, is_new_session = chatbot.get_chat_session(session_id)
+    session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
     if is_new_session:
         await chatbot.initial_process(app, target, session)
 
     if message.strip() in config.trigger.reset_command:
-        timeout_task.cancel()
         session.reset_conversation()
         await chatbot.initial_process(app, target, session)
         return config.response.reset
         
     if message.strip() in config.trigger.rollback_command:
-        timeout_task.cancel()
         if session.rollback_conversation():
             return config.response.rollback_success
         else:
@@ -71,10 +68,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
     resp, e = await session.get_chat_response(message)
     logger.debug(f"{id} - {resp}")
-    timeout_task.cancel()
     if e:
         logger.exception(e)
-        timeout_task.cancel()
 
     if resp:
         return resp["message"]
@@ -85,24 +80,18 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             await refresh_task
         return config.response.error_format.format(exc=e)
 
-async def send_task(target: Union[Friend, Group], app: Ariadne, source: Source):
-    await asyncio.sleep(config.response.timeout)
-    await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
-
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
-    task = asyncio.create_task(send_task(friend, app, source))
-    response = await handle_message(friend, f"friend-{friend.id}", chain.display, task)
+    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
     await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]
 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    task = asyncio.create_task(send_task(group, app, source))
-    response = await handle_message(group, f"group-{group.id}", chain.display, task)
+    response = await handle_message(group, f"group-{group.id}", chain.display, source)
     event = await app.send_message(group, response)
     if event.source.id < 0:
         img = text_to_image(text=response)
