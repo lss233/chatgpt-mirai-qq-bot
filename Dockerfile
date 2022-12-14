@@ -19,7 +19,8 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install playwright && \
-    playwright install
+    playwright install && \
+    playwright install-deps
 
 COPY requirements.txt /app
 RUN pip install -r requirements.txt
