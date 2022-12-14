@@ -1,3 +1,5 @@
+from charset_normalizer import from_bytes
+from config import Config
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import itertools
@@ -5,25 +7,12 @@ import unicodedata
 import json
 from collections import defaultdict
 
-default_settings = {
-    "enable": True,
-    "width": 700,
-    "font_path": "fonts/sarasa-mono-sc-regular.ttf",
-    "font_size": 30,
-    "offset_x": 50,
-    "offset_y": 50
-}
-with open("config.json", "r") as jsonfile:
-    config_data = json.load(jsonfile)
-
-    if not hasattr(config_data, "text_to_image"):
-        config_data["text_to_image"] = {}
-    config_data = config_data["text_to_image"]
-
-    # Copy defaults
-    for key in default_settings:
-        if not hasattr(config_data, key):
-            config_data[key] = default_settings[key]
+with open("config.json", "rb") as f:
+    guessed_json = from_bytes(f.read()).best()
+    if not guessed_json:
+        raise ValueError("无法识别 JSON 格式!")
+    
+    config = Config.parse_obj(json.loads(str(guessed_json)))
 
 class TextWrapper(textwrap.TextWrapper):
     char_widths = {
@@ -197,7 +186,7 @@ class TextWrapper(textwrap.TextWrapper):
         text = self._munge_whitespace(text)
         return self._split(text)
 
-def text_to_image(text, width=config_data["width"], font_name=config_data["font_path"], font_size=config_data["font_size"], offset_x=config_data["offset_x"], offset_y=config_data["offset_y"]):
+def text_to_image(text, width=config.text_to_image.width, font_name=config.text_to_image.font_path, font_size=config.text_to_image.font_size, offset_x=config.text_to_image.offset_x, offset_y=config.text_to_image.offset_y):
     # Create a draw object that can be used to measure the size of the text
     draw = ImageDraw.Draw(Image.new('RGB', (width, 1)))
 

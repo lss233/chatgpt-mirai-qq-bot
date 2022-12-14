@@ -4,7 +4,7 @@ from typing import Awaitable, Any, Dict
 from config import Config
 from loguru import logger
 import json
-import os
+import os, sys
 import asyncio
 
 with open("config.json", "rb") as f:
@@ -32,17 +32,23 @@ try:
     if config.system.auto_save_session_token:
         config.openai.session_token = bot.config["session_token"]
     
-    logger.debug(f"获取到 cf_clearance {config.openai.cf_clearance}")
-    logger.debug(f"获取到 session_token {config.openai.session_token}")
+    logger.debug(f"获取到 cf_clearance {bot.config['cf_clearance']}")
+    logger.debug(f"获取到 session_token {bot.config['session_token']}")
 except Exception as e:
     logger.exception(e)
     logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
     exit(-1)
-try:
-    with open("config.json", "w") as f:
-        f.write(json.dumps(config.dict(), ensure_ascii=False, indent=4))
-except:
-    logger.warning("配置保存失败")
+
+if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
+    with open("config.json", "wb") as f:
+        try:
+            logger.debug(f"配置文件编码 {guessed_json.encoding} {config.response.timeout_format}")
+            parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
+            f.write(parsed_json)
+        except Exception as e:
+            logger.exception(e)
+            logger.warning("配置保存失败")
+
 class ChatSession:
     def __init__(self):
         self.reset_conversation()
