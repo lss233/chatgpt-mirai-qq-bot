@@ -47,27 +47,30 @@ app = Ariadne(
 )
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    
     if not message.strip():
         return config.response.placeholder
 
     bot = chatbot.bot
+    e = None
+
     session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
     if is_new_session:
-        await chatbot.initial_process(app, target, session)
+        e = await chatbot.initial_process(app, target, session)
 
-    if message.strip() in config.trigger.reset_command:
+    if not e and message.strip() in config.trigger.reset_command:
         session.reset_conversation()
-        await chatbot.initial_process(app, target, session)
-        return config.response.reset
+        e = await chatbot.initial_process(app, target, session)
+        if not e:
+            return config.response.reset
         
-    if message.strip() in config.trigger.rollback_command:
-        if session.rollback_conversation():
-            return config.response.rollback_success
-        else:
-            return config.response.rollback_fail
+    if not e and message.strip() in config.trigger.rollback_command:
+        return config.response.rollback_success if session.rollback_conversation() else config.response.rollback_fail
 
-    resp, e = await session.get_chat_response(message)
-    logger.debug(f"{id} - {resp}")
+    if not e:
+        resp, e = await session.get_chat_response(message)
+        logger.debug(f"{id} - {resp}")
+
     if e:
         logger.exception(e)
 
