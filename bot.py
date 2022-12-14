@@ -65,12 +65,12 @@ async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> s
     if e:
         logger.exception(e)
         timeout_task.cancel()
-        refresh_task = bot.refresh_session()
-        if refresh_task:
-            await refresh_task
     if resp:
         return resp["message"]
     if e:
+        refresh_task = bot.refresh_session()
+        if refresh_task:
+            await refresh_task
         return config.response.error_format.format(exc=e)
 
 async def send_task(target: Union[Friend, Group], app: Ariadne, source: Source):
