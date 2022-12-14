@@ -23,9 +23,9 @@ cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channe
 
 cd ..
 ECHO 复制 mirai-http-api 配置信息...
-mkdir config
-mkdir config\net.mamoe.mirai-api-http
-copy files\mirai-http-api-settings.yml config\net.mamoe.mirai-api-http\setting.yml
+mkdir mirai\config
+mkdir mirai\config\net.mamoe.mirai-api-http
+copy files\mirai-http-api-settings.yml mirai\config\net.mamoe.mirai-api-http\setting.yml
 
 ECHO Mirai 初始化完毕。
 cd chatgpt
