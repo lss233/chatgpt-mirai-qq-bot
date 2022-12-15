@@ -31,12 +31,15 @@ try:
     
     logger.debug(f"获取到 cf_clearance {bot.config['cf_clearance']}")
     logger.debug(f"获取到 session_token {bot.config['session_token']}")
+
+    if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
+        Config.save_config(config)
+
 except Exception as e:
     logger.exception(e)
     logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议稍后重试。")
     exit(-1)
 
-Config.save_config(config)
 
 class ChatSession:
 
@@ -45,6 +48,7 @@ class ChatSession:
         self.target = target
         self.source = source
 
+        self.timeout_task = None
         self.reset_conversation()
 
     def reset_conversation(self):

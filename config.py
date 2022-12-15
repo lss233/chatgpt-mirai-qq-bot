@@ -136,14 +136,13 @@ class Config(BaseModel):
 
     @staticmethod
     def save_config(config: Config) -> Config:
-        if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
-            try:
-                with open("config.json", "rb") as f:
-                    guessed_json = from_bytes(f.read()).best()
-                with open("config.json", "wb") as f:
-                    logger.debug(f"配置文件编码 {guessed_json.encoding} {config.response.timeout_format}")
-                    parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
-                    f.write(parsed_json)
-            except Exception as e:
-                    logger.exception(e)
-                    logger.warning("配置保存失败。")
+        try:
+            with open("config.json", "rb") as f:
+                guessed_json = from_bytes(f.read()).best()
+            with open("config.json", "wb") as f:
+                logger.debug(f"配置文件编码 {guessed_json.encoding} {config.response.timeout_format}")
+                parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
+                f.write(parsed_json)
+        except Exception as e:
+                logger.exception(e)
+                logger.warning("配置保存失败。")
