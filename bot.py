@@ -1,12 +1,9 @@
 import os, sys
 sys.path.append(os.getcwd())
 
-import json
-import asyncio
 from io import BytesIO
 from typing import Union
 from typing_extensions import Annotated
-from charset_normalizer import from_bytes
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,

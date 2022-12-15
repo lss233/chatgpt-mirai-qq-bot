@@ -2,7 +2,7 @@ from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
 from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.message import Source
-from typing import Awaitable, Any, Dict, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 from config import Config
 from loguru import logger
 import os
@@ -67,10 +67,8 @@ class ChatSession:
         return True
 
     def jump_to_conversation(self, conversation_id, parent_id):
-        self.prev_conversation_id.append(conversation_id)
-        self.prev_parent_id.append(parent_id)
-        bot.conversation_id = conversation_id
-        bot.parent_id = parent_id
+        self.conversation_id = conversation_id
+        self.parent_id = parent_id
 
     async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
         self.__create_timeout_task()
