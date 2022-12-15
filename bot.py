@@ -61,11 +61,11 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
     if not e:
         resp, e = await chatbot.keyword_presets_process(session, message)
-        logger.debug(f"{session_id} - {resp}")
         if e:
             logger.exception(e)
         if resp:
-            return resp["message"]
+            logger.debug(f"{session_id} - {resp}")
+            return resp
 
     if not e:
         resp, e = await session.get_chat_response(message)

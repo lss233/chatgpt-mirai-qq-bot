@@ -52,14 +52,14 @@ class ChatSession:
         self.reset_conversation()
 
     def reset_conversation(self):
-        self.__cancle_timeout_task()
+        self.__cancel_timeout_task()
         self.conversation_id = None
         self.parent_id = generate_uuid()
         self.prev_conversation_id = []
         self.prev_parent_id = []
 
     def rollback_conversation(self) -> bool:
-        self.__cancle_timeout_task()
+        self.__cancel_timeout_task()
         if len(self.prev_parent_id) <= 0:
             return False
         self.conversation_id = self.prev_conversation_id.pop()
@@ -85,21 +85,21 @@ class ChatSession:
         try:
             async for resp in await bot.get_chat_response(message, output="stream"):
                 if final_resp is None:
-                    self.__cancle_timeout_task()
+                    self.__cancel_timeout_task()
                     logger.debug("已收到回应，正在接收中...")
                 
                 self.conversation_id = resp["conversation_id"]
                 self.parent_id = resp["parent_id"]
                 final_resp = resp
         except Exception as e:
-            self.__cancle_timeout_task()
+            self.__cancel_timeout_task()
             exception = e
 
         return final_resp, exception
     
-    def __cancle_timeout_task(self):
+    def __cancel_timeout_task(self):
         if self.timeout_task:
-            self.timeout_task.cancle()
+            self.timeout_task.cancel()
         self.timeout_task = None
 
     def __create_timeout_task(self):
