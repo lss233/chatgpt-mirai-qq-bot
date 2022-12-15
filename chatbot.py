@@ -126,6 +126,7 @@ def get_chat_session(id: str, app: Ariadne, target: Union[Friend, Group], source
 async def initial_process(session: ChatSession) -> Exception:
     exception = None
     try:
+        logger.debug("初始化处理中...")
         """
         例子：
         event = await session.app.send_message(session.target, '加载人设中...')

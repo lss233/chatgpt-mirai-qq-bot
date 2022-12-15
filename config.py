@@ -140,7 +140,7 @@ class Config(BaseModel):
             with open("config.json", "rb") as f:
                 guessed_json = from_bytes(f.read()).best()
             with open("config.json", "wb") as f:
-                logger.debug(f"配置文件编码 {guessed_json.encoding} {config.response.timeout_format}")
+                logger.debug(f"配置文件编码 {guessed_json.encoding}")
                 parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
                 f.write(parsed_json)
         except Exception as e:
