@@ -139,8 +139,8 @@ async def initial_process(session: ChatSession) -> Exception:
         """
         也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
         """
-        conv_id = '6909b2b7-2793-455b-af64-144d32195c6c'
-        pare_id = '883c2057-9d0f-4889-9483-69cfee20d03b'
+        conv_id = 'c56325ed-2ce6-443a-b66d-852afc12bc7d'
+        pare_id = 'c18dd20-c42c-4145-8e86-9ac8efdf4f57'
         session.jump_to_conversation(conv_id, pare_id)
     except Exception as e:
         exception = e
