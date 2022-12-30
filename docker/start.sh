@@ -1,8 +1,4 @@
 #!/bin/bash
 
-xpra start :99 --no-daemon --html=on &
-echo "Waiting for xpra to start"
-export DISPLAY=:99
-sleep 10
 cd /app
-python bot.py
+xpra start --no-daemon --html=on --start-child="xterm -e 'python bot.py 2>&1 | tee /tmp/log.txt'"  --exit-with-children
