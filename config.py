@@ -100,12 +100,6 @@ class Response(BaseModel):
     """响应时间过长时要发送的提醒"""
 
 class System(BaseModel):
-    auto_save_cf_clearance: bool = True
-    """自动保存 cf_clearance"""
-
-    auto_save_session_token: bool = False
-    """自动保存 session_token"""
-
     accept_group_invite: bool = False
     """自动接收邀请入群请求"""
 

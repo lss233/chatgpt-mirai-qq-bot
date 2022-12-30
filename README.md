@@ -135,8 +135,6 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
         "timeout_format": "我还在思考中，请再等一下~" // 超过响应时间时要发送的提醒
     },
     "system": {
-        "auto_save_cf_clearance": true, // 是否自动保存 cf_clearance
-        "auto_save_session_token": false, // 是否自动保存 session_token
         "accept_friend_request": false, // 是否自动接受好友请求
         "accept_group_invite": false // 是否自动接受加群邀请
     }
@@ -166,33 +164,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 ### 🚀 使用代理
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码）， 可以通过配置代理的方式来连接到 OpenAI。  
-
-代理有两种方式，分别为 反向代理 和 正向代理，你只需要配置其中一种方式即可。 
-
-#### 反向代理  
-
-使用反向代理方式访问 OpenAI, 你需要准备一个可以访问到 `chat.openai.com` 的代理网站。  
-
-这可以通过 cf worker / nginx 反向代理 / vercel 等来实现，在此不作赘述。
-
-> 可以参考： https://www.j000e.com/cloudflare/cfworkers_reverse_proxy.html  
->
->   你只需要代理 `chat.openai.com` 这一个域名即可。
-  
-在 `"openai"` 中加入一条 `"base_url": <你的反代URL>` 即可。  
-
-举个例子：
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
-        "base_url": "https://chatgpt.proxy.lss233.com/"
-    },
-    // 后面别的东西
-```
-
-之后，所有发往 `chat.openai.com` 的请求都会通过 `base_url` 中配置的地址发送。  
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码）， 可以通过配置代理的方式来连接到 OpenAI。   
 
 #### 正向代理  
 
@@ -210,22 +182,35 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     },
     // 后面别的东西
 ```
-### OpenAI 半自动登录
+### OpenAI 邮箱密码登录
 
-最新的版本支持在通过 CloudFlare 的防火墙验证之后，跳转到 ChatGPT 的登录页面进行登录。  
-
-如果您想要使用这个功能，请将 `session_token` 设置为空，像这样：
+目前支持使用邮箱、密码的方式登录 OpenAI，但你需要购买并使用 [2captcha](https://2captcha.com?from=16366923) 的验证码破解服务来解决验证码。
 
 举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "" // 没错，就这样
+        "email": "你的邮箱",
+        "password": "你的密码",
+        "captcha": "你的2Captcha API 密钥"
     },
     // 后面别的东西
 ```
 
-搭配下面的 `自动保存 cf_clearance / session_token` 功能，可以减少后续启动的时间。  
+### 微软账号登录
+
+你也可以通过微软账号登录：
+
+举个例子：
+```jsonc
+    // 前面别的东西
+    "openai": {
+        "email": "你的微软账号邮箱",
+        "password": "你的微软账号密码",
+        "isMicrosoftLogin": true
+    },
+    // 后面别的东西
+```
 
 ### OpenAI 手动登录
 
@@ -245,23 +230,6 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了，或者不正确。  
 
 注： `session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
-
-### 自动保存 cf_clearance / session_token
-
-现在我们支持在登录 OpenAI 之后，保存 `cf_clearance` 和 `session_token` 信息。  
-
-这可以让你不用每次启动程序的时候都打开浏览器进行验证。  
-
-如果你觉得这个功能给你带来了不便，可以关闭它。  
-
-```jsonc
-    // 前面别的东西
-    "system": {
-        "auto_save_cf_clearance": true, // 是否自动保存 cf_clearance
-        "auto_save_session_token": false, // 是否自动保存 session_token
-    },
-    // 后面别的东西
-```
 
 ## 📷 图片转文字
 

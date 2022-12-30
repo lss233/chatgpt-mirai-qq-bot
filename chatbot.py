@@ -24,27 +24,14 @@ try:
     bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
     logger.info("登录成功，保存登录信息中……")
 
-    if config.system.auto_save_session_token:
-        config.openai.session_token = bot.config["session_token"]
-
     logger.debug(f"获取到 session_token {bot.config['session_token']}")
 except Exception as e:
     logger.exception(e)
-    if e == str("local variable 'driver' referenced before assignment"):
+    if str(e) == "local variable 'driver' referenced before assignment":
         logger.error("无法启动，请检查是否安装了 chrome，或手动指定 chrome driver 的位置。")
     else:
         logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
     exit(-1)
-
-if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
-    with open("config.json", "wb") as f:
-        try:
-            logger.debug(f"配置文件编码 {guessed_json.encoding} {config.response.timeout_format}")
-            parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
-            f.write(parsed_json)
-        except Exception as e:
-            logger.exception(e)
-            logger.warning("配置保存失败")
 
 class ChatSession:
     def __init__(self):
