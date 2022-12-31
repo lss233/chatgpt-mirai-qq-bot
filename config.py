@@ -35,7 +35,7 @@ class OpenAIEmailAuth(OpenAIAuthBase):
     """OpenAI 注册邮箱"""
     password: str
     """OpenAI 密码"""
-    captcha: str
+    captcha: Union[str, None] = None
     """2Captcha API 密钥"""
     isMicrosoftLogin: bool = False
     """是否通过 Microsoft 登录"""
