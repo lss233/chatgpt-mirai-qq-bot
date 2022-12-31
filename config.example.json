@@ -1,21 +1,21 @@
 {
-    "mirai": {
-        "qq": 123456,
-        "api_key": "<mirai-http-api 中的 verifyKey>",
-        "http_url": "http://localhost:8080",
-        "ws_url": "http://localhost:8080"
-    },
-    "openai": {
-        "session_token": "SESSION_TOKEN",
-        "key": [
-
-        ]
-    },
-    "text_to_image": {
-        "font_size": 30,
-        "width": 700,
-        "font_path": "fonts/sarasa-mono-sc-regular.ttf",
-        "offset_x": 50,
-        "offset_y": 50
-    }
+  "mirai": {
+    "qq": 123456,
+    "api_key": "<mirai-http-api 中的 verifyKey>",
+    "http_url": "http://localhost:8080",
+    "ws_url": "http://localhost:8080"
+  },
+  "chatgpt": {
+    "session_token": "SESSION_TOKEN"
+  },
+  "openai": {
+    "api_key": []
+  },
+  "text_to_image": {
+    "font_size": 30,
+    "width": 700,
+    "font_path": "fonts/sarasa-mono-sc-regular.ttf",
+    "offset_x": 50,
+    "offset_y": 50
+  }
 }
