@@ -20,9 +20,9 @@ import uuid
 # Kira
 import random
 import pathlib
-from utils.Chat import Utils, Usage, Header, rqParser
-from utils.Data import DefaultData
-from utils.Detect import Censor, DFA
+from tools.Chat import Utils, Usage, Header, rqParser
+from tools.Data import DefaultData
+from tools.Detect import Censor, DFA
 
 urlForm = {
     "Danger.form": [
@@ -41,7 +41,7 @@ if not pathlib.Path("./Config/Danger.form").exists():
 # 过滤器
 ContentDfa = DFA(path="./Config/Danger.form")
 
-# from utils.Data import Api_keys
+# from tools.Data import Api_keys
 # 因为架构不同不能使用这个 api key 管理器
 
 with open("config.json", "rb") as f:
