@@ -6,7 +6,10 @@
         "ws_url": "http://localhost:8080"
     },
     "openai": {
-        "session_token": "SESSION_TOKEN"
+        "session_token": "SESSION_TOKEN",
+        "key": [
+
+        ]
     },
     "text_to_image": {
         "font_size": 30,
