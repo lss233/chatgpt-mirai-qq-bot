@@ -9,7 +9,16 @@
     "session_token": "SESSION_TOKEN"
   },
   "openai": {
-    "api_key": []
+    "api_key": [],
+    "plugin": {
+      "duckgo": "",
+      "search": [
+        "https://www.bing.cn/search?form=MOZLBR&pc=MOZI&q={}"
+      ],
+      "time": "",
+      "week": ""
+    },
+    "token_limit": 500
   },
   "text_to_image": {
     "font_size": 30,

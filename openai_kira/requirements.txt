@@ -1,0 +1,11 @@
+httpx
+redis
+nltk
+Pillow
+numpy
+jieba
+transformers
+beautifulsoup4
+pydantic
+loguru
+elara

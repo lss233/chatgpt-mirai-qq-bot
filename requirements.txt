@@ -1,3 +1,13 @@
 graia-ariadne==0.10.2
 revChatGPT==0.0.48.2
 Pillow>=9.3.0
+httpx
+redis
+nltk
+numpy
+jieba
+transformers
+beautifulsoup4
+pydantic
+loguru
+elara
