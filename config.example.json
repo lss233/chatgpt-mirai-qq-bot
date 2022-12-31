@@ -1,18 +1,30 @@
 {
-    "mirai": {
-        "qq": 123456,
-        "api_key": "<mirai-http-api 中的 verifyKey>",
-        "http_url": "http://localhost:8080",
-        "ws_url": "http://localhost:8080"
+  "mirai": {
+    "qq": 123456,
+    "api_key": "<mirai-http-api 中的 verifyKey>",
+    "http_url": "http://localhost:8080",
+    "ws_url": "http://localhost:8080"
+  },
+  "chatgpt": {
+    "session_token": "SESSION_TOKEN"
+  },
+  "openai": {
+    "api_key": [],
+    "plugin": {
+      "duckgo": "",
+      "search": [
+        "https://www.bing.cn/search?form=MOZLBR&pc=MOZI&q={}"
+      ],
+      "time": "",
+      "week": ""
     },
-    "openai": {
-        "session_token": "SESSION_TOKEN"
-    },
-    "text_to_image": {
-        "font_size": 30,
-        "width": 700,
-        "font_path": "fonts/sarasa-mono-sc-regular.ttf",
-        "offset_x": 50,
-        "offset_y": 50
-    }
+    "token_limit": 500
+  },
+  "text_to_image": {
+    "font_size": 30,
+    "width": 700,
+    "font_path": "fonts/sarasa-mono-sc-regular.ttf",
+    "offset_x": 50,
+    "offset_y": 50
+  }
 }

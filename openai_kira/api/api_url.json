@@ -1,0 +1,106 @@
+{
+  "v1": {
+    "completions": {
+      "desc": "write",
+      "url": "https://api.openai.com/v1/completions",
+      "params": {
+        "model": {
+          "type": "string",
+          "intro": "ID of the model to use.",
+          "must": true,
+          "Defaults": ""
+        },
+        "prompt": {
+          "type": "string,array",
+          "intro": "The prompt(s) to generate completions for, encoded as a string, array of strings, array of tokens, or array of token arrays.",
+          "must": false,
+          "Defaults": ""
+        },
+        "suffix": {
+          "type": "string,array",
+          "intro": "The suffix that comes after a completion of inserted text.",
+          "must": false,
+          "Defaults": ""
+        },
+        "temperature": {
+          "type": "number",
+          "intro": "What sampling temperature to use. ",
+          "must": false,
+          "Defaults": 1
+        },
+        "max_tokens": {
+          "type": "integer",
+          "intro": "The maximum number of tokens to generate in the completion.",
+          "must": false,
+          "Defaults": 16
+        },
+        "top_p": {
+          "type": "number",
+          "intro": "An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.",
+          "must": false,
+          "Defaults": 1
+        },
+        "n": {
+          "type": "integer",
+          "intro": "How many completions to generate for each prompt.",
+          "must": false,
+          "Defaults": 1
+        },
+        "stream": {
+          "type": "string",
+          "intro": "Whether to stream back partial progress.",
+          "must": false,
+          "Defaults": false
+        },
+        "logprobs": {
+          "type": "boolean",
+          "intro": "Include the log probabilities on the logprobs most likely tokens, as well the chosen tokens. ",
+          "must": false,
+          "Defaults": false
+        },
+        "echo": {
+          "type": "boolean",
+          "intro": "Echo back the prompt in addition to the completion",
+          "must": false,
+          "Defaults": false
+        },
+        "stop": {
+          "type": "string,array",
+          "intro": "Up to 4 sequences where the API will stop generating further tokens. ",
+          "must": false,
+          "Defaults": ""
+        },
+        "presence_penalty": {
+          "type": "number",
+          "intro": "Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.",
+          "must": false,
+          "Defaults": 0
+        },
+        "frequency_penalty": {
+          "type": "number",
+          "intro": "Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.",
+          "must": false,
+          "Defaults": 0
+        },
+        "best_of": {
+          "type": "integer",
+          "intro": "Generates best_of completions server-side and returns the best (the one with the highest log probability per token). Results cannot be streamed.",
+          "must": false,
+          "Defaults": 1
+        },
+        "logit_bias": {
+          "type": "map",
+          "intro": "Modify the likelihood of specified tokens appearing in the completion.",
+          "must": false,
+          "Defaults": {}
+        },
+        "user": {
+          "type": "string",
+          "intro": "A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.",
+          "must": false,
+          "Defaults": ""
+        }
+      }
+    }
+  }
+}

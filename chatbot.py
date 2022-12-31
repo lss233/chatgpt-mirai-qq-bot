@@ -12,7 +12,7 @@ with open("config.json", "rb") as f:
     guessed_json = from_bytes(f.read()).best()
     if not guessed_json:
         raise ValueError("无法识别 JSON 格式!")
-    
+
     config = Config.parse_obj(json.loads(str(guessed_json)))
 # Refer to https://github.com/acheong08/ChatGPT
 try:
@@ -20,8 +20,7 @@ try:
     logger.info("请在新打开的浏览器窗口中完成验证")
     if 'XPRA_PASSWORD' in os.environ:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
-    
-    bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
+    bot = Chatbot(config=config.chatgpt.dict(exclude_none=True, by_alias=False), conversation_id=None)
     logger.info("登录成功，保存登录信息中……")
 
     logger.debug(f"获取到 session_token {bot.config['session_token']}")

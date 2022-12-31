@@ -92,7 +92,7 @@ class Response(BaseModel):
 
     quote: bool = True
     """是否回复触发的那条消息"""
-    
+
     timeout: float = 30.0
     """发送提醒前允许的响应时间"""
 
@@ -108,7 +108,8 @@ class System(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAIEmailAuth, OpenAISessionTokenAuth]
+    chatgpt: Union[OpenAIEmailAuth, OpenAISessionTokenAuth]
+    openai: list
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
