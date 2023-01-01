@@ -22,9 +22,6 @@ try:
 
     logger.debug(f"获取到 session_token {bot.config['session_token']}")
 
-    if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
-        Config.save_config(config)
-
 except Exception as e:
     logger.exception(e)
 
