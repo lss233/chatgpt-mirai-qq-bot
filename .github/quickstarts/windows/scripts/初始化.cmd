@@ -48,6 +48,7 @@ ECHO 接下来将会打开 config.json，请修改里面的信息。
 cd %BASE_DIR%\chatgpt
 COPY config.example.json config.json
 notepad config.json
+cd %BASE_DIR%
 
 COPY %BASE_DIR%\files\scripts\启动.cmd .
 ECHO 接下来请执行 启动.cmd 开始使用吧！

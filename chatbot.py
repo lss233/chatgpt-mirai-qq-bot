@@ -1,12 +1,11 @@
-from revChatGPT.revChatGPT import AsyncChatbot, generate_uuid
-from graia.ariadne.app import Ariadne
-from graia.ariadne.model import Friend, Group
-from graia.ariadne.message import Source
-from typing import Any, Dict, Tuple, Union
+from revChatGPT.ChatGPT import Chatbot
+from charset_normalizer import from_bytes
+from typing import Awaitable, Any, Dict, Tuple
 from config import Config
 from loguru import logger
 import os
 import asyncio
+import uuid
 
 config = Config.load_config()
 # Refer to https://github.com/acheong08/ChatGPT
@@ -16,20 +15,9 @@ try:
     if 'XPRA_PASSWORD' in os.environ:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
 
-    bot = AsyncChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None, base_url=config.openai.base_url)
-    if not "cf_clearance" in bot.config:
-        asyncio.run(bot.refresh_session())
+    bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
+    logger.info("登录成功，保存登录信息中……")
 
-    logger.info("登录成功，保存登录信息中...")
-
-    if config.system.auto_save_cf_clearance:
-        config.openai.cf_clearance = bot.config["cf_clearance"]
-        config.openai.user_agent = bot.config["user_agent"]
-
-    if config.system.auto_save_session_token:
-        config.openai.session_token = bot.config["session_token"]
-    
-    logger.debug(f"获取到 cf_clearance {bot.config['cf_clearance']}")
     logger.debug(f"获取到 session_token {bot.config['session_token']}")
 
     if config.system.auto_save_cf_clearance or config.system.auto_save_session_token:
@@ -37,7 +25,11 @@ try:
 
 except Exception as e:
     logger.exception(e)
-    logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议稍后重试。")
+
+    if str(e) == "local variable 'driver' referenced before assignment":
+        logger.error("无法启动，请检查是否安装了 chrome，或手动指定 chrome driver 的位置。")
+    else:
+        logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
     exit(-1)
 
 
@@ -54,7 +46,7 @@ class ChatSession:
     def reset_conversation(self):
         self.__cancel_timeout_task()
         self.conversation_id = None
-        self.parent_id = generate_uuid()
+        self.parent_id = str(uuid.uuid4())
         self.prev_conversation_id = []
         self.prev_parent_id = []
 
@@ -81,14 +73,9 @@ class ChatSession:
         final_resp = None
         exception = None
         try:
-            async for resp in await bot.get_chat_response(message, output="stream"):
-                if final_resp is None:
-                    self.__cancel_timeout_task()
-                    logger.debug("已收到回应，正在接收中...")
-                
-                self.conversation_id = resp["conversation_id"]
-                self.parent_id = resp["parent_id"]
-                final_resp = resp
+            final_resp = bot.ask(message)
+            self.conversation_id = final_resp["conversation_id"]
+            self.parent_id = final_resp["parent_id"]
         except Exception as e:
             self.__cancel_timeout_task()
             exception = e

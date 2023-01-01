@@ -22,14 +22,14 @@ class OpenAIAuthBase(BaseModel):
     """可选的验证头"""
     proxy: Union[str, None] = None
     """可选的代理地址"""
-    base_url: str = "https://chat.openai.com/"
-    """OpenAI 地址，可以填入反向代理"""
-
-    cf_clearance: Union[str, None] = None
-    """CloudFlare 验证 cookie"""
-
-    user_agent: Union[str, None] = None
-    """访问 OpenAI 使用的浏览器 UserAgent"""
+    driver_exec_path: Union[str, None] = None
+    """可选的 Chromedriver 路径"""
+    browser_exec_path: Union[str, None] = None
+    """可选的 Chrome 浏览器路径"""
+    conversation: Union[str, None] = None
+    """初始化对话所使用的UUID"""
+    verbose: bool = False
+    """启用详尽日志模式"""
 
     class Config(BaseConfig):
         extra = Extra.allow
@@ -39,6 +39,10 @@ class OpenAIEmailAuth(OpenAIAuthBase):
     """OpenAI 注册邮箱"""
     password: str
     """OpenAI 密码"""
+    captcha: Union[str, None] = None
+    """2Captcha API 密钥"""
+    isMicrosoftLogin: bool = False
+    """是否通过 Microsoft 登录"""
 
 class OpenAISessionTokenAuth(OpenAIAuthBase):
     session_token: str
@@ -100,12 +104,6 @@ class Response(BaseModel):
     """响应时间过长时要发送的提醒"""
 
 class System(BaseModel):
-    auto_save_cf_clearance: bool = True
-    """自动保存 cf_clearance"""
-
-    auto_save_session_token: bool = False
-    """自动保存 session_token"""
-
     accept_group_invite: bool = False
     """自动接收邀请入群请求"""
 
