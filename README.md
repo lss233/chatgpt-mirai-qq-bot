@@ -169,7 +169,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     "openai": {
         "email": "你的邮箱",
         "password": "你的密码",
-        "captcha": "你的2Captcha API 密钥"
+        "captcha": "你的 2Captcha API 密钥"
     },
     // 后面别的东西
 ```
@@ -195,7 +195,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 ```jsonc
     // 前面别的东西
     "openai": {
-        // 在前面提及的登录方式中选一种，然后加上 proxy。别忘了处理逗号
+        // 在前面提及的登录方式中选一种，然后加上 proxy，填写你的代理服务器地址。别忘了处理 json 逗号
         "proxy": "http://localhost:1080"
     },
     // 后面别的东西
