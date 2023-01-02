@@ -61,7 +61,7 @@ class ChatSession:
         self.conversation_id = conversation_id
         self.parent_id = parent_id
 
-    async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
+    async def get_chat_response(self, message) -> str:
         self.__create_timeout_task()
 
         self.prev_conversation_id.append(self.conversation_id)
@@ -70,16 +70,13 @@ class ChatSession:
         bot.parent_id = self.parent_id
 
         final_resp = None
-        exception = None
         try:
             final_resp = bot.ask(message)
             self.conversation_id = final_resp["conversation_id"]
             self.parent_id = final_resp["parent_id"]
-        except Exception as e:
+        finally:
             self.__cancel_timeout_task()
-            exception = e
-
-        return final_resp, exception
+        return final_resp
     
     def __cancel_timeout_task(self):
         if self.timeout_task:
@@ -107,57 +104,45 @@ def get_chat_session(id: str, app: Ariadne, target: Union[Friend, Group], source
     return __sessions[id], is_new_session
 
 """有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def initial_process(session: ChatSession) -> Exception:
-    exception = None
-    try:
-        logger.debug("初始化处理中...")
-        """
-        例子：
-        event = await session.app.send_message(session.target, '加载人设中...')
-        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await session.app.send_message(session.target, '加载人设中(1/3)')
-        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await session.app.send_message(session.target, '加载人设中(2/3)')
-        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        event = await session.app.send_message(session.target, '加载人设完毕')
-        """
+async def initial_process(session: ChatSession):
+    logger.debug("初始化处理中...")
+    """
+    例子：
+    event = await session.app.send_message(session.target, '加载人设中...')
+    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+    event = await session.app.send_message(session.target, '加载人设中(1/3)')
+    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+    event = await session.app.send_message(session.target, '加载人设中(2/3)')
+    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+    event = await session.app.send_message(session.target, '加载人设完毕')
+    """
 
-        """
-        也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
-        """
+    """
+    也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
+    """
 
-        """
-        conv_id = 'c56325ed-2ce6-443a-b66d-852afc12bc7d'
-        pare_id = 'c18dd20-c42c-4145-8e86-9ac8efdf4f57'
-        session.jump_to_conversation(conv_id, pare_id)
-        """
-
-    except Exception as e:
-        exception = e
-
-    return exception
+    """
+    conv_id = 'c56325ed-2ce6-443a-b66d-852afc12bc7d'
+    pare_id = 'c18dd20-c42c-4145-8e86-9ac8efdf4f57'
+    session.jump_to_conversation(conv_id, pare_id)
+    """
 
 """有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def keyword_presets_process(session: ChatSession, message: str) -> Tuple[Union[str, None], Exception]:
-    exception = None
-    try:
-        """
-        例子：
-        keyword = message.strip()
-        if keyword == '某个字符':
-            event = await session.app.send_message(session.target, '猫娘加载中...')
-            resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-            return '猫娘加载完毕'
-        elif keyword == '某个字符2':
-            event = await session.app.send_message(session.target, '猫娘加载中...')
-            resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-            return '猫娘加载完毕'
-        """
+async def keyword_presets_process(session: ChatSession, message: str) -> Union[str, None]:
+    """
+    例子：
+    keyword = message.strip()
+    if keyword == '某个字符':
+        event = await session.app.send_message(session.target, '猫娘加载中...')
+        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+        return '猫娘加载完毕'
+    elif keyword == '某个字符2':
+        event = await session.app.send_message(session.target, '猫娘加载中...')
+        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
+        return '猫娘加载完毕'
+    """
 
-        """
-        也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
-        """
-    except Exception as e:
-        exception = e
-    
-    return None, exception
+    """
+    也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
+    """    
+    return None

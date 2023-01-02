@@ -41,42 +41,41 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
     bot = chatbot.bot
     resp = None
-    e = None
-
-    session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
-    if is_new_session:
-        e = await chatbot.initial_process(session)
-
-    if not e and message.strip() in config.trigger.reset_command:
-        session.reset_conversation()
-        e = await chatbot.initial_process(session)
-        if not e:
+    try:
+        session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
+            
+        # 重置会话
+        if message.strip() in config.trigger.reset_command:
+            session.reset_conversation()
+            await chatbot.initial_process(session)
             return config.response.reset
+                    
+        # 新会话
+        if is_new_session:
+            await chatbot.initial_process(session)
         
-    if not e and message.strip() in config.trigger.rollback_command:
-        return config.response.rollback_success if session.rollback_conversation() else config.response.rollback_fail
+        # 回滚
+        if message.strip() in config.trigger.rollback_command:
+            return config.response.rollback_success if session.rollback_conversation() else config.response.rollback_fail
 
-    if not e:
-        resp, e = await chatbot.keyword_presets_process(session, message)
-        if e:
-            logger.exception(e)
+        # 加载关键词人设
+        resp = await chatbot.keyword_presets_process(session, message)
         if resp:
             logger.debug(f"{session_id} - {resp}")
             return resp
-
-    if not e:
-        resp, e = await session.get_chat_response(message)
-        if e:
-            logger.exception(e)
+        # 正常交流
+        resp = await session.get_chat_response(message)
         if resp:
             logger.debug(f"{session_id} - {resp}")
             return resp["message"]
-        
-    if e:
+    except Exception as e:
+        # 出现故障，刷新 session_token
+        logger.exception(e)
         refresh_task = bot.refresh_session()
-        if refresh_task:
+        if refresh_task: # 这么写主要是因为上游偶尔返回的是一个 promise
             await refresh_task
         return config.response.error_format.format(exc=e)
+
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
