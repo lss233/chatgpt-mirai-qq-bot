@@ -1,8 +1,12 @@
 # ChatGPT Mirai QQ Bot
 
-一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！  
+[TOC]
 
-基于
+**一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！ **
+
+***
+
+基于：
  - [Ariadne](https://github.com/GraiaProject/Ariadne)
  - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
  - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
@@ -25,7 +29,7 @@
 
 <details>
     <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai, 新人推荐)</summary>
-    
+
 我们使用 `docker-compose.yaml` 整合了 [ttionya/mirai-http](https://github.com/ttionya/mirai-http-docker) 和本项目来实现快速部署。  
 
 但是在部署过程中仍然需要一些步骤来进行配置。  
@@ -38,7 +42,7 @@
 
 <details>
     <summary>Linux: 通过 Docker 部署 （适合已经有 Mirai 的用户)</summary>
-  
+
 1. 找个合适的位置，写你的 `config.json`。
 
 2.  执行以下命令，启动 bot：
@@ -69,7 +73,7 @@ docker run --name mirai-chatgpt-bot \
 
 提示：你需要 Python >= 3.9 才能运行本项目  
 
-1. 部署 Mirai ，安装 mirai-http-api 插件
+1. 部署 Mirai ，安装 mirai-http-api 插件。
 
 2. 下载本项目:
 ```bash
@@ -78,7 +82,7 @@ cd chatgpt-mirai-qq-bot
 pip3 install -r requirements.txt
 ```
 
-3. 重命名 `config.example.json` 为 `config.json`, 更改里面的配置.  
+3. 参照下文调整配置文件。
 
 
 4. 启动 bot.
@@ -88,15 +92,16 @@ python3 bot.py
 </details>
 
 
+
 ## ⚙ 配置文件
 
-你可以参考 `config.example.json` 来写配置文件。   
+你可以参考 `config.example.json` 调整配置文件，调整完毕后，将其重命名为 `config.json`。   
 
 配置文件主要包含 mirai-http-api 的连接信息和 OpenAI 的登录信息。
 
 OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html  
 
-OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup).  
+OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup)。
 
 **！！请注意！！ 不要把 `//` 开头的注释也抄进去了！**  
 
@@ -138,39 +143,16 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
         "accept_friend_request": false, // 是否自动接受好友请求
         "accept_group_invite": false // 是否自动接受加群邀请
     }
-}
-```
-
-```jsonc
-    // 下面展示的是 `trigger` 的默认配置，对应那行的 key 不存在就会自动使用这个
-    "trigger": {
-        "prefix": [""],
-        "require_mention": "at",
-        "reset_command": ["重置会话"],
-        "rollback_command": ["回滚对话"]
-    },
-    // 下面展示的是 `response` 的默认配置，对应那行的 key 不存在就会自动使用这个
-    "response": {
-        "placeholder": "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。",
-        "reset": "会话已重置。",
-        "rollback_success": "已回滚至上一条对话，你刚刚发的我就忘记啦！",
-        "rollback_fail": "回滚失败，没有更早的记录了！",
-        "error_format": "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n{exc}",
-        "quote": true,
-        "timeout": 30,
-        "timeout_format": "我还在思考中，请再等一下~"
-    },
 ```
 
 ### 🚀 使用代理
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码）， 可以通过配置代理的方式来连接到 OpenAI。   
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码），可以通过配置代理的方式来连接到 OpenAI。  
 
 #### 正向代理  
 
 使用正向代理方式访问 OpenAI, 你需要在运行本项目的主机上有一个可以访问的 HTTTP/HTTPS 代理服务器。  
 
-  
 在 `"openai"` 中加入一条 `"proxy": <你的代理服务器地址>` 即可。  
 
 举个例子：

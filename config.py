@@ -1,6 +1,10 @@
+from __future__ import annotations
 from typing import List, Union, Literal
-
 from pydantic import BaseModel, BaseConfig, Extra, Field
+from charset_normalizer import from_bytes
+from loguru import logger
+import sys
+import json
 
 
 class Mirai(BaseModel):
@@ -113,3 +117,30 @@ class Config(BaseModel):
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
+
+    @staticmethod
+    def load_config() -> Config:
+        try:
+            with open("config.json", "rb") as f:
+                guessed_json = from_bytes(f.read()).best()
+                if not guessed_json:
+                    raise ValueError("无法识别 JSON 格式！")
+                
+                return Config.parse_obj(json.loads(str(guessed_json)))
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
+            exit(-1)
+
+    @staticmethod
+    def save_config(config: Config) -> Config:
+        try:
+            with open("config.json", "rb") as f:
+                guessed_json = from_bytes(f.read()).best()
+            with open("config.json", "wb") as f:
+                logger.debug(f"配置文件编码 {guessed_json.encoding}")
+                parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
+                f.write(parsed_json)
+        except Exception as e:
+                logger.exception(e)
+                logger.warning("配置保存失败。")

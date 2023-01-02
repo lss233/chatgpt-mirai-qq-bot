@@ -1,8 +1,9 @@
 import os, sys
 sys.path.append(os.getcwd())
-import asyncio
-from charset_normalizer import from_bytes
+
+from io import BytesIO
 from typing import Union
+from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,
@@ -13,86 +14,83 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
-import chatbot
 from loguru import logger
+
+import chatbot
 from config import Config
-import json
 from text_to_img import text_to_image
-from io import BytesIO
 
-try:
-    with open("config.json", "rb") as f:
-        guessed_json = from_bytes(f.read()).best()
-        if not guessed_json:
-            raise ValueError("无法识别 JSON 格式!")
-        
-        config = Config.parse_obj(json.loads(str(guessed_json)))
-except Exception as e:
-    logger.exception(e)
-    logger.error("配置文件有误，请重新修改！")
 
+config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
-        config.mirai.qq,  # 你的机器人的 qq 号
-        config.mirai.api_key,  # 填入 VerifyKey
+        config.mirai.qq,  # 配置详见 config.json
+        config.mirai.api_key,
         HttpClientConfig(host=config.mirai.http_url),
         WebsocketClientConfig(host=config.mirai.ws_url),
     ),
 )
 
-async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> str:
+async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    
     if not message.strip():
         return config.response.placeholder
+
     bot = chatbot.bot
-    session = chatbot.get_chat_session(id)
-    if message.strip() in config.trigger.reset_command:
-        timeout_task.cancel()
-        session.reset_conversation()
-        return config.response.reset
-    if message.strip() in config.trigger.rollback_command:
-        timeout_task.cancel()
-        if session.rollback_conversation():
-            return config.response.rollback_success
-        else:
-            return config.response.rollback_fail
-    resp, e = await session.get_chat_response(message)
-    logger.debug(f"{id} - {resp}")
-    timeout_task.cancel()
-    if e:
+    resp = None
+    try:
+        session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
+            
+        # 重置会话
+        if message.strip() in config.trigger.reset_command:
+            session.reset_conversation()
+            await chatbot.initial_process(session)
+            return config.response.reset
+                    
+        # 新会话
+        if is_new_session:
+            await chatbot.initial_process(session)
+        
+        # 回滚
+        if message.strip() in config.trigger.rollback_command:
+            return config.response.rollback_success if session.rollback_conversation() else config.response.rollback_fail
+
+        # 加载关键词人设
+        resp = await chatbot.keyword_presets_process(session, message)
+        if resp:
+            logger.debug(f"{session_id} - {resp}")
+            return resp
+        # 正常交流
+        resp = await session.get_chat_response(message)
+        if resp:
+            logger.debug(f"{session_id} - {resp}")
+            return resp["message"]
+    except Exception as e:
+        # 出现故障，刷新 session_token
         logger.exception(e)
-        timeout_task.cancel()
-    if resp:
-        return resp["message"]
-    if e:
         refresh_task = bot.refresh_session()
-        if refresh_task:
+        if refresh_task: # 这么写主要是因为上游偶尔返回的是一个 promise
             await refresh_task
         return config.response.error_format.format(exc=e)
 
-async def send_task(target: Union[Friend, Group], app: Ariadne, source: Source):
-    await asyncio.sleep(config.response.timeout)
-    await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
-    task = asyncio.create_task(send_task(friend, app, source))
-    response = await handle_message(f"friend-{friend.id}", chain.display, task)
+    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
     await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]
 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    task = asyncio.create_task(send_task(group, app, source))
-    response = await handle_message(f"group-{group.id}", chain.display, task)
+    response = await handle_message(group, f"group-{group.id}", chain.display, source)
     event = await app.send_message(group, response)
-    if(event.source.id < 0):
+    if event.source.id < 0:
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
