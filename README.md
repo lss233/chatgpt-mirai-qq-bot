@@ -1,8 +1,6 @@
 # ChatGPT Mirai QQ Bot
 
-[TOC]
-
-**一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！ **
+**一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**
 
 ***
 
@@ -15,8 +13,9 @@
 * [x] 文字转图片发送  
 * [x] 群聊回复引用
 * [x] 关键词触发回复
-* [x] 反向代理/正向代理
+* [x] 正向代理
 * [x] 多种方式登录 OpenAI
+* [x] 预设人格初始化
 
 
 [交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 遇到问题请发日志和配置文件  
