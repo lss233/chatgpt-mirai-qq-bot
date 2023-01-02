@@ -71,7 +71,8 @@ class ChatSession:
 
         final_resp = None
         try:
-            final_resp = bot.ask(message)
+            loop = asyncio.get_event_loop()
+            final_resp = await loop.run_in_executor(None, bot.ask, message)
             self.conversation_id = final_resp["conversation_id"]
             self.parent_id = final_resp["parent_id"]
         finally:
