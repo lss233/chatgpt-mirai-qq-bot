@@ -94,7 +94,7 @@ python3 bot.py
 
 ## ⚙ 配置文件
 
-你可以参考 `config.example.json` 调整配置文件，调整完毕后，将其重命名为 `config.json`。   
+参考 `config.example.json` 调整配置文件。将其复制为 `config.json`，然后修改 `config.json`。
 
 配置文件主要包含 mirai-http-api 的连接信息和 OpenAI 的登录信息。
 
@@ -144,30 +144,26 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     }
 ```
 
-### 🚀 使用代理
+### Session 登录
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了（需要验证码），可以通过配置代理的方式来连接到 OpenAI。  
+指定 `session_token` 手动登录是**最简单直接**的登录方式，大概率能解决`Captcha detect`、 `State not found` 等各种问题：
 
-#### 正向代理  
-
-使用正向代理方式访问 OpenAI, 你需要在运行本项目的主机上有一个可以访问的 HTTTP/HTTPS 代理服务器。  
-
-在 `"openai"` 中加入一条 `"proxy": <你的代理服务器地址>` 即可。  
-
-举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
-        "proxy": "http://localhost:1080"
+        "session_token": "一串ey开头的很长的东西..." // 注意， ey 开头的可能有两个，别复制错了！
     },
     // 后面别的东西
 ```
+
+请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
+
+如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了或者不正确。`session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
+
 ### OpenAI 邮箱密码登录
 
-目前支持使用邮箱、密码的方式登录 OpenAI，但你需要购买并使用 [2captcha](https://2captcha.com?from=16366923) 的验证码破解服务来解决验证码。
+支持使用 OpenAI 邮箱、密码的方式登录，但你需要购买并使用 [2captcha](https://2captcha.com?from=16366923) 的验证码破解服务来解决验证码：
 
-举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
@@ -180,9 +176,8 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 ### 微软账号登录
 
-你也可以通过微软账号登录：
+支持使用微软账号登录：
 
-举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
@@ -193,28 +188,22 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     // 后面别的东西
 ```
 
-### OpenAI 手动登录
+### 使用正向代理
 
-`Captcha detect`、 `State not found` 等各种问题，都可以通过指定 `session_token` 手动登录。
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
 
-举个例子：
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "一串ey开头的很长的东西..." // 注意， ey 开头的可能有两个，别复制错了！
+        // 在前面提及的登录方式中选一种，然后加上 proxy。别忘了处理逗号
+        "proxy": "http://localhost:1080"
     },
     // 后面别的东西
 ```
 
-请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
-
-如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了，或者不正确。  
-
-注： `session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
-
 ## 📷 图片转文字
 
-本项目会在向 QQ 群发送消息失败时，自动将消息转为图片发送。  
+向 QQ 群发送消息失败时，自动将消息转为图片发送。  
 
 字体文件存放于 `fonts/` 目录中。  
 
