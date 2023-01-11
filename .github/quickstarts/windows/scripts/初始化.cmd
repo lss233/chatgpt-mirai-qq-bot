@@ -39,10 +39,12 @@ cd %BASE_DIR%\chatgpt\python3.9
 
 ECHO 安装依赖...
 cd %BASE_DIR%\chatgpt
-%PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
-ECHO 初始化 playwright
-%PYTHON_EXECUTABLE% -m playwright install
+REM 如果下载的依赖不是最新版
+REM 请修改 https://mirrors.aliyun.com/pypi/simple/ 为 https://pypi.org/simple/
+REM 然后重新执行
+
+%PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
 ECHO 接下来将会打开 config.json，请修改里面的信息。
 cd %BASE_DIR%\chatgpt
@@ -50,6 +52,8 @@ COPY config.example.json config.json
 notepad config.json
 cd %BASE_DIR%
 
-COPY %BASE_DIR%\files\scripts\启动.cmd .
-ECHO 接下来请执行 启动.cmd 开始使用吧！
+COPY %BASE_DIR%\files\scripts\启动ChatGPT.cmd .
+COPY %BASE_DIR%\files\scripts\启动Mirai.cmd .
+ECHO 接下来请先执行 启动Mirai.cmd 并登录机器人 QQ
+ECHO 然后执行 启动ChatGPT.cmd，然后就可以开始使用了！
 pause
