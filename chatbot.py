@@ -8,25 +8,55 @@ from loguru import logger
 import os
 import asyncio
 import uuid
+from time import sleep
+from selenium.common.exceptions import TimeoutException
 
 config = Config.load_config()
-# Refer to https://github.com/acheong08/ChatGPT
+
+# Inherited it because we need some modification
+class BlowUpDeliberatelyException(Exception):
+    pass
+class mChatbot(Chatbot):
+    def __init__(self, config, conversation_id=None, parent_id=None) -> None:
+        if not config.get("captcha"):
+            config["captcha"] = 'manual'
+
+        super().__init__(config, conversation_id, parent_id)
+    def solve_captcha(self, *args, **kwargs) -> str:
+        if self.twocaptcha_key == 'manual':
+            return self._solve_captcha_manual(*args, **kwargs)
+        return super().solve_captcha(*args, **kwargs)
+    
+    def _solve_captcha_manual(self):
+        class _:
+            def get(_self, key):
+                while not self.session_cookie_found:
+                    logger.info("等待中，请在打开的浏览器页面中完成登录……")
+                    sleep(5)
+                raise BlowUpDeliberatelyException()
+        return _()
+
 try:
     logger.info("登录 OpenAI 中...")
     logger.info("请在新打开的浏览器窗口中完成验证。")
     if 'XPRA_PASSWORD' in os.environ:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
 
-    bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
+    bot = mChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
     logger.info("登录成功，保存登录信息中……")
 
     logger.debug(f"获取到 session_token {bot.config['session_token']}")
+except BlowUpDeliberatelyException:
+    logger.info("登录成功！")
 
 except Exception as e:
     logger.exception(e)
 
     if str(e) == "local variable 'driver' referenced before assignment":
-        logger.error("无法启动，请检查是否安装了 chrome，或手动指定 chrome driver 的位置。")
+        logger.error("无法启动，请检查是否安装了 Chrome，或手动指定 Chromedriver 的位置")
+        logger.error("参考资料：https://github.com/acheong08/ChatGPT/wiki/Setup#dependencies")
+    elif e is TimeoutException:
+        logger.error("等待超时：没有在规定时间内完成登录。")
     else:
         logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
     exit(-1)

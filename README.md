@@ -162,14 +162,39 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 ### OpenAI 邮箱密码登录
 
-支持使用 OpenAI 邮箱、密码的方式登录，但你需要购买并使用 [2captcha](https://2captcha.com?from=16366923) 的验证码破解服务来解决验证码：
+支持使用 OpenAI 邮箱、密码的方式登录。  
+
+在启动时，我们会打开一个浏览器，   
+
+当你使用这种方式登录时，需要在打开的浏览器页面中完成 OpenAI 的登录。  
+
+您需要点击页面中的 `Log in` 按钮，我们会自动为您填写 `email`，剩下的需要您自己完成。
+
+登录完成后，浏览器会自动退出。
+
+```jsonc
+    // 前面别的东西
+    "openai": {
+        "email": "你的邮箱",
+        "password": "随便填"
+    },
+    // 后面别的东西
+```
+
+#### 使用第三方服务自动填写验证码
+
+我们的依赖 revChatGPT 支持通过第三方服务 [2Captcha](https://2captcha.com?from=16366923) 
+来实现自动填写验证码，如果您愿意使用这种方式，可以填写 2Chaptcha 的 API 密钥来开启这一功能。
+
+提示：这需要您向他们（2Captcha）支付一些费用。
+
 
 ```jsonc
     // 前面别的东西
     "openai": {
         "email": "你的邮箱",
         "password": "你的密码",
-        "captcha": "你的 2Captcha API 密钥"
+        "captcha": "2Captcha 的 API Key",
     },
     // 后面别的东西
 ```
@@ -200,6 +225,12 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     },
     // 后面别的东西
 ```
+
+### 自定义人格
+
+我们现在支持在会话的初始阶段为机器人设置人格。  
+
+请查阅 `chatbot.py` 中的 `initial_process` 和 `keyword_presets_process` 方法，了解如何设置。
 
 ## 📷 图片转文字
 
