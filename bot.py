@@ -71,9 +71,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     except Exception as e:
         # 出现故障，刷新 session_token
         logger.exception(e)
-        refresh_task = bot.refresh_session()
-        if refresh_task: # 这么写主要是因为上游偶尔返回的是一个 promise
-            await refresh_task
         return config.response.error_format.format(exc=e)
 
 

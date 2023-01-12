@@ -20,19 +20,29 @@ class mChatbot(Chatbot):
     def __init__(self, config, conversation_id=None, parent_id=None) -> None:
         if not config.get("captcha"):
             config["captcha"] = 'manual'
-
+        global bot
+        bot = self
         super().__init__(config, conversation_id, parent_id)
+
     def solve_captcha(self, *args, **kwargs) -> str:
         if self.twocaptcha_key == 'manual':
             return self._solve_captcha_manual(*args, **kwargs)
         return super().solve_captcha(*args, **kwargs)
-    
+    def get_cf_cookies(self) -> None:
+        logger.info("检测到 cf_clearance 失效，正在尝试重新获取……")
+        logger.info(" 提示：出现登录页面时无需登录")
+        logger.info(" 如果程序不断再次重复，请尝试更换 IP")
+        super().get_cf_cookies()
+        logger.debug(f"获取到 cf_clearance: {self.cf_clearance}")
+
     def _solve_captcha_manual(self):
         class _:
             def get(_self, key):
                 while not self.session_cookie_found:
                     logger.info("等待中，请在打开的浏览器页面中完成登录……")
                     sleep(5)
+                logger.debug(f"获取到 cf_clearance: {self.cf_clearance}")
+                logger.debug(f"获取到 session_token: {self.session_token}")
                 raise BlowUpDeliberatelyException()
         return _()
 
