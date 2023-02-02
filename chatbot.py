@@ -141,7 +141,7 @@ def get_chat_session(id: str, app: Ariadne, target: Union[Friend, Group], source
     if id not in __sessions:
         __sessions[id] = ChatSession(app, target, source)
         is_new_session = True
-
+    __sessions[id].source = source
     return __sessions[id], is_new_session
 
 """有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
