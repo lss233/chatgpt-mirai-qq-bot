@@ -70,7 +70,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         resp = await session.get_chat_response(message)
         if resp:
             logger.debug(f"{session_id} - {resp}")
-            return resp
+            return resp.strip()
     except Exception as e:
         logger.exception(e)
         return config.response.error_format.format(exc=e)
