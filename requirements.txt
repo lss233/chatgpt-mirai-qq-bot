@@ -1,3 +1,7 @@
 graia-ariadne>=0.10.3
+undetected_chromedriver>=3.1.7
+selenium>=4.7.2
+tls_client>=0.1.7
+2captcha-python>=1.1.3
 revChatGPT>=0.1.1
 Pillow>=9.3.0
