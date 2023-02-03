@@ -148,6 +148,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
             "猫娘": "presets/catgirl.txt"
         }
     }
+}
 ```
 
 ### API Key 登录
