@@ -108,7 +108,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 {
     "mirai": {
         "qq": 123456, // 机器人的 QQ 账号
-        "api_key": "VERIFY_KEY", // mirai-http-api 中的 verifyKey
+        "api_key": "1234567890", // mirai-http-api 中的 verifyKey
         "http_url": "http://localhost:8080", // mirai-http-api 中的 http 回调地址
         "ws_url": "http://localhost:8080" // mirai-http-api 中的 ws 回调地址
     },
@@ -160,7 +160,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "一串sk-开头的东西..."
+        "api_key": "一串sk-开头的东西..."
     },
     // 后面别的东西
 ```
