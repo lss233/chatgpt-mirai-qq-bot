@@ -1,18 +1,17 @@
 {
     "mirai": {
         "qq": 123456,
-        "api_key": "<mirai-http-api 中的 verifyKey>",
+        "api_key": "1234567890",
         "http_url": "http://localhost:8080",
         "ws_url": "http://localhost:8080"
     },
     "openai": {
-        "session_token": "SESSION_TOKEN"
+        "api_key": "API_KEY"
     },
-    "text_to_image": {
-        "font_size": 30,
-        "width": 700,
-        "font_path": "fonts/sarasa-mono-sc-regular.ttf",
-        "offset_x": 50,
-        "offset_y": 50
+    "presets": {
+        "keywords": {
+            "正常": "presets/default.txt",
+            "猫娘": "presets/catgirl.txt"
+        }
     }
 }

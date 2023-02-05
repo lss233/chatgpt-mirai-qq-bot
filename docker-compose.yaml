@@ -17,9 +17,9 @@ services:
     restart: always
     environment:
       LANG: 'C.UTF-8'
-      XPRA_PASSWORD: 'lss233' # XPRA 密码，建议修改
     ports:
       - 14500:14500
     volumes:
       - ./config.json:/app/config.json
       # - ./fonts:/app/fonts # 如果你想自定义字体，就解除注释
+      # - ./presets:/app/presets # 如果你想自定义预设，就解除注释

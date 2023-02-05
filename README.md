@@ -14,7 +14,7 @@
 * [x] 群聊回复引用
 * [x] 关键词触发回复
 * [x] 正向代理
-* [x] 多种方式登录 OpenAI
+* [x] 无需浏览器登录
 * [x] 预设人格初始化
 
 
@@ -108,12 +108,12 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 {
     "mirai": {
         "qq": 123456, // 机器人的 QQ 账号
-        "api_key": "VERIFY_KEY", // mirai-http-api 中的 verifyKey
+        "api_key": "1234567890", // mirai-http-api 中的 verifyKey
         "http_url": "http://localhost:8080", // mirai-http-api 中的 http 回调地址
         "ws_url": "http://localhost:8080" // mirai-http-api 中的 ws 回调地址
     },
     "openai": {
-        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
+        "api_key": "sk-xxxxxxx", // 你的 OpenAI 的 api_key，详见下
     },
     "text_to_image": { // 文字转图片
         "font_size": 30, // 字体大小
@@ -141,96 +141,39 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     "system": {
         "accept_friend_request": false, // 是否自动接受好友请求
         "accept_group_invite": false // 是否自动接受加群邀请
+    },
+    "presets": {
+        "keywords": {
+            "正常": "presets/default.txt",  // 预设名称 <-> 预设对应的聊天记录
+            "猫娘": "presets/catgirl.txt"
+        }
     }
+}
 ```
 
-### Session 登录
+### API Key 登录
 
-指定 `session_token` 手动登录是**最简单直接**的登录方式，大概率能解决`Captcha detect`、 `State not found` 等各种问题：
+截止至 2023年2月3日， OpenAI 可以通过 API Key 的方式**免费**使用 ChatGPT，无需浏览器、无访问限制。  
+
+你可以在[这里](https://platform.openai.com/account/api-keys)生成 API Key。
 
 ```jsonc
     // 前面别的东西
     "openai": {
-        "session_token": "一串ey开头的很长的东西..." // 注意， ey 开头的可能有两个，别复制错了！
+        "api_key": "一串sk-开头的东西..."
     },
     // 后面别的东西
 ```
 
-请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
+### 加载预设
 
-如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了或者不正确。`session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
+如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
 
-### OpenAI 邮箱密码登录
+我们自带了 `猫娘` 和 `正常` 两种预设，你可以在 `presets` 文件夹下了解预设的写法。  
 
-支持使用 OpenAI 邮箱、密码的方式登录。  
+使用 `加载预设 猫娘` 来加载猫娘预设。
 
-在启动时，我们会打开一个浏览器，   
-
-当你使用这种方式登录时，需要在打开的浏览器页面中完成 OpenAI 的登录。  
-
-我们会自动点击页面中的 `Log in` 按钮、为您填写 `email`，剩下的需要您自己完成。
-
-登录完成后，浏览器会自动退出。
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "email": "你的邮箱",
-        "password": "随便填"
-    },
-    // 后面别的东西
-```
-
-#### 使用第三方服务自动填写验证码
-
-我们的依赖 revChatGPT 支持通过第三方服务 [2Captcha](https://2captcha.com?from=16366923) 
-来实现自动填写验证码，如果您愿意使用这种方式，可以填写 2Chaptcha 的 API 密钥来开启这一功能。
-
-提示：这需要您向他们（2Captcha）支付一些费用。
-
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "email": "你的邮箱",
-        "password": "你的密码",
-        "captcha": "2Captcha 的 API Key",
-    },
-    // 后面别的东西
-```
-
-### 微软账号登录
-
-支持使用微软账号登录：
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "email": "你的微软账号邮箱",
-        "password": "你的微软账号密码",
-        "isMicrosoftLogin": true
-    },
-    // 后面别的东西
-```
-
-### 使用正向代理
-
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        // 在前面提及的登录方式中选一种，然后加上 proxy，填写你的代理服务器地址。别忘了处理 json 逗号
-        "proxy": "http://localhost:1080"
-    },
-    // 后面别的东西
-```
-
-### 自定义人格
-
-我们现在支持在会话的初始阶段为机器人设置人格。  
-
-请查阅 `chatbot.py` 中的 `initial_process` 和 `keyword_presets_process` 方法，了解如何设置。
+你可以参考[Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
 ## 📷 图片转文字
 
