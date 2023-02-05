@@ -12,9 +12,6 @@ from time import sleep
 import json
 
 config = Config.load_config()
-if 'api_key' not in config.openai:
-    logger.error("请在 openai 中填写 api_key。")
-    exit(-1)
 bot = Chatbot(api_key=config.openai.api_key)
 
 class ChatSession:
