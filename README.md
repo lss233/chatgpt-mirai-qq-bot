@@ -113,7 +113,7 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
         "ws_url": "http://localhost:8080" // mirai-http-api 中的 ws 回调地址
     },
     "openai": {
-        "api_key": "sk-xxxxxxx", // 你的 OpenAI 的 api_key，详见下
+        "api_key": "sk-xxxxxxx" // 你的 OpenAI 的 api_key，详见下
     },
     "text_to_image": { // 文字转图片
         "font_size": 30, // 字体大小
