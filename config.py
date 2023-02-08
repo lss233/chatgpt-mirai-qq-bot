@@ -140,7 +140,11 @@ class Config(BaseModel):
                 logger.info("正在转换旧版配置文件……")
                 Config.save_config(Config.__load_json_config())
                 logger.warning("提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
-                os.rename('config.json', 'config.json.old')
+                try:
+                    os.rename('config.json', 'config.json.old')
+                except Exception as e:
+                    logger.error(e)
+                    logger.error("无法重命名配置文件，请自行处理。")
             with open("config.cfg", "rb") as f:
                 guessed_str = from_bytes(f.read()).best()
                 if not guessed_str:
