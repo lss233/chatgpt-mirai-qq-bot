@@ -18,6 +18,8 @@ class Mirai(BaseModel):
     """mirai-api-http 的 ws 适配器地址"""
 
 class OpenAIAuthBase(BaseModel):
+    temperature: float = 0.5
+    """情感值，越高话越多""" 
     Authorization: Union[str, None] = Field(alias="authorization")
     """可选的验证头"""
     proxy: Union[str, None] = None
