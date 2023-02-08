@@ -42,15 +42,15 @@
 <details>
     <summary>Linux: 通过 Docker 部署 （适合已经有 Mirai 的用户)</summary>
 
-1. 找个合适的位置，写你的 `config.json`。
+1. 找个合适的位置，写你的 `config.cfg`。
 
 2.  执行以下命令，启动 bot：
 ```bash
-# 修改 /path/to/config.json 为你 config.json 的位置
+# 修改 /path/to/config.cfg 为你 config.cfg 的位置
 # XPRA_PASSWORD=123456 中的 123456 是你的 Xpra 密码，建议修改
 docker run --name mirai-chatgpt-bot \
     -e XPRA_PASSWORD=123456 \ 
-    -v /path/to/config.json:/app/config.json \
+    -v /path/to/config.cfg:/app/config.cfg \
     --network host \
     lss233/chatgpt-mirai-qq-bot:latest
 ```
@@ -94,7 +94,7 @@ python3 bot.py
 
 ## ⚙ 配置文件
 
-参考 `config.example.json` 调整配置文件。将其复制为 `config.json`，然后修改 `config.json`。
+参考 `config.example.cfg` 调整配置文件。将其复制为 `config.cfg`，然后修改 `config.cfg`。
 
 配置文件主要包含 mirai-http-api 的连接信息和 OpenAI 的登录信息。
 
@@ -102,58 +102,94 @@ OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
 
 OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup)。
 
-**！！请注意！！ 不要把 `//` 开头的注释也抄进去了！**  
 
-```jsonc
-{
-    "mirai": {
-        "qq": 123456, // 机器人的 QQ 账号
-        "api_key": "VERIFY_KEY", // mirai-http-api 中的 verifyKey
-        "http_url": "http://localhost:8080", // mirai-http-api 中的 http 回调地址
-        "ws_url": "http://localhost:8080" // mirai-http-api 中的 ws 回调地址
-    },
-    "openai": {
-        "session_token": "SESSION_TOKEN", // 你的 OpenAI 的 session_token，详见下
-    },
-    "text_to_image": { // 文字转图片
-        "font_size": 30, // 字体大小
-        "width": 700, // 图片宽度
-        "font_path": "fonts/sarasa-mono-sc-regular.ttf", // 字体
-        "offset_x": 50, // 起始点 X
-        "offset_y": 50 // 起始点 Y
-    },
-    "trigger": { // 配置机器人要如何响应，下面所有项均可选 (也就是可以直接删掉那一行)
-        "prefix": ["/chat", "#chat"], // 符合前缀才会响应，可以自己增减
-        "require_mention": "at", // 配置群里如何让机器人响应，"at" 表示需要群里 @ 机器人，"mention" 表示 @ 或者以机器人名字开头都可以，"none" 表示不需要
-        "reset_command": ["重置会话", "/reset"], // 重置会话的命令
-        "rollback_command": ["回滚对话", "/rollback"] // 回滚会话的命令
-    },
-    "response": {
-        "placeholder": "您好！我是 Assistant...", // 匹配指令成功但没有对话内容时发送的消息
-        "reset": "会话已重置~", // 重置会话时发送的消息
-        "rollback_success": "已回滚至上一条对话 OwO", // 回滚成功时发送的消息
-        "rollback_fail": "回滚失败 >_<", // 回滚失败时发送的消息
-        "error_format": "发生错误了...\n{exc}", // 发生错误时要发送的消息
-        "quote": true, // 是否要回复触发指令的消息
-        "timeout": 30, // 发送下面那个提醒之前的等待时间
-        "timeout_format": "我还在思考中，请再等一下~" // 超过响应时间时要发送的提醒
-    },
-    "system": {
-        "accept_friend_request": false, // 是否自动接受好友请求
-        "accept_group_invite": false // 是否自动接受加群邀请
-    }
+```properties
+[mirai]
+# Mirai 相关设置
+
+qq = 请填写机器人的 QQ 号
+
+# 以下设置如果不懂 无需理会
+
+api_key = "1234567890" # mirai-http-api 中的 verifyKey
+http_url = "http://localhost:8080" # mirai-http-api 中的 http 回调地址
+ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
+
+[openai]
+# OpenAI 相关设置
+
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+
+[text_to_image]
+# 文字转图片
+font_size = 30 # 字体大小
+width = 700  # 图片宽度
+font_path = "fonts/sarasa-mono-sc-regular.ttf"  # 字体
+offset_x = 50  # 起始点 X
+offset_y = 50 # 起始点 Y
+
+[trigger]
+# 配置机器人要如何响应，下面所有项均可选 (也就是可以直接删掉那一行)
+
+# 符合前缀才会响应，可以自己增减
+prefix = [ "",]
+
+# 配置群里如何让机器人响应，"at" 表示需要群里 @ 机器人，"mention" 表示 @ 或
+require_mention = "at"
+
+# 重置会话的命令
+reset_command = [ "重置会话",]
+
+# 回滚会话的命令
+rollback_command = [ "回滚会话",]
+
+[response]
+# 匹配指令成功但没有对话内容时发送的消息
+placeholder = "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
+
+# 发生错误时要发送的消息
+error_format = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n{exc}"
+
+# 是否要回复触发指令的消息
+quote = true
+
+# 发送下面那个提醒之前的等待时间
+timeout = 30.0
+
+# 超过响应时间时要发送的提醒
+timeout_format = "我还在思考中，请再等一下~"
+
+# 重置会话时发送的消息
+reset = "会话已重置。"
+
+# 回滚成功时发送的消息
+rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦！"
+
+# 回滚失败时发送的消息
+rollback_fail = "回滚失败，没有更早的记录了！"
+
+[system]
+# 是否自动同意进群邀请
+accept_group_invite = false
+
+# 是否自动同意好友请求
+accept_friend_request = false
+
 ```
 
 ### Session 登录
 
 指定 `session_token` 手动登录是**最简单直接**的登录方式，大概率能解决`Captcha detect`、 `State not found` 等各种问题：
 
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "session_token": "一串ey开头的很长的东西..." // 注意， ey 开头的可能有两个，别复制错了！
-    },
-    // 后面别的东西
+```properties
+# 前面别的东西
+[openai]
+# 注意， ey 开头的可能有两个，别复制错了！
+session_token = ""一串ey开头的很长的东西..."
+# 后面别的东西
 ```
 
 请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
@@ -172,40 +208,14 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
 
 登录完成后，浏览器会自动退出。
 
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "email": "你的邮箱",
-        "password": "随便填"
-    },
-    // 后面别的东西
-```
-
-### 微软账号登录
-
-支持使用微软账号登录：
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "email": "你的微软账号邮箱",
-        "password": "你的微软账号密码",
-        "isMicrosoftLogin": true
-    },
-    // 后面别的东西
-```
-
-### 使用正向代理
-
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        // 在前面提及的登录方式中选一种，然后加上 proxy，填写你的代理服务器地址。别忘了处理 json 逗号
-        "proxy": "http://localhost:1080"
-    },
-    // 后面别的东西
+```properties
+# 前面别的东西
+[openai]
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+# 后面别的东西
 ```
 
 ### 自定义人格
