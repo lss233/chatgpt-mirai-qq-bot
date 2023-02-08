@@ -48,7 +48,7 @@ class ChatSession:
     async def get_chat_response(self, message) -> str:
         bot.prompt.chat_history = self.chat_history
         loop = asyncio.get_event_loop()
-        final_resp = await loop.run_in_executor(None, bot.ask, message)
+        final_resp = await loop.run_in_executor(None, bot.ask, message, config.openai.temperature)
         final_resp = final_resp["choices"][0]["text"]
         return final_resp
 
