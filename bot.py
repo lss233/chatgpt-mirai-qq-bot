@@ -29,7 +29,7 @@ config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
-        config.mirai.qq,  # 配置详见 config.json
+        config.mirai.qq,  # 配置详见
         config.mirai.api_key,
         HttpClientConfig(host=config.mirai.http_url),
         WebsocketClientConfig(host=config.mirai.ws_url),
