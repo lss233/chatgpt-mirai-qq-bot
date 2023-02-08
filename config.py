@@ -4,8 +4,7 @@ from pydantic import BaseModel, BaseConfig, Extra, Field
 from charset_normalizer import from_bytes
 from loguru import logger
 import sys
-import json
-
+import toml
 
 class Mirai(BaseModel):
     qq: int
@@ -147,14 +146,34 @@ class Config(BaseModel):
             logger.error("配置文件有误，请重新修改！")
 
     @staticmethod
+    def __load_json_config() -> Config:
+        try:
+            import json
+            with open("config.json", "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别 JSON 格式！")
+                return Config.parse_obj(json.loads(str(guessed_str)))
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
+            exit(-1)
+
+
+    @staticmethod
     def load_config() -> Config:
         try:
-            with open("config.json", "rb") as f:
-                guessed_json = from_bytes(f.read()).best()
-                if not guessed_json:
-                    raise ValueError("无法识别 JSON 格式！")
-                
-                return Config.parse_obj(json.loads(str(guessed_json)))
+            import os
+            if os.path.exists('config.json'):
+                logger.info("正在转换旧版配置文件……")
+                Config.save_config(Config.__load_json_config())
+                logger.warning("提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
+                os.rename('config.json', 'config.json.old')
+            with open("config.cfg", "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别配置文件，请检查是否输入有误！")
+                return Config.parse_obj(toml.loads(str(guessed_str)))
         except Exception as e:
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
@@ -163,12 +182,9 @@ class Config(BaseModel):
     @staticmethod
     def save_config(config: Config) -> Config:
         try:
-            with open("config.json", "rb") as f:
-                guessed_json = from_bytes(f.read()).best()
-            with open("config.json", "wb") as f:
-                logger.debug(f"配置文件编码 {guessed_json.encoding}")
-                parsed_json = json.dumps(config.dict(), ensure_ascii=False, indent=4).encode(sys.getdefaultencoding())
-                f.write(parsed_json)
+            with open("config.cfg", "wb") as f:
+                parsed_str = toml.dumps(config.dict()).encode(sys.getdefaultencoding())
+                f.write(parsed_str)
         except Exception as e:
                 logger.exception(e)
                 logger.warning("配置保存失败。")
