@@ -164,7 +164,7 @@ class Config(BaseModel):
     def load_config() -> Config:
         try:
             import os
-            if not os.path.exists('config.cfg') and os.path.exists('config.json'):
+            if not (os.path.exists('config.cfg') and os.path.getsize('config.cfg') > 0) and os.path.exists('config.json'):
                 logger.info("正在转换旧版配置文件……")
                 Config.save_config(Config.__load_json_config())
                 logger.warning("提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
