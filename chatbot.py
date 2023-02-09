@@ -33,7 +33,6 @@ class mChatbot(Chatbot):
         logger.info(" 提示：出现登录页面时无需登录")
         logger.info(" 如果程序不断再次重复，请尝试更换 IP")
         super().get_cf_cookies()
-        logger.debug(f"获取到 cf_clearance: {self.cf_clearance}")
 
     def _solve_captcha_manual(self):
         class _:
@@ -41,8 +40,6 @@ class mChatbot(Chatbot):
                 while not self.session_cookie_found:
                     logger.info("等待中，请在打开的浏览器页面中完成登录……")
                     sleep(5)
-                logger.debug(f"获取到 cf_clearance: {self.cf_clearance}")
-                logger.debug(f"获取到 session_token: {self.session_token}")
                 raise BlowUpDeliberatelyException()
         return _()
 
@@ -54,8 +51,6 @@ try:
 
     bot = mChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
     logger.info("登录成功，保存登录信息中……")
-
-    logger.debug(f"获取到 session_token {bot.config['session_token']}")
 except BlowUpDeliberatelyException:
     logger.info("登录成功！")
 
