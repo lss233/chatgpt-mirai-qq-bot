@@ -13,7 +13,7 @@ services:
       - ./mirai/libs:/mirai/libs
       # - ./mirai/config.json:/mirai/config.json # 如果你要修改 mcl 的设置，就解除这个注释
   chatgpt:
-    image: lss233/chatgpt-mirai-qq-bot:v1.5.2.1
+    image: lss233/chatgpt-mirai-qq-bot:v1.5.3
     restart: always
     environment:
       LANG: 'C.UTF-8'
