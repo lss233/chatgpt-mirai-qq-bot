@@ -192,6 +192,9 @@ rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦
 # 回滚失败时发送的消息
 rollback_fail = "回滚失败，没有更早的记录了！"
 
+# 服务器提示 429 错误时的回复
+request_too_fast = "当前正在处理的请求太多了，请稍等一会再发吧！"
+
 [system]
 # 是否自动同意进群邀请
 accept_group_invite = false

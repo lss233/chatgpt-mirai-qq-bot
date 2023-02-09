@@ -74,6 +74,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             logger.debug(f"{session_id} - {resp}")
             return resp.strip()
     except Exception as e:
+        if "Too many requests" in str(e):
+            return config.response.request_too_fast
         logger.exception(e)
         return config.response.error_format.format(exc=e)
     finally:
