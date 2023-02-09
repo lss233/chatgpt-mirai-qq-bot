@@ -1,4 +1,4 @@
-from revChatGPT.ChatGPT import Chatbot
+from revChatGPT.Unofficial import Chatbot
 from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.message import Source
