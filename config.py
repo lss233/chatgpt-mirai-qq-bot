@@ -102,6 +102,9 @@ class Response(BaseModel):
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
 
+    request_too_fast: str = "当前正在处理的请求太多了，请稍等一会再发吧！"
+    """服务器提示 429 错误时的回复 """
+
 class System(BaseModel):
     accept_group_invite: bool = False
     """自动接收邀请入群请求"""
