@@ -2,6 +2,12 @@
 
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**
 
+> **2023/2/10**  
+> 本项目分为网页版和API版两种模式。  
+> 网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
+> 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
+> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/master)切换至 API 版。
+
 ***
 
 基于：
