@@ -64,7 +64,7 @@ docker run --name mirai-chatgpt-bot \
 
 我们为 Windows 用户制作了一个快速启动包，可以在 [Release](https://github.com/lss233/chatgpt-mirai-qq-bot/releases) 中找到。    
 
-文件名为：`quickstart-windows-amd64.zip`  
+文件名为：`quickstart-windows-amd64.zip`  或者 `Windows快速部署包.zip`
 </details>
 
 <details>
@@ -177,24 +177,6 @@ OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wi
     "openai": {
         "email": "你的邮箱",
         "password": "随便填"
-    },
-    // 后面别的东西
-```
-
-#### 使用第三方服务自动填写验证码
-
-我们的依赖 revChatGPT 支持通过第三方服务 [2Captcha](https://2captcha.com?from=16366923) 
-来实现自动填写验证码，如果您愿意使用这种方式，可以填写 2Chaptcha 的 API 密钥来开启这一功能。
-
-提示：这需要您向他们（2Captcha）支付一些费用。
-
-
-```jsonc
-    // 前面别的东西
-    "openai": {
-        "email": "你的邮箱",
-        "password": "你的密码",
-        "captcha": "2Captcha 的 API Key",
     },
     // 后面别的东西
 ```
