@@ -1,9 +1,10 @@
 name: Create Quickstart for Windows 64
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - '*'
+      - '**'
 
 jobs:
   build:
