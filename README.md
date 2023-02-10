@@ -258,3 +258,9 @@ proxy=http://127.0.0.1:1080
 字体文件存放于 `fonts/` 目录中。  
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
+
+## Star History
+
+如果你觉得本项目对你有帮助的话，欢迎点一个 Star!  
+
+[![Star History Chart](https://api.star-history.com/svg?repos=lss233/chatgpt-mirai-qq-bot&type=Timeline)](https://star-history.com/#lss233/chatgpt-mirai-qq-bot&Timeline)
