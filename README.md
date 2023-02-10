@@ -24,24 +24,25 @@
 * [x] 预设人格初始化
 
 
-[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 遇到问题请发日志和配置文件  
-[调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 本群不解答技术问题  
+* [交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 会发布最新的项目动态。  
+  加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
+  如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。  
+* [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。  
 
 ![Preview](.github/preview.png)
 
 
 ## 🔧 使用
 
+如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
+
 <details>
     <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai, 新人推荐)</summary>
 
 我们使用 `docker-compose.yaml` 整合了 [ttionya/mirai-http](https://github.com/ttionya/mirai-http-docker) 和本项目来实现快速部署。  
-
 但是在部署过程中仍然需要一些步骤来进行配置。  
 
-您可以尝试使用  [@paradox8599](https://github.com/paradox8599) 提供的简易部署脚本：[paradox8599/mirai-chatgpt-setup](https://github.com/paradox8599/mirai-chatgpt-setup) 进行较快地部署。  
-
-**或者**移步至 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89) 浏览手工配置的方案。
+你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89) 查看搭建教程。
 
 </details>
 
@@ -128,6 +129,9 @@ ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
 email = "xxxx" 
 # 你的 OpenAI 密码
 password = "xxx"
+
+# 如果你在国内，需要配置代理
+# proxy=http://127.0.0.1:1080
 
 [text_to_image]
 # 文字转图片
@@ -221,6 +225,23 @@ session_token = ""一串ey开头的很长的东西..."
 email = "xxxx" 
 # 你的 OpenAI 密码
 password = "xxx"
+# 后面别的东西
+```
+
+### 使用正向代理
+
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
+
+```properties
+[openai]
+# 前面别的东西
+
+# 请注意，由于现在 OpenAI 封锁严格，你需要一个
+# 尽量独立的代理服务器
+# 否则会出现无限弹出浏览器的问题  
+
+proxy=http://127.0.0.1:1080
+
 # 后面别的东西
 ```
 
