@@ -2,6 +2,13 @@
 
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**
 
+> **2023/2/10**  
+> 本项目分为网页版和API版两种模式。  
+> 网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
+> 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
+> 当前浏览的是 API 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/browser-version)切换至网页版。
+
+
 ***
 
 基于：
@@ -18,13 +25,17 @@
 * [x] 预设人格初始化
 
 
-[交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 遇到问题请发日志和配置文件  
-[调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 本群不解答技术问题  
+* [交流群](https://jq.qq.com/?_wv=1027&k=3X55LqoY) 会发布最新的项目动态。  
+  加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
+  如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。  
+* [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
 ![Preview](.github/preview.png)
 
 
 ## 🔧 使用
+
+如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
 <details>
     <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai, 新人推荐)</summary>
@@ -220,3 +231,9 @@ api_key = "一串 sk- 开头的字符串"
 字体文件存放于 `fonts/` 目录中。  
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
+
+## Star History
+
+如果你觉得本项目对你有帮助的话，欢迎点一个 Star!  
+
+[![Star History Chart](https://api.star-history.com/svg?repos=lss233/chatgpt-mirai-qq-bot&type=Timeline)](https://star-history.com/#lss233/chatgpt-mirai-qq-bot&Timeline)
