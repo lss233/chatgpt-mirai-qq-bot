@@ -105,6 +105,18 @@ class Response(BaseModel):
     request_too_fast: str = "当前正在处理的请求太多了，请稍等一会再发吧！"
     """服务器提示 429 错误时的回复 """
 
+    max_queue_size: int = 10
+    """等待处理的消息的最大数量，如果要关闭此功能，设置为 0"""
+
+    queue_full: str = "抱歉！我现在要回复的人有点多，暂时没有办法接收新的消息了，请过会儿再给我发吧！"
+    """队列满时的提示"""
+
+    queued_notice_size: int = 3
+    """新消息加入队列会发送通知的长度最小值"""
+
+    queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
+    """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
+
 class System(BaseModel):
     accept_group_invite: bool = False
     """自动接收邀请入群请求"""
