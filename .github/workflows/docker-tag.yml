@@ -1,9 +1,10 @@
 name: Docker build with tags
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - '*'
+      - '**'
 
 jobs:
   docker:
