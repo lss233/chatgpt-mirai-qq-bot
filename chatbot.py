@@ -78,14 +78,12 @@ class ChatSession:
         self.reset_conversation()
 
     def reset_conversation(self):
-        self.__cancel_timeout_task()
         self.conversation_id = None
         self.parent_id = str(uuid.uuid4())
         self.prev_conversation_id = []
         self.prev_parent_id = []
 
     def rollback_conversation(self) -> bool:
-        self.__cancel_timeout_task()
         if len(self.prev_parent_id) <= 0:
             return False
         self.conversation_id = self.prev_conversation_id.pop()
@@ -97,36 +95,16 @@ class ChatSession:
         self.parent_id = parent_id
 
     async def get_chat_response(self, message) -> str:
-        self.__create_timeout_task()
-
         self.prev_conversation_id.append(self.conversation_id)
         self.prev_parent_id.append(self.parent_id)
         bot.conversation_id = self.conversation_id
         bot.parent_id = self.parent_id
 
-        final_resp = None
-        try:
-            loop = asyncio.get_event_loop()
-            final_resp = await loop.run_in_executor(None, bot.ask, message)
-            self.conversation_id = final_resp["conversation_id"]
-            self.parent_id = final_resp["parent_id"]
-        finally:
-            self.__cancel_timeout_task()
+        loop = asyncio.get_event_loop()
+        final_resp = await loop.run_in_executor(None, bot.ask, message)
+        self.conversation_id = final_resp["conversation_id"]
+        self.parent_id = final_resp["parent_id"]
         return final_resp
-    
-    def __cancel_timeout_task(self):
-        if self.timeout_task:
-            self.timeout_task.cancel()
-        self.timeout_task = None
-
-    def __create_timeout_task(self):
-        task = asyncio.create_task(self.__handle_timeout_task())
-        self.timeout_task = task
-    
-    async def __handle_timeout_task(self):
-        await asyncio.sleep(config.response.timeout)
-        await self.app.send_message(self.target, config.response.timeout_format, quote=self.source if config.response.quote else False)
-
 
 __sessions = {}
 

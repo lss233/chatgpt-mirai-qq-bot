@@ -18,6 +18,7 @@ from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
 from loguru import logger
 
+import asyncio
 import chatbot
 from config import Config
 from text_to_img import text_to_image
@@ -34,47 +35,53 @@ app = Ariadne(
     ),
 )
 
+async def create_timeout_task(target: Union[Friend, Group], source: Source):
+    await asyncio.sleep(config.response.timeout)
+    await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
+
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
-    
     if not message.strip():
         return config.response.placeholder
-
-    bot = chatbot.bot
-    resp = None
+    
+    timeout_task = asyncio.create_task(create_timeout_task(target, source))
     try:
-        session, is_new_session = chatbot.get_chat_session(session_id, app, target, source)
-            
+        session, is_new_session = chatbot.get_chat_session(session_id)
+         
+        # 新会话
+        if is_new_session:
+            await chatbot.initial_process(session)
+        
         # 重置会话
         if message.strip() in config.trigger.reset_command:
             session.reset_conversation()
             await chatbot.initial_process(session)
             return config.response.reset
-                    
-        # 新会话
-        if is_new_session:
-            await chatbot.initial_process(session)
         
         # 回滚
         if message.strip() in config.trigger.rollback_command:
-            return config.response.rollback_success if session.rollback_conversation() else config.response.rollback_fail
+            resp = session.rollback_conversation()
+            if resp:
+                return config.response.rollback_success + '\n' + resp
+            return config.response.rollback_fail
 
         # 加载关键词人设
         resp = await chatbot.keyword_presets_process(session, message)
         if resp:
             logger.debug(f"{session_id} - {resp}")
             return resp
+
         # 正常交流
         resp = await session.get_chat_response(message)
         if resp:
             logger.debug(f"{session_id} - {resp}")
-            return resp["message"]
+            return resp.strip()
     except Exception as e:
         if str(e)  == "('Response code error: ', 429)" or 'overloaded' in str(e):
             return config.response.request_too_fast
-        # 出现故障，刷新 session_token
         logger.exception(e)
         return config.response.error_format.format(exc=e)
-
+    finally:
+        timeout_task.cancel()
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
