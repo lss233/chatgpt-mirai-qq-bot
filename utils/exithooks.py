@@ -27,6 +27,7 @@ def foo():
         if type(hooks.exception) is KeyboardInterrupt:
             return
         logger.error("看样子程序似乎没有正常退出。")
+        logger.exception(hooks.exception)
         logger.error("你可以在这里阅读常见问题的解决方案：")
         logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85")
 atexit.register(foo)
