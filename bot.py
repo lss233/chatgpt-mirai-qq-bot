@@ -1,6 +1,7 @@
 import os, sys
 sys.path.append(os.getcwd())
 
+import utils.exithooks
 from io import BytesIO
 from typing import Union
 from typing_extensions import Annotated

@@ -45,12 +45,14 @@ class mChatbot(Chatbot):
 
 try:
     logger.info("登录 OpenAI 中...")
-    logger.info("请在新打开的浏览器窗口中完成验证。")
+    logger.info("这需要你拥有最新版的 Chrome 浏览器。")
+    logger.info("即将打开浏览器窗口……")
+    logger.info("提示：如果你看见了 Cloudflare 验证码，请手动完成验证。")
+    logger.info("如果浏览器反复弹出，请阅读项目 FAQ。")
     if 'XPRA_PASSWORD' in os.environ:
         logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
 
     bot = mChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
-    logger.info("登录成功，保存登录信息中……")
 except BlowUpDeliberatelyException:
     logger.info("登录成功！")
 
