@@ -71,12 +71,7 @@ except Exception as e:
 
 class ChatSession:
 
-    def __init__(self, app: Ariadne, target: Union[Friend, Group], source: Source):
-        self.app = app
-        self.target = target
-        self.source = source
-
-        self.timeout_task = None
+    def __init__(self):
         self.reset_conversation()
 
     def reset_conversation(self):
@@ -111,10 +106,10 @@ class ChatSession:
 __sessions = {}
 
 
-def get_chat_session(id: str, app: Ariadne, target: Union[Friend, Group], source: Source) -> Tuple[ChatSession, bool]:
+def get_chat_session(id: str) -> Tuple[ChatSession, bool]:
     is_new_session = False
     if id not in __sessions:
-        __sessions[id] = ChatSession(app, target, source)
+        __sessions[id] = ChatSession()
         is_new_session = True
 
     return __sessions[id], is_new_session
