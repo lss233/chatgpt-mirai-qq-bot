@@ -52,8 +52,7 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/6f1af9510f47409e
 <details>
     <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai)</summary>
 
-我们使用 `docker-compose.yaml` 整合了 [ttionya/mirai-http](https://github.com/ttionya/mirai-http-docker) 和本项目来实现快速部署。  
-
+我们使用 `docker-compose.yaml` 整合了 [lss233/mirai-http](https://github.com/lss233/mirai-http-docker) 和本项目来实现快速部署。  
 但是在部署过程中仍然需要一些步骤来进行配置。  
 
 您可以尝试使用  [@paradox8599](https://github.com/paradox8599) 提供的简易部署脚本：[paradox8599/mirai-chatgpt-setup](https://github.com/paradox8599/mirai-chatgpt-setup) 进行较快地部署。  
