@@ -46,7 +46,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if not message.strip():
         return config.response.placeholder
     
-    global queue_lock
+    global queue_lock, queue_size
     if queue_lock is None:
         queue_lock = asyncio.Lock()
 
