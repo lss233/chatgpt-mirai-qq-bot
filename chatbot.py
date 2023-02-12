@@ -77,7 +77,7 @@ class ChatSession:
         final_resp = await loop.run_in_executor(None, bot.ask, message)
         self.conversation_id = final_resp["conversation_id"]
         self.parent_id = final_resp["parent_id"]
-        return final_resp
+        return final_resp["message"]
 
 __sessions = {}
 
