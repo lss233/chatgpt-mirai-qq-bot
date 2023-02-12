@@ -37,7 +37,7 @@
 如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
 <details>
-    <summary>Linux: 通过快速部署脚本部署</summary>
+    <summary>Linux: 通过快速部署脚本部署 （新人推荐)</summary>
 
 执行下面这行命令启动自动部署脚本。  
 它会为你安装 Docker、 Docker Compose 和编写配置文件。  
@@ -49,9 +49,9 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/6f1af9510f47409e
 </details>
 
 <details>
-    <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai, 新人推荐)</summary>
+    <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai)</summary>
 
-我们使用 `docker-compose.yaml` 整合了 [ttionya/mirai-http](https://github.com/ttionya/mirai-http-docker) 和本项目来实现快速部署。  
+我们使用 `docker-compose.yaml` 整合了 [lss233/mirai-http](https://github.com/lss233/mirai-http-docker) 和本项目来实现快速部署。  
 但是在部署过程中仍然需要一些步骤来进行配置。  
 
 你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89) 查看搭建教程。
