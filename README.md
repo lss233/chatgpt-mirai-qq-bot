@@ -196,6 +196,21 @@ rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦
 # 回滚失败时发送的消息
 rollback_fail = "回滚失败，没有更早的记录了！"
 
+# 服务器提示 429 错误时的回复
+request_too_fast = "当前正在处理的请求太多了，请稍等一会再发吧！"
+
+# 等待处理的消息的最大数量，如果要关闭此功能，设置为 0
+max_queue_size: int = 10
+
+# 队列满时的提示
+queue_full = "抱歉！我现在要回复的人有点多，暂时没有办法接收新的消息了，请过会儿再给我发吧！"
+
+# 新消息加入队列会发送通知的长度最小值
+queued_notice_size = 3
+
+# 新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数
+queued_notice = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
+
 [system]
 # 是否自动同意进群邀请
 accept_group_invite = false
