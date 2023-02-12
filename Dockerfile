@@ -6,14 +6,12 @@ WORKDIR /app
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt install software-properties-common apt-transport-https wget ca-certificates gnupg2 -yq && \
+    apt install software-properties-common apt-transport-https wget ca-certificates gnupg2 curl gcc -yq && \
+    curl https://sh.rustup.rs -sSf | sh -s -- -y && apt-get install --reinstall libc6-dev -y && \
     wget -qO /usr/share/keyrings/xpra-2022.gpg https://xpra.org/xpra-2022.gpg  && \
     echo deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/xpra-2022.gpg] https://xpra.org/ bullseye main |  tee /etc/apt/sources.list.d/xpra.list && \
     apt-get update && \
-    apt install --no-install-recommends xpra xpra-html5 xvfb xfonts-base xfonts-100dpi xfonts-75dpi libgl1-mesa-dri xauth chromium xterm -yq
-
-
-RUN set -eux; \
+    apt install --no-install-recommends xpra xpra-html5 xvfb xfonts-base xfonts-100dpi xfonts-75dpi libgl1-mesa-dri xauth chromium xterm -yq && \
     apt-get clean; \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     rm -rf /var/lib/apt/lists/*
