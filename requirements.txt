@@ -1,4 +1,5 @@
 graia-ariadne>=0.10.3
 revChatGPT[unofficial]
+OpenAIAuth
 toml
 Pillow>=9.3.0

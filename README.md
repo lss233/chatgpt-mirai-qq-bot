@@ -137,6 +137,9 @@ ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
 [openai]
 # OpenAI 相关设置
 
+# 模式选择，详情见下方 README
+mode = "browser"
+
 # 你的 OpenAI 邮箱
 email = "xxxx" 
 # 你的 OpenAI 密码
@@ -202,17 +205,26 @@ accept_friend_request = false
 
 ```
 
-### Session 登录
 
-指定 `session_token` 手动登录是**最简单直接**的登录方式，大概率能解决`Captcha detect`、 `State not found` 等各种问题：
+### 模式选择
+
+现在我们支持多种方式访问 OpenAI 服务器， 你可以在配置文件中选择所使用的模式。
 
 ```properties
-# 前面别的东西
 [openai]
-# 注意， ey 开头的可能有两个，别复制错了！
-session_token = ""一串ey开头的很长的东西..."
+# 前面别的东西
+
+# 模式选择
+mode = "browser"
+
 # 后面别的东西
 ```
+
+支持的模式有：
+- browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI
+- proxy - 第三方代理。该模式将你的账号信息发送到第三方服务器进行认证，不需要浏览器。  
+
+### Session 登录
 
 请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
 
@@ -256,6 +268,11 @@ proxy="http://127.0.0.1:1080"
 
 # 后面别的东西
 ```
+### 使用第三方代理模式的注意事项
+
+根据 https://github.com/acheong08/ChatGPT/issues/639， 如果你在使用第三方代理模式时出现了 ```KeyError: 'accessToken'``` 错误，  
+
+可以配置一个正向代理来解决此问题。  
 
 ### 自定义人格
 

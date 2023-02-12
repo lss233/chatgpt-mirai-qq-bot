@@ -17,6 +17,8 @@ class Mirai(BaseModel):
     """mirai-api-http 的 ws 适配器地址"""
 
 class OpenAIAuthBase(BaseModel):
+    mode: str = "browser"
+    """使用 OpenAI 的模式，可选的值：proxy - 使用第三方代理、 browser - 使用浏览器"""
     Authorization: Union[str, None] = Field(alias="authorization")
     """可选的验证头"""
     proxy: Union[str, None] = None

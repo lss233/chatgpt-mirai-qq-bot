@@ -1,4 +1,3 @@
-from revChatGPT.Unofficial import Chatbot
 from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.message import Source
@@ -13,60 +12,37 @@ from selenium.common.exceptions import TimeoutException
 
 config = Config.load_config()
 
-# Inherited it because we need some modification
-class BlowUpDeliberatelyException(Exception):
-    pass
-class mChatbot(Chatbot):
-    def __init__(self, config, conversation_id=None, parent_id=None) -> None:
-        if not config.get("captcha"):
-            config["captcha"] = 'manual'
-        global bot
-        bot = self
-        super().__init__(config, conversation_id, parent_id)
-
-    def solve_captcha(self, *args, **kwargs) -> str:
-        if self.twocaptcha_key == 'manual':
-            return self._solve_captcha_manual(*args, **kwargs)
-        return super().solve_captcha(*args, **kwargs)
-    def get_cf_cookies(self) -> None:
-        logger.info("检测到 cf_clearance 失效，正在尝试重新获取……")
-        logger.info(" 提示：出现登录页面时无需登录")
-        logger.info(" 如果程序不断再次重复，请尝试更换 IP")
-        super().get_cf_cookies()
-
-    def _solve_captcha_manual(self):
-        class _:
-            def get(_self, key):
-                while not self.session_cookie_found:
-                    logger.info("等待中，请在打开的浏览器页面中完成登录……")
-                    sleep(5)
-                raise BlowUpDeliberatelyException()
-        return _()
-
 try:
     logger.info("登录 OpenAI 中...")
-    logger.info("这需要你拥有最新版的 Chrome 浏览器。")
-    logger.info("即将打开浏览器窗口……")
-    logger.info("提示：如果你看见了 Cloudflare 验证码，请手动完成验证。")
-    logger.info("如果浏览器反复弹出，请阅读项目 FAQ。")
-    if 'XPRA_PASSWORD' in os.environ:
-        logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
+    if config.openai.mode == 'proxy':
+        logger.info("当前模式：第三方代理")
+        from revChatGPT.Proxied import Chatbot
+        bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
+    else:
+        from revChatGPT.Unofficial import Chatbot
+        logger.info("当前模式：浏览器直接访问")
+        logger.info("这需要你拥有最新版的 Chrome 浏览器。")
+        logger.info("即将打开浏览器窗口……")
+        logger.info("提示：如果你看见了 Cloudflare 验证码，请手动完成验证。")
+        logger.info("如果浏览器反复弹出，请阅读项目 FAQ。")
 
-    bot = mChatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
-except BlowUpDeliberatelyException:
-    logger.info("登录成功！")
-
+        if 'XPRA_PASSWORD' in os.environ:
+            logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
+        bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
 except Exception as e:
     logger.exception(e)
-
-    if str(e) == "local variable 'driver' referenced before assignment":
-        logger.error("无法启动，请检查是否安装了 Chrome，或手动指定 Chromedriver 的位置")
-        logger.error("参考资料：https://github.com/acheong08/ChatGPT/wiki/Setup#dependencies")
-    elif e is TimeoutException:
-        logger.error("等待超时：没有在规定时间内完成登录。")
+    if config.openai.mode == 'proxy':
+        logger.error("OpenAI 登录失败，可能是账号密码有误、需要设置本地正向代理或其他原因。")
     else:
-        logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
-    exit(-1)
+        if str(e) == "local variable 'driver' referenced before assignment":
+            logger.error("无法启动，请检查是否安装了 Chrome，或手动指定 Chromedriver 的位置")
+            logger.error("参考资料：https://github.com/acheong08/ChatGPT/wiki/Setup#dependencies")
+        elif e is TimeoutException:
+            logger.error("等待超时：没有在规定时间内完成登录。")
+        else:
+            logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
+            logger.error("你也可以将模式修改为第三方代理来绕过这个步骤。")
+    raise e
 
 
 class ChatSession:
