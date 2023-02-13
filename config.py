@@ -16,42 +16,23 @@ class Mirai(BaseModel):
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
 
-class OpenAIAuthBase(BaseModel):
-    temperature: float = 0.5
-    """情感值，越高话越多""" 
-    Authorization: Union[str, None] = Field(alias="authorization")
-    """可选的验证头"""
-    proxy: Union[str, None] = None
-    """可选的代理地址"""
-    driver_exec_path: Union[str, None] = None
-    """可选的 Chromedriver 路径"""
-    browser_exec_path: Union[str, None] = None
-    """可选的 Chrome 浏览器路径"""
-    conversation: Union[str, None] = None
-    """初始化对话所使用的UUID"""
-    verbose: bool = False
-    """启用详尽日志模式"""
-
-    class Config(BaseConfig):
-        extra = Extra.allow
-
-class OpenAIEmailAuth(OpenAIAuthBase):
+class OpenAIAuth(BaseModel):
     email: str
     """OpenAI 注册邮箱"""
     password: str
     """OpenAI 密码"""
-    captcha: Union[str, None] = None
-    """2Captcha API 密钥"""
-    isMicrosoftLogin: bool = False
-    """是否通过 Microsoft 登录"""
-
-class OpenAISessionTokenAuth(OpenAIAuthBase):
-    session_token: str
-    """OpenAI 的 session_token"""
-
-class OpenAIAPIKey(OpenAIAuthBase):
-    api_key: str
-    """OpenAI 的 api_key"""
+    session_token: Union[str, None] = None
+    """OpenAI 的 session_token，使用 Google 或者 微软登录者使用"""
+    proxy: Union[str, None] = None
+    """可选的本地代理服务器"""
+    insecure_auth: bool = False
+    """使用第三方代理登录"""
+    temperature: float = 0.5
+    """情感值，越高话越多""" 
+    piad: bool = False
+    """使用付费模型""" 
+    class Config(BaseConfig):
+        extra = Extra.allow
 
 class TextToImage(BaseModel):
     font_size: int = 30
@@ -122,7 +103,7 @@ class Preset(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAPIKey]
+    openai: OpenAIAuth
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
@@ -136,7 +117,7 @@ class Config(BaseModel):
                 if not guessed_str:
                     raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
                 
-                return str(guessed_str).split('\nUser:')
+                return str(guessed_str).replace('\r', '').strip().split('\n\n')
         except KeyError as e:
             raise ValueError("预设不存在！")
         except FileNotFoundError as e:
