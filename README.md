@@ -2,11 +2,16 @@
 
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**
 
-> **2023/2/10**  
-> 本项目分为网页版和API版两种模式。  
-> 网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
-> 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
-> 当前浏览的是 API 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/browser-version)切换至网页版。
+
+> **2023/2/14**  
+> 上游已更新，接下来不区分网页版和 API 版。  
+> 1.6.x 及以上版本将为最新版。
+
+> ~~**2023/2/10**~~  
+> ~~本项目分为网页版和API版两种模式。~~  
+> ~~网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本~~  
+> ~~具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82~~  
+> ~~当前浏览的是 API 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/browser-version)切换至网页版。~~
 
 
 ***
@@ -22,6 +27,7 @@
 * [x] 关键词触发回复
 * [x] 正向代理
 * [x] 无需浏览器登录
+* [x] 支持 ChatGPT Plus
 * [x] 预设人格初始化
 
 
@@ -139,10 +145,28 @@ ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
 
 [openai]
 # OpenAI 相关设置
-api_key = "请填写 OpenAI 的 api_key"
 
-# 机器人情感值
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+
+# 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# 此时 email 和 password 可以直接删除
+# session_token = "一串 ey 开头的东西"
+
+# 机器人情感值，范围  0 ~ 1，越高话越多
 temperature = 0.5
+
+# 如果你的网络不好，可以设置一个本地代理
+# proxy="http://127.0.0.1:1080"
+
+# 如果你 OpenAI 禁止你所在的地区使用，可以使用第三方服务代理验证
+# 警告：设置为 true 以后，你的 OpenAI 账户信息会发送至第三方
+insecure_auth = false
+
+# 使用付费模型（plus 用户使用）
+paid = false
 
 [text_to_image]
 # 文字转图片
@@ -215,16 +239,75 @@ loaded_successful = "预设加载成功！"
 
 ```
 
-### API Key 登录
+### OpenAI 登录
 
-截止至 2023年2月3日， OpenAI 可以通过 API Key 的方式**免费**使用 ChatGPT，无需浏览器、无访问限制。  
+目前我们支持邮箱密码登录和 session_token 登录两种方式。  
 
-你可以在[这里](https://platform.openai.com/account/api-keys)生成 API Key。
+#### 邮箱密码登录
+
+你只需要填写 OpenAI 的邮箱和密码即可。  
 
 ```properties
 # 前面别的东西
 [openai]
-api_key = "一串 sk- 开头的字符串"
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+# 后面别的东西
+```
+
+**登录不了？**
+
+如果你所在的地区无法使用 OpenAI，可以尝试开启 `insecure_auth` 配置项。  
+
+开启后，你的账户密码将发送至一个第三方的代理服务器进行验证。  
+
+```properties
+# 前面别的东西
+[openai]
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+
+# 通过第三方代理服务器验证
+insecure_auth = true
+```
+
+### session_token 验证
+
+对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
+
+使用这种方式登录时不需要填写邮箱和密码。  
+
+需要注意的是，session_token 过期比较频繁，过期后需要重新设置。  
+
+session_token 的获取方式可参考：[请问怎么获取 session_token](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/96)  
+
+```properties
+# 前面别的东西
+[openai]
+
+session_token = "一串 ey 开头的东西"
+```
+
+### 使用正向代理
+
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。  
+
+支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
+
+```properties
+[openai]
+# 前面别的东西
+
+# 请注意，由于现在 OpenAI 封锁严格，你需要一个
+# 尽量使用独立的代理服务器，不要使用和其他人共用 IP 的代理
+# 否则会出现无限弹出浏览器的问题  
+
+proxy="http://127.0.0.1:1080"
+
 # 后面别的东西
 ```
 

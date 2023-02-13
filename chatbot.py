@@ -20,7 +20,10 @@ bot = None
 def setup():
     global bot
     try:
-        bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token)
+        if not (config.openai.email and config.openai.password) and not config.openai.session_token:
+            logger.error("配置文件出错！请配置 OpenAI 的邮箱、密码，或者 session_token。")
+            exit(-1)
+        bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token, paid=config.openai.paid)
     except KeyError as e:
         if str(e) == 'accessToken':
             logger.error("无法获取 accessToken，请检查 session_token 是否过期")

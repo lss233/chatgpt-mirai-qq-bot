@@ -17,9 +17,9 @@ class Mirai(BaseModel):
     """mirai-api-http 的 ws 适配器地址"""
 
 class OpenAIAuth(BaseModel):
-    email: str
+    email: Union[str, None] = None
     """OpenAI 注册邮箱"""
-    password: str
+    password: Union[str, None] = None
     """OpenAI 密码"""
     session_token: Union[str, None] = None
     """OpenAI 的 session_token，使用 Google 或者 微软登录者使用"""
@@ -29,7 +29,7 @@ class OpenAIAuth(BaseModel):
     """使用第三方代理登录"""
     temperature: float = 0.5
     """情感值，越高话越多""" 
-    piad: bool = False
+    paid: bool = False
     """使用付费模型""" 
     class Config(BaseConfig):
         extra = Extra.allow
