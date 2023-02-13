@@ -18,6 +18,7 @@ os.environ.setdefault('TEMPERATURE', str(config.openai.temperature))
 bot = None
 
 def setup():
+    global bot
     try:
         bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token)
     except KeyError as e:
@@ -34,10 +35,12 @@ class ChatSession:
     conversation_id: str
     preset: str
     base_prompt: str
+    lock: asyncio.Lock
 
     def __init__(self, conversation_id):
         self.conversation_id = conversation_id
         self.load_conversation()
+        self.lock = asyncio.Lock()
 
     def load_conversation(self, keyword='default'):
         if not keyword in config.presets.keywords:
@@ -78,11 +81,12 @@ class ChatSession:
         return last_message
 
     async def get_chat_response(self, message) -> str:
-        os.environ.setdefault('BASE_PROMPT', self.base_prompt)
-        result = ''
-        async for data in bot.ask(prompt=message, conversation_id=self.conversation_id):
-            result = result + data["choices"][0]["text"].replace("<|im_end|>", "")
-        return result
+        async with self.lock:
+            os.environ.setdefault('BASE_PROMPT', self.base_prompt)
+            result = ''
+            async for data in bot.ask(prompt=message, conversation_id=self.conversation_id):
+                result = result + data["choices"][0]["text"].replace("<|im_end|>", "")
+            return result
 
 __sessions = {}
 
