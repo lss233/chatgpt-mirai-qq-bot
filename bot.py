@@ -43,6 +43,9 @@ async def create_timeout_task(target: Union[Friend, Group], source: Source):
     await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    if chatbot.bot is None:
+        return "OpenAI 连接中，请稍后再给我发消息……"
+
     if not message.strip():
         return config.response.placeholder
     
