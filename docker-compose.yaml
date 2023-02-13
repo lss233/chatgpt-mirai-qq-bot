@@ -17,9 +17,6 @@ services:
     restart: always
     environment:
       LANG: 'C.UTF-8'
-      # GPT_ENGINE: text-davinci-003 # 如果你想使用付费模型，就解除注释
-    ports:
-      - 14500:14500
     volumes:
       - ./config.cfg:/app/config.cfg
       # - ./fonts:/app/fonts # 如果你想自定义字体，就解除注释
