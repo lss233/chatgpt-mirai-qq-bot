@@ -16,6 +16,7 @@ from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
+from graia.ariadne.event.lifecycle import AccountLaunch
 from loguru import logger
 
 import re
@@ -106,4 +107,15 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
     if config.system.accept_group_invite:
         await event.accept()
 
+@app.broadcast.receiver(AccountLaunch)
+async def start_background(loop: asyncio.AbstractEventLoop):
+    try:
+        logger.info("OpenAI 服务器登录中……")
+        chatbot.setup()
+    except Exception as e:
+        # Fail-through
+        raise e
+    logger.info("OpenAI 服务器登录成功")
+    logger.info("尝试连接到 Mirai 服务……")
+    
 app.launch_blocking()

@@ -14,15 +14,21 @@ import json
 config = Config.load_config()
 
 os.environ.setdefault('TEMPERATURE', str(config.openai.temperature))
-try:
-    bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token)
-except KeyError as e:
-    if str(e) == 'accessToken':
-        logger.error("无法获取 accessToken，请检查 session_token 是否过期")
-try:
-    logger.debug("Session token: " + bot.session_token)
-except:
-    pass
+
+bot = None
+
+def setup():
+    try:
+        bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token)
+    except KeyError as e:
+        if str(e) == 'accessToken':
+            logger.error("无法获取 accessToken，请检查 session_token 是否过期")
+        raise e
+
+    try:
+        logger.debug("Session token: " + bot.session_token)
+    except:
+        pass
 class ChatSession:
     chat_history: list[str]
     conversation_id: str
