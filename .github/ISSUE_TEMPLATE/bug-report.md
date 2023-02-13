@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: BUG 汇报
-title: "[BUG]"
+title: "[BUG] 请填写标题"
 labels: bug
 assignees: ''
 
