@@ -11,7 +11,7 @@
 > 本项目分为网页版和API版两种模式。  
 > 网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
 > 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
-> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/master)切换至 API 版。
+> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 API 版。
 
 ***
 
