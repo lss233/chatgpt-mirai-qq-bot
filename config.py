@@ -19,8 +19,6 @@ class Mirai(BaseModel):
 class OpenAIAuthBase(BaseModel):
     mode: str = "browser"
     """使用 OpenAI 的模式，可选的值：proxy - 使用第三方代理、 browser - 使用浏览器"""
-    Authorization: Union[str, None] = Field(alias="authorization")
-    """可选的验证头"""
     proxy: Union[str, None] = None
     """可选的代理地址"""
     driver_exec_path: Union[str, None] = None
@@ -29,6 +27,8 @@ class OpenAIAuthBase(BaseModel):
     """可选的 Chrome 浏览器路径"""
     conversation: Union[str, None] = None
     """初始化对话所使用的UUID"""
+    paid: bool = False
+    """使用 ChatGPT Plus"""
     verbose: bool = False
     """启用详尽日志模式"""
 
@@ -40,8 +40,6 @@ class OpenAIEmailAuth(OpenAIAuthBase):
     """OpenAI 注册邮箱"""
     password: str
     """OpenAI 密码"""
-    captcha: Union[str, None] = None
-    """2Captcha API 密钥"""
     isMicrosoftLogin: bool = False
     """是否通过 Microsoft 登录"""
 

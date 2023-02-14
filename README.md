@@ -153,6 +153,9 @@ password = "xxx"
 # 如果你在国内，需要配置代理
 # proxy="http://127.0.0.1:1080"
 
+# 使用 ChatGPT Plus（plus 用户此项设置为 true）
+paid = false
+
 [text_to_image]
 # 文字转图片
 font_size = 30 # 字体大小
@@ -245,6 +248,8 @@ mode = "browser"
 - proxy - 第三方代理。该模式将你的账号信息发送到第三方服务器进行认证，不需要浏览器。  
 
 ### Session 登录
+
+**注：第三方代理模式无法使用 session_token 方式登录**  
 
 请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
 
