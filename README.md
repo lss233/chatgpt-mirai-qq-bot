@@ -150,6 +150,10 @@ email = "xxxx"
 # 你的 OpenAI 密码
 password = "xxx"
 
+# 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# 此时 email 和 password 可以直接删除
+# session_token = "一串 ey 开头的东西"
+
 # 如果你在国内，需要配置代理
 # proxy="http://127.0.0.1:1080"
 
@@ -247,13 +251,23 @@ mode = "browser"
 - browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI
 - proxy - 第三方代理。该模式将你的账号信息发送到第三方服务器进行认证，不需要浏览器。  
 
-### Session 登录
+### session_token 登录
 
-**注：第三方代理模式无法使用 session_token 方式登录**  
+对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
 
-请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
+使用这种方式登录时不需要填写邮箱和密码。  
 
-如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了或者不正确。`session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
+需要注意的是，session_token 过期比较频繁，过期后需要重新设置。  
+
+session_token 的获取方式可参考：[请问怎么获取 session_token](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/96)  
+
+```properties
+# 前面别的东西
+[openai]
+
+session_token = "一串 ey 开头的东西"
+```
+
 
 ### OpenAI 邮箱密码登录
 
