@@ -1,6 +1,11 @@
 # ChatGPT Mirai QQ Bot
 
-**一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**
+**一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**  
+
+![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
+[![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=browser-version)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
+[![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
+[![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
 > **2023/2/10**  
 > 本项目分为网页版和API版两种模式。  
