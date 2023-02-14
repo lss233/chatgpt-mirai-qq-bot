@@ -294,7 +294,7 @@ session_token = "一串 ey 开头的东西"
 
 ### 使用正向代理
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。  
+如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，或者出现了 Unknown error 的情况，可以通过配置代理的方式来连接到 OpenAI。  
 
 支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
 
