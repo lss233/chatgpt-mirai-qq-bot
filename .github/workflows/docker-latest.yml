@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'master'
+      - 'browser-version'
 
 jobs:
   docker:
@@ -31,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: lss233/chatgpt-mirai-qq-bot:latest
+          tags: lss233/chatgpt-mirai-qq-bot:browser-version
