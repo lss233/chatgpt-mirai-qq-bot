@@ -16,7 +16,7 @@ try:
     logger.info("登录 OpenAI 中...")
     if config.openai.mode == 'proxy':
         logger.info("当前模式：第三方代理")
-        from revChatGPT.Proxied import Chatbot
+        from revChatGPT.V1 import Chatbot
         bot = Chatbot(config=config.openai.dict(exclude_none=True, by_alias=False), conversation_id=None)
     else:
         from revChatGPT.Unofficial import Chatbot
