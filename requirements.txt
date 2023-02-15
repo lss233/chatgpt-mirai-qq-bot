@@ -1,5 +1,5 @@
 graia-ariadne>=0.10.3
-revChatGPT[unofficial]==2.2.2
+revChatGPT[unofficial]==2.2.6
 toml
 selenium
 rich

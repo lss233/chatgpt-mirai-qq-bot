@@ -50,6 +50,8 @@
 
 如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
+对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534
+
 <details>
     <summary>Linux: 通过快速部署脚本部署 （新人推荐)</summary>
 
@@ -162,7 +164,7 @@ email = "xxxx"
 password = "xxx"
 
 # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
-# 此时 email 和 password 可以直接删除
+# 此时的 password 可以直接删除 (email 必填)
 # session_token = "一串 ey 开头的东西"
 
 # 如果你在国内，需要配置代理
