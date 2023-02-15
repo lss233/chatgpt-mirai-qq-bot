@@ -47,7 +47,7 @@ class ChatSession:
 
     def reset_conversation(self):
         self.conversation_id = None
-        self.parent_id = str(uuid.uuid4())
+        self.parent_id = None
         self.prev_conversation_id = []
         self.prev_parent_id = []
         self.chatbot = botManager.pick()
