@@ -15,6 +15,8 @@ class Mirai(BaseModel):
     """mirai-api-http 的 http 适配器地址"""
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
+class OpenAI(BaseModel):
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]
 
 class OpenAIAuthBase(BaseModel):
     mode: str = "browser"
@@ -135,7 +137,7 @@ class Preset(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAPIKey]
+    openai: Union[OpenAI, OpenAIEmailAuth, OpenAISessionTokenAuth]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
@@ -158,6 +160,7 @@ class Config(BaseModel):
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
 
+    OpenAI.update_forward_refs()
     @staticmethod
     def __load_json_config() -> Config:
         try:

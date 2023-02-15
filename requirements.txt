@@ -2,6 +2,7 @@ graia-ariadne>=0.10.3
 revChatGPT[unofficial]==2.2.2
 toml
 selenium
+rich
 Pillow>=9.3.0
 revChatGPT==1.2.1
 openai

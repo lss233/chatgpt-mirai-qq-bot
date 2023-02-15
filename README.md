@@ -25,7 +25,8 @@
 * [x] 群聊回复引用
 * [x] 关键词触发回复
 * [x] 正向代理
-* [x] 无需浏览器登录
+* [x] 多种方式登录 OpenAI
+* [x] 多账号支持
 * [x] 预设人格初始化
 
 
@@ -142,6 +143,8 @@ ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
 [openai]
 # OpenAI 相关设置
 
+# 第 1 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 # 模式选择，详情见下方 README
 mode = "browser"
 
@@ -150,11 +153,58 @@ email = "xxxx"
 # 你的 OpenAI 密码
 password = "xxx"
 
+# 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# 此时 email 和 password 可以直接删除
+# session_token = "一串 ey 开头的东西"
+
 # 如果你在国内，需要配置代理
 # proxy="http://127.0.0.1:1080"
 
 # 使用 ChatGPT Plus（plus 用户此项设置为 true）
 paid = false
+
+# 以下是多账号的设置
+# 如果你想同时使用多个账号进行负载均衡，就删掉前面的注释
+
+# # 第 2 个 OpenAI 账号的登录信息
+# [[openai.accounts]]
+# 模式选择，详情见下方 README
+# mode = "browser"
+
+# # 你的 OpenAI 邮箱
+# email = "xxxx" 
+# # 你的 OpenAI 密码
+# password = "xxx"
+
+# # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# # 此时 email 和 password 可以直接删除
+# # session_token = "一串 ey 开头的东西"
+
+# # 如果你在国内，需要配置代理
+# # proxy="http://127.0.0.1:1080"
+
+# # 使用 ChatGPT Plus（plus 用户此项设置为 true）
+# paid = false
+
+# # 第 3 个 OpenAI 账号的登录信息
+# [[openai.accounts]]
+# 模式选择，详情见下方 README
+# mode = "browser"
+
+# # 你的 OpenAI 邮箱
+# email = "xxxx" 
+# # 你的 OpenAI 密码
+# password = "xxx"
+
+# # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# # 此时 email 和 password 可以直接删除
+# # session_token = "一串 ey 开头的东西"
+
+# # 如果你在国内，需要配置代理
+# # proxy="http://127.0.0.1:1080"
+
+# # 使用 ChatGPT Plus（plus 用户此项设置为 true）
+# paid = false
 
 [text_to_image]
 # 文字转图片
@@ -239,6 +289,30 @@ loaded_successful = "预设加载成功！"
 "猫娘" = "presets/catgirl.txt"
 ```
 
+### 多账号支持  
+
+你可以登录多个不同的 OpenAI 账号，当机器人开始产生新对话时，我们会从你登录的账号中选择**一个**来使用 ChatGPT 和用户聊天。 
+
+一个对话会绑定在一个号上，所以你不必担心丢失上下文的问题。  
+
+这可以降低聊天频率限制出现的概率。  
+
+```properties
+[openai]
+# OpenAI 相关设置
+
+# 第 1 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 里面是一些设置
+
+# 第 2 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 里面是一些设置
+
+# 第 3 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 里面是一些设置
+```
 
 ### 模式选择
 
@@ -246,6 +320,10 @@ loaded_successful = "预设加载成功！"
 
 ```properties
 [openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 # 前面别的东西
 
 # 模式选择
@@ -258,15 +336,48 @@ mode = "browser"
 - browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI
 - proxy - 第三方代理。该模式将你的账号信息发送到第三方服务器进行认证，不需要浏览器。  
 
-### Session 登录
+### session_token 登录
 
-**注：第三方代理模式无法使用 session_token 方式登录**  
+对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
 
-请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
+使用这种方式登录时不需要填写邮箱和密码。  
+
+需要注意的是，session_token 过期比较频繁，过期后需要重新设置。  
+
+session_token 的获取方式可参考：[请问怎么获取 session_token](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/96)  
 
 ```properties
 # 前面别的东西
 [openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+
+session_token = "一串 ey 开头的东西"
+```
+
+
+### OpenAI 邮箱密码登录
+
+支持使用 OpenAI 邮箱、密码的方式登录。  
+
+在启动时，我们会打开一个浏览器，   
+
+当你使用这种方式登录时，需要在打开的浏览器页面中完成 OpenAI 的登录。  
+
+我们会自动点击页面中的 `Log in` 按钮、为您填写 `email`，并完成登录。
+
+登录完成后，浏览器会自动退出。
+
+
+```properties
+# 前面别的东西
+[openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 # 你的 OpenAI 邮箱
 email = "xxxx" 
 # 你的 OpenAI 密码
@@ -279,8 +390,12 @@ password = "xxx"
 如果你的网络访问 OpenAI 出现一直弹浏览器的问题，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
 
 ```properties
-[openai]
 # 前面别的东西
+[openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 
 # 请注意，由于现在 OpenAI 封锁严格，你需要一个
 # 尽量使用独立的代理服务器，不要使用和其他人共用 IP 的代理

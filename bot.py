@@ -37,8 +37,6 @@ app = Ariadne(
         WebsocketClientConfig(host=config.mirai.ws_url),
     ),
 )
-queue_size = 0
-queue_lock = None
 
 async def create_timeout_task(target: Union[Friend, Group], source: Source):
     await asyncio.sleep(config.response.timeout)
@@ -48,10 +46,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if not message.strip():
         return config.response.placeholder
     
-    global queue_lock, queue_size
-    if queue_lock is None:
-        queue_lock = asyncio.Lock()
-
     timeout_task = None
 
     session, is_new_session = chatbot.get_chat_session(session_id)
@@ -64,16 +58,16 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         return config.response.rollback_fail
 
     # 队列满时拒绝新的消息
-    if config.response.max_queue_size > 0 and queue_size > config.response.max_queue_size:
+    if config.response.max_queue_size > 0 and session.chatbot.queue_size > config.response.max_queue_size:
         return config.response.queue_full
     else:
         # 提示用户：请求已加入队列
-        if queue_size > config.response.queued_notice_size:
-            await app.send_message(target, config.response.queued_notice.format(queue_size=queue_size), quote=source if config.response.quote else False)
+        if session.chatbot.queue_size > config.response.queued_notice_size:
+            await app.send_message(target, config.response.queued_notice.format(queue_size=session.chatbot.queue_size), quote=source if config.response.quote else False)
 
     # 以下开始需要排队
-    queue_size = queue_size + 1
-    async with queue_lock:
+    
+    async with session.chatbot:
         try:
 
             timeout_task = asyncio.create_task(create_timeout_task(target, source))
@@ -104,7 +98,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             logger.exception(e)
             return config.response.error_format.format(exc=e)
         finally:
-            queue_size = queue_size - 1
             if timeout_task:
                 timeout_task.cancel()
     ### 排队结束
