@@ -17,6 +17,7 @@ services:
     restart: always
     environment:
       LANG: 'C.UTF-8'
+      XPRA_PASSWORD: 'lss233' # XPRA 密码，建议修改
     ports:
       - 14500:14500
     volumes:
