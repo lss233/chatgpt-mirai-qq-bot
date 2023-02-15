@@ -17,6 +17,8 @@ logger.remove()
 class BotInfo(asyncio.Lock):
     bot: Union[V1Chatbot, BrowserChatbot]
 
+    mode: str
+
     queue_size: int = 0
 
     lastAccessed = None
@@ -25,8 +27,9 @@ class BotInfo(asyncio.Lock):
     lastFailure = None
     """Date when bot encounter an error last time"""
 
-    def __init__(self, bot):
+    def __init__(self, bot, mode):
         self.bot = bot
+        self.mode = mode
         super().__init__()
     
     def __str__(self) -> str:
@@ -84,12 +87,12 @@ class BotManager():
         if 'XPRA_PASSWORD' in os.environ:
             logger.info("检测到您正在使用 xpra 虚拟显示环境，请使用你自己的浏览器访问 http://你的IP:14500，密码：{XPRA_PASSWORD}以看见浏览器。", XPRA_PASSWORD=os.environ.get('XPRA_PASSWORD'))
         bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False), conversation_id=None)
-        return BotInfo(bot)
+        return BotInfo(bot, account.mode)
 
     def __login_V1(self, account: OpenAIAuthBase) -> BotInfo :
         logger.info("模式：第三方代理")
         bot = V1Chatbot(config=account.dict(exclude_none=True, by_alias=False), conversation_id=None)
-        return BotInfo(bot)
+        return BotInfo(bot, account.mode)
 
     def pick(self) -> BotInfo:
         if self.roundrobin is None:

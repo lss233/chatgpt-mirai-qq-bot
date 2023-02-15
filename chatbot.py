@@ -45,24 +45,24 @@ class ChatSession:
         self.prev_conversation_id.append(self.conversation_id)
         self.prev_parent_id.append(self.parent_id)
 
-        async with self.chatbot as bot:
-            bot.conversation_id = self.conversation_id
-            bot.parent_id = self.parent_id
+        bot = self.chatbot.bot
+        bot.conversation_id = self.conversation_id
+        bot.parent_id = self.parent_id
 
-            loop = asyncio.get_event_loop()
-            resp = await loop.run_in_executor(None, bot.ask, message)
+        loop = asyncio.get_event_loop()
+        resp = await loop.run_in_executor(None, bot.ask, message)
 
-            if config.openai.mode == 'proxy':
-                final_resp = None
-                for item in resp:
-                    final_resp = item
-                self.conversation_id = final_resp["conversation_id"]
-                self.parent_id = final_resp["parent_id"]
-                return final_resp["message"]
-            else:
-                self.conversation_id = resp["conversation_id"]
-                self.parent_id = resp["parent_id"]
-                return resp["message"]
+        if self.chatbot.mode == 'proxy':
+            final_resp = None
+            for item in resp:
+                final_resp = item
+            self.conversation_id = final_resp["conversation_id"]
+            self.parent_id = final_resp["parent_id"]
+            return final_resp["message"]
+        else:
+            self.conversation_id = resp["conversation_id"]
+            self.parent_id = resp["parent_id"]
+            return resp["message"]
 
 __sessions = {}
 
