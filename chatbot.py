@@ -13,7 +13,7 @@ from manager import BotManager, BotInfo
 
 config = Config.load_config()
 
-if config.openai is OpenAIAuths:
+if type(config.openai) is OpenAIAuths:
     botManager = BotManager(config.openai.accounts)
 else:
     # Backward-compatibility
