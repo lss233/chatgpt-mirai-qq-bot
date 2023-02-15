@@ -91,7 +91,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             # 正常交流
             resp = await session.get_chat_response(message)
             if resp:
-                logger.debug(f"{session_id} - {resp}")
+                logger.debug(f"{session_id} - {session.chatbot.id} {resp}")
                 return resp.strip()
         except Exception as e:
             if str(e)  == "('Response code error: ', 429)" or 'overloaded' in str(e):

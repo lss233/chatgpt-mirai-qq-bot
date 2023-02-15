@@ -17,6 +17,8 @@ logger.remove()
 config = Config.load_config()
 
 class BotInfo(asyncio.Lock):
+    id = 0
+    
     bot: Union[V1Chatbot, BrowserChatbot]
 
     mode: str
@@ -36,6 +38,7 @@ class BotInfo(asyncio.Lock):
         self.mode = mode
         super().__init__()
 
+    """更新预设对话池"""
     def update_conversation_pools(self):
         for key in config.presets.keywords.keys():
             if key not in self.unused_conversations_pools:
@@ -49,7 +52,8 @@ class BotInfo(asyncio.Lock):
                 if text.startswith('User:'):
                     text = text.replace('User:', '')
                 self.ask(text)
-            
+    
+    """向 ChatGPT 发送提问"""
     def ask(self, prompt, conversation_id = None, parent_id = None):
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
         if self.mode == 'proxy':
@@ -96,6 +100,7 @@ class BotManager():
                         bot = self.__login_V1(account)
                     elif account.mode == "browser":
                         bot = self.__login_browser(account)
+                    bot.id = i
                     self.bots.append(bot)
                 except Exception as e:
                     logger.exception(e)
@@ -105,6 +110,7 @@ class BotManager():
         if len(self.bots) < 1:
             logger.error("所有账号均登录失败，无法继续启动！")
             exit(-2)
+        logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！")
 
     def __login_browser(self, account) -> BotInfo :
         logger.info("模式：浏览器直接访问")
