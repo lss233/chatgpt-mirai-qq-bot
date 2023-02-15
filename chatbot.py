@@ -9,31 +9,20 @@ import os
 import asyncio
 import uuid
 from time import sleep
+from selenium.common.exceptions import TimeoutException
+from manager import BotManager, BotInfo
 import json
 
 config = Config.load_config()
+botManager = BotManager(config.openai.accounts)
 
 os.environ.setdefault('TEMPERATURE', str(config.openai.temperature))
 
-bot = None
-
 def setup():
-    global bot
-    try:
-        if not (config.openai.email and config.openai.password) and not config.openai.session_token:
-            logger.error("配置文件出错！请配置 OpenAI 的邮箱、密码，或者 session_token。")
-            exit(-1)
-        bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token, paid=config.openai.paid)
-    except KeyError as e:
-        if str(e) == 'accessToken':
-            logger.error("无法获取 accessToken，请检查 session_token 是否过期")
-        raise e
+    botManager.login()
 
-    try:
-        logger.debug("Session token: " + bot.session_token)
-    except:
-        pass
 class ChatSession:
+    chatbot: BotInfo = None
     chat_history: list[str]
     conversation_id: str
     preset: str
@@ -59,23 +48,25 @@ class ChatSession:
         else:
             return last_message
     def get_last_message(self):
-        if len(bot.conversations.conversations[self.conversation_id].messages) == 0:
+        if len(self.chatbot.bot.conversations.conversations[self.conversation_id].messages) == 0:
             return None
-        return bot.conversations.conversations[self.conversation_id].messages[-1].text
+        return self.chatbot.bot.conversations.conversations[self.conversation_id].messages[-1].text
     def reset_conversation(self):
-        bot.conversations.conversations[self.conversation_id] = Conversation()
+        self.chatbot = botManager.pick()
+        self.chatbot.conversations.conversations[self.conversation_id] = Conversation()
         if not self.preset == 'default':
             preset_conversations = config.load_preset(self.preset)
             self.base_prompt = preset_conversations[0]
             for message in preset_conversations[1:]:
                 user, txt = message.split(':', maxsplit=2)
-                bot.conversations.add_message(Message(txt, user), self.conversation_id)
+                self.chatbot.conversations.add_message(Message(txt, user), self.conversation_id)
         else:
             self.base_prompt = '你是 ChatGPT，一个大型语言模型。请以对话方式回复。\n\n\n'
+        
     def rollback_conversation(self) -> bool:
-        if not self.conversation_id in bot.conversations.conversations:
+        if not self.conversation_id in self.chatbot.conversations.conversations:
             return False
-        bot.conversations.rollback(self.conversation_id, num = 2)
+        self.chatbot.conversations.rollback(self.conversation_id, num = 2)
         
         last_message = self.get_last_message()
         if last_message is None:
@@ -87,7 +78,7 @@ class ChatSession:
         async with self.lock:
             os.environ.setdefault('BASE_PROMPT', self.base_prompt)
             result = ''
-            async for data in bot.ask(prompt=message, conversation_id=self.conversation_id):
+            async for data in self.chatbot.ask(prompt=message, conversation_id=self.conversation_id):
                 result = result + data["choices"][0]["text"].replace("<|im_end|>", "")
             return result
 

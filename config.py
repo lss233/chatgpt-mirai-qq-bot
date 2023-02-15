@@ -15,24 +15,39 @@ class Mirai(BaseModel):
     """mirai-api-http 的 http 适配器地址"""
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
+class OpenAI(BaseModel):
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]
 
-class OpenAIAuth(BaseModel):
-    email: Union[str, None] = None
-    """OpenAI 注册邮箱"""
-    password: Union[str, None] = None
-    """OpenAI 密码"""
-    session_token: Union[str, None] = None
-    """OpenAI 的 session_token，使用 Google 或者 微软登录者使用"""
+class OpenAIAuthBase(BaseModel):
+    mode: str = "browser"
+    """使用 OpenAI 的模式，可选的值：proxy - 使用第三方代理、 browser - 使用浏览器"""
     proxy: Union[str, None] = None
-    """可选的本地代理服务器"""
-    insecure_auth: bool = False
-    """使用第三方代理登录"""
-    temperature: float = 0.5
-    """情感值，越高话越多""" 
+    """可选的代理地址"""
+    driver_exec_path: Union[str, None] = None
+    """可选的 Chromedriver 路径"""
+    browser_exec_path: Union[str, None] = None
+    """可选的 Chrome 浏览器路径"""
+    conversation: Union[str, None] = None
+    """初始化对话所使用的UUID"""
     paid: bool = False
-    """使用付费模型""" 
+    """使用 ChatGPT Plus"""
+    verbose: bool = False
+    """启用详尽日志模式"""
+
     class Config(BaseConfig):
         extra = Extra.allow
+
+class OpenAIEmailAuth(OpenAIAuthBase):
+    email: str
+    """OpenAI 注册邮箱"""
+    password: str
+    """OpenAI 密码"""
+    isMicrosoftLogin: bool = False
+    """是否通过 Microsoft 登录"""
+
+class OpenAISessionTokenAuth(OpenAIAuthBase):
+    session_token: str
+    """OpenAI 的 session_token"""
 
 class TextToImage(BaseModel):
     font_size: int = 30
@@ -92,6 +107,18 @@ class Response(BaseModel):
     request_too_fast: str = "当前正在处理的请求太多了，请稍等一会再发吧！"
     """服务器提示 429 错误时的回复 """
 
+    max_queue_size: int = 10
+    """等待处理的消息的最大数量，如果要关闭此功能，设置为 0"""
+
+    queue_full: str = "抱歉！我现在要回复的人有点多，暂时没有办法接收新的消息了，请过会儿再给我发吧！"
+    """队列满时的提示"""
+
+    queued_notice_size: int = 3
+    """新消息加入队列会发送通知的长度最小值"""
+
+    queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
+    """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
+
 class System(BaseModel):
     accept_group_invite: bool = False
     """自动接收邀请入群请求"""
@@ -106,7 +133,7 @@ class Preset(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: OpenAIAuth
+    openai: Union[OpenAI, OpenAIEmailAuth, OpenAISessionTokenAuth]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
@@ -129,6 +156,7 @@ class Config(BaseModel):
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
 
+    OpenAI.update_forward_refs()
     @staticmethod
     def __load_json_config() -> Config:
         try:

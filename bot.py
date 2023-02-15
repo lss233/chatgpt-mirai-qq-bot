@@ -16,11 +16,12 @@ from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from graia.ariadne.message.element import Image
+from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.event.lifecycle import AccountLaunch
 from loguru import logger
-
 import re
+
 import asyncio
 import chatbot
 from config import Config
@@ -119,9 +120,8 @@ async def start_background(loop: asyncio.AbstractEventLoop):
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
     except Exception as e:
-        # Fail-through
-        raise e
+        logger.error("OpenAI 服务器失败！")
+        exit(-1)
     logger.info("OpenAI 服务器登录成功")
-    logger.info("尝试连接到 Mirai 服务……")
-    
+    logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 app.launch_blocking()

@@ -3,6 +3,7 @@
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**  
 
 ![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
+
 [![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=master)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/latest/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
@@ -31,7 +32,8 @@
 * [x] 群聊回复引用
 * [x] 关键词触发回复
 * [x] 正向代理
-* [x] 无需浏览器登录
+* [x] 多种方式登录 OpenAI
+* [x] 多账号支持
 * [x] 支持 ChatGPT Plus
 * [x] 预设人格初始化
 
@@ -66,9 +68,7 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/6f1af9510f47409e
 我们使用 `docker-compose.yaml` 整合了 [lss233/mirai-http](https://github.com/lss233/mirai-http-docker) 和本项目来实现快速部署。  
 但是在部署过程中仍然需要一些步骤来进行配置。  
 
-您可以尝试使用  [@paradox8599](https://github.com/paradox8599) 提供的简易部署脚本：[paradox8599/mirai-chatgpt-setup](https://github.com/paradox8599/mirai-chatgpt-setup) 进行较快地部署。  
-
-**或者**移步至 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89) 浏览手工配置的方案。
+你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E4%BD%BF%E7%94%A8-Docker-Compose-%E9%83%A8%E7%BD%B2%EF%BC%88Mirai---%E6%9C%AC%E9%A1%B9%E7%9B%AE%EF%BC%89) 查看搭建教程。
 
 </details>
 
@@ -97,7 +97,7 @@ docker run --name mirai-chatgpt-bot \
 
 我们为 Windows 用户制作了一个快速启动包，可以在 [Release](https://github.com/lss233/chatgpt-mirai-qq-bot/releases) 中找到。    
 
-文件名为：`quickstart-windows-amd64.zip`  
+文件名为：`quickstart-windows-amd64.zip`  或者 `Windows快速部署包.zip`
 </details>
 
 <details>
@@ -151,6 +151,11 @@ ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
 [openai]
 # OpenAI 相关设置
 
+# 第 1 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 模式选择，详情见下方 README
+mode = "browser"
+
 # 你的 OpenAI 邮箱
 email = "xxxx" 
 # 你的 OpenAI 密码
@@ -160,18 +165,54 @@ password = "xxx"
 # 此时 email 和 password 可以直接删除
 # session_token = "一串 ey 开头的东西"
 
-# 机器人情感值，范围  0 ~ 1，越高话越多
-temperature = 0.5
-
-# 如果你的网络不好，可以设置一个本地代理
+# 如果你在国内，需要配置代理
 # proxy="http://127.0.0.1:1080"
 
-# 如果你 OpenAI 禁止你所在的地区使用，可以使用第三方服务代理验证
-# 警告：设置为 true 以后，你的 OpenAI 账户信息会发送至第三方
-insecure_auth = false
-
-# 使用付费模型（plus 用户使用）
+# 使用 ChatGPT Plus（plus 用户此项设置为 true）
 paid = false
+
+# 以下是多账号的设置
+# 如果你想同时使用多个账号进行负载均衡，就删掉前面的注释
+
+# # 第 2 个 OpenAI 账号的登录信息
+# [[openai.accounts]]
+# 模式选择，详情见下方 README
+# mode = "browser"
+
+# # 你的 OpenAI 邮箱
+# email = "xxxx" 
+# # 你的 OpenAI 密码
+# password = "xxx"
+
+# # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# # 此时 email 和 password 可以直接删除
+# # session_token = "一串 ey 开头的东西"
+
+# # 如果你在国内，需要配置代理
+# # proxy="http://127.0.0.1:1080"
+
+# # 使用 ChatGPT Plus（plus 用户此项设置为 true）
+# paid = false
+
+# # 第 3 个 OpenAI 账号的登录信息
+# [[openai.accounts]]
+# 模式选择，详情见下方 README
+# mode = "browser"
+
+# # 你的 OpenAI 邮箱
+# email = "xxxx" 
+# # 你的 OpenAI 密码
+# password = "xxx"
+
+# # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
+# # 此时 email 和 password 可以直接删除
+# # session_token = "一串 ey 开头的东西"
+
+# # 如果你在国内，需要配置代理
+# # proxy="http://127.0.0.1:1080"
+
+# # 使用 ChatGPT Plus（plus 用户此项设置为 true）
+# paid = false
 
 [text_to_image]
 # 文字转图片
@@ -224,6 +265,18 @@ rollback_fail = "回滚失败，没有更早的记录了！"
 # 服务器提示 429 错误时的回复
 request_too_fast = "当前正在处理的请求太多了，请稍等一会再发吧！"
 
+# 等待处理的消息的最大数量，如果要关闭此功能，设置为 0
+max_queue_size = 10
+
+# 队列满时的提示
+queue_full = "抱歉！我现在要回复的人有点多，暂时没有办法接收新的消息了，请过会儿再给我发吧！"
+
+# 新消息加入队列会发送通知的长度最小值
+queued_notice_size = 3
+
+# 新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数
+queued_notice = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
+
 [system]
 # 是否自动同意进群邀请
 accept_group_invite = false
@@ -244,9 +297,50 @@ loaded_successful = "预设加载成功！"
 
 ```
 
-### OpenAI 登录
+### 多账号支持  
 
-目前我们支持邮箱密码登录和 session_token 登录两种方式。  
+你可以登录多个不同的 OpenAI 账号，当机器人开始产生新对话时，我们会从你登录的账号中选择**一个**来使用 ChatGPT 和用户聊天。 
+
+这可以降低聊天频率限制出现的概率。  
+
+```properties
+[openai]
+# OpenAI 相关设置
+
+# 第 1 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 里面是一些设置
+
+# 第 2 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 里面是一些设置
+
+# 第 3 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 里面是一些设置
+```
+
+### 模式选择
+
+现在我们支持多种方式访问 OpenAI 服务器， 你可以在配置文件中选择所使用的模式。
+
+```properties
+[openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 前面别的东西
+
+# 模式选择
+mode = "browser"
+
+# 后面别的东西
+```
+
+支持的模式有：
+- browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI
+- proxy - 第三方代理。该模式将你的账号信息发送到第三方服务器进行认证，不需要浏览器。  
 
 #### 邮箱密码登录
 
@@ -255,6 +349,10 @@ loaded_successful = "预设加载成功！"
 ```properties
 # 前面别的东西
 [openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 # 你的 OpenAI 邮箱
 email = "xxxx" 
 # 你的 OpenAI 密码
@@ -262,25 +360,7 @@ password = "xxx"
 # 后面别的东西
 ```
 
-**登录不了？**
-
-如果你所在的地区无法使用 OpenAI，可以尝试开启 `insecure_auth` 配置项。  
-
-开启后，你的账户密码将发送至一个第三方的代理服务器进行验证。  
-
-```properties
-# 前面别的东西
-[openai]
-# 你的 OpenAI 邮箱
-email = "xxxx" 
-# 你的 OpenAI 密码
-password = "xxx"
-
-# 通过第三方代理服务器验证
-insecure_auth = true
-```
-
-### session_token 验证
+### session_token 登录
 
 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
 
@@ -293,19 +373,49 @@ session_token 的获取方式可参考：[请问怎么获取 session_token](http
 ```properties
 # 前面别的东西
 [openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 
 session_token = "一串 ey 开头的东西"
 ```
 
-### 使用正向代理
 
-如果你的网络访问 OpenAI 比较慢，或者你的 IP 被封锁了，或者出现了 Unknown error 的情况，可以通过配置代理的方式来连接到 OpenAI。  
+**登录不了？使用第三方代理模式！**
 
-支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
+如果你所在的地区无法使用 OpenAI，或者出现了登录过程卡死的情况，
+  
+可以尝试设置 `mode="proxy"` 配置项。  
+
+开启后，你的账户密码将发送至一个第三方的代理服务器进行验证。  
 
 ```properties
-[openai]
 # 前面别的东西
+[openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+mode = "proxy"
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+# 后面别的东西
+```
+
+### 使用正向代理
+
+如果你的网络访问 OpenAI 出现一直弹浏览器的问题，或者你的 IP 被封锁了，可以通过配置代理的方式来连接到 OpenAI。支持使用正向代理方式访问 OpenAI，你需要一个 HTTTP/HTTPS 代理服务器：
+
+```properties
+# 前面别的东西
+[openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
 
 # 请注意，由于现在 OpenAI 封锁严格，你需要一个
 # 尽量使用独立的代理服务器，不要使用和其他人共用 IP 的代理
@@ -314,6 +424,7 @@ session_token = "一串 ey 开头的东西"
 proxy="http://127.0.0.1:1080"
 
 # 后面别的东西
+
 ```
 
 ### 加载预设
