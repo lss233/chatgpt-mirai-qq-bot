@@ -3,15 +3,22 @@
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**  
 
 ![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
-[![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=browser-version)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
-[![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
-[![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
-> **2023/2/10**  
-> 本项目分为网页版和API版两种模式。  
-> 网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
-> 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
-> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 API 版。
+[![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=master)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
+[![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
+[![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/latest/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
+
+
+> **2023/2/14**  
+> 上游已更新，接下来不区分网页版和 API 版。  
+> 1.6.x 及以上版本将为最新版。
+
+> ~~**2023/2/10**~~  
+> ~~本项目分为网页版和API版两种模式。~~  
+> ~~网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本~~  
+> ~~具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82~~  
+> ~~当前浏览的是 API 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/browser-version)切换至网页版。~~
+
 
 ***
 
@@ -27,13 +34,14 @@
 * [x] 正向代理
 * [x] 多种方式登录 OpenAI
 * [x] 多账号支持
+* [x] 支持 ChatGPT Plus
 * [x] 预设人格初始化
 
 
 * [交流群](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 会发布最新的项目动态。  
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。  
-* [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。  
+* [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
 ![Preview](.github/preview.png)
 
@@ -49,7 +57,7 @@
 它会为你安装 Docker、 Docker Compose 和编写配置文件。  
 
 ```bash
-bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665768b1bdcbed837fd/raw/chatgpt-mirai-installer-154-16RC3.sh)"
+bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/6f1af9510f47409e0d05276a3af816df/raw/chatgpt-mirai-installer.sh)"
 ```
 
 </details>
@@ -276,6 +284,17 @@ accept_group_invite = false
 # 是否自动同意好友请求
 accept_friend_request = false
 
+[presets]
+# 切换预设的命令： 加载预设 猫娘
+command = "加载预设 (\\w+)"
+
+loaded_successful = "预设加载成功！"
+
+[presets.keywords]
+# 预设关键词 <-> 实际文件
+"正常" = "presets/default.txt"
+"猫娘" = "presets/catgirl.txt"
+
 ```
 
 ### 多账号支持  
@@ -323,6 +342,24 @@ mode = "browser"
 - browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI
 - proxy - 第三方代理。该模式将你的账号信息发送到第三方服务器进行认证，不需要浏览器。  
 
+#### 邮箱密码登录
+
+你只需要填写 OpenAI 的邮箱和密码即可。  
+
+```properties
+# 前面别的东西
+[openai]
+# OpenAI 相关设置
+
+# 第 N 个 OpenAI 账号的登录信息
+[[openai.accounts]]
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+# 后面别的东西
+```
+
 ### session_token 登录
 
 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
@@ -345,17 +382,13 @@ session_token = "一串 ey 开头的东西"
 ```
 
 
-### OpenAI 邮箱密码登录
+**登录不了？使用第三方代理模式！**
 
-支持使用 OpenAI 邮箱、密码的方式登录。  
+如果你所在的地区无法使用 OpenAI，或者出现了登录过程卡死的情况，
+  
+可以尝试设置 `mode="proxy"` 配置项。  
 
-在启动时，我们会打开一个浏览器，   
-
-当你使用这种方式登录时，需要在打开的浏览器页面中完成 OpenAI 的登录。  
-
-我们会自动点击页面中的 `Log in` 按钮、为您填写 `email`，剩下的需要您自己完成。
-
-登录完成后，浏览器会自动退出。
+开启后，你的账户密码将发送至一个第三方的代理服务器进行验证。  
 
 ```properties
 # 前面别的东西
@@ -364,6 +397,7 @@ session_token = "一串 ey 开头的东西"
 
 # 第 N 个 OpenAI 账号的登录信息
 [[openai.accounts]]
+mode = "proxy"
 # 你的 OpenAI 邮箱
 email = "xxxx" 
 # 你的 OpenAI 密码
@@ -390,18 +424,18 @@ password = "xxx"
 proxy="http://127.0.0.1:1080"
 
 # 后面别的东西
+
 ```
-### 使用第三方代理模式的注意事项
 
-根据 https://github.com/acheong08/ChatGPT/issues/639， 如果你在使用第三方代理模式时出现了 ```KeyError: 'accessToken'``` 错误，  
+### 加载预设
 
-可以配置一个正向代理来解决此问题。  
+如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
 
-### 自定义人格
+我们自带了 `猫娘` 和 `正常` 两种预设，你可以在 `presets` 文件夹下了解预设的写法。  
 
-我们现在支持在会话的初始阶段为机器人设置人格。  
+使用 `加载预设 猫娘` 来加载猫娘预设。
 
-请查阅 `chatbot.py` 中的 `initial_process` 和 `keyword_presets_process` 方法，了解如何设置。
+你可以参考[Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
 ## 📷 图片转文字
 

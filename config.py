@@ -126,6 +126,11 @@ class System(BaseModel):
     accept_friend_request: bool = False
     """自动接收好友请求"""
 
+class Preset(BaseModel):
+    command: str = r"加载预设 (\w+)"
+    keywords: dict[str, str] = dict()
+    loaded_successful: str = "预设加载成功！"
+
 class Config(BaseModel):
     mirai: Mirai
     openai: Union[OpenAI, OpenAIEmailAuth, OpenAISessionTokenAuth]
@@ -133,6 +138,23 @@ class Config(BaseModel):
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
+    presets: Preset = Preset()
+
+    def load_preset(self, keyword):
+        try:
+            with open(self.presets.keywords[keyword], "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
+                
+                return str(guessed_str).replace('\r', '').strip().split('\n\n')
+        except KeyError as e:
+            raise ValueError("预设不存在！")
+        except FileNotFoundError as e:
+            raise ValueError("预设文件不存在！")
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
 
     OpenAI.update_forward_refs()
     @staticmethod
