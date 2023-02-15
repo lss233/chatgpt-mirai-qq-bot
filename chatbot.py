@@ -1,4 +1,3 @@
-from revChatGPT.V2 import Chatbot, Message, Conversation
 from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.message import Source
@@ -9,91 +8,71 @@ import os
 import asyncio
 import uuid
 from time import sleep
-import json
+from selenium.common.exceptions import TimeoutException
+from manager import BotManager, BotInfo
 
 config = Config.load_config()
-
-os.environ.setdefault('TEMPERATURE', str(config.openai.temperature))
-
-bot = None
+botManager = BotManager(config.openai.accounts)
 
 def setup():
-    global bot
-    try:
-        if not (config.openai.email and config.openai.password) and not config.openai.session_token:
-            logger.error("配置文件出错！请配置 OpenAI 的邮箱、密码，或者 session_token。")
-            exit(-1)
-        bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token, paid=config.openai.paid)
-    except KeyError as e:
-        if str(e) == 'accessToken':
-            logger.error("无法获取 accessToken，请检查 session_token 是否过期")
-        raise e
+    botManager.login()
 
-    try:
-        logger.debug("Session token: " + bot.session_token)
-    except:
-        pass
+
 class ChatSession:
-    chat_history: list[str]
-    conversation_id: str
-    preset: str
-    base_prompt: str
-    lock: asyncio.Lock
-
-    def __init__(self, conversation_id):
-        self.conversation_id = conversation_id
-        self.load_conversation()
-        self.lock = asyncio.Lock()
-
-    def load_conversation(self, keyword='default'):
-        if not keyword in config.presets.keywords:
-            if not keyword == 'default':
-                raise ValueError("预设不存在，请检查你的输入是否有问题！")
-        self.preset = keyword
-        
+    chatbot: BotInfo = None
+    def __init__(self):
         self.reset_conversation()
 
-        last_message = self.get_last_message()
-        if last_message is None:
-            return config.presets.loaded_successful
+    async def load_conversation(self, keyword='default'):
+        if not keyword in config.presets.keywords:
+            if keyword == 'default':
+                self.reset_conversation()
+            else:
+                raise ValueError("预设不存在，请检查你的输入是否有问题！")
         else:
-            return last_message
-    def get_last_message(self):
-        if len(bot.conversations.conversations[self.conversation_id].messages) == 0:
-            return None
-        return bot.conversations.conversations[self.conversation_id].messages[-1].text
+            self.reset_conversation()
+            presets = config.load_preset(keyword)
+            for text in presets:
+                if text.startswith('ChatGPT:'):
+                    yield text.split('ChatGPT:')[-1].strip()
+                elif text.startswith('User:'):
+                    await self.get_chat_response(text.split('User:')[-1].strip())
+                else:
+                    await self.get_chat_response(text.split('User:')[-1].strip())
+
     def reset_conversation(self):
-        bot.conversations.conversations[self.conversation_id] = Conversation()
-        if not self.preset == 'default':
-            preset_conversations = config.load_preset(self.preset)
-            self.base_prompt = preset_conversations[0]
-            for message in preset_conversations[1:]:
-                user, txt = message.split(':', maxsplit=2)
-                bot.conversations.add_message(Message(txt, user), self.conversation_id)
-        else:
-            self.base_prompt = '你是 ChatGPT，一个大型语言模型。请以对话方式回复。\n\n\n'
+        self.conversation_id = None
+        self.parent_id = str(uuid.uuid4())
+        self.prev_conversation_id = []
+        self.prev_parent_id = []
+        self.chatbot = botManager.pick()
+
     def rollback_conversation(self) -> bool:
-        if not self.conversation_id in bot.conversations.conversations:
+        if len(self.prev_parent_id) <= 0:
             return False
-        bot.conversations.rollback(self.conversation_id, num = 2)
-        
-        last_message = self.get_last_message()
-        if last_message is None:
-            return ''
-        
-        return last_message
+        self.conversation_id = self.prev_conversation_id.pop()
+        self.parent_id = self.prev_parent_id.pop()
+        return True
 
     async def get_chat_response(self, message) -> str:
-        async with self.lock:
-            os.environ.setdefault('BASE_PROMPT', self.base_prompt)
-            result = ''
-            async for data in bot.ask(prompt=message, conversation_id=self.conversation_id):
-                result = result + data["choices"][0]["text"].replace("<|im_end|>", "")
-            return result
+        self.prev_conversation_id.append(self.conversation_id)
+        self.prev_parent_id.append(self.parent_id)
+
+        bot = self.chatbot.bot
+        bot.conversation_id = self.conversation_id
+        bot.parent_id = self.parent_id
+
+        loop = asyncio.get_event_loop()
+        resp = await loop.run_in_executor(None, self.chatbot.ask, message, self.conversation_id, self.parent_id)
+
+        self.conversation_id = resp["conversation_id"]
+        self.parent_id = resp["parent_id"]
+
+        return resp["message"]
 
 __sessions = {}
 
 def get_chat_session(id: str) -> ChatSession:
     if id not in __sessions:
-        __sessions[id] = ChatSession(id)
+        __sessions[id] = ChatSession()
     return __sessions[id]

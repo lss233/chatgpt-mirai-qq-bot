@@ -49,6 +49,7 @@ REM 然后重新执行
 %PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
 
 ECHO 接下来将会打开 config.cfg，请修改里面的信息。
+
 cd "%BASE_DIR%\chatgpt"
 COPY config.example.cfg config.cfg
 notepad config.cfg
