@@ -294,12 +294,13 @@ loaded_successful = "预设加载成功！"
 # 预设关键词 <-> 实际文件
 "正常" = "presets/default.txt"
 "猫娘" = "presets/catgirl.txt"
-
 ```
 
 ### 多账号支持  
 
 你可以登录多个不同的 OpenAI 账号，当机器人开始产生新对话时，我们会从你登录的账号中选择**一个**来使用 ChatGPT 和用户聊天。 
+
+一个对话会绑定在一个号上，所以你不必担心丢失上下文的问题。  
 
 这可以降低聊天频率限制出现的概率。  
 
@@ -344,7 +345,11 @@ mode = "browser"
 
 #### 邮箱密码登录
 
-你只需要填写 OpenAI 的邮箱和密码即可。  
+当你使用这种方式登录时，我们会自动打开一个浏览器页面完成 OpenAI 的登录。  
+
+我们会自动点击页面中的 `Log in` 按钮、为您填写 `email`，并完成登录。
+
+登录完成后，浏览器会自动退出。
 
 ```properties
 # 前面别的东西
@@ -427,7 +432,8 @@ proxy="http://127.0.0.1:1080"
 
 ```
 
-### 加载预设
+
+## 🦊 加载预设
 
 如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
 
@@ -435,7 +441,7 @@ proxy="http://127.0.0.1:1080"
 
 使用 `加载预设 猫娘` 来加载猫娘预设。
 
-你可以参考[Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
+你可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
 ## 📷 图片转文字
 

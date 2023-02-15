@@ -4,5 +4,7 @@ toml
 selenium
 rich
 Pillow>=9.3.0
-revChatGPT==2.2.0
+revChatGPT==1.2.1
+openai
+tiktoken
 toml

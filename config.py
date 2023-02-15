@@ -49,6 +49,10 @@ class OpenAISessionTokenAuth(OpenAIAuthBase):
     session_token: str
     """OpenAI 的 session_token"""
 
+class OpenAIAPIKey(OpenAIAuthBase):
+    api_key: str
+    """OpenAI 的 api_key"""
+
 class TextToImage(BaseModel):
     font_size: int = 30
     """字号"""
@@ -147,7 +151,7 @@ class Config(BaseModel):
                 if not guessed_str:
                     raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
                 
-                return str(guessed_str).replace('\r', '').strip().split('\n\n')
+                return str(guessed_str).replace('<|im_end|>', '').replace('\r', '').split('\n\n')
         except KeyError as e:
             raise ValueError("预设不存在！")
         except FileNotFoundError as e:
