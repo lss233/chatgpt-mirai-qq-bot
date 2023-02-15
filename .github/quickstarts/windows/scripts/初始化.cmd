@@ -44,7 +44,7 @@ REM 如果下载的依赖不是最新版
 REM 请修改 https://mirrors.aliyun.com/pypi/simple/ 为 https://pypi.org/simple/
 REM 然后重新执行
 
-%PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ -r requirements.txt
+%PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://pypi.org/simple/ -r requirements.txt
 
 ECHO 接下来将会打开 config.cfg，请修改里面的信息。
 cd %BASE_DIR%\chatgpt
