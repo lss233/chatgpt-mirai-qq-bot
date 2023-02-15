@@ -4,9 +4,9 @@
 
 ![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
 
-[![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=master)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
+[![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=browser-version)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
-[![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/latest/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
+[![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
 
 > **2023/2/10**  
@@ -83,7 +83,7 @@ docker run --name mirai-chatgpt-bot \
     -e XPRA_PASSWORD=123456 \ 
     -v /path/to/config.cfg:/app/config.cfg \
     --network host \
-    lss233/chatgpt-mirai-qq-bot:latest
+    lss233/chatgpt-mirai-qq-bot:browser-version
 ```
 
 3. 启动后，在浏览器访问 `http://你的服务器IP:14500` 可以访问到登录 ChatGPT 的浏览器页面  
