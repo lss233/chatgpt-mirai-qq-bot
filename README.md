@@ -55,7 +55,7 @@
 它会为你安装 Docker、 Docker Compose 和编写配置文件。  
 
 ```bash
-bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/6f1af9510f47409e0d05276a3af816df/raw/chatgpt-mirai-installer.sh)"
+bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665768b1bdcbed837fd/raw/chatgpt-mirai-installer-154-16RC3.sh)"
 ```
 
 </details>
