@@ -25,7 +25,7 @@
 * [x] 群聊回复引用
 * [x] 关键词触发回复
 * [x] 正向代理
-* [x] 多种方式登录 OpenAI
+* [x] 无需浏览器登录
 * [x] 预设人格初始化
 
 
@@ -226,6 +226,17 @@ accept_group_invite = false
 # 是否自动同意好友请求
 accept_friend_request = false
 
+
+[presets]
+# 切换预设的命令： 加载预设 猫娘
+command = "加载预设 (\\w+)"
+
+loaded_successful = "预设加载成功！"
+
+[presets.keywords]
+# 预设关键词 <-> 实际文件
+"正常" = "presets/default.txt"
+"猫娘" = "presets/catgirl.txt"
 ```
 
 
@@ -252,20 +263,6 @@ mode = "browser"
 **注：第三方代理模式无法使用 session_token 方式登录**  
 
 请参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup) 了解 `session_token` 的获取方法。
-
-如果你看见 `Exception: Wrong response code` 的错误，说明你的 `session_token` 过期了或者不正确。`session_token` 具有时效性，如果长期出现错误的情况，请重新获取你的  `session_token`。 [#29](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/29)
-
-### OpenAI 邮箱密码登录
-
-支持使用 OpenAI 邮箱、密码的方式登录。  
-
-在启动时，我们会打开一个浏览器，   
-
-当你使用这种方式登录时，需要在打开的浏览器页面中完成 OpenAI 的登录。  
-
-我们会自动点击页面中的 `Log in` 按钮、为您填写 `email`，剩下的需要您自己完成。
-
-登录完成后，浏览器会自动退出。
 
 ```properties
 # 前面别的东西
@@ -297,13 +294,17 @@ proxy="http://127.0.0.1:1080"
 
 根据 https://github.com/acheong08/ChatGPT/issues/639， 如果你在使用第三方代理模式时出现了 ```KeyError: 'accessToken'``` 错误，  
 
-可以配置一个正向代理来解决此问题。  
+可以配置一个**正向代理**来解决此问题。  
 
-### 自定义人格
+### 加载预设
 
-我们现在支持在会话的初始阶段为机器人设置人格。  
+如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
 
-请查阅 `chatbot.py` 中的 `initial_process` 和 `keyword_presets_process` 方法，了解如何设置。
+我们自带了 `猫娘` 和 `正常` 两种预设，你可以在 `presets` 文件夹下了解预设的写法。  
+
+使用 `加载预设 猫娘` 来加载猫娘预设。
+
+你可以参考[Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
 ## 📷 图片转文字
 

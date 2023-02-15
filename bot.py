@@ -20,6 +20,7 @@ from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
 from loguru import logger
 
+import re
 import asyncio
 import chatbot
 from config import Config
@@ -30,7 +31,7 @@ config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
-        config.mirai.qq,  # 配置详见 config.json
+        config.mirai.qq,  # 配置详见
         config.mirai.api_key,
         HttpClientConfig(host=config.mirai.http_url),
         WebsocketClientConfig(host=config.mirai.ws_url),
@@ -88,10 +89,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 await chatbot.initial_process(session)
 
             # 加载关键词人设
-            resp = await chatbot.keyword_presets_process(session, message)
-            if resp:
-                logger.debug(f"{session_id} - {resp}")
-                return resp
+            preset_search = re.search(config.presets.command, message)
+            if preset_search:
+                return session.load_conversation(preset_search.group(1))
 
             # 正常交流
             resp = await session.get_chat_response(message)

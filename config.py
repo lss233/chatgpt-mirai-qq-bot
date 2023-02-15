@@ -47,6 +47,10 @@ class OpenAISessionTokenAuth(OpenAIAuthBase):
     session_token: str
     """OpenAI 的 session_token"""
 
+class OpenAIAPIKey(OpenAIAuthBase):
+    api_key: str
+    """OpenAI 的 api_key"""
+
 class TextToImage(BaseModel):
     font_size: int = 30
     """字号"""
@@ -124,13 +128,35 @@ class System(BaseModel):
     accept_friend_request: bool = False
     """自动接收好友请求"""
 
+class Preset(BaseModel):
+    command: str = r"加载预设 (\w+)"
+    keywords: dict[str, str] = dict()
+    loaded_successful: str = "预设加载成功！"
+
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAIEmailAuth, OpenAISessionTokenAuth]
+    openai: Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAPIKey]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
+    presets: Preset = Preset()
+
+    def load_preset(self, keyword):
+        try:
+            with open(self.presets.keywords[keyword], "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
+                
+                return str(guessed_str).split('\nUser:')
+        except KeyError as e:
+            raise ValueError("预设不存在！")
+        except FileNotFoundError as e:
+            raise ValueError("预设文件不存在！")
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
 
     @staticmethod
     def __load_json_config() -> Config:

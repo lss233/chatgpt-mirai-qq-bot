@@ -25,15 +25,4 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 
-# Copy xpra config file
-COPY ./docker/xpra.conf /etc/xpra/xpra.conf
-
-# Set default xpra password
-ENV XPRA_PASSWORD password
-
-# Expose xpra HTML5 client port
-EXPOSE 14500
-
 CMD ["/bin/bash", "/app/docker/start.sh"]
-
-RUN ln -sf /proc/1/fd/1 /tmp/log.txt

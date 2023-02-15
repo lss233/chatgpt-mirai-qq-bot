@@ -52,9 +52,23 @@ def setup():
 
 
 class ChatSession:
-
+    chat_history: list[str]
     def __init__(self):
+        self.load_conversation()
+
+    def load_conversation(self, keyword='default'):
+        if not keyword in config.presets.keywords:
+            if keyword == 'default':
+                self.__default_chat_history = []
+            else:
+                raise ValueError("预设不存在，请检查你的输入是否有问题！")
+        else:
+            self.__default_chat_history = config.load_preset(keyword)
         self.reset_conversation()
+        if len(self.chat_history) > 0:
+            return self.chat_history[-1].split('\nChatGPT:')[-1].strip().rstrip("<|im_end|>")
+        else:
+            return config.presets.loaded_successful
 
     def reset_conversation(self):
         self.conversation_id = None
@@ -68,10 +82,6 @@ class ChatSession:
         self.conversation_id = self.prev_conversation_id.pop()
         self.parent_id = self.prev_parent_id.pop()
         return True
-
-    def jump_to_conversation(self, conversation_id, parent_id):
-        self.conversation_id = conversation_id
-        self.parent_id = parent_id
 
     async def get_chat_response(self, message) -> str:
         self.prev_conversation_id.append(self.conversation_id)
@@ -96,55 +106,7 @@ class ChatSession:
 
 __sessions = {}
 
-
-def get_chat_session(id: str) -> Tuple[ChatSession, bool]:
-    is_new_session = False
+def get_chat_session(id: str) -> ChatSession:
     if id not in __sessions:
         __sessions[id] = ChatSession()
-        is_new_session = True
-
-    return __sessions[id], is_new_session
-
-"""有些时候需要自动做出一些初始化行为，比如导入一些预设的人设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def initial_process(session: ChatSession):
-    logger.debug("初始化处理中...")
-    """
-    例子：
-    event = await session.app.send_message(session.target, '加载人设中...')
-    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-    event = await session.app.send_message(session.target, '加载人设中(1/3)')
-    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-    event = await session.app.send_message(session.target, '加载人设中(2/3)')
-    resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-    event = await session.app.send_message(session.target, '加载人设完毕')
-    """
-
-    """
-    也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
-    """
-
-    """
-    conv_id = 'c56325ed-2ce6-443a-b66d-852afc12bc7d'
-    pare_id = 'c18dd20-c42c-4145-8e86-9ac8efdf4f57'
-    session.jump_to_conversation(conv_id, pare_id)
-    """
-
-"""有些时候还会希望用一些关键词来导入一些预设，与此同时还可能要向目标用户发送类似于 '进度条' 的东西"""
-async def keyword_presets_process(session: ChatSession, message: str) -> Union[str, None]:
-    """
-    例子：
-    keyword = message.strip()
-    if keyword == '某个字符':
-        event = await session.app.send_message(session.target, '猫娘加载中...')
-        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        return '猫娘加载完毕'
-    elif keyword == '某个字符2':
-        event = await session.app.send_message(session.target, '猫娘加载中...')
-        resp = await session.get_chat_response('你是一只猫娘你是一只猫娘你是一只猫娘')
-        return '猫娘加载完毕'
-    """
-
-    """
-    也许可以换成conv_id式初始化？无论如何先在这里留一个函数大概不会有错...
-    """    
-    return None
+    return __sessions[id]
