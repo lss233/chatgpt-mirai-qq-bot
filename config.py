@@ -16,7 +16,7 @@ class Mirai(BaseModel):
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
 class OpenAI(BaseModel):
-    accounts: Union[OpenAIEmailAuth, OpenAISessionTokenAuth]
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]
 
 class OpenAIAuthBase(BaseModel):
     mode: str = "browser"
@@ -134,6 +134,7 @@ class Config(BaseModel):
     response: Response = Response()
     system: System = System()
 
+    OpenAI.update_forward_refs()
     @staticmethod
     def __load_json_config() -> Config:
         try:
