@@ -1,7 +1,10 @@
+from __future__ import annotations
 from typing import List, Union, Literal
-
 from pydantic import BaseModel, BaseConfig, Extra, Field
-
+from charset_normalizer import from_bytes
+from loguru import logger
+import sys
+import toml
 
 class Mirai(BaseModel):
     qq: int
@@ -13,36 +16,29 @@ class Mirai(BaseModel):
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
 
-class OpenAIAuthBase(BaseModel):
-    Authorization: Union[str, None] = Field(alias="authorization")
-    """可选的验证头"""
+class OpenAIAccountAuth(BaseModel):
+    email: Union[str, None] = None
+    """OpenAI 注册邮箱"""
+    password: Union[str, None] = None
+    """OpenAI 密码"""
+    session_token: Union[str, None] = None
+    """OpenAI 的 session_token，使用 Google 或者 微软登录者使用"""
     proxy: Union[str, None] = None
-    """可选的代理地址"""
-    driver_exec_path: Union[str, None] = None
-    """可选的 Chromedriver 路径"""
-    browser_exec_path: Union[str, None] = None
-    """可选的 Chrome 浏览器路径"""
-    conversation: Union[str, None] = None
-    """初始化对话所使用的UUID"""
-    verbose: bool = False
-    """启用详尽日志模式"""
-
+    """可选的本地代理服务器"""
+    insecure_auth: bool = False
+    """使用第三方代理登录"""
+    temperature: float = 0.5
+    """情感值，越高话越多""" 
+    paid: bool = False
+    """使用付费模型""" 
     class Config(BaseConfig):
         extra = Extra.allow
 
-class OpenAIEmailAuth(OpenAIAuthBase):
-    email: str
-    """OpenAI 注册邮箱"""
-    password: str
-    """OpenAI 密码"""
-    captcha: str
-    """2Captcha API 密钥"""
-    isMicrosoftLogin: bool = False
-    """是否通过 Microsoft 登录"""
-
-class OpenAISessionTokenAuth(OpenAIAuthBase):
-    session_token: str
-    """OpenAI 的 session_token"""
+class OpenAIAPIAuth(BaseModel):
+    api_key: str
+    """OpenAI 的 API key"""
+    model: str = "text-davinci-003"
+    """OpenAI 的模型"""
 
 class TextToImage(BaseModel):
     font_size: int = 30
@@ -99,6 +95,9 @@ class Response(BaseModel):
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
 
+    request_too_fast: str = "当前正在处理的请求太多了，请稍等一会再发吧！"
+    """服务器提示 429 错误时的回复 """
+
 class System(BaseModel):
     accept_group_invite: bool = False
     """自动接收邀请入群请求"""
@@ -106,11 +105,80 @@ class System(BaseModel):
     accept_friend_request: bool = False
     """自动接收好友请求"""
 
+class Preset(BaseModel):
+    command: str = r"加载预设 (\w+)"
+    keywords: dict[str, str] = dict()
+    loaded_successful: str = "预设加载成功！"
+
 class Config(BaseModel):
     mirai: Mirai
-    chatgpt: Union[OpenAIEmailAuth, OpenAISessionTokenAuth]
-    openai: list
+    openai: Union[OpenAIAccountAuth, OpenAIAPIAuth]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
+    presets: Preset = Preset()
+
+    def load_preset(self, keyword):
+        try:
+            with open(self.presets.keywords[keyword], "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
+                
+                return str(guessed_str).replace('\r', '').strip().split('\n\n')
+        except KeyError as e:
+            raise ValueError("预设不存在！")
+        except FileNotFoundError as e:
+            raise ValueError("预设文件不存在！")
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
+
+    @staticmethod
+    def __load_json_config() -> Config:
+        try:
+            import json
+            with open("config.json", "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别 JSON 格式！")
+                return Config.parse_obj(json.loads(str(guessed_str)))
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
+            exit(-1)
+
+
+    @staticmethod
+    def load_config() -> Config:
+        try:
+            import os
+            if not (os.path.exists('config.cfg') and os.path.getsize('config.cfg') > 0) and os.path.exists('config.json'):
+                logger.info("正在转换旧版配置文件……")
+                Config.save_config(Config.__load_json_config())
+                logger.warning("提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
+                try:
+                    os.rename('config.json', 'config.json.old')
+                except Exception as e:
+                    logger.error(e)
+                    logger.error("无法重命名配置文件，请自行处理。")
+            with open("config.cfg", "rb") as f:
+                guessed_str = from_bytes(f.read()).best()
+                if not guessed_str:
+                    raise ValueError("无法识别配置文件，请检查是否输入有误！")
+                return Config.parse_obj(toml.loads(str(guessed_str)))
+        except Exception as e:
+            logger.exception(e)
+            logger.error("配置文件有误，请重新修改！")
+            exit(-1)
+
+    @staticmethod
+    def save_config(config: Config) -> Config:
+        try:
+            with open("config.cfg", "wb") as f:
+                parsed_str = toml.dumps(config.dict()).encode(sys.getdefaultencoding())
+                f.write(parsed_str)
+        except Exception as e:
+                logger.exception(e)
+                logger.warning("配置保存失败。")

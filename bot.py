@@ -1,8 +1,10 @@
 import os, sys
 sys.path.append(os.getcwd())
-import asyncio
-from charset_normalizer import from_bytes
+
+import utils.exithooks
+from io import BytesIO
 from typing import Union
+from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,
@@ -13,86 +15,89 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from typing_extensions import Annotated
 from graia.ariadne.message.element import Image
 from graia.ariadne.model import Friend, Group
-import chatbot
+from graia.ariadne.event.lifecycle import AccountLaunch
 from loguru import logger
+
+import re
+import asyncio
+import chatbot
 from config import Config
-import json
 from text_to_img import text_to_image
-from io import BytesIO
 
-try:
-    with open("config.json", "rb") as f:
-        guessed_json = from_bytes(f.read()).best()
-        if not guessed_json:
-            raise ValueError("无法识别 JSON 格式!")
-        
-        config = Config.parse_obj(json.loads(str(guessed_json)))
-except Exception as e:
-    logger.exception(e)
-    logger.error("配置文件有误，请重新修改！")
 
+config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
-        config.mirai.qq,  # 你的机器人的 qq 号
-        config.mirai.api_key,  # 填入 VerifyKey
+        config.mirai.qq,  # 配置详见
+        config.mirai.api_key,
         HttpClientConfig(host=config.mirai.http_url),
         WebsocketClientConfig(host=config.mirai.ws_url),
     ),
 )
 
-async def handle_message(id: str, message: str, timeout_task: asyncio.Task) -> str:
-    if not message.strip():
-        return config.response.placeholder
-    bot = chatbot.bot
-    session = chatbot.get_chat_session(id)
-    if message.strip() in config.trigger.reset_command:
-        timeout_task.cancel()
-        session.reset_conversation()
-        return config.response.reset
-    if message.strip() in config.trigger.rollback_command:
-        timeout_task.cancel()
-        if session.rollback_conversation():
-            return config.response.rollback_success
-        else:
-            return config.response.rollback_fail
-    resp, e = await session.get_chat_response(message)
-    logger.debug(f"{id} - {resp}")
-    timeout_task.cancel()
-    if e:
-        logger.exception(e)
-        timeout_task.cancel()
-    if resp:
-        return resp["message"]
-    if e:
-        refresh_task = bot.refresh_session()
-        if refresh_task:
-            await refresh_task
-        return config.response.error_format.format(exc=e)
-
-async def send_task(target: Union[Friend, Group], app: Ariadne, source: Source):
+async def create_timeout_task(target: Union[Friend, Group], source: Source):
     await asyncio.sleep(config.response.timeout)
     await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
+
+async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    if chatbot.bot is None:
+        return "OpenAI 连接中，请稍后再给我发消息……"
+
+    if not message.strip():
+        return config.response.placeholder
+    
+    timeout_task = asyncio.create_task(create_timeout_task(target, source))
+    try:
+        session = chatbot.get_chat_session(session_id)
+
+        # 加载预设
+        preset_search = re.search(config.presets.command, message)
+        if preset_search:
+            return session.load_conversation(preset_search.group(1))
+        
+        # 重置会话
+        if message.strip() in config.trigger.reset_command:
+            session.reset_conversation()
+            return config.response.reset
+                    
+        # 回滚
+        if message.strip() in config.trigger.rollback_command:
+            resp = session.rollback_conversation()
+            if resp:
+                return config.response.rollback_success + '\n' + resp
+            return config.response.rollback_fail
+
+        
+        # 正常交流
+        resp = await session.get_chat_response(message)
+        if resp:
+            logger.debug(f"{session_id} - {resp}")
+            return resp.strip()
+    except Exception as e:
+        if "Too many requests" in str(e):
+            return config.response.request_too_fast
+        logger.exception(e)
+        return config.response.error_format.format(exc=e)
+    finally:
+        timeout_task.cancel()
 
 @app.broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
-    task = asyncio.create_task(send_task(friend, app, source))
-    response = await handle_message(f"friend-{friend.id}", chain.display, task)
+    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
     await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]
 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    task = asyncio.create_task(send_task(group, app, source))
-    response = await handle_message(f"group-{group.id}", chain.display, task)
+    response = await handle_message(group, f"group-{group.id}", chain.display, source)
     event = await app.send_message(group, response)
-    if(event.source.id < 0):
+    if event.source.id < 0:
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
@@ -108,4 +113,15 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
     if config.system.accept_group_invite:
         await event.accept()
 
+@app.broadcast.receiver(AccountLaunch)
+async def start_background(loop: asyncio.AbstractEventLoop):
+    try:
+        logger.info("OpenAI 服务器登录中……")
+        chatbot.setup()
+    except Exception as e:
+        # Fail-through
+        raise e
+    logger.info("OpenAI 服务器登录成功")
+    logger.info("尝试连接到 Mirai 服务……")
+    
 app.launch_blocking()

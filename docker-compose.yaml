@@ -1,25 +1,23 @@
 version: '3.4'
 services:
   mirai:
-    image: ttionya/mirai-http:latest
+    image: lss233/mirai-http:latest
     restart: always
     environment:
       LANG: 'C.UTF-8'
     volumes:
-      - ./mirai/bots:/mirai/bots
-      - ./mirai/config:/mirai/config
-      - ./mirai/data:/mirai/data
-      - ./mirai/plugin-libraries:/mirai/plugin-libraries
-      - ./mirai/libs:/mirai/libs
+      - ./mirai/bots:/app/bots
+      - ./mirai/config:/app/config
+      - ./mirai/data:/app/data
+      - ./mirai/plugin-libraries:/app/plugin-libraries
+      - ./mirai/libs:/app/libs
       # - ./mirai/config.json:/mirai/config.json # 如果你要修改 mcl 的设置，就解除这个注释
   chatgpt:
     image: lss233/chatgpt-mirai-qq-bot:latest
     restart: always
     environment:
       LANG: 'C.UTF-8'
-      XPRA_PASSWORD: 'lss233' # XPRA 密码，建议修改
-    ports:
-      - 14500:14500
     volumes:
-      - ./config.json:/app/config.json
+      - ./config.cfg:/app/config.cfg
       # - ./fonts:/app/fonts # 如果你想自定义字体，就解除注释
+      # - ./presets:/app/presets # 如果你想自定义预设，就解除注释

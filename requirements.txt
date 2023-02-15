@@ -1,5 +1,4 @@
-graia-ariadne==0.10.2
-revChatGPT==0.0.48.2
+graia-ariadne>=0.10.3
 Pillow>=9.3.0
 httpx
 redis
@@ -11,3 +10,5 @@ beautifulsoup4
 pydantic
 loguru
 elara
+revChatGPT==2.2.0
+toml

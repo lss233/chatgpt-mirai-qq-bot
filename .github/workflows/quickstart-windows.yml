@@ -1,9 +1,10 @@
 name: Create Quickstart for Windows 64
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - '*'
+      - '**'
 
 jobs:
   build:
@@ -11,6 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Set output
+      id: vars
+      run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+    - name: Check output
+      env:
+        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
+      run: |
+        echo $RELEASE_VERSION
+        echo ${{ steps.vars.outputs.tag }}
     - name: Generate files
       run: |
         sudo apt install -yq unzip
@@ -35,7 +45,7 @@ jobs:
         mv chatgpt/.github/quickstarts/windows/ files/
 
         echo "Replacing..."
-        sed -i 's/<mirai-http-api 中的 verifyKey>/1234567890/' chatgpt/config.example.json
+        sed -i 's/<mirai-http-api 中的 verifyKey>/1234567890/' chatgpt/config.example.cfg
         cp files/scripts/初始化.cmd .
 
         echo "Packing..."
@@ -45,7 +55,7 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: quickstart-windows-amd64.zip
-        asset_name: quickstart-windows-amd64.zip
+        asset_name: Windows快速部署包-${{ github.ref }}.zip
         tag: ${{ github.ref }}
         overwrite: true
         body: "quickstart-windows-amd64.zip 是为 Windows x64 用户准备的快速启动包"

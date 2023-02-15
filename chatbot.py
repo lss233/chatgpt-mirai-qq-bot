@@ -1,69 +1,99 @@
-from revChatGPT.ChatGPT import Chatbot
-from charset_normalizer import from_bytes
-from typing import Awaitable, Any, Dict, Tuple
+from revChatGPT.V2 import Chatbot, Message, Conversation
+from graia.ariadne.app import Ariadne
+from graia.ariadne.model import Friend, Group
+from graia.ariadne.message import Source
+from typing import Union, Any, Dict, Tuple
 from config import Config
 from loguru import logger
-import json
-import os, sys
+import os
 import asyncio
 import uuid
+from time import sleep
+import json
 
-with open("config.json", "rb") as f:
-    guessed_json = from_bytes(f.read()).best()
-    if not guessed_json:
-        raise ValueError("无法识别 JSON 格式!")
+config = Config.load_config()
 
-    config = Config.parse_obj(json.loads(str(guessed_json)))
-# Refer to https://github.com/acheong08/ChatGPT
-try:
-    logger.info("登录 OpenAI 中……")
-    logger.info("请在新打开的浏览器窗口中完成验证")
-    if 'XPRA_PASSWORD' in os.environ:
-        logger.info("如果您使用 xpra，请使用自己的浏览器访问 xpra 程序的端口，以访问到本程序启动的浏览器。")
-    bot = Chatbot(config=config.chatgpt.dict(exclude_none=True, by_alias=False), conversation_id=None)
-    logger.info("登录成功，保存登录信息中……")
+os.environ.setdefault('TEMPERATURE', str(config.openai.temperature))
 
-    logger.debug(f"获取到 session_token {bot.config['session_token']}")
-except Exception as e:
-    logger.exception(e)
-    if str(e) == "local variable 'driver' referenced before assignment":
-        logger.error("无法启动，请检查是否安装了 chrome，或手动指定 chrome driver 的位置。")
-    else:
-        logger.error("OpenAI 登录失败，可能是 session_token 过期或无法通过 CloudFlare 验证，建议歇息一下再重试。")
-    exit(-1)
+bot = None
 
+def setup():
+    global bot
+    try:
+        if not (config.openai.email and config.openai.password) and not config.openai.session_token:
+            logger.error("配置文件出错！请配置 OpenAI 的邮箱、密码，或者 session_token。")
+            exit(-1)
+        bot = Chatbot(email=config.openai.email, password=config.openai.password, proxy=config.openai.proxy, insecure=config.openai.insecure_auth, session_token=config.openai.session_token, paid=config.openai.paid)
+    except KeyError as e:
+        if str(e) == 'accessToken':
+            logger.error("无法获取 accessToken，请检查 session_token 是否过期")
+        raise e
+
+    try:
+        logger.debug("Session token: " + bot.session_token)
+    except:
+        pass
 class ChatSession:
-    def __init__(self):
-        self.reset_conversation()
-    def reset_conversation(self):
-        self.conversation_id = None
-        self.parent_id = str(uuid.uuid4())
-        self.prev_conversation_id = []
-        self.prev_parent_id = []
-    def rollback_conversation(self) -> bool:
-        if len(self.prev_parent_id) <= 0:
-            return False
-        self.conversation_id = self.prev_conversation_id.pop()
-        self.parent_id = self.prev_parent_id.pop()
-        return True
-    async def get_chat_response(self, message) -> Tuple[Dict[str, Any], Exception]:
-        self.prev_conversation_id.append(self.conversation_id)
-        self.prev_parent_id.append(self.parent_id)
-        bot.conversation_id = self.conversation_id
-        bot.parent_id = self.parent_id
-        final_resp = None
-        exception = None
-        try:
-            final_resp = bot.ask(message)
-            self.conversation_id = final_resp["conversation_id"]
-            self.parent_id = final_resp["parent_id"]
-        except Exception as e:
-            exception = e
-        return final_resp, exception
-sessions = {}
+    chat_history: list[str]
+    conversation_id: str
+    preset: str
+    base_prompt: str
+    lock: asyncio.Lock
 
+    def __init__(self, conversation_id):
+        self.conversation_id = conversation_id
+        self.load_conversation()
+        self.lock = asyncio.Lock()
+
+    def load_conversation(self, keyword='default'):
+        if not keyword in config.presets.keywords:
+            if not keyword == 'default':
+                raise ValueError("预设不存在，请检查你的输入是否有问题！")
+        self.preset = keyword
+        
+        self.reset_conversation()
+
+        last_message = self.get_last_message()
+        if last_message is None:
+            return config.presets.loaded_successful
+        else:
+            return last_message
+    def get_last_message(self):
+        if len(bot.conversations.conversations[self.conversation_id].messages) == 0:
+            return None
+        return bot.conversations.conversations[self.conversation_id].messages[-1].text
+    def reset_conversation(self):
+        bot.conversations.conversations[self.conversation_id] = Conversation()
+        if not self.preset == 'default':
+            preset_conversations = config.load_preset(self.preset)
+            self.base_prompt = preset_conversations[0]
+            for message in preset_conversations[1:]:
+                user, txt = message.split(':', maxsplit=2)
+                bot.conversations.add_message(Message(txt, user), self.conversation_id)
+        else:
+            self.base_prompt = '你是 ChatGPT，一个大型语言模型。请以对话方式回复。\n\n\n'
+    def rollback_conversation(self) -> bool:
+        if not self.conversation_id in bot.conversations.conversations:
+            return False
+        bot.conversations.rollback(self.conversation_id, num = 2)
+        
+        last_message = self.get_last_message()
+        if last_message is None:
+            return ''
+        
+        return last_message
+
+    async def get_chat_response(self, message) -> str:
+        async with self.lock:
+            os.environ.setdefault('BASE_PROMPT', self.base_prompt)
+            result = ''
+            async for data in bot.ask(prompt=message, conversation_id=self.conversation_id):
+                result = result + data["choices"][0]["text"].replace("<|im_end|>", "")
+            return result
+
+__sessions = {}
 
 def get_chat_session(id: str) -> ChatSession:
-    if id not in sessions:
-        sessions[id] = ChatSession()
-    return sessions[id]
+    if id not in __sessions:
+        __sessions[id] = ChatSession(id)
+    return __sessions[id]
