@@ -14,12 +14,16 @@ from config import OpenAI, OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAu
 
 logger.remove()
 
+config = Config.load_config()
+
 class BotInfo(asyncio.Lock):
     bot: Union[V1Chatbot, BrowserChatbot]
 
     mode: str
 
     queue_size: int = 0
+
+    unused_conversations_pools = {}
 
     lastAccessed = None
     """Date when bot is accessed last time"""
@@ -31,7 +35,31 @@ class BotInfo(asyncio.Lock):
         self.bot = bot
         self.mode = mode
         super().__init__()
-    
+
+    def update_conversation_pools(self):
+        for key in config.presets.keywords.keys():
+            if key not in self.unused_conversations_pools:
+                self.unused_conversations_pools = []
+            preset = config.load_preset(preset)
+            self.bot.parent_id = None
+            self.bot.conversation_id = None
+            for text in preset:
+                if text.startswith('ChatGPT:'):
+                    pass
+                if text.startswith('User:'):
+                    text = text.replace('User:', '')
+                self.ask(text)
+            
+    def ask(self, prompt, conversation_id = None, parent_id = None):
+        resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
+        if self.mode == 'proxy':
+            final_resp = None
+            for final_resp in resp:
+                pass
+            return final_resp
+        else:
+            return resp
+
     def __str__(self) -> str:
         return self.bot.__str__()
 

@@ -411,7 +411,7 @@ proxy="http://127.0.0.1:1080"
 
 可以配置一个**正向代理**来解决此问题。  
 
-### 加载预设
+## 🦊 加载预设
 
 如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
 
@@ -419,7 +419,7 @@ proxy="http://127.0.0.1:1080"
 
 使用 `加载预设 猫娘` 来加载猫娘预设。
 
-你可以参考[Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
+你可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
 ## 📷 图片转文字
 

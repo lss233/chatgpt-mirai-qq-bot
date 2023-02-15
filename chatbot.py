@@ -21,21 +21,24 @@ def setup():
 class ChatSession:
     chatbot: BotInfo = None
     def __init__(self):
-        self.load_conversation()
+        self.reset_conversation()
 
-    def load_conversation(self, keyword='default'):
+    async def load_conversation(self, keyword='default'):
         if not keyword in config.presets.keywords:
             if keyword == 'default':
-                self.__default_chat_history = []
+                self.reset_conversation()
             else:
                 raise ValueError("预设不存在，请检查你的输入是否有问题！")
         else:
-            self.__default_chat_history = config.load_preset(keyword)
-        self.reset_conversation()
-        if len(self.chat_history) > 0:
-            return self.chat_history[-1].split('\nChatGPT:')[-1].strip().rstrip("<|im_end|>")
-        else:
-            return config.presets.loaded_successful
+            self.reset_conversation()
+            presets = config.load_preset(keyword)
+            for text in presets:
+                if text.startswith('ChatGPT:'):
+                    yield text.split('ChatGPT:')[-1].strip()
+                elif text.startswith('User:'):
+                    await self.get_chat_response(text.split('User:')[-1].strip())
+                else:
+                    await self.get_chat_response(text.split('User:')[-1].strip())
 
     def reset_conversation(self):
         self.conversation_id = None
@@ -60,19 +63,12 @@ class ChatSession:
         bot.parent_id = self.parent_id
 
         loop = asyncio.get_event_loop()
-        resp = await loop.run_in_executor(None, bot.ask, message)
+        resp = await loop.run_in_executor(None, self.chatbot.ask, message, self.conversation_id, self.parent_id)
 
-        if self.chatbot.mode == 'proxy':
-            final_resp = None
-            for item in resp:
-                final_resp = item
-            self.conversation_id = final_resp["conversation_id"]
-            self.parent_id = final_resp["parent_id"]
-            return final_resp["message"]
-        else:
-            self.conversation_id = resp["conversation_id"]
-            self.parent_id = resp["parent_id"]
-            return resp["message"]
+        self.conversation_id = resp["conversation_id"]
+        self.parent_id = resp["parent_id"]
+
+        return resp["message"]
 
 __sessions = {}
 

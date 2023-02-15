@@ -151,7 +151,7 @@ class Config(BaseModel):
                 if not guessed_str:
                     raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
                 
-                return str(guessed_str).split('\nUser:')
+                return str(guessed_str).replace('<|im_end|>', '').replace('\r', '').split('\n\n')
         except KeyError as e:
             raise ValueError("预设不存在！")
         except FileNotFoundError as e:
