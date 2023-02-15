@@ -20,7 +20,7 @@ class OpenAI(BaseModel):
 
 class OpenAIAuthBase(BaseModel):
     mode: str = "browser"
-    """使用 OpenAI 的模式，可选的值：proxy - 使用第三方代理、 browser - 使用浏览器"""
+    """OpenAI 的登录模式，可选的值：browserless - 无浏览器登录 browser - 浏览器登录"""
     proxy: Union[str, None] = None
     """可选的代理地址"""
     driver_exec_path: Union[str, None] = None
