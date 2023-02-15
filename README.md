@@ -9,15 +9,11 @@
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/latest/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
 
-> **2023/2/14**  
-> 上游已更新，接下来不区分网页版和 API 版。  
-> 1.6.x 及以上版本将为最新版。
-
-> ~~**2023/2/10**~~  
-> ~~本项目分为网页版和API版两种模式。~~  
-> ~~网页版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本~~  
-> ~~具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82~~  
-> ~~当前浏览的是 API 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/browser-version)切换至网页版。~~
+> **2023/2/10**  
+> 本项目分为 ChatGPT(网页) 版和 API 版两种模式。  
+>  ChatGPT(网页) 版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
+> 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
+> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 API 版。
 
 
 ***
