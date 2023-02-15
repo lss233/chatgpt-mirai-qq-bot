@@ -1,14 +1,8 @@
-from graia.ariadne.app import Ariadne
-from graia.ariadne.model import Friend, Group
-from graia.ariadne.message import Source
 from typing import Union, Any, Dict, Tuple
 from config import Config
-from loguru import logger
-import os
 import asyncio
 import uuid
 from time import sleep
-from selenium.common.exceptions import TimeoutException
 from manager import BotManager, BotInfo
 
 config = Config.load_config()

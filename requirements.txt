@@ -3,16 +3,4 @@ revChatGPT[unofficial]==2.2.2
 Pillow>=9.3.0
 toml
 rich
-httpx
-redis
-nltk
-numpy
-jieba
-transformers
-beautifulsoup4
-pydantic
-loguru
-elara
-selenium
-openai
-tiktoken
+llm-kira
