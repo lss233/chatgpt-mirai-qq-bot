@@ -12,12 +12,9 @@ RUN apt-get update && \
     wget -O- /usr/share/keyrings/google-chrome.gpg https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor --yes -o /usr/share/keyrings/google-chrome.gpg  && \
     echo deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main | tee -a /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && \
-    apt install --no-install-recommends xpra xpra-html5 xvfb xfonts-base xfonts-100dpi xfonts-75dpi libgl1-mesa-dri xauth google-chrome-stable xterm -yq
-
-
-RUN set -eux; \
-    apt-get clean; \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+    apt install --no-install-recommends xpra xpra-html5 xvfb xfonts-base xfonts-100dpi xfonts-75dpi libgl1-mesa-dri xauth google-chrome-stable xterm -yq && \
+    apt-get clean && \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app
