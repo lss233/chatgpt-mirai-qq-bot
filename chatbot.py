@@ -2,7 +2,7 @@ from graia.ariadne.app import Ariadne
 from graia.ariadne.model import Friend, Group
 from graia.ariadne.message import Source
 from typing import Union, Any, Dict, Tuple
-from config import Config
+from config import Config, OpenAIAuths
 from loguru import logger
 import os
 import asyncio
@@ -12,7 +12,12 @@ from selenium.common.exceptions import TimeoutException
 from manager import BotManager, BotInfo
 
 config = Config.load_config()
-botManager = BotManager(config.openai.accounts)
+
+if config.openai is OpenAIAuths:
+    botManager = BotManager(config.openai.accounts)
+else:
+    # Backward-compatibility
+    botManager = BotManager([config.openai])
 
 def setup():
     botManager.login()

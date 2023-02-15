@@ -10,7 +10,7 @@ from revChatGPT.V1 import Chatbot as V1Chatbot
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
 from config import Config
-from config import OpenAI, OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
+from config import OpenAIAuths, OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
 
 logger.remove()
 
