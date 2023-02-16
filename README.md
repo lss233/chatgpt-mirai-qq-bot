@@ -163,6 +163,9 @@ password = "xxx"
 # 此时的 password 可以直接删除 (email 必填)
 # session_token = "一串 ey 开头的东西"
 
+# 你的 OpenAI access_token，登录后访问`https://chat.openai.com/api/auth/session`获取
+# access_token = "一串 ey 开头的东西"
+
 # 如果你在国内，需要配置代理
 # proxy="http://127.0.0.1:1080"
 
@@ -384,6 +387,31 @@ session_token 的获取方式可参考：[请问怎么获取 session_token](http
 session_token = "一串 ey 开头的东西"
 ```
 
+### access_token 登录
+配合 `mode="browserless"`使用，这种方式登录时不需要填写邮箱和密码、session_token。  
+你需要自己登录 OpenAI 网站，然后访问 https://chat.openai.com/api/auth/session，你可以看到一段类似下面的代码：
+```json
+{
+	"user": {
+		"id": "user-*****",
+		"name": "***",
+		"email": "***",
+		"image": "***",
+		"picture": "***",
+		"groups": []
+	},
+	"expires": "2023-03-18T09:11:03.546Z",
+	"accessToken": "eyJhbGciOiJS*****X7GdA"
+}
+``` 
+获取以上 JSON 中`accessToken` 的值即可，有效期在 30 天左右。过期后需要重新设置。  
+
+```properties
+# 前面别的东西
+
+[[openai.accounts]]
+access_token = "一串 ey 开头的东西"
+```
 
 **浏览器登录不了？使用无浏览器模式！**
 
