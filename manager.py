@@ -60,6 +60,8 @@ class BotInfo(asyncio.Lock):
             final_resp = None
             for final_resp in resp:
                 pass
+            if final_resp is None:
+                raise Exception("OpenAI 在返回结果时出现了错误")
             return final_resp
         else:
             return resp
