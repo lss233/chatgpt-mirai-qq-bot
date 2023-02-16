@@ -16,7 +16,7 @@ class Mirai(BaseModel):
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
 class OpenAI(BaseModel):
-    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]]
 
 class OpenAIAuthBase(BaseModel):
     mode: str = "browser"
@@ -48,6 +48,10 @@ class OpenAIEmailAuth(OpenAIAuthBase):
 class OpenAISessionTokenAuth(OpenAIAuthBase):
     session_token: str
     """OpenAI 的 session_token"""
+
+class OpenAIAccessTokenAuth(OpenAIAuthBase):
+    access_token: str
+    """OpenAI 的 access_token"""
 
 class OpenAIAPIKey(OpenAIAuthBase):
     api_key: str
@@ -137,7 +141,7 @@ class Preset(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAI, OpenAIEmailAuth, OpenAISessionTokenAuth]
+    openai: Union[OpenAI, OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
