@@ -75,7 +75,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             # 重置会话
             if message.strip() in config.trigger.reset_command:
                 session.reset_conversation()
-                await chatbot.initial_process(session)
                 return config.response.reset
 
             # # 新会话
