@@ -115,7 +115,7 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     response = await handle_message(group, f"group-{group.id}", chain.display, source)
-    event = await app.send_message(group, response)
+    event = await app.send_message(group, response, quote=source if config.response.quote else False)
     if event.source.id < 0:
         img = text_to_image(text=response)
         b = BytesIO()
