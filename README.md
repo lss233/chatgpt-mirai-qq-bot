@@ -370,7 +370,7 @@ password = "xxx"
 
 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
 
-使用这种方式登录时不需要填写邮箱和密码。  
+使用这种方式登录时不需要填写**密码**。  
 
 需要注意的是，session_token 过期比较频繁，过期后需要重新设置。  
 
@@ -385,6 +385,7 @@ session_token 的获取方式可参考：[请问怎么获取 session_token](http
 [[openai.accounts]]
 
 session_token = "一串 ey 开头的东西"
+email = "你的邮箱"
 ```
 
 ### access_token 登录
