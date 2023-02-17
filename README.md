@@ -389,7 +389,7 @@ session_token = "一串 ey 开头的东西"
 
 ### access_token 登录
 配合 `mode="browserless"`使用，这种方式登录时不需要填写邮箱和密码、session_token。  
-这种方法比较适合登录时出现 Unknown error,或者回答问题时出现有关 Access Token报错的情况。。
+这种方法比较适合登录时出现 Unknown error,或者回答问题时出现有关 Access Token报错的情况。  
 你需要自己登录 OpenAI 网站，然后访问 https://chat.openai.com/api/auth/session ，你可以看到一段类似下面的代码：
 ```json
 {
