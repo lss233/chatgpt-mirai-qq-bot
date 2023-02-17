@@ -9,8 +9,6 @@ services:
       - ./mirai/bots:/app/bots
       - ./mirai/config:/app/config
       - ./mirai/data:/app/data
-      - ./mirai/plugin-libraries:/app/plugin-libraries
-      - ./mirai/libs:/app/libs
       # - ./mirai/config.json:/app/config.json # 如果你要修改 mcl 的设置，就解除这个注释
   chatgpt:
     image: lss233/chatgpt-mirai-qq-bot:browser-version

@@ -377,7 +377,7 @@ password = "xxx"
 
 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 方式进行登录。  
 
-使用这种方式登录时不需要填写邮箱和密码。  
+使用这种方式登录时不需要填写**密码**。  
 
 需要注意的是，session_token 过期比较频繁，过期后需要重新设置。  
 
@@ -392,11 +392,13 @@ session_token 的获取方式可参考：[请问怎么获取 session_token](http
 [[openai.accounts]]
 
 session_token = "一串 ey 开头的东西"
+email = "你的邮箱"
 ```
 
 ### access_token 登录
 配合 `mode="browserless"`使用，这种方式登录时不需要填写邮箱和密码、session_token。  
-你需要自己登录 OpenAI 网站，然后访问 https://chat.openai.com/api/auth/session，你可以看到一段类似下面的代码：
+这种方法比较适合登录时出现 Unknown error,或者回答问题时出现有关 Access Token报错的情况。  
+你需要自己登录 OpenAI 网站，然后访问 https://chat.openai.com/api/auth/session ，你可以看到一段类似下面的代码：
 ```json
 {
 	"user": {
@@ -495,7 +497,9 @@ title_pattern="qq-{session_id}"
 
 你可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
-## 📷 图片转文字
+还可以参考 [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) 来解锁更多技能。
+
+## 📷 文字转图片
 
 向 QQ 群发送消息失败时，自动将消息转为图片发送。  
 
