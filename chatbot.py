@@ -25,7 +25,10 @@ def setup():
 
 class ChatSession:
     chatbot: BotInfo = None
-    def __init__(self):
+    session_id: str
+
+    def __init__(self, session_id):
+        self.session_id = session_id
         self.reset_conversation()
 
     async def load_conversation(self, keyword='default'):
@@ -44,8 +47,9 @@ class ChatSession:
                     await self.get_chat_response(text.split('User:')[-1].strip())
                 else:
                     await self.get_chat_response(text.split('User:')[-1].strip())
-
     def reset_conversation(self):
+        if self.chatbot and self.chatbot.account.auto_remove_old_conversations and self.chatbot and self.conversation_id:
+            self.chatbot.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
         self.prev_conversation_id = []
@@ -70,6 +74,9 @@ class ChatSession:
         loop = asyncio.get_event_loop()
         resp = await loop.run_in_executor(None, self.chatbot.ask, message, self.conversation_id, self.parent_id)
 
+        if self.conversation_id is None and self.chatbot.account.title_pattern:
+            self.chatbot.bot.change_title(resp["conversation_id"], self.chatbot.account.title_pattern.format(session_id=self.session_id))
+
         self.conversation_id = resp["conversation_id"]
         self.parent_id = resp["parent_id"]
 
@@ -79,5 +86,21 @@ __sessions = {}
 
 def get_chat_session(id: str) -> ChatSession:
     if id not in __sessions:
-        __sessions[id] = ChatSession()
+        __sessions[id] = ChatSession(id)
     return __sessions[id]
+
+import atexit
+from rich.progress import Progress
+
+def conversation_remover():
+    with Progress() as progress:
+        task = progress.add_task("[green]清理会话中", total=len(__sessions.values()))
+        for session in __sessions.values():
+            if session.chatbot.account.auto_remove_old_conversations and session.chatbot and session.conversation_id:
+                try:
+                    session.chatbot.bot.delete_conversation(session.conversation_id)
+                except Exception as e:
+                    logger.error(f"删除会话 {session.conversation_id} 失败：{str(e)}")
+                finally:
+                    progress.update(task, advance=1)
+atexit.register(conversation_remover)

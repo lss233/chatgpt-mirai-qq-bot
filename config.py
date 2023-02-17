@@ -19,7 +19,7 @@ class OpenAIAuths(BaseModel):
     accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]]
 
 class OpenAIAuthBase(BaseModel):
-    mode: str = "browser"
+    mode: str = "browserless"
     """OpenAI 的登录模式，可选的值：browserless - 无浏览器登录 browser - 浏览器登录"""
     proxy: Union[str, None] = None
     """可选的代理地址"""
@@ -33,6 +33,10 @@ class OpenAIAuthBase(BaseModel):
     """使用 ChatGPT Plus"""
     verbose: bool = False
     """启用详尽日志模式"""
+    title_pattern: str = ""
+    """自动修改标题，为空则不修改"""
+    auto_remove_old_conversations: bool = False
+    """自动删除旧的对话"""
 
     class Config(BaseConfig):
         extra = Extra.allow

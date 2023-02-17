@@ -123,15 +123,13 @@ python3 bot.py
 
 
 
-## ⚙ 配置文件
+## ⚙ 配置文件完整介绍
 
 参考 `config.example.cfg` 调整配置文件。将其复制为 `config.cfg`，然后修改 `config.cfg`。
 
 配置文件主要包含 mirai-http-api 的连接信息和 OpenAI 的登录信息。
 
 OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html  
-
-OpenAI 配置的信息可参考 [这里](https://github.com/acheong08/ChatGPT/wiki/Setup)。
 
 
 ```properties
@@ -171,6 +169,15 @@ password = "xxx"
 
 # 使用 ChatGPT Plus（plus 用户此项设置为 true）
 paid = false
+
+# 是否开启标题自动重命名
+# 若为空或保持注释即不开启
+# 支持的变量： {session_id} - 此对话对应的上下文 ID，若产生在好友中，则为好友 QQ 号，若产生在群聊中，则为群号
+# 具体见 README 中的介绍
+# title_pattern="qq-{session_id}"
+
+# 是否自动删除旧的对话，开启后用户发送重置对话时会自动删除以前的会话内容
+# auto_remove_old_conversations = true
 
 # 以下是多账号的设置
 # 如果你想同时使用多个账号进行负载均衡，就删掉前面的注释
@@ -322,9 +329,9 @@ loaded_successful = "预设加载成功！"
 # 里面是一些设置
 ```
 
-### 模式选择
+### 登录模式选择
 
-现在我们支持多种方式访问 OpenAI 服务器， 你可以在配置文件中选择所使用的模式。
+现在我们支持多种方式访问 OpenAI 服务器， 你可以在配置文件中选择所使用的模式。  
 
 ```properties
 [openai]
@@ -341,8 +348,8 @@ mode = "browser"
 ```
 
 支持的模式有：
-- browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI
-- browserless - 无浏览器模式。该模式将你的账号信息发送到第三方服务器进行认证，从而不需要浏览器。  
+- browser - 浏览器登录。该模式会在你的电脑上启动一个 Chrome 浏览器来登录并验证 OpenAI，该模式成功率较低。
+- browserless - 无浏览器模式。该模式将你的**聊天请求**发送到第三方服务器进行认证，从而不需要浏览器，该模式成功率较高。  
 
 #### 邮箱密码登录
 
@@ -404,13 +411,13 @@ session_token = "一串 ey 开头的东西"
 	"accessToken": "eyJhbGciOiJS*****X7GdA"
 }
 ``` 
-获取以上 JSON 中`accessToken` 的值即可，有效期在 30 天左右。过期后需要重新设置。  
+获取以上 JSON 中`accessToken` 后面的值即可，有效期在 30 天左右。过期后需要重新设置。  
 
 ```properties
 # 前面别的东西
 
 [[openai.accounts]]
-access_token = "一串 ey 开头的东西"
+access_token = "一串内容为 eyJhbGciOiJS*****X7GdA 的东西"
 ```
 
 **浏览器登录不了？使用无浏览器模式！**
@@ -458,6 +465,25 @@ proxy="http://127.0.0.1:1080"
 
 ```
 
+
+### 对话标题自动重命名 
+
+如果你的账号产生了太多的对话，看着不舒服，可以开启配置文件中的标题自动重命名和。  
+
+```
+[[openai.accounts]]
+# 省略的账号信息
+
+title_pattern="qq-{session_id}"
+```  
+
+当你按照这个格式进行设置之后，新创建的对话将会以 `qq-friend-好友QQ` 或 `qq-group-群号` 进行命名。
+
+这里的 `{session_id}` 是一个变量，它在程序启动之后会根据聊天信息的发送者动态变化。  
+
+* 如果是一个好友给机器人发送消息，则 `{session_id}` 会变成 `qq-friend-好友QQ`  
+
+* 如果是一个群聊给机器人发送消息，则 `{session_id}` 会变成 `qq-group-群号`  
 
 ## 🦊 加载预设
 

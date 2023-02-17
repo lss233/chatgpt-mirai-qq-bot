@@ -18,6 +18,8 @@ config = Config.load_config()
 
 class BotInfo(asyncio.Lock):
     id = 0
+
+    account: OpenAIAuthBase
     
     bot: Union[V1Chatbot, BrowserChatbot]
 
@@ -102,7 +104,10 @@ class BotManager():
                         bot = self.__login_V1(account)
                     elif account.mode == "browser":
                         bot = self.__login_browser(account)
+                    else:
+                        raise Exception("未定义的登录类型：" + account.mode)
                     bot.id = i
+                    bot.account = account
                     self.bots.append(bot)
                 except Exception as e:
                     logger.exception(e)
