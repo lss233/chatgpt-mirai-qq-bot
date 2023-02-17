@@ -471,6 +471,8 @@ proxy="http://127.0.0.1:1080"
 
 你可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
+还可以参考 [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) 来解锁更多技能。
+
 ## 📷 文字转图片
 
 向 QQ 群发送消息失败时，自动将消息转为图片发送。  
