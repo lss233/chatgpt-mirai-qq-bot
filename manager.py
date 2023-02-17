@@ -12,8 +12,6 @@ from loguru import logger
 from config import Config
 from config import OpenAI, OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
 
-logger.remove()
-
 config = Config.load_config()
 
 class BotInfo(asyncio.Lock):
@@ -91,6 +89,7 @@ class BotManager():
     
     def login(self):
         with Progress() as progress:
+            logger.remove()
             logger.add(sink=progress.console.out, level='TRACE')
             task = progress.add_task("[red]登录 OpenAI", total=len(self.accounts))
             for i, account in enumerate(self.accounts):
