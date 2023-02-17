@@ -1,6 +1,9 @@
 from config import Config, OpenAIAuths
 import asyncio
 from manager import BotManager, BotInfo
+import atexit
+from rich.progress import Progress
+from loguru import logger
 
 config = Config.load_config()
 
@@ -87,8 +90,7 @@ def get_chat_session(id: str) -> ChatSession:
         __sessions[id] = ChatSession(id)
     return __sessions[id]
 
-import atexit
-from rich.progress import Progress
+
 
 def conversation_remover():
     with Progress() as progress:
