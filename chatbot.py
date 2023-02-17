@@ -1,14 +1,5 @@
-from graia.ariadne.app import Ariadne
-from graia.ariadne.model import Friend, Group
-from graia.ariadne.message import Source
-from typing import Union, Any, Dict, Tuple
 from config import Config, OpenAIAuths
-from loguru import logger
-import os
 import asyncio
-import uuid
-from time import sleep
-from selenium.common.exceptions import TimeoutException
 from manager import BotManager, BotInfo
 
 config = Config.load_config()
@@ -19,13 +10,19 @@ else:
     # Backward-compatibility
     botManager = BotManager([config.openai])
 
+
 def setup():
     botManager.login()
 
 
 class ChatSession:
     chatbot: BotInfo = None
+
     def __init__(self):
+        self.prev_conversation_id = None
+        self.prev_parent_id = None
+        self.parent_id = None
+        self.conversation_id = None
         self.reset_conversation()
 
     async def load_conversation(self, keyword='default'):
@@ -75,7 +72,9 @@ class ChatSession:
 
         return resp["message"]
 
+
 __sessions = {}
+
 
 def get_chat_session(id: str) -> ChatSession:
     if id not in __sessions:
