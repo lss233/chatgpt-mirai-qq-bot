@@ -495,6 +495,12 @@ title_pattern="qq-{session_id}"
 
 使用 `加载预设 猫娘` 来加载猫娘预设。
 
+下面是一些预设的小视频，你可以看看效果：
+* MOSS： https://www.bilibili.com/video/av309604568
+* 丁真：https://www.bilibili.com/video/av267013053
+* 小黑子：https://www.bilibili.com/video/av309604568
+* 高启强：https://www.bilibili.com/video/av779555493
+
 关于预设系统的详细教程：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%F0%9F%90%B1-%E9%A2%84%E8%AE%BE%E7%B3%BB%E7%BB%9F)
 
 你可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
