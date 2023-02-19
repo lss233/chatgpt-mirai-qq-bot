@@ -3,7 +3,6 @@
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**  
 
 ![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
-
 [![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=browser-version)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
@@ -18,12 +17,13 @@
 
 ***
 
-基于：
- - [Ariadne](https://github.com/GraiaProject/Ariadne)
- - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
- - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
+基于以下项目开发：
+ - [Ariadne](https://github.com/GraiaProject/Ariadne) - 一个优雅且完备的 Python QQ 机器人框架 （可以也给这个项目点个 star ！！！）
+ - [mirai-api-http](https://github.com/project-mirai/mirai-api-http) - 提供HTTP API供所有语言使用 mirai QQ 机器人
+ - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT) - 非官方 ChatGPT Python 支持库  
 
-支持：  
+
+**⚡ 支持**   
 * [x] 文字转图片发送  
 * [x] 群聊回复引用
 * [x] 关键词触发回复
@@ -519,8 +519,26 @@ title_pattern="qq-{session_id}"
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
 
-## Star History
 
-如果你觉得本项目对你有帮助的话，欢迎点一个 Star!  
+## 🎈 相似项目
 
-[![Star History Chart](https://api.star-history.com/svg?repos=lss233/chatgpt-mirai-qq-bot&type=Timeline)](https://star-history.com/#lss233/chatgpt-mirai-qq-bot&Timeline)
+除了我们以外，还有这些很出色的项目：  
+
+* [LlmKira / Openaibot](https://github.com/LlmKira/Openaibot) - 全平台，多模态理解的 OpenAI 机器人
+* [RockChinQ / QChatGPT](https://github.com/RockChinQ/QChatGPT) - 基于 OpenAI 官方 API， 使用 GPT-3 的 QQ 机器人
+* [fuergaosi233 / wechat-chatgpt](https://github.com/fuergaosi233/wechat-chatgpt) - 在微信上迅速接入 ChatGPT
+
+
+## 🛠 贡献者名单  
+
+欢迎提出新的点子、 Pull Request。  
+
+<a href="https://github.com/lss233/chatgpt-mirai-qq-bot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=lss233/chatgpt-mirai-qq-bot" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
+
+## 💪 支持我们
+
+如果我们这个项目对你有所帮助，请给我们一颗 ⭐️
