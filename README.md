@@ -46,7 +46,9 @@
 
 如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
-对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534
+对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534  
+
+如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
 
 <details>
     <summary>Linux: 通过快速部署脚本部署 （新人推荐)</summary>
