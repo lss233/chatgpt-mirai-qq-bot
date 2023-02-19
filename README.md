@@ -17,10 +17,12 @@
 
 ***
 
-基于以下项目开发：
- - [Ariadne](https://github.com/GraiaProject/Ariadne) - 一个优雅且完备的 Python QQ 机器人框架 （可以也给这个项目点个 star ！！！）
+如果你自己也有做机器人的想法，可以看看下面这些项目：
+ - [Ariadne](https://github.com/GraiaProject/Ariadne) - 一个优雅且完备的 Python QQ 机器人框架 （主要是这个 ！！！）
  - [mirai-api-http](https://github.com/project-mirai/mirai-api-http) - 提供HTTP API供所有语言使用 mirai QQ 机器人
  - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT) - 非官方 ChatGPT Python 支持库  
+
+本项目基于以上项目开发，所以你可以给他们也点个 star ！
 
 
 **⚡ 支持**   
