@@ -3,6 +3,7 @@ from typing import List, Union, Literal
 from pydantic import BaseModel, BaseConfig, Extra
 from charset_normalizer import from_bytes
 from loguru import logger
+import os
 import sys
 import toml
 
@@ -159,6 +160,7 @@ class Preset(BaseModel):
     command: str = r"加载预设 (\w+)"
     keywords: dict[str, str] = dict()
     loaded_successful: str = "预设加载成功！"
+    scan_dir: str = "./presets"
 
 
 class Config(BaseModel):
@@ -169,6 +171,25 @@ class Config(BaseModel):
     response: Response = Response()
     system: System = System()
     presets: Preset = Preset()
+
+    def scan_presets(self):
+        for keyword, path in self.presets.keywords.items():
+            if os.path.isfile(path):
+                logger.success(f"检查预设：{keyword} <==> {path} [成功]")
+            else:
+                logger.error(f"检查预设：{keyword} <==> {path} [失败：文件不存在]")
+        for root, _, files in os.walk(self.presets.scan_dir, topdown=False):
+            for name in files:
+                if not name.endswith(".txt"):
+                    continue
+                path = os.path.join(root, name)
+                name = name.removesuffix('.txt')
+                if name in self.presets.keywords:
+                    logger.error(f"注册预设：{name} <==> {path} [失败：关键词已存在]")
+                    continue
+                self.presets.keywords[name] = path
+                logger.success(f"注册预设：{name} <==> {path} [成功]")
+
 
     def load_preset(self, keyword):
         try:

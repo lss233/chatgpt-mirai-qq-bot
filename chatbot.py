@@ -6,7 +6,6 @@ from rich.progress import Progress
 from loguru import logger
 
 config = Config.load_config()
-
 if type(config.openai) is OpenAIAuths:
     botManager = BotManager(config.openai.accounts)
 else:
@@ -16,7 +15,7 @@ else:
 
 def setup():
     botManager.login()
-
+    config.scan_presets()
 
 class ChatSession:
     chatbot: BotInfo = None
@@ -40,7 +39,9 @@ class ChatSession:
             self.reset_conversation()
             presets = config.load_preset(keyword)
             for text in presets:
-                if text.startswith('ChatGPT:'):
+                if text.startswith('#'):
+                    continue
+                elif text.startswith('ChatGPT:'):
                     yield text.split('ChatGPT:')[-1].strip()
                 elif text.startswith('User:'):
                     await self.get_chat_response(text.split('User:')[-1].strip())
