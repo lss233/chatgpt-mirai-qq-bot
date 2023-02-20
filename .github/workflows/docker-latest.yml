@@ -32,3 +32,5 @@ jobs:
           context: .
           push: true
           tags: lss233/chatgpt-mirai-qq-bot:browser-version
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
