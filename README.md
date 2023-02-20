@@ -3,7 +3,6 @@
 **一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**  
 
 ![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
-
 [![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=browser-version)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
@@ -18,12 +17,15 @@
 
 ***
 
-基于：
- - [Ariadne](https://github.com/GraiaProject/Ariadne)
- - [mirai-http-api](https://github.com/project-mirai/mirai-api-http)
- - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT).  
+如果你自己也有做机器人的想法，可以看看下面这些项目：
+ - [Ariadne](https://github.com/GraiaProject/Ariadne) - 一个优雅且完备的 Python QQ 机器人框架 （主要是这个 ！！！）
+ - [mirai-api-http](https://github.com/project-mirai/mirai-api-http) - 提供HTTP API供所有语言使用 mirai QQ 机器人
+ - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT) - 非官方 ChatGPT Python 支持库  
 
-支持：  
+本项目基于以上项目开发，所以你可以给他们也点个 star ！
+
+
+**⚡ 支持**   
 * [x] 文字转图片发送  
 * [x] 群聊回复引用
 * [x] 关键词触发回复
@@ -46,7 +48,9 @@
 
 如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
-对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534
+对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534  
+
+如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
 
 <details>
     <summary>Linux: 通过快速部署脚本部署 （新人推荐)</summary>
@@ -502,7 +506,17 @@ title_pattern="qq-{session_id}"
 
 使用 `加载预设 猫娘` 来加载猫娘预设。
 
-你可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
+下面是一些预设的小视频，你可以看看效果：
+* MOSS： https://www.bilibili.com/video/av309604568
+* 丁真：https://www.bilibili.com/video/av267013053
+* 小黑子：https://www.bilibili.com/video/av309604568
+* 高启强：https://www.bilibili.com/video/av779555493
+
+关于预设系统的详细教程：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%F0%9F%90%B1-%E9%A2%84%E8%AE%BE%E7%B3%BB%E7%BB%9F)
+
+你可以在 [Awesome ChatGPT QQ Presets](https://github.com/lss233/awesome-chatgpt-qq-presets/tree/master) 获取由大家分享的预设。
+
+你也可以参考 [Awesome-ChatGPT-prompts-ZH_CN](https://github.com/L1Xu4n/Awesome-ChatGPT-prompts-ZH_CN) 来调教你的 ChatGPT。
 
 还可以参考 [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) 来解锁更多技能。
 
@@ -514,8 +528,26 @@ title_pattern="qq-{session_id}"
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
 
-## Star History
 
-如果你觉得本项目对你有帮助的话，欢迎点一个 Star!  
+## 🎈 相似项目
 
-[![Star History Chart](https://api.star-history.com/svg?repos=lss233/chatgpt-mirai-qq-bot&type=Timeline)](https://star-history.com/#lss233/chatgpt-mirai-qq-bot&Timeline)
+除了我们以外，还有这些很出色的项目：  
+
+* [LlmKira / Openaibot](https://github.com/LlmKira/Openaibot) - 全平台，多模态理解的 OpenAI 机器人
+* [RockChinQ / QChatGPT](https://github.com/RockChinQ/QChatGPT) - 基于 OpenAI 官方 API， 使用 GPT-3 的 QQ 机器人
+* [fuergaosi233 / wechat-chatgpt](https://github.com/fuergaosi233/wechat-chatgpt) - 在微信上迅速接入 ChatGPT
+
+
+## 🛠 贡献者名单  
+
+欢迎提出新的点子、 Pull Request。  
+
+<a href="https://github.com/lss233/chatgpt-mirai-qq-bot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=lss233/chatgpt-mirai-qq-bot" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
+
+## 💪 支持我们
+
+如果我们这个项目对你有所帮助，请给我们一颗 ⭐️
