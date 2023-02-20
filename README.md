@@ -133,6 +133,10 @@ OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
 
 
 ```properties
+# 这里是 ChatGPT for QQ 的所有配置文件
+# 请注意：以 "#" 开头的文本均为注释
+# 不会被程序读取
+# 如果你想要使用某个设置，请确保前面没有 "#" 号
 [mirai]
 # Mirai 相关设置
 
@@ -159,12 +163,15 @@ password = "xxx"
 
 # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
 # 此时的 password 可以直接删除 (email 必填)
+# 提示：如果使用此模式，请删除下方 session_token 前面的 "#" 号，并给上方的 password 前面加上 "#"
 # session_token = "一串 ey 开头的东西"
 
 # 你的 OpenAI access_token，登录后访问`https://chat.openai.com/api/auth/session`获取
+# 提示：如果使用此模式，请删除下方 access_token 前面的 "#" 号，并给上方的 email、password 前面加上 "#"
 # access_token = "一串 ey 开头的东西"
 
 # 如果你在国内，需要配置代理
+# 提示：如果使用此功能，请删除下方 proxy 前面的 "#" 号
 # proxy="http://127.0.0.1:1080"
 
 # 使用 ChatGPT Plus（plus 用户此项设置为 true）
