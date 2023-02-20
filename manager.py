@@ -1,5 +1,7 @@
 import os
+from requests.exceptions import SSLError
 import sys
+import time
 
 sys.path.append(os.getcwd())
 
@@ -13,6 +15,8 @@ from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
 from config import Config
 from config import OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
+
+import utils.network as network
 
 config = Config.load_config()
 
@@ -114,9 +118,16 @@ class BotManager():
                     bot.id = i
                     bot.account = account
                     self.bots.append(bot)
+                    time.sleep(10)
+                except SSLError as e:
+                    logger.error("无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
                 except Exception as e:
-                    logger.exception(e)
-                    logger.error("第 {i} 个 OpenAI 账号登录失败！", i=i + 1)
+                    if str(e) == "failed to connect to the proxy server":
+                        logger.error("无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
+                    else:
+                        logger.error("未知错误：")
+                        logger.exception(e)
+                    logger.error("第 {i} 个 OpenAI 账号登录失败！{exc}", i=i + 1, exc=e)
                 finally:
                     progress.update(task, advance=1)
         if len(self.bots) < 1:
@@ -139,6 +150,12 @@ class BotManager():
 
     def __login_V1(self, account: OpenAIAuthBase) -> BotInfo:
         logger.info("模式：无浏览器登录")
+        if account.proxy is not None:
+            logger.info(f"正在检查代理配置：{account.proxy}")
+            from urllib.parse import urlparse
+            proxy_addr = urlparse(account.proxy)
+            if not network.is_open(proxy_addr.hostname, proxy_addr.port):
+                raise Exception("failed to connect to the proxy server")
         bot = V1Chatbot(config=account.dict(exclude_none=True, by_alias=False), conversation_id=None)
         return BotInfo(bot, account.mode)
 

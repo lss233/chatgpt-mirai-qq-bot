@@ -1,6 +1,8 @@
 import os
 import sys
 
+from requests.exceptions import SSLError
+
 sys.path.append(os.getcwd())
 
 from io import BytesIO
@@ -95,9 +97,17 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             if resp:
                 logger.debug(f"{session_id} - {session.chatbot.id} {resp}")
                 return resp.strip()
+        except SSLError as e:
+            logger.exception(e)
+            return config.response.error_network_failure.format(exc=e)
         except Exception as e:
-            if str(e) == "('Response code error: ', 429)" or 'overloaded' in str(e):
-                return config.response.request_too_fast
+            # Other un-handled exceptions
+            if 'Too many requests' in str(e):
+                return config.response.error_request_too_many
+            elif 'overloaded' in str(e):
+                return config.response.error_server_overloaded
+            elif 'Unauthorized' in str(e):
+                return config.response.error_session_authenciate_failed
             logger.exception(e)
             return config.response.error_format.format(exc=e)
         finally:

@@ -263,6 +263,18 @@ placeholder = "您好！我是 Assistant，一个由 OpenAI 训练的大型语�
 # 发生错误时要发送的消息
 error_format = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n{exc}"
 
+# 发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符
+error_network_failure = "网络故障！连接 OpenAI 服务器失败，我需要更好的网络才能服务！\n{exc}"
+
+# OpenAI 账号登录失效时的提示
+error_session_authenciate_failed = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
+
+# OpenAI 提示 Too many requests（太多请求） 时的提示
+error_request_too_many = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n{exc}"
+
+# 服务器提示 Server overloaded(过载) 时的提示
+error_server_overloaded = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
+
 # 是否要回复触发指令的消息
 quote = true
 
@@ -280,9 +292,6 @@ rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦
 
 # 回滚失败时发送的消息
 rollback_fail = "回滚失败，没有更早的记录了！"
-
-# 服务器提示 429 错误时的回复
-request_too_fast = "当前正在处理的请求太多了，请稍等一会再发吧！"
 
 # 等待处理的消息的最大数量，如果要关闭此功能，设置为 0
 max_queue_size = 10
