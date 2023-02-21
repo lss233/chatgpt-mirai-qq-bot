@@ -235,11 +235,24 @@ paid = false
 
 [text_to_image]
 # 文字转图片
-font_size = 30 # 字体大小
-width = 700  # 图片宽度
-font_path = "fonts/sarasa-mono-sc-regular.ttf"  # 字体
-offset_x = 50  # 起始点 X
-offset_y = 50 # 起始点 Y
+
+# 持续开启，设置后所有的消息以图片发送，减小风控概率  
+always = true
+
+# 字体大小
+font_size = 30
+
+# 图片宽度
+width = 700
+
+# 字体
+font_path = "fonts/sarasa-mono-sc-regular.ttf" 
+
+# 起始点 X
+offset_x = 50 
+
+# 起始点 Y
+offset_y = 50 
 
 [trigger]
 # 配置机器人要如何响应，下面所有项均可选 (也就是可以直接删掉那一行)
