@@ -7,7 +7,6 @@ sys.path.append(os.getcwd())
 
 import asyncio
 import itertools
-from rich.progress import Progress
 from typing import Union, List
 import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
@@ -18,6 +17,8 @@ from config import OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
+from tinydb import TinyDB, Query
+import hashlib
 
 config = Config.load_config()
 
@@ -101,6 +102,8 @@ class BotManager():
 
     def __init__(self, accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]) -> None:
         self.accounts = accounts
+        self.cache_db = TinyDB('data/login_caches.json')
+
 
     def login(self):
         for i, account in enumerate(self.accounts):
@@ -116,7 +119,8 @@ class BotManager():
                 bot.account = account
                 self.bots.append(bot)
                 logger.success("登录成功！", i=i + 1)
-                time.sleep(10)
+                logger.debug("等待 8 秒……")
+                time.sleep(8)
             except OpenAIAuth.Error as e:
                 logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
             except (SSLError, urllib3.exceptions.MaxRetryError) as e:
@@ -147,8 +151,23 @@ class BotManager():
                 XPRA_PASSWORD=os.environ.get('XPRA_PASSWORD'))
         bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False))
         return BotInfo(bot, account.mode)
+
+    def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
+        """保存登录缓存"""
+        account_sha = hashlib.sha256(account.json().encode('utf8')).hexdigest()
+        q = Query()
+        self.cache_db.upsert({'account': account_sha, 'cache': cache}, q.account == account_sha)
+
+    def __load_login_cache(self, account):
+        """读取登录缓存"""
+        account_sha = hashlib.sha256(account.json().encode('utf8')).hexdigest()
+        q = Query()
+        cache = self.cache_db.get(q.account == account_sha)
+        return cache['cache'] if cache is not None else dict()
+
     def __login_V1(self, account: OpenAIAuthBase) -> BotInfo:
         logger.info("模式：无浏览器登录")
+        cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
         if account.proxy is not None:
             logger.info(f"正在检查代理配置：{account.proxy}")
@@ -163,33 +182,46 @@ class BotManager():
             try:
                 bot.get_conversations(0, 1)
                 return True
-            except V1Error as e:
+            except (V1Error, KeyError) as e:
                 return False
+        
+        def get_access_token(bot: V1Chatbot):
+            return bot.session.headers.get('Authorization').removeprefix('Bearer ')
 
-        if 'access_token' in account.dict():
+        if 'access_token' in cached_account:
             logger.info("尝试使用 access_token 登录中...")
-            config['access_token'] = account.access_token
+            config['access_token'] = cached_account['access_token']
             bot = V1Chatbot(config=config)
             if __V1_check_auth(bot):
                return BotInfo(bot, account.mode)
 
-        if 'session_token' in account.dict():
+        if 'session_token' in cached_account:
             logger.info("尝试使用 session_token 登录中...")
             config.pop('access_token', None)
-            config['session_token'] = account.session_token
+            config['session_token'] = cached_account['session_token']
             bot = V1Chatbot(config=config)
+            self.__save_login_cache(account=account, cache={
+                "session_token": config['session_token'], 
+                "access_token": get_access_token(bot),
+            })
             if __V1_check_auth(bot):
                return BotInfo(bot, account.mode)
 
-        if 'password' in account.dict():
+        if 'password' in cached_account:
             logger.info("尝试使用 email + password 登录中...")
             config.pop('access_token', None)
             config.pop('session_token', None)
-            config['email'] = account.email
-            config['password'] = account.password
+            config['email'] = cached_account['email']
+            config['password'] = cached_account['password']
             bot = V1Chatbot(config=config)
+            self.__save_login_cache(account=account, cache={
+                "session_token":bot.config['session_token'], 
+                "access_token": get_access_token(bot)
+            })
             if __V1_check_auth(bot):
                return BotInfo(bot, account.mode)
+        # Invalidate cache
+        self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
 
     def pick(self) -> BotInfo:
