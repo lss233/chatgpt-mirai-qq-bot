@@ -10,12 +10,13 @@ import itertools
 from rich.progress import Progress
 from typing import Union, List
 import os
-from revChatGPT.V1 import Chatbot as V1Chatbot
+from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
 from config import Config
 from config import OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
-
+import OpenAIAuth
+import urllib3.exceptions
 import utils.network as network
 
 config = Config.load_config()
@@ -102,34 +103,33 @@ class BotManager():
         self.accounts = accounts
 
     def login(self):
-        with Progress() as progress:
-            logger.remove()
-            logger.add(sink=progress.console.out, level='TRACE')
-            task = progress.add_task("[red]登录 OpenAI", total=len(self.accounts))
-            for i, account in enumerate(self.accounts):
-                logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
-                try:
-                    if account.mode == "proxy" or account.mode == "browserless":
-                        bot = self.__login_V1(account)
-                    elif account.mode == "browser":
-                        bot = self.__login_browser(account)
-                    else:
-                        raise Exception("未定义的登录类型：" + account.mode)
-                    bot.id = i
-                    bot.account = account
-                    self.bots.append(bot)
-                    time.sleep(10)
-                except SSLError as e:
-                    logger.error("无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-                except Exception as e:
-                    if str(e) == "failed to connect to the proxy server":
-                        logger.error("无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-                    else:
-                        logger.error("未知错误：")
-                        logger.exception(e)
-                    logger.error("第 {i} 个 OpenAI 账号登录失败！{exc}", i=i + 1, exc=e)
-                finally:
-                    progress.update(task, advance=1)
+        for i, account in enumerate(self.accounts):
+            logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
+            try:
+                if account.mode == "proxy" or account.mode == "browserless":
+                    bot = self.__login_V1(account)
+                elif account.mode == "browser":
+                    bot = self.__login_browser(account)
+                else:
+                    raise Exception("未定义的登录类型：" + account.mode)
+                bot.id = i
+                bot.account = account
+                self.bots.append(bot)
+                logger.success("登录成功！", i=i + 1)
+                time.sleep(10)
+            except OpenAIAuth.Error as e:
+                logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
+            except (SSLError, urllib3.exceptions.MaxRetryError) as e:
+                logger.error("登录失败! 连接 OpenAI 服务器失败,请检查网络和本地代理设置！{exc}", exc=e)
+            except Exception as e:
+                err_msg = str(e)
+                if "failed to connect to the proxy server" in err_msg:
+                    logger.error("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！{exc}", exc=e)
+                elif "All login method failed" in err_msg:
+                    logger.error("登录失败! 所有登录方法均已失效,请检查 IP、代理或者登录信息是否正确{exc}", exc=e)
+                else:
+                    logger.error("未知错误：")
+                    logger.exception(e)
         if len(self.bots) < 1:
             logger.error("所有账号均登录失败，无法继续启动！")
             exit(-2)
@@ -145,19 +145,52 @@ class BotManager():
             logger.info(
                 "检测到您正在使用 xpra 虚拟显示环境，请使用你自己的浏览器访问 http://你的IP:14500，密码：{XPRA_PASSWORD}以看见浏览器。",
                 XPRA_PASSWORD=os.environ.get('XPRA_PASSWORD'))
-        bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False), conversation_id=None)
+        bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False))
         return BotInfo(bot, account.mode)
-
     def __login_V1(self, account: OpenAIAuthBase) -> BotInfo:
         logger.info("模式：无浏览器登录")
+        config = dict()
         if account.proxy is not None:
             logger.info(f"正在检查代理配置：{account.proxy}")
             from urllib.parse import urlparse
             proxy_addr = urlparse(account.proxy)
             if not network.is_open(proxy_addr.hostname, proxy_addr.port):
                 raise Exception("failed to connect to the proxy server")
-        bot = V1Chatbot(config=account.dict(exclude_none=True, by_alias=False), conversation_id=None)
-        return BotInfo(bot, account.mode)
+            config['proxy'] = account.proxy
+
+        # 我承认这部分代码有点蠢
+        def __V1_check_auth(bot) -> bool:
+            try:
+                bot.get_conversations(0, 1)
+                return True
+            except V1Error as e:
+                return False
+
+        if 'access_token' in account.dict():
+            logger.info("尝试使用 access_token 登录中...")
+            config['access_token'] = account.access_token
+            bot = V1Chatbot(config=config)
+            if __V1_check_auth(bot):
+               return BotInfo(bot, account.mode)
+
+        if 'session_token' in account.dict():
+            logger.info("尝试使用 session_token 登录中...")
+            config.pop('access_token', None)
+            config['session_token'] = account.session_token
+            bot = V1Chatbot(config=config)
+            if __V1_check_auth(bot):
+               return BotInfo(bot, account.mode)
+
+        if 'password' in account.dict():
+            logger.info("尝试使用 email + password 登录中...")
+            config.pop('access_token', None)
+            config.pop('session_token', None)
+            config['email'] = account.email
+            config['password'] = account.password
+            bot = V1Chatbot(config=config)
+            if __V1_check_auth(bot):
+               return BotInfo(bot, account.mode)
+        raise Exception("All login method failed")
 
     def pick(self) -> BotInfo:
         if self.roundrobin is None:
