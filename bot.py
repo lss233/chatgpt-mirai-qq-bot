@@ -52,7 +52,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
     timeout_task = None
 
-    session = chatbot.get_chat_session(session_id)
+    session, is_new_session = chatbot.get_chat_session(session_id)
 
     # 回滚
     if message.strip() in config.trigger.rollback_command:
@@ -83,12 +83,13 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return config.response.reset
 
             # # 新会话
-            # if is_new_session:
-            #     await chatbot.initial_process(session)
+            if is_new_session:
+                await session.load_conversation()
 
             # 加载关键词人设
             preset_search = re.search(config.presets.command, message)
             if preset_search:
+                session.reset_conversation()
                 async for progress in session.load_conversation(preset_search.group(1)):
                     await app.send_message(target, progress, quote=source if config.response.quote else False)
                 return config.presets.loaded_successful

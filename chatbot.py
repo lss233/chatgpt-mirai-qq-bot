@@ -1,3 +1,4 @@
+from typing import Tuple
 from config import Config, OpenAIAuths
 import asyncio
 from manager import BotManager, BotInfo
@@ -23,20 +24,18 @@ class ChatSession:
 
     def __init__(self, session_id):
         self.session_id = session_id
-        self.prev_conversation_id = None
-        self.prev_parent_id = None
+        self.prev_conversation_id = []
+        self.prev_parent_id = []
         self.parent_id = None
         self.conversation_id = None
-        self.reset_conversation()
+        self.chatbot = botManager.pick()
 
     async def load_conversation(self, keyword='default'):
-        if not keyword in config.presets.keywords:
+        if keyword not in config.presets.keywords:
             if keyword == 'default':
-                self.reset_conversation()
-            else:
-                raise ValueError("预设不存在，请检查你的输入是否有问题！")
+                pass
+            raise ValueError("预设不存在，请检查你的输入是否有问题！")
         else:
-            self.reset_conversation()
             presets = config.load_preset(keyword)
             for text in presets:
                 if text.startswith('#'):
@@ -86,10 +85,12 @@ class ChatSession:
 __sessions = {}
 
 
-def get_chat_session(id: str) -> ChatSession:
+def get_chat_session(id: str) -> Tuple[ChatSession, bool]:
+    new_session = False
     if id not in __sessions:
         __sessions[id] = ChatSession(id)
-    return __sessions[id]
+        new_session = True
+    return __sessions[id], new_session
 
 
 
