@@ -103,11 +103,11 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         except Exception as e:
             # Other un-handled exceptions
             if 'Too many requests' in str(e):
-                return config.response.error_request_too_many
+                return config.response.error_request_too_many.format(exc=e)
             elif 'overloaded' in str(e):
-                return config.response.error_server_overloaded
+                return config.response.error_server_overloaded.format(exc=e)
             elif 'Unauthorized' in str(e):
-                return config.response.error_session_authenciate_failed
+                return config.response.error_session_authenciate_failed.format(exc=e)
             logger.exception(e)
             return config.response.error_format.format(exc=e)
         finally:
