@@ -72,6 +72,8 @@ class OpenAIAPIKey(OpenAIAuthBase):
 
 
 class TextToImage(BaseModel):
+    always: bool = False
+    """持续开启，设置后所有的文字均以图片方式发送"""
     font_size: int = 30
     """字号"""
     width: int = 700

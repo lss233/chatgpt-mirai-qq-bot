@@ -123,7 +123,13 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
     if friend.id == config.mirai.qq:
         return
     response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
-    await app.send_message(friend, response, quote=source if config.response.quote else False)
+    if config.text_to_image.always:
+        img = text_to_image(text=response)
+        b = BytesIO()
+        img.save(b, format="png")
+        await app.send_message(friend, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+    else:
+        await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
@@ -134,12 +140,19 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     response = await handle_message(group, f"group-{group.id}", chain.display, source)
-    event = await app.send_message(group, response, quote=source if config.response.quote else False)
-    if event.source.id < 0:
+    if config.text_to_image.always:
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
         await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+    else:
+        event = await app.send_message(group, response, quote=source if config.response.quote else False)
+        if event.source.id < 0:
+            img = text_to_image(text=response)
+            b = BytesIO()
+            img.save(b, format="png")
+            await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+        
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")
