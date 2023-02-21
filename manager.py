@@ -102,6 +102,11 @@ class BotManager():
 
     def __init__(self, accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]) -> None:
         self.accounts = accounts
+        try:
+            os.mkdir('data')
+            logger.warning("警告：未检测到 data 目录，如果你通过 Docker 部署，请挂载此目录以实现登录缓存，否则可忽略此消息。")
+        except:
+            pass
         self.cache_db = TinyDB('data/login_caches.json')
 
 
