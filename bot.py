@@ -58,7 +58,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if message.strip() in config.trigger.rollback_command:
         resp = session.rollback_conversation()
         if resp:
-            return config.response.rollback_success + '\n' + resp
+            return config.response.rollback_success
         return config.response.rollback_fail
 
     # 队列满时拒绝新的消息
@@ -84,7 +84,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
             # # 新会话
             if is_new_session:
-                await session.load_conversation()
+                async for progress in session.load_conversation():
+                    await app.send_message(target, progress, quote=source if config.response.quote else False)
 
             # 加载关键词人设
             preset_search = re.search(config.presets.command, message)
