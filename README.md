@@ -237,11 +237,24 @@ paid = false
 
 [text_to_image]
 # 文字转图片
-font_size = 30 # 字体大小
-width = 700  # 图片宽度
-font_path = "fonts/sarasa-mono-sc-regular.ttf"  # 字体
-offset_x = 50  # 起始点 X
-offset_y = 50 # 起始点 Y
+
+# 持续开启，设置后所有的消息以图片发送，减小风控概率  
+always = true
+
+# 字体大小
+font_size = 30
+
+# 图片宽度
+width = 700
+
+# 字体
+font_path = "fonts/sarasa-mono-sc-regular.ttf" 
+
+# 起始点 X
+offset_x = 50 
+
+# 起始点 Y
+offset_y = 50 
 
 [trigger]
 # 配置机器人要如何响应，下面所有项均可选 (也就是可以直接删掉那一行)
@@ -249,7 +262,7 @@ offset_y = 50 # 起始点 Y
 # 符合前缀才会响应，可以自己增减
 prefix = [ "",]
 
-# 配置群里如何让机器人响应，"at" 表示需要群里 @ 机器人，"mention" 表示 @ 或
+# 配置群里如何让机器人响应，"at" 表示需要群里 @ 机器人，"mention" 表示 @ 或者以机器人名字开头都可以，"none" 表示不需要
 require_mention = "at"
 
 # 重置会话的命令

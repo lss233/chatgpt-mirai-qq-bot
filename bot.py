@@ -68,7 +68,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if message.strip() in config.trigger.rollback_command:
         resp = session.rollback_conversation()
         if resp:
-            return config.response.rollback_success + '\n' + resp
+            return config.response.rollback_success
         return config.response.rollback_fail
 
     # 队列满时拒绝新的消息
@@ -94,7 +94,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
             # # 新会话
             if is_new_session:
-                await session.load_conversation()
+                async for progress in session.load_conversation():
+                    await app.send_message(target, progress, quote=source if config.response.quote else False)
 
             # 加载关键词人设
             preset_search = re.search(config.presets.command, message)
@@ -144,7 +145,13 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
             response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
         
-    await app.send_message(friend, response, quote=source if config.response.quote else False)
+    if config.text_to_image.always:
+        img = text_to_image(text=response)
+        b = BytesIO()
+        img.save(b, format="png")
+        await app.send_message(friend, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+    else:
+        await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
@@ -163,12 +170,19 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
             response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
 
-    event = await app.send_message(group, response, quote=source if config.response.quote else False)
-    if event.source.id < 0:
+    if config.text_to_image.always:
         img = text_to_image(text=response)
         b = BytesIO()
         img.save(b, format="png")
         await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+    else:
+        event = await app.send_message(group, response, quote=source if config.response.quote else False)
+        if event.source.id < 0:
+            img = text_to_image(text=response)
+            b = BytesIO()
+            img.save(b, format="png")
+            await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+        
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")

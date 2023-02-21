@@ -20,6 +20,7 @@ services:
       - "14500:14500"
     volumes:
       - ./config.cfg:/app/config.cfg
+      - ./data:/app/data
       # - ./fonts:/app/fonts # 如果你想自定义字体，就解除注释
       # - ./presets:/app/presets # 如果你想自定义预设，就解除注释
   watchtower: # [可选] 自动更新

@@ -23,7 +23,7 @@ jobs:
         echo ${{ steps.vars.outputs.tag }}
     - name: Generate files
       run: |
-        sudo apt install -yq unzip
+        sudo apt install -yq unzip dos2unix
         echo "Creating folders..."
         mkdir mirai chatgpt
         echo "Downloading mcl-installer ..."
@@ -48,6 +48,8 @@ jobs:
         sed -i 's/<mirai-http-api 中的 verifyKey>/1234567890/' chatgpt/config.example.cfg
         cp files/scripts/初始化.cmd .
 
+        find . -type f -print0 | xargs -0 dos2unix
+        
         echo "Packing..."
         zip -r quickstart-windows-amd64 chatgpt mirai files 初始化.cmd
     - name: Upload compressed files to release
