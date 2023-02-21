@@ -84,7 +84,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
             # # 新会话
             if is_new_session:
-                await session.load_conversation()
+                async for progress in session.load_conversation(preset_search.group(1)):
+                    await app.send_message(target, progress, quote=source if config.response.quote else False)
 
             # 加载关键词人设
             preset_search = re.search(config.presets.command, message)
