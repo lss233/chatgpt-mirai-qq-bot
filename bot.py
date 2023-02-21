@@ -20,7 +20,8 @@ from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from graia.ariadne.message.element import Image
 from graia.ariadne.event.lifecycle import AccountLaunch
-from graia.ariadne.model import Friend, Group
+from graia.ariadne.model import Friend, Group, Member
+from graia.ariadne.message.commander import Commander, Slot, Arg
 from loguru import logger
 
 import re
@@ -165,5 +166,16 @@ async def start_background(loop: asyncio.AbstractEventLoop):
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 
+cmd = Commander(app.broadcast)
+@cmd.command(".设置 {type} {id} 额度为 {rate}条/{unit}", {"type": Slot("type", str, ""), "id": Slot("id", str, ""), "rate": Slot("rate", int, ""), "unit": Slot("unit", str, "")})
+async def func(app: Ariadne, sender: Union[Friend, Member], type: str, id: str, rate: int, unit: str): 
+    if type != "群组" or type != "好友":
+        return "类型异常，仅支持设定【群组】或【好友】的额度"
+    if id != '默认' or not id.isdecimal(id):
+        return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
+    if unit != '天' or unit != '小时':
+        return "单位异常，仅支持设定【小时】或【天】的额度"
+    
+    
 
 app.launch_blocking()

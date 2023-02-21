@@ -3,6 +3,7 @@ revChatGPT[unofficial]==2.3.4
 toml~=0.10.2
 rich~=13.3.1
 Pillow>=9.3.0
+tinydb~=4.7.1
 
 loguru~=0.6.0
 asyncio~=3.4.3
