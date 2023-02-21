@@ -146,6 +146,8 @@ OpenAI 注册教程： https://www.cnblogs.com/mrjade/p/16968591.html
 
 qq = 请填写机器人的 QQ 号
 
+manager_qq = 请修改为机器人管理员的QQ号
+
 # 以下设置如果不懂 无需理会
 
 api_key = "1234567890" # mirai-http-api 中的 verifyKey
@@ -322,6 +324,18 @@ loaded_successful = "预设加载成功！"
 # 预设关键词 <-> 实际文件
 "正常" = "presets/default.txt"
 "猫娘" = "presets/catgirl.txt"
+
+[ratelimit]
+# 额度限制功能，可以在 wiki 中了解此功能的用法
+
+# 额度使用达到此比例时进行警告
+warning_rate: float = 0.8
+
+# 警告消息
+warning_msg: str = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
+
+# 超额消息
+exceed: str = "已达到额度限制，请等待下一小时继续和我对话。"
 ```
 
 ### 多账号支持  

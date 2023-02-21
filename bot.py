@@ -29,6 +29,8 @@ import asyncio
 import chatbot
 from config import Config
 from text_to_img import text_to_image
+from manager.ratelimit import RateLimitManager
+import time
 
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
@@ -40,6 +42,8 @@ app = Ariadne(
         WebsocketClientConfig(host=config.mirai.ws_url),
     ),
 )
+
+rateLimitManager = RateLimitManager()
 
 
 async def create_timeout_task(target: Union[Friend, Group], source: Source):
@@ -54,6 +58,11 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     timeout_task = None
 
     session, is_new_session = chatbot.get_chat_session(session_id)
+
+    rate_usage = rateLimitManager.check_exceed('好友' if isinstance(target, Friend) else '群组', target.id)
+
+    if rate_usage >= 1:
+        return config.ratelimit.exceed
 
     # 回滚
     if message.strip() in config.trigger.rollback_command:
@@ -112,6 +121,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return config.response.error_session_authenciate_failed.format(exc=e)
             logger.exception(e)
             return config.response.error_format.format(exc=e)
+        else:
+            # 更新额度
+            rateLimitManager.increment_usage('好友' if isinstance(target, Friend) else '群组', target.id)
         finally:
             if timeout_task:
                 timeout_task.cancel()
@@ -124,6 +136,14 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
     if friend.id == config.mirai.qq:
         return
     response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
+
+    rate_usage = rateLimitManager.check_exceed('好友', friend.id)
+    if rate_usage >= config.ratelimit.warning_rate:
+            limit = rateLimitManager.get_limit(type, id)
+            usage = rateLimitManager.get_usage(type, id)
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
+        
     await app.send_message(friend, response, quote=source if config.response.quote else False)
 
 
@@ -135,6 +155,14 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     response = await handle_message(group, f"group-{group.id}", chain.display, source)
+
+    rate_usage = rateLimitManager.check_exceed('群组', group.id)
+    if rate_usage >= config.ratelimit.warning_rate:
+            limit = rateLimitManager.get_limit(type, id)
+            usage = rateLimitManager.get_usage(type, id)
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
+
     event = await app.send_message(group, response, quote=source if config.response.quote else False)
     if event.source.id < 0:
         img = text_to_image(text=response)
@@ -167,15 +195,29 @@ async def start_background(loop: asyncio.AbstractEventLoop):
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 
 cmd = Commander(app.broadcast)
-@cmd.command(".设置 {type} {id} 额度为 {rate}条/{unit}", {"type": Slot("type", str, ""), "id": Slot("id", str, ""), "rate": Slot("rate", int, ""), "unit": Slot("unit", str, "")})
-async def func(app: Ariadne, sender: Union[Friend, Member], type: str, id: str, rate: int, unit: str): 
+@cmd.command(".设置 {type} {id} 额度为 {rate} 条/小时", {"type": Slot("type", str, ""), "id": Slot("id", str, ""), "rate": Slot("rate", int, "")})
+async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: int): 
+    if not sender.id == config.mirai.manager_qq:
+        return "您没有权限执行这个操作"
     if type != "群组" or type != "好友":
         return "类型异常，仅支持设定【群组】或【好友】的额度"
     if id != '默认' or not id.isdecimal(id):
         return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
-    if unit != '天' or unit != '小时':
-        return "单位异常，仅支持设定【小时】或【天】的额度"
+    rateLimitManager.update(type, id, rate)
+    return "额度更新成功！"
     
+@cmd.command(".查看 {type} {id} 的使用情况", {"type": Slot("type", str, ""), "id": Slot("id", str, "")})
+async def show_rate(sender: Union[Friend, Member], type: str, id: str): 
+    if not sender.id == config.mirai.manager_qq and not sender.id == int(id):
+        return "您没有权限执行这个操作"
+    if type != "群组" or type != "好友":
+        return "类型异常，仅支持设定【群组】或【好友】的额度"
+    if id != '默认' or not id.isdecimal(id):
+        return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
+    limit = rateLimitManager.get_limit(type, id)
+    usage = rateLimitManager.get_usage(type, id)
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    return f"{type} {id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}"
     
 
 app.launch_blocking()
