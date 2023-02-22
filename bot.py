@@ -17,6 +17,7 @@ from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroup
 from graia.ariadne.event.message import MessageEvent, TempMessage
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
+from graia.broadcast.exceptions import ExecutionStop
 from requests.exceptions import SSLError
 from graia.ariadne.model import Friend, Group, Member
 from graia.ariadne.message.commander import Commander, Slot, Arg
@@ -56,11 +57,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     timeout_task = None
 
     session, is_new_session = chatbot.get_chat_session(session_id)
-
-    rate_usage = rateLimitManager.check_exceed('好友' if isinstance(target, Friend) else '群组', target.id)
-
-    if rate_usage >= 1:
-        return config.ratelimit.exceed
 
     # 回滚
     if message.strip() in config.trigger.rollback_command:
@@ -128,20 +124,22 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 timeout_task.cancel()
     # 排队结束
 
-
-@app.broadcast.receiver("FriendMessage")
+@app.broadcast.receiver("FriendMessage", priority=19)
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
                                   chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
-    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
-
     rate_usage = rateLimitManager.check_exceed('好友', friend.id)
-    if rate_usage >= config.ratelimit.warning_rate:
-            limit = rateLimitManager.get_limit(type, id)
-            usage = rateLimitManager.get_usage(type, id)
+    if rate_usage >= 1:
+        response = config.ratelimit.exceed
+    else:
+        response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
+        if rate_usage >= config.ratelimit.warning_rate:
+            limit = rateLimitManager.get_limit('好友', friend.id)
+            usage = rateLimitManager.get_usage('好友', friend.id)
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
+            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
+                                                                             current_time=current_time)
 
     if config.text_to_image.always:
         await app.send_message(friend, to_image(response), quote=source if config.response.quote else False)
@@ -154,16 +152,19 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
     MessageChain, DetectPrefix(config.trigger.prefix)]
 
 
-@app.broadcast.receiver("GroupMessage")
+@app.broadcast.receiver("GroupMessage", priority=19)
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    response = await handle_message(group, f"group-{group.id}", chain.display, source)
-
     rate_usage = rateLimitManager.check_exceed('群组', group.id)
-    if rate_usage >= config.ratelimit.warning_rate:
-            limit = rateLimitManager.get_limit(type, id)
-            usage = rateLimitManager.get_usage(type, id)
+    if rate_usage >= 1:
+        return config.ratelimit.exceed
+    else:
+        response = await handle_message(group, f"group-{group.id}", chain.display, source)
+        if rate_usage >= config.ratelimit.warning_rate:
+            limit = rateLimitManager.get_limit('群组', group.id)
+            usage = rateLimitManager.get_usage('群组', group.id)
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
+            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
+                                                                             current_time=current_time)
 
     if config.text_to_image.always:
         await app.send_message(group, to_image(response), quote=source if config.response.quote else False)
@@ -197,35 +198,48 @@ async def start_background():
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 
+
 cmd = Commander(app.broadcast)
-@cmd.command(".设置 {type: str} {id: str} 额度为 {rate: int} 条/小时")
-async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], type: str, id: str, rate: int): 
-    if not sender.id == config.mirai.manager_qq:
-        return await app.send_message(event, "您没有权限执行这个操作")
-    if type != "群组" and type != "好友":
-        return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
-    if id != '默认' and not id.isdecimal():
-        return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
-    rateLimitManager.update(type, id, rate)
-    return await app.send_message(event, "额度更新成功！")
-    
-@cmd.command(".查看 {type: str} {id: str} 的使用情况")
-async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], type: str, id: str): 
-    if isinstance(event, TempMessage):
-        # ignored
-        return
-    if not sender.id == config.mirai.manager_qq and not sender.id == int(id):
-        return await app.send_message(event, "您没有权限执行这个操作")
-    if type != "群组" and type != "好友":
-        return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
-    if id != '默认' and not id.isdecimal():
-        return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
-    limit = rateLimitManager.get_limit(type, id)
-    if limit is None:
-        return await app.send_message(event, f"{type} {id} 没有额度限制。")
-    usage = rateLimitManager.get_usage(type, id)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-    return await app.send_message(event, f"{type} {id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
+
+
+@cmd.command(".设置 {msg_type: str} {msg_id: str} 额度为 {rate: int} 条/小时")
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str,
+                      rate: int):
+    try:
+        if not sender.id == config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        if msg_type != "群组" and msg_type != "好友":
+            return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+        if msg_id != '默认' and not msg_id.isdecimal():
+            return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
+        rateLimitManager.update(msg_type, msg_id, rate)
+        return await app.send_message(event, "额度更新成功！")
+    finally:
+        raise ExecutionStop ()
+
+
+@cmd.command(".查看 {msg_type: str} {msg_id: str} 的使用情况")
+async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str):
+    try:
+        if isinstance(event, TempMessage):
+            # ignored
+            return
+        if not sender.id == config.mirai.manager_qq and not sender.id == int(msg_id):
+            return await app.send_message(event, "您没有权限执行这个操作")
+        if msg_type != "群组" and msg_type != "好友":
+            return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+        if msg_id != '默认' and not msg_id.isdecimal():
+            return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
+        limit = rateLimitManager.get_limit(msg_type, msg_id)
+        if limit is None:
+            return await app.send_message(event, f"{msg_type} {msg_id} 没有额度限制。")
+        usage = rateLimitManager.get_usage(msg_type, msg_id)
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        return await app.send_message(event,
+                                      f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
+    finally:
+        raise ExecutionStop ()
+
 
 
 app.launch_blocking()
