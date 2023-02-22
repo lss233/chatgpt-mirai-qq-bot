@@ -197,8 +197,8 @@ async def start_background():
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 
 cmd = Commander(app.broadcast)
-@cmd.command(".设置 {type} {id} 额度为 {rate} 条/小时", {"type": Slot("type", str, ""), "id": Slot("id", str, ""), "rate": Slot("rate", int, "")})
-async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: int):
+@cmd.command(".设置 {type: str} {id: str} 额度为 {rate: int} 条/小时")
+async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: int): 
     if not sender.id == config.mirai.manager_qq:
         return "您没有权限执行这个操作"
     if type != "群组" or type != "好友":
@@ -207,9 +207,9 @@ async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: i
         return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
     rateLimitManager.update(type, id, rate)
     return "额度更新成功！"
-
-@cmd.command(".查看 {type} {id} 的使用情况", {"type": Slot("type", str, ""), "id": Slot("id", str, "")})
-async def show_rate(sender: Union[Friend, Member], type: str, id: str):
+    
+@cmd.command(".查看 {type: str} {id: str} 的使用情况")
+async def show_rate(sender: Union[Friend, Member], type: str, id: str): 
     if not sender.id == config.mirai.manager_qq and not sender.id == int(id):
         return "您没有权限执行这个操作"
     if type != "群组" or type != "好友":
