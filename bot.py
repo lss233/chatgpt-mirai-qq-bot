@@ -1,11 +1,7 @@
 import os
 import sys
 
-from requests.exceptions import SSLError
-
 sys.path.append(os.getcwd())
-
-from io import BytesIO
 from typing import Union
 from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne
@@ -18,8 +14,9 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from graia.ariadne.message.element import Image
 from graia.ariadne.event.lifecycle import AccountLaunch
+from graia.ariadne.model import Friend, Group
+from requests.exceptions import SSLError
 from graia.ariadne.model import Friend, Group, Member
 from graia.ariadne.message.commander import Commander, Slot, Arg
 from loguru import logger
@@ -28,7 +25,7 @@ import re
 import asyncio
 import chatbot
 from config import Config
-from text_to_img import text_to_image
+from utils.text_to_img import to_image
 from manager.ratelimit import RateLimitManager
 import time
 
@@ -92,11 +89,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 session.reset_conversation()
                 return config.response.reset
 
-            # # 新会话
-            if is_new_session:
-                async for progress in session.load_conversation():
-                    await app.send_message(target, progress, quote=source if config.response.quote else False)
-
             # 加载关键词人设
             preset_search = re.search(config.presets.command, message)
             if preset_search:
@@ -104,6 +96,11 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 async for progress in session.load_conversation(preset_search.group(1)):
                     await app.send_message(target, progress, quote=source if config.response.quote else False)
                 return config.presets.loaded_successful
+            elif is_new_session:
+                # 新会话
+                async for progress in session.load_conversation():
+                    await app.send_message(target, progress, quote=source if config.response.quote else False)
+
             # 正常交流
             resp = await session.get_chat_response(message)
             if resp:
@@ -128,7 +125,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         finally:
             if timeout_task:
                 timeout_task.cancel()
-    ### 排队结束
+    # 排队结束
 
 
 @app.broadcast.receiver("FriendMessage")
@@ -144,12 +141,9 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
             usage = rateLimitManager.get_usage(type, id)
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
             response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
-        
+
     if config.text_to_image.always:
-        img = text_to_image(text=response)
-        b = BytesIO()
-        img.save(b, format="png")
-        await app.send_message(friend, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+        await app.send_message(friend, to_image(response), quote=source if config.response.quote else False)
     else:
         await app.send_message(friend, response, quote=source if config.response.quote else False)
 
@@ -171,18 +165,12 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
             response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'], current_time=current_time)
 
     if config.text_to_image.always:
-        img = text_to_image(text=response)
-        b = BytesIO()
-        img.save(b, format="png")
-        await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+        await app.send_message(group, to_image(response), quote=source if config.response.quote else False)
     else:
         event = await app.send_message(group, response, quote=source if config.response.quote else False)
         if event.source.id < 0:
-            img = text_to_image(text=response)
-            b = BytesIO()
-            img.save(b, format="png")
-            await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
-        
+            await app.send_message(group, to_image(response),
+                                   quote=source if config.response.quote else False)
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")
@@ -198,7 +186,7 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 
 @app.broadcast.receiver(AccountLaunch)
-async def start_background(loop: asyncio.AbstractEventLoop):
+async def start_background():
     try:
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
@@ -210,7 +198,7 @@ async def start_background(loop: asyncio.AbstractEventLoop):
 
 cmd = Commander(app.broadcast)
 @cmd.command(".设置 {type} {id} 额度为 {rate} 条/小时", {"type": Slot("type", str, ""), "id": Slot("id", str, ""), "rate": Slot("rate", int, "")})
-async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: int): 
+async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: int):
     if not sender.id == config.mirai.manager_qq:
         return "您没有权限执行这个操作"
     if type != "群组" or type != "好友":
@@ -219,9 +207,9 @@ async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: i
         return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
     rateLimitManager.update(type, id, rate)
     return "额度更新成功！"
-    
+
 @cmd.command(".查看 {type} {id} 的使用情况", {"type": Slot("type", str, ""), "id": Slot("id", str, "")})
-async def show_rate(sender: Union[Friend, Member], type: str, id: str): 
+async def show_rate(sender: Union[Friend, Member], type: str, id: str):
     if not sender.id == config.mirai.manager_qq and not sender.id == int(id):
         return "您没有权限执行这个操作"
     if type != "群组" or type != "好友":
@@ -232,6 +220,6 @@ async def show_rate(sender: Union[Friend, Member], type: str, id: str):
     usage = rateLimitManager.get_usage(type, id)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     return f"{type} {id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}"
-    
+
 
 app.launch_blocking()

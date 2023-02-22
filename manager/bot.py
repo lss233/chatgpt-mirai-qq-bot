@@ -1,7 +1,8 @@
 import os
-from requests.exceptions import SSLError
 import sys
 import time
+
+from requests.exceptions import SSLError
 
 sys.path.append(os.getcwd())
 
@@ -27,7 +28,7 @@ class BotInfo(asyncio.Lock):
     id = 0
 
     account: OpenAIAuthBase
-    
+
     bot: Union[V1Chatbot, BrowserChatbot]
 
     mode: str
@@ -89,7 +90,7 @@ class BotInfo(asyncio.Lock):
         return await super().__aexit__(exc_type, exc, tb)
 
 
-class BotManager():
+class BotManager:
     """Bot lifecycle manager."""
 
     bots: List[BotInfo] = []
@@ -104,11 +105,11 @@ class BotManager():
         self.accounts = accounts
         try:
             os.mkdir('data')
-            logger.warning("警告：未检测到 data 目录，如果你通过 Docker 部署，请挂载此目录以实现登录缓存，否则可忽略此消息。")
+            logger.warning(
+                "警告：未检测到 data 目录，如果你通过 Docker 部署，请挂载此目录以实现登录缓存，否则可忽略此消息。")
         except:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
-
 
     def login(self):
         for i, account in enumerate(self.accounts):
@@ -189,7 +190,7 @@ class BotManager():
                 return True
             except (V1Error, KeyError) as e:
                 return False
-        
+
         def get_access_token(bot: V1Chatbot):
             return bot.session.headers.get('Authorization').removeprefix('Bearer ')
 
@@ -198,7 +199,7 @@ class BotManager():
             config['access_token'] = cached_account['access_token']
             bot = V1Chatbot(config=config)
             if __V1_check_auth(bot):
-               return BotInfo(bot, account.mode)
+                return BotInfo(bot, account.mode)
 
         if 'session_token' in cached_account:
             logger.info("尝试使用 session_token 登录中...")
@@ -206,11 +207,11 @@ class BotManager():
             config['session_token'] = cached_account['session_token']
             bot = V1Chatbot(config=config)
             self.__save_login_cache(account=account, cache={
-                "session_token": config['session_token'], 
+                "session_token": config['session_token'],
                 "access_token": get_access_token(bot),
             })
             if __V1_check_auth(bot):
-               return BotInfo(bot, account.mode)
+                return BotInfo(bot, account.mode)
 
         if 'password' in cached_account:
             logger.info("尝试使用 email + password 登录中...")
@@ -220,11 +221,11 @@ class BotManager():
             config['password'] = cached_account['password']
             bot = V1Chatbot(config=config)
             self.__save_login_cache(account=account, cache={
-                "session_token":bot.config['session_token'], 
+                "session_token": bot.config['session_token'],
                 "access_token": get_access_token(bot)
             })
             if __V1_check_auth(bot):
-               return BotInfo(bot, account.mode)
+                return BotInfo(bot, account.mode)
         # Invalidate cache
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
