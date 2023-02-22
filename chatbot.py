@@ -48,7 +48,9 @@ class ChatSession:
                     await self.get_chat_response(text.split('User:')[-1].strip())
 
     def reset_conversation(self):
-        if self.chatbot and self.chatbot.account.auto_remove_old_conversations and self.chatbot and self.conversation_id:
+        if self.chatbot and \
+                self.chatbot.account.auto_remove_old_conversations and \
+                self.conversation_id:
             self.chatbot.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
@@ -87,12 +89,12 @@ class ChatSession:
 __sessions = {}
 
 
-def get_chat_session(id: str) -> Tuple[ChatSession, bool]:
+def get_chat_session(session_id: str) -> Tuple[ChatSession, bool]:
     new_session = False
-    if id not in __sessions:
-        __sessions[id] = ChatSession(id)
+    if session_id not in __sessions:
+        __sessions[session_id] = ChatSession(session_id)
         new_session = True
-    return __sessions[id], new_session
+    return __sessions[session_id], new_session
 
 
 def conversation_remover():

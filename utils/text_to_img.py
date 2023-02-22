@@ -1,21 +1,25 @@
+from io import BytesIO
+
 from config import Config
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import itertools
 import unicodedata
+from graia.ariadne.message.element import Image as GraiaImage
 
 config = Config.load_config()
 
+
 class TextWrapper(textwrap.TextWrapper):
     char_widths = {
-        'W' : 2, # Wide
-        'Na' : 1, # Narrow
-        'F' : 2, # Fullwidth
-        'H' : 1, # Half-width
-        'A' : 2, # ?
-        'N' : 1 # Neutral
+        'W': 2,  # Wide
+        'Na': 1,  # Narrow
+        'F': 2,  # Fullwidth
+        'H': 1,  # Half-width
+        'A': 2,  # ?
+        'N': 1  # Neutral
     }
-    
+
     def _strlen(self, text):
         """
         Calcaute display length of a line
@@ -100,18 +104,18 @@ class TextWrapper(textwrap.TextWrapper):
 
             if cur_line:
                 if (self.max_lines is None or
-                    self._strlen(lines) + 1 < self.max_lines or
-                    (not chunks or
-                     self.drop_whitespace and
-                     self._strlen(chunks) == 1 and
-                     not chunks[0].strip()) and cur_len <= width):
+                        self._strlen(lines) + 1 < self.max_lines or
+                        (not chunks or
+                         self.drop_whitespace and
+                         self._strlen(chunks) == 1 and
+                         not chunks[0].strip()) and cur_len <= width):
                     # Convert current line back to a string and store it in
                     # list of all lines (return value).
                     lines.append(indent + ''.join(cur_line))
                 else:
                     while cur_line:
                         if (cur_line[-1].strip() and
-                            cur_len + self._strlen(self.placeholder) <= width):
+                                cur_len + self._strlen(self.placeholder) <= width):
                             cur_line.append(self.placeholder)
                             lines.append(indent + ''.join(cur_line))
                             break
@@ -128,7 +132,7 @@ class TextWrapper(textwrap.TextWrapper):
                     break
 
         return lines
-    
+
     def _get_space_left(self, text, requested_len):
         """
         Calcuate actual space_left
@@ -138,7 +142,7 @@ class TextWrapper(textwrap.TextWrapper):
         for char in text:
             counter = counter + 1
             charslen += self.char_widths[unicodedata.east_asian_width(char)]
-            if(charslen >= requested_len):
+            if (charslen >= requested_len):
                 break
         return counter
 
@@ -174,11 +178,15 @@ class TextWrapper(textwrap.TextWrapper):
         # main loop of _wrap_chunks(), we'll wind up here again, but
         # cur_len will be zero, so the next line will be entirely
         # devoted to the long word that we can't handle right now.
+
     def _split_chunks(self, text):
         text = self._munge_whitespace(text)
         return self._split(text)
 
-def text_to_image(text, width=config.text_to_image.width, font_name=config.text_to_image.font_path, font_size=config.text_to_image.font_size, offset_x=config.text_to_image.offset_x, offset_y=config.text_to_image.offset_y):
+
+def text_to_image(text, width=config.text_to_image.width, font_name=config.text_to_image.font_path,
+                  font_size=config.text_to_image.font_size, offset_x=config.text_to_image.offset_x,
+                  offset_y=config.text_to_image.offset_y):
     # Create a draw object that can be used to measure the size of the text
     draw = ImageDraw.Draw(Image.new('RGB', (width, 1)))
 
@@ -216,3 +224,10 @@ def text_to_image(text, width=config.text_to_image.width, font_name=config.text_
     draw.text((offset_x, offset_y), '\n'.join(wrapped_text), font=font, fill='black')
 
     return image
+
+
+def to_image(text) -> GraiaImage:
+    img = text_to_image(text=text)
+    b = BytesIO()
+    img.save(b, format="png")
+    return GraiaImage(data_bytes=b.getvalue())

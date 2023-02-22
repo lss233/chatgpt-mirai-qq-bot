@@ -1,11 +1,7 @@
 import os
 import sys
 
-from requests.exceptions import SSLError
-
 sys.path.append(os.getcwd())
-
-from io import BytesIO
 from typing import Union
 from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne
@@ -18,16 +14,16 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from graia.ariadne.message.element import Image
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
+from requests.exceptions import SSLError
 from loguru import logger
 
 import re
 import asyncio
 import chatbot
 from config import Config
-from text_to_img import text_to_image
+from utils.text_to_img import to_image
 
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
@@ -115,7 +111,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         finally:
             if timeout_task:
                 timeout_task.cancel()
-    ### 排队结束
+    # 排队结束
 
 
 @app.broadcast.receiver("FriendMessage")
@@ -125,10 +121,7 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
         return
     response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
     if config.text_to_image.always:
-        img = text_to_image(text=response)
-        b = BytesIO()
-        img.save(b, format="png")
-        await app.send_message(friend, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+        await app.send_message(friend, to_image(response), quote=source if config.response.quote else False)
     else:
         await app.send_message(friend, response, quote=source if config.response.quote else False)
 
@@ -142,18 +135,12 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     response = await handle_message(group, f"group-{group.id}", chain.display, source)
     if config.text_to_image.always:
-        img = text_to_image(text=response)
-        b = BytesIO()
-        img.save(b, format="png")
-        await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
+        await app.send_message(group, to_image(response), quote=source if config.response.quote else False)
     else:
         event = await app.send_message(group, response, quote=source if config.response.quote else False)
         if event.source.id < 0:
-            img = text_to_image(text=response)
-            b = BytesIO()
-            img.save(b, format="png")
-            await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
-        
+            await app.send_message(group, to_image(response),
+                                   quote=source if config.response.quote else False)
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")
@@ -169,7 +156,7 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 
 @app.broadcast.receiver(AccountLaunch)
-async def start_background(loop: asyncio.AbstractEventLoop):
+async def start_background():
     try:
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
