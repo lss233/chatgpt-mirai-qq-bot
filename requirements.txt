@@ -1,5 +1,5 @@
 graia-ariadne>=0.10.3
-revChatGPT[unofficial]==2.3.4
+revChatGPT[unofficial]==2.3.5
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
