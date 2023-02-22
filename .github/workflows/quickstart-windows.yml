@@ -47,6 +47,10 @@ jobs:
         echo "Replacing..."
         sed -i 's/<mirai-http-api 中的 verifyKey>/1234567890/' chatgpt/config.example.cfg
         cp files/scripts/初始化.cmd .
+        
+        wget https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -O /tmp/presets.zip
+        unzip /tmp/presets.zip -d /tmp
+        cp -rf /tmp/awesome-chatgpt-qq-presets-master/* chatgpt/presets/
 
         find . -type f -print0 | xargs -0 dos2unix
         
