@@ -78,11 +78,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 session.reset_conversation()
                 return config.response.reset
 
-            # # 新会话
-            if is_new_session:
-                async for progress in session.load_conversation():
-                    await app.send_message(target, progress, quote=source if config.response.quote else False)
-
             # 加载关键词人设
             preset_search = re.search(config.presets.command, message)
             if preset_search:
@@ -90,6 +85,11 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 async for progress in session.load_conversation(preset_search.group(1)):
                     await app.send_message(target, progress, quote=source if config.response.quote else False)
                 return config.presets.loaded_successful
+            elif is_new_session:
+                # 新会话
+                async for progress in session.load_conversation():
+                    await app.send_message(target, progress, quote=source if config.response.quote else False)
+
             # 正常交流
             resp = await session.get_chat_response(message)
             if resp:
