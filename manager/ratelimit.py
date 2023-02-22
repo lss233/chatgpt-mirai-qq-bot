@@ -12,8 +12,8 @@ class RateLimitManager:
         """更新额度限制"""
 
         q = Query()
-        self.limit_db.upsert({"type": type, "id": id, "rate": rate}, q.type == type and q.id == id)
-    
+        self.limit_db.upsert({"type": type, "id": id, "rate": rate}, q.fragment({"type": type, "id": id}))
+
     def list(self):
         """列出所有的额度限制"""
 
@@ -23,15 +23,16 @@ class RateLimitManager:
         """获取限制"""
 
         q = Query()
-        entity = self.limit_db.get(q.type == type and q.id == id)
-        if entity is None:
+        entity = self.limit_db.get(q.fragment({"type": type, "id": id}))
+        if entity is None and not id == '默认':
             return self.limit_db.get(q.type == type and q.id == '默认')
-    
+        return entity
+        
     def get_usage(self, type: str, id: str):
         """获取使用量"""
 
         q = Query()
-        usage = self.usage_db.get(q.type == type and q.id == id)
+        usage = self.usage_db.get(q.fragment({"type": type, "id": id}))
         current_time = time.localtime(time.time()).tm_hour
 
         # 删除过期的记录
@@ -41,7 +42,10 @@ class RateLimitManager:
         
         # 初始化
         if usage is None:
-            self.usage_db.insert({'type': type, 'id': id, 'count': 1, 'time': current_time})
+            usage = {'type': type, 'id': id, 'count': 0, 'time': current_time}
+            self.usage_db.insert(usage)
+        
+        return usage
 
     def increment_usage(self, type, id):
         """更新使用量"""
@@ -49,7 +53,7 @@ class RateLimitManager:
         self.get_usage(type, id)
 
         q = Query()
-        self.usage_db.update(increment('count'), q.type == type and q.id == id)
+        self.usage_db.update(increment('count'), q.fragment({"type": type, "id": id}))
 
     def check_exceed(self, type: str, id: str) -> float:
         """检查是否超额，返回 使用量/额度"""

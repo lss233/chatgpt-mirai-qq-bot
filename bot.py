@@ -218,6 +218,8 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
     if id != '默认' and not id.isdecimal():
         return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
     limit = rateLimitManager.get_limit(type, id)
+    if limit is None:
+        return await app.send_message(event, f"{type} {id} 没有额度限制。")
     usage = rateLimitManager.get_usage(type, id)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     return await app.send_message(event, f"{type} {id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
