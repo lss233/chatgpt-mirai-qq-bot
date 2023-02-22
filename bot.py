@@ -14,7 +14,7 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from graia.ariadne.event.message import MessageEvent
+from graia.ariadne.event.message import MessageEvent, TempMessage
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
 from requests.exceptions import SSLError
@@ -211,6 +211,9 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
     
 @cmd.command(".查看 {type: str} {id: str} 的使用情况")
 async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], type: str, id: str): 
+    if isinstance(event, TempMessage):
+        # ignored
+        return
     if not sender.id == config.mirai.manager_qq and not sender.id == int(id):
         return await app.send_message(event, "您没有权限执行这个操作")
     if type != "群组" and type != "好友":
