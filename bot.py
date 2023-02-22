@@ -14,6 +14,7 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
+from graia.ariadne.event.message import MessageEvent
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
 from requests.exceptions import SSLError
@@ -198,28 +199,28 @@ async def start_background():
 
 cmd = Commander(app.broadcast)
 @cmd.command(".设置 {type: str} {id: str} 额度为 {rate: int} 条/小时")
-async def update_rate(sender: Union[Friend, Member], type: str, id: str, rate: int): 
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], type: str, id: str, rate: int): 
     if not sender.id == config.mirai.manager_qq:
-        return "您没有权限执行这个操作"
-    if type != "群组" or type != "好友":
-        return "类型异常，仅支持设定【群组】或【好友】的额度"
-    if id != '默认' or not id.isdecimal(id):
-        return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
+        return await app.send_message(event, "您没有权限执行这个操作")
+    if type != "群组" and type != "好友":
+        return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+    if id != '默认' and not id.isdecimal():
+        return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
     rateLimitManager.update(type, id, rate)
-    return "额度更新成功！"
+    return await app.send_message(event, "额度更新成功！")
     
 @cmd.command(".查看 {type: str} {id: str} 的使用情况")
-async def show_rate(sender: Union[Friend, Member], type: str, id: str): 
+async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], type: str, id: str): 
     if not sender.id == config.mirai.manager_qq and not sender.id == int(id):
-        return "您没有权限执行这个操作"
-    if type != "群组" or type != "好友":
-        return "类型异常，仅支持设定【群组】或【好友】的额度"
-    if id != '默认' or not id.isdecimal(id):
-        return "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度"
+        return await app.send_message(event, "您没有权限执行这个操作")
+    if type != "群组" and type != "好友":
+        return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+    if id != '默认' and not id.isdecimal():
+        return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
     limit = rateLimitManager.get_limit(type, id)
     usage = rateLimitManager.get_usage(type, id)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-    return f"{type} {id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}"
+    return await app.send_message(event, f"{type} {id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
 
 app.launch_blocking()
