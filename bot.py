@@ -87,8 +87,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return config.presets.loaded_successful
             elif is_new_session:
                 # 新会话
-                async for progress in session.load_conversation():
-                    await app.send_message(target, progress, quote=source if config.response.quote else False)
+                async for _ in session.load_conversation():
+                    # await app.send_message(target, progress, quote=source if config.response.quote else False)
+                    pass
 
             # 正常交流
             resp = await session.get_chat_response(message)
