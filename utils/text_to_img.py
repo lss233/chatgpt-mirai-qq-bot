@@ -32,14 +32,11 @@ def md_to_html(text):
     return html
 
 def text_to_image(text):
-    # 将text写入文件
-    with open('temp.md', 'w', encoding='utf-8') as f:
-        f.write(text)
     
     content = md_to_html(text)
 
-    with open('markdown_support_template.html', 'r') as input_file:
-        with open('temp.html', 'w') as output_file:
+    with open('./utils/markdown_support_template.html', 'r') as input_file:
+        with open('./utils/temp.html', 'w') as output_file:
             for line in input_file:
                 if "{{ md_to_html(text) }}" in line:
                     line = line.replace("{{ md_to_html(text) }}", content)
@@ -55,7 +52,7 @@ def text_to_image(text):
     }
 
     # 调用imgkit将html转为图片
-    image1 = imgkit.from_file(filename="temp.html",  config=config, options=options, output_path="temp.jpg")
+    image1 = imgkit.from_file(filename="./utils/temp.html",  config=config, options=options, output_path="temp.jpg")
 
     # 调用PIL将图片读取为PNG，RGB格式
     image = Image.open('temp.jpg').convert('RGB')
