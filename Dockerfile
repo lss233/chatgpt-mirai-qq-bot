@@ -22,6 +22,8 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 
+RUN cp ./fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
+
 # Copy xpra config file
 COPY ./docker/xpra.conf /etc/xpra/xpra.conf
 
