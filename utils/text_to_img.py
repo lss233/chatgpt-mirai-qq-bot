@@ -9,7 +9,7 @@ from markdown.extensions.tables import TableExtension
 from mdx_math import MathExtension
 
 from pygments.formatters import HtmlFormatter
-from pygments.styles.Xcode import XcodeStyle
+from pygments.styles.xcode import XcodeStyle
 
 import imgkit
 
