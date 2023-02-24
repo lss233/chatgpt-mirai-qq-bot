@@ -33,7 +33,7 @@ jobs:
         $search  = [Regex]::Escape('set JAVA_BINARY=java')
         $replace = 'set JAVA_BINARY=jre\jre-17.0.6\bin\java.exe'
 
-        (Get-Content -Path 'C:\TEMP\App.config' -Raw) -replace $search, $replace | Set-Content -Path 'C:\TEMP\App.config'
+        (Get-Content -Path 'C:/generated_files/mirai/mcl.cmd' -Raw) -replace $search, $replace | Set-Content -Path 'C:/generated_files/mirai/mcl.cmd'
         ./mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
         ./mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
         ./mcl.cmd --dry-run
