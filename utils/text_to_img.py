@@ -2,7 +2,7 @@ from io import BytesIO
 
 from PIL import Image
 from graia.ariadne.message.element import Image as GraiaImage
-
+import utils.zipimporter_patch
 import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.tables import TableExtension
