@@ -1,15 +1,47 @@
 from io import BytesIO
+from io import StringIO
+import os
+from tempfile import NamedTemporaryFile
 
 from config import Config
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import itertools
 import unicodedata
+from PIL import Image
 from graia.ariadne.message.element import Image as GraiaImage
+from charset_normalizer import from_bytes
+
+# Do not delete this line, it has be loaded before markdown
+import utils.zipimporter_patch
+import markdown
+from markdown.extensions.codehilite import CodeHiliteExtension
+from markdown.extensions.tables import TableExtension
+from mdx_math import MathExtension
+
+from pygments.formatters import HtmlFormatter
+from pygments.styles.xcode import XcodeStyle
+from loguru import logger
+import imgkit
+import shutil
+import random
+import string
+import html
 
 config = Config.load_config()
 
+template_html = ''
+with open("./assets/texttoimg/template.html", "rb") as f:
+    guessed_str = from_bytes(f.read()).best()
+    if not guessed_str:
+        raise ValueError("无法识别 Markdown 模板 template.html，请检查是否输入有误！")
+    template_html = str(guessed_str)
 
+if config.text_to_image.wkhtmltoimage is None:
+    os.environ["PATH"] = os.environ["PATH"] + os.pathsep + os.getcwd()
+    config.text_to_image.wkhtmltoimage = shutil.which("wkhtmltoimage")
+    if config.text_to_image.wkhtmltoimage is None:
+        logger.error("未检测到 wkhtmltoimage，无法进行 Markdown 渲染！")
 class TextWrapper(textwrap.TextWrapper):
     char_widths = {
         'W': 2,  # Wide
@@ -32,14 +64,13 @@ class TextWrapper(textwrap.TextWrapper):
     def _wrap_chunks(self, chunks):
         """_wrap_chunks(chunks : [string]) -> [string]
         Code from https://github.com/python/cpython/blob/3.9/Lib/textwrap.py
-
         Wrap a sequence of text chunks and return a list of lines of
         length 'self.width' or less.  (If 'break_long_words' is false,
         some lines may be longer than this.)  Chunks correspond roughly
         to words and the whitespace between them: each chunk is
         indivisible (modulo 'break_long_words'), but a line break can
         come between any two chunks.  Chunks should not have internal
-        whitespace; ie. a chunk is either all whitespace or a "word".
+        whitespace; i.e. a chunk is either all whitespace or a "word".
         Whitespace chunks will be removed from the beginning and end of
         lines, but apart from that whitespace is preserved.
         """
@@ -184,9 +215,9 @@ class TextWrapper(textwrap.TextWrapper):
         return self._split(text)
 
 
-def text_to_image(text, width=config.text_to_image.width, font_name=config.text_to_image.font_path,
-                  font_size=config.text_to_image.font_size, offset_x=config.text_to_image.offset_x,
-                  offset_y=config.text_to_image.offset_y):
+def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.text_to_image.font_path,
+                      font_size=config.text_to_image.font_size, offset_x=config.text_to_image.offset_x,
+                      offset_y=config.text_to_image.offset_y):
     # Create a draw object that can be used to measure the size of the text
     draw = ImageDraw.Draw(Image.new('RGB', (width, 1)))
 
@@ -222,6 +253,76 @@ def text_to_image(text, width=config.text_to_image.width, font_name=config.text_
 
     # Draw the wrapped text on the image
     draw.text((offset_x, offset_y), '\n'.join(wrapped_text), font=font, fill='black')
+
+    return image
+
+
+def md_to_html(text):
+    escaped = ''
+    quotes = 0
+    for char in text:
+        if quotes % 2 == 0:
+            escaped = escaped + html.escape(char)
+        else:
+            escaped = escaped + char
+    extensions = [
+        MathExtension(enable_dollar_delimiter=True),  # 开启美元符号渲染
+        CodeHiliteExtension(linenums=False, css_class='highlight', noclasses=False, guess_lang=True),  # 添加代码块语法高亮
+        TableExtension(),
+        'fenced_code'
+    ]
+    md = markdown.Markdown(extensions=extensions)
+    h = md.convert(escaped)
+
+    # 获取 Pygments 生成的 CSS 样式
+    css_style = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
+
+    # 将 CSS 样式插入到 HTML 中
+    h = f"<style>{css_style}</style>\n{h}"
+
+    return h
+
+
+def text_to_image(text):
+    content = md_to_html(text)
+
+    image = None
+
+    # 输出html到字符串io流
+    with StringIO() as output_file:
+        # 填充正文
+        csp_nonce = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32))
+        output_file.write(template_html.replace("{csp-nonce}", csp_nonce).replace("{content}", content))
+
+        # wkhtmltoimage是用apt安装的，安装wkhtmltopdf附带，binary文件在/usr/bin/wkhtmltoimage
+        imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
+
+        # 创建临时jpg文件
+        temp_jpg_file = NamedTemporaryFile(mode='w+b', suffix='.jpg', delete=False)
+        temp_jpg_filename = temp_jpg_file.name
+        temp_jpg_file.close()
+        with StringIO(output_file.getvalue()) as input_file:
+            print(output_file.getvalue())
+            ok = False
+            try:
+                # 调用imgkit将html转为图片
+                ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
+                                            "enable-local-file-access": False, # 禁用local，防止 SSRF
+                                            "width": config.text_to_image.width # 图片宽度
+                                        },
+                                      output_path=temp_jpg_filename)
+                if ok:
+                    # 调用PIL将图片读取为 JPEG，RGB 格式
+                    image = Image.open(temp_jpg_filename, formats=['JPEG']).convert('RGB')
+            except Exception as e:
+                logger.exception(e)
+            finally:
+                # 删除临时文件
+                if os.path.exists(temp_jpg_filename):
+                    os.remove(temp_jpg_filename)
+
+        if not ok:
+            image = text_to_image_raw(text)
 
     return image
 
