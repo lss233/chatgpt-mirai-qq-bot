@@ -69,7 +69,7 @@ jobs:
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: quickstart-windows-amd64.zip
+        file: C:\generated_files\quickstart-windows-amd64.zip
         asset_name: Windows-quickstart-${{ github.ref }}.zip
         tag: ${{ github.ref }}
         overwrite: true
