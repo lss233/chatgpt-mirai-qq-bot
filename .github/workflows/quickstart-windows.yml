@@ -34,10 +34,10 @@ jobs:
         echo "import site" >> C:/generated_files/chatgpt/python3.9/python39._pth
 
         echo "Moving files..."
-        mv C:/generated_files/chatgpt/.github/quickstarts/windows/ C:/generated_files/files/
+        mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
 
         echo "Replacing..."
-        cp C:/generated_files/files/scripts/初始化.cmd C:/generated_files/
+        cp D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\files\scripts\初始化.cmd C:/generated_files/
         
         Invoke-WebRequest -URI https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -OutFile C:/tmp_files/presets.zip
         7z x C:/tmp_files/presets.zip -oC:/tmp_files/
