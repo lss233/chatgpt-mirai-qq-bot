@@ -17,6 +17,7 @@ jobs:
         mkdir C:/generated_files
         mkdir C:/tmp_files
         echo "Creating folders..."
+        cd C:/generated_files
         mkdir mirai
         mkdir chatgpt
         echo "Downloading mcl-installer ..."
