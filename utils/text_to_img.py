@@ -24,6 +24,9 @@ from pygments.styles.xcode import XcodeStyle
 from loguru import logger
 import imgkit
 import shutil
+import random
+import string
+import html
 
 config = Config.load_config()
 
@@ -255,6 +258,13 @@ def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.t
 
 
 def md_to_html(text):
+    escaped = ''
+    quotes = 0
+    for char in text:
+        if quotes % 2 == 0:
+            escaped = escaped + html.escape(char)
+        else:
+            escaped = escaped + char
     extensions = [
         MathExtension(enable_dollar_delimiter=True),  # 开启美元符号渲染
         CodeHiliteExtension(linenums=False, css_class='highlight', noclasses=False, guess_lang=True),  # 添加代码块语法高亮
@@ -262,15 +272,15 @@ def md_to_html(text):
         'fenced_code'
     ]
     md = markdown.Markdown(extensions=extensions)
-    html = md.convert(text)
+    h = md.convert(escaped)
 
     # 获取 Pygments 生成的 CSS 样式
     css_style = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
 
     # 将 CSS 样式插入到 HTML 中
-    html = f"<style>{css_style}</style>\n{html}"
+    h = f"<style>{css_style}</style>\n{h}"
 
-    return html
+    return h
 
 
 def text_to_image(text):
@@ -281,7 +291,8 @@ def text_to_image(text):
     # 输出html到字符串io流
     with StringIO() as output_file:
         # 填充正文
-        output_file.write(template_html.replace("{content}", content))
+        csp_nonce = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32))
+        output_file.write(template_html.replace("{csp-nonce}", csp_nonce).replace("{content}", content))
 
         # wkhtmltoimage是用apt安装的，安装wkhtmltopdf附带，binary文件在/usr/bin/wkhtmltoimage
         imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
@@ -290,8 +301,8 @@ def text_to_image(text):
         temp_jpg_file = NamedTemporaryFile(mode='w+b', suffix='.jpg', delete=False)
         temp_jpg_filename = temp_jpg_file.name
         temp_jpg_file.close()
-
         with StringIO(output_file.getvalue()) as input_file:
+            print(output_file.getvalue())
             ok = False
             try:
                 # 调用imgkit将html转为图片
