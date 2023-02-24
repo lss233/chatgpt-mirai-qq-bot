@@ -43,7 +43,7 @@ jobs:
         
         Invoke-WebRequest -URI https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -OutFile C:/tmp_files/presets.zip
         7z x C:/tmp_files/presets.zip -oC:/tmp_files/
-        cp -rf C:/tmp_files/awesome-chatgpt-qq-presets-master/* C:/generated_files/chatgpt/presets/
+        Copy-Item C:\tmp_files\awesome-chatgpt-qq-presets-master\*  -Destination C:\generated_files\chatgpt\presets\ -Recurse
         
         Invoke-WebRequest -URI https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.mxe-cross-win64.7z -O C:/tmp_files/wkhtmltox.7z
         
