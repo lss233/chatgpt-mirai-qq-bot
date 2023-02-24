@@ -260,11 +260,18 @@ def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.t
 def md_to_html(text):
     escaped = ''
     quotes = 0
+    tex_mode = False
+    last_char = None
     for char in text:
-        if quotes % 2 == 0:
+        if char == '`':
+            quotes = quotes + 1
+        if last_char == '$' and char == '$':
+            tex_mode = not tex_mode
+        if quotes % 2 == 0 and not tex_mode:
             escaped = escaped + html.escape(char)
         else:
             escaped = escaped + char
+        last_char = char
     extensions = [
         MathExtension(enable_dollar_delimiter=True),  # 开启美元符号渲染
         CodeHiliteExtension(linenums=False, css_class='highlight', noclasses=False, guess_lang=True),  # 添加代码块语法高亮
@@ -307,9 +314,10 @@ def text_to_image(text):
             try:
                 # 调用imgkit将html转为图片
                 ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
-                                            "enable-local-file-access": False, # 禁用local，防止 SSRF
-                                            "width": config.text_to_image.width # 图片宽度
-                                        },
+                    "enable-local-file-access": False,  # 禁用local，防止 SSRF
+                    "width": config.text_to_image.width,  # 图片宽度
+                    'javascript-delay': '3000',
+                },
                                       output_path=temp_jpg_filename)
                 if ok:
                     # 调用PIL将图片读取为 JPEG，RGB 格式
