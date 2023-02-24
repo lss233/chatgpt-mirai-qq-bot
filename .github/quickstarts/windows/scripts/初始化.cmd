@@ -17,13 +17,13 @@ pause
 cd "%BASE_DIR%\mirai"
 @REM mcl-installer.exe
 
-ECHO 安装 mirai-api-http 插件...
-ECHO 插件介绍：https://github.com/project-mirai/mirai-api-http
-cmd /c mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
-
-ECHO 安装 mirai-device-generator 插件...
-ECHO 插件介绍：https://github.com/cssxsh/mirai-device-generator
-cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
+@REM ECHO 安装 mirai-api-http 插件...
+@REM ECHO 插件介绍：https://github.com/project-mirai/mirai-api-http
+@REM cmd /c mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
+@REM
+@REM ECHO 安装 mirai-device-generator 插件...
+@REM ECHO 插件介绍：https://github.com/cssxsh/mirai-device-generator
+@REM cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
 
 cd "%BASE_DIR%"
 ECHO 复制 mirai-http-api 配置信息...
