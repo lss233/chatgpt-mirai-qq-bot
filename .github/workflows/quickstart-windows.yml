@@ -49,10 +49,11 @@ jobs:
         
         echo "Setting up wkhtmltox"
         7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
-        dir C:/tmp_files
+        cp C:/tmp_files/wkhtmltox/bin/wkhtmltoimage.exe C:\generated_files\chatgpt\
         
         echo "Downloading packages..."
         cd C:/generated_files/chatgpt
+        python3.9\python.exe C:/generated_files/chatgpt/python3.9/get-pip.py
         python3.9\python.exe -m pip install -r requirements.txt
         
         echo "Packing..." 
@@ -63,7 +64,7 @@ jobs:
       with:
         name: quickstart-windows-amd64.zip
         path: |
-          quickstart-windows-amd64.zip
+          C:\generated_files\quickstart-windows-amd64.zip
     - name: Upload compressed files to release
       uses: svenstaro/upload-release-action@v2
       with:
