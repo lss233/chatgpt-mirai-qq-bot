@@ -47,12 +47,21 @@ jobs:
         
         Invoke-WebRequest -URI https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.mxe-cross-win64.7z -O C:/tmp_files/wkhtmltox.7z
         
-        echo "Packing..."
-        7z a quickstart-windows-amd64.zip
+        echo "Setting up wkhtmltox"
+        7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
+        dir C:/tmp_files
+        
+        echo "Downloading packages..."
+        cd C:/generated_files/chatgpt
+        python3.9\python.exe -m pip install -r requirements.txt
+        
+        echo "Packing..." 
+        cd C:/generated_files
+        7z a quickstart-windows-amd64.zip C:\generated_files\
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: dist-without-markdown
+        name: quickstart-windows-amd64.zip
         path: |
           quickstart-windows-amd64.zip
     - name: Upload compressed files to release
