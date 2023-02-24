@@ -15,7 +15,7 @@ ECHO 提示：请注意安装路径中不要有空格，否则可能会导致安
 pause 
 
 cd "%BASE_DIR%\mirai"
-mcl-installer.exe
+@REM mcl-installer.exe
 
 ECHO 安装 mirai-api-http 插件...
 ECHO 插件介绍：https://github.com/project-mirai/mirai-api-http
