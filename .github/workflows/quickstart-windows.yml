@@ -23,7 +23,7 @@ jobs:
         Invoke-WebRequest -URI https://github.com/iTXTech/mcl-installer/releases/download/a02f711/mcl-installer-a02f711-windows-amd64.exe -OutFile C:/generated_files/mirai/mcl-installer.exe
     - name: Copy files
       run: |
-        cp D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot C:\generated_files\chatgpt
+        cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt
         echo "Downloading Python3.9 ..."
         Invoke-WebRequest https://www.python.org/ftp/python/3.9.13/python-3.9.13-embed-amd64.zip -OutFile C:/tmp_files/python.zip
         7z x C:/tmp_files/python.zip -r -oC:/generated_files/chatgpt/python3.9
