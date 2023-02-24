@@ -84,6 +84,7 @@ class TextToImage(BaseModel):
     """横坐标"""
     offset_y: int = 50
     """纵坐标"""
+    wkhtmltoimage: Union[str, None] = None
 
 
 class Trigger(BaseModel):
