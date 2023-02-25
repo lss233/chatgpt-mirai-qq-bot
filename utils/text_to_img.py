@@ -35,7 +35,11 @@ with open("./assets/texttoimg/template.html", "rb") as f:
     guessed_str = from_bytes(f.read()).best()
     if not guessed_str:
         raise ValueError("无法识别 Markdown 模板 template.html，请检查是否输入有误！")
-    template_html = str(guessed_str)
+    
+    # 获取 Pygments 生成的 CSS 样式
+    highlight_css = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
+    
+    template_html = str(guessed_str).replace("{highlight_css}", highlight_css)
 
 if config.text_to_image.wkhtmltoimage is None:
     os.environ["PATH"] = os.environ["PATH"] + os.pathsep + os.getcwd()
@@ -280,12 +284,6 @@ def md_to_html(text):
     ]
     md = markdown.Markdown(extensions=extensions)
     h = md.convert(escaped)
-
-    # 获取 Pygments 生成的 CSS 样式
-    css_style = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
-
-    # 将 CSS 样式插入到 HTML 中
-    h = f"<style>{css_style}</style>\n{h}"
 
     return h
 
