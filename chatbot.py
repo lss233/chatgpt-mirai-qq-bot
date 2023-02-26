@@ -32,9 +32,8 @@ class ChatSession:
 
     async def load_conversation(self, keyword='default'):
         if keyword not in config.presets.keywords:
-            if keyword == 'default':
-                pass
-            raise ValueError("预设不存在，请检查你的输入是否有问题！")
+            if not keyword == 'default':
+                raise ValueError("预设不存在，请检查你的输入是否有问题！")
         else:
             presets = config.load_preset(keyword)
             for text in presets:
