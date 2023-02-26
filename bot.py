@@ -122,7 +122,8 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
         return
     response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
     if config.text_to_image.always:
-        await app.send_message(friend, await asyncio.get_event_loop().run_in_executor(None, to_image, response), quote=source if config.response.quote else False)
+        await app.send_message(friend, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
+                               quote=source if config.response.quote else False)
     else:
         await app.send_message(friend, response, quote=source if config.response.quote else False)
 
@@ -136,7 +137,8 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     response = await handle_message(group, f"group-{group.id}", chain.display, source)
     if config.text_to_image.always:
-        await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response), quote=source if config.response.quote else False)
+        await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
+                               quote=source if config.response.quote else False)
     else:
         event = await app.send_message(group, response, quote=source if config.response.quote else False)
         if event.source.id < 0:
@@ -161,21 +163,11 @@ async def start_background():
     try:
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
-    except Exception as e:
+    except:
         logger.error("OpenAI 服务器失败！")
         exit(-1)
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 
-to_image(r"""
-$$
-\begin{aligned}
-\hat{x}(k|k-1) &= F(k,k-1)\hat{x}(k-1|k-1) + B(k)u(k) \\
-P(k|k-1) &= F(k,k-1)P(k-1|k-1)F(k,k-1)^T + Q(k)
-\end{aligned}
-$$
-哈哈哈
-呵呵
-<p>Blod</P>
-""")
-# app.launch_blocking()
+
+app.launch_blocking()

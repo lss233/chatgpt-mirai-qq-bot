@@ -305,7 +305,6 @@ def text_to_image(text):
         temp_jpg_filename = temp_jpg_file.name
         temp_jpg_file.close()
         with StringIO(output_file.getvalue()) as input_file:
-            print(output_file.getvalue())
             ok = False
             try:
                 # 调用imgkit将html转为图片
