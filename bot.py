@@ -25,6 +25,7 @@ import chatbot
 from config import Config
 from utils.text_to_img import to_image
 from revChatGPT.V1 import Error as V1Error
+import datetime
 
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
@@ -100,7 +101,14 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         except V1Error as e:
             # Rate limit
             if e.code == 2:
-                return config.response.error_request_too_many.format(exc=e)
+                current_time = datetime.datetime.now()
+                session.chatbot.refresh_accessed_at()
+                first_accessed_at = session.chatbot.accessed_at[0] if len(session.chatbot.accessed_at) > 0 \
+                    else current_time - datetime.timedelta(hours=1)
+                remaining = divmod(current_time - first_accessed_at, datetime.datetime.timedelta(60))
+                minute = remaining[0]
+                second = remaining[1].seconds
+                return config.response.error_request_too_many.format(exc=e, remaining=f"{minute}分{second}秒")
             if e.code == 1:
                 return config.response.error_server_overloaded.format(exc=e)
             if e.code == 4 or e.code == 5:
