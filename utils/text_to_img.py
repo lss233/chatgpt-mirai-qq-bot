@@ -35,10 +35,10 @@ with open("./assets/texttoimg/template.html", "rb") as f:
     guessed_str = from_bytes(f.read()).best()
     if not guessed_str:
         raise ValueError("无法识别 Markdown 模板 template.html，请检查是否输入有误！")
-    
+
     # 获取 Pygments 生成的 CSS 样式
     highlight_css = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
-    
+
     template_html = str(guessed_str).replace("{highlight_css}", highlight_css)
 
 if config.text_to_image.wkhtmltoimage is None:
@@ -46,6 +46,8 @@ if config.text_to_image.wkhtmltoimage is None:
     config.text_to_image.wkhtmltoimage = shutil.which("wkhtmltoimage")
     if config.text_to_image.wkhtmltoimage is None:
         logger.error("未检测到 wkhtmltoimage，无法进行 Markdown 渲染！")
+
+
 class TextWrapper(textwrap.TextWrapper):
     char_widths = {
         'W': 2,  # Wide
@@ -261,29 +263,26 @@ def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.t
     return image
 
 
+class DisableHTMLExtension(markdown.Extension):
+    def extendMarkdown(self, md):
+        md.inlinePatterns.deregister('html')
+        md.preprocessors.deregister('html_block')
+
+
+def makeExtension(*args, **kwargs):
+    return DisableHTMLExtension(*args, **kwargs)
+
+
 def md_to_html(text):
-    escaped = ''
-    quotes = 0
-    tex_mode = False
-    last_char = None
-    for char in text:
-        if char == '`':
-            quotes = quotes + 1
-        if last_char == '$' and char == '$':
-            tex_mode = not tex_mode
-        if quotes % 2 == 0 and not tex_mode:
-            escaped = escaped + html.escape(char)
-        else:
-            escaped = escaped + char
-        last_char = char
     extensions = [
+        DisableHTMLExtension(),
         MathExtension(enable_dollar_delimiter=True),  # 开启美元符号渲染
         CodeHiliteExtension(linenums=False, css_class='highlight', noclasses=False, guess_lang=True),  # 添加代码块语法高亮
         TableExtension(),
         'fenced_code'
     ]
     md = markdown.Markdown(extensions=extensions)
-    h = md.convert(escaped)
+    h = md.convert(text)
 
     return h
 
@@ -296,8 +295,7 @@ def text_to_image(text):
     # 输出html到字符串io流
     with StringIO() as output_file:
         # 填充正文
-        csp_nonce = ''.join(random.choices(string.ascii_uppercase + string.digits, k=32))
-        output_file.write(template_html.replace("{csp-nonce}", csp_nonce).replace("{content}", content))
+        output_file.write(template_html.replace("{content}", content))
 
         # wkhtmltoimage是用apt安装的，安装wkhtmltopdf附带，binary文件在/usr/bin/wkhtmltoimage
         imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
