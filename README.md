@@ -99,7 +99,7 @@ docker run --name mirai-chatgpt-bot \
 </details>
 
 <details>
-    <summary>手动部署</summary>
+    <summary>Linux: 手动部署</summary>
 
 提示：你需要 Python >= 3.9 才能运行本项目  
 
