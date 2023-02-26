@@ -24,6 +24,7 @@ import asyncio
 import chatbot
 from config import Config
 from utils.text_to_img import to_image
+from revChatGPT.V1 import Error as V1Error
 
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
@@ -96,6 +97,15 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             if resp:
                 logger.debug(f"{session_id} - {session.chatbot.id} {resp}")
                 return resp.strip()
+        except V1Error as e:
+            # Rate limit
+            if e.code == 2:
+                return config.response.error_request_too_many.format(exc=e)
+            if e.code == 1:
+                return config.response.error_server_overloaded.format(exc=e)
+            if e.code == 4 or e.code == 5:
+                return config.response.error_session_authenciate_failed.format(exc=e)
+            return config.response.error_format.format(exc=e)
         except SSLError as e:
             logger.exception(e)
             return config.response.error_network_failure.format(exc=e)
