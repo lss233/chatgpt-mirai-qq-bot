@@ -16,7 +16,7 @@ from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
-from requests.exceptions import SSLError
+from requests.exceptions import SSLError, ProxyError
 from loguru import logger
 
 import re
@@ -106,7 +106,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             if e.code == 4 or e.code == 5:
                 return config.response.error_session_authenciate_failed.format(exc=e)
             return config.response.error_format.format(exc=e)
-        except SSLError as e:
+        except (SSLError, ProxyError) as e:
             logger.exception(e)
             return config.response.error_network_failure.format(exc=e)
         except Exception as e:
