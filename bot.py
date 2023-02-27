@@ -124,10 +124,13 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 timeout_task.cancel()
     # 排队结束
 
+
 @app.broadcast.receiver("FriendMessage", priority=19)
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
                                   chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
+        return
+    if chain.display.startswith("."):
         return
     rate_usage = rateLimitManager.check_exceed('好友', friend.id)
     if rate_usage >= 1:
@@ -154,6 +157,8 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 
 @app.broadcast.receiver("GroupMessage", priority=19)
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
+    if chain.display.startswith("."):
+        return
     rate_usage = rateLimitManager.check_exceed('群组', group.id)
     if rate_usage >= 1:
         return config.ratelimit.exceed
@@ -215,7 +220,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         rateLimitManager.update(msg_type, msg_id, rate)
         return await app.send_message(event, "额度更新成功！")
     finally:
-        raise ExecutionStop ()
+        raise ExecutionStop()
 
 
 @cmd.command(".查看 {msg_type: str} {msg_id: str} 的使用情况")
@@ -238,8 +243,7 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
         return await app.send_message(event,
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
-        raise ExecutionStop ()
-
+        raise ExecutionStop()
 
 
 app.launch_blocking()
