@@ -266,5 +266,5 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
     finally:
         raise ExecutionStop()
 
-to_image("# Markdown\n* Text 1\n* Text 2\n * Text 3\n# Line \n* Topic")
-# app.launch_blocking()
+#to_image("# Markdown\n* Text 1\n* Text 2\n * Text 3\n# Line \n* Topic")
+app.launch_blocking()
