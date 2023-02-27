@@ -9,54 +9,79 @@ on:
 jobs:
   build:
     name: Quickstart
-    runs-on: ubuntu-latest
+    runs-on: Windows-latest
 
     steps:
-    - name: Set output
-      id: vars
-      run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-    - name: Check output
-      env:
-        RELEASE_VERSION: ${{ steps.vars.outputs.tag }}
-      run: |
-        echo $RELEASE_VERSION
-        echo ${{ steps.vars.outputs.tag }}
+    - name: Checkout
+      uses: actions/checkout@v3
     - name: Generate files
       run: |
-        sudo apt install -yq unzip dos2unix
+        mkdir C:/generated_files
+        mkdir C:/tmp_files
         echo "Creating folders..."
-        mkdir mirai chatgpt
-        echo "Downloading mcl-installer ..."
-        wget https://github.com/iTXTech/mcl-installer/releases/download/a02f711/mcl-installer-a02f711-windows-amd64.exe -O mirai/mcl-installer.exe
-    - uses: actions/checkout@v2
-      with:
-        path: 'chatgpt'
-    - name: Copy files
-      run: |
+        cd C:/generated_files
+        mkdir mirai
+        mkdir chatgpt
+        echo "Downloading JRE..."
+        Invoke-WebRequest -URI https://download.bell-sw.com/java/17.0.6+10/bellsoft-jre17.0.6+10-windows-amd64.zip -OutFile C:/tmp_files/jre.zip
+        7z x C:/tmp_files/jre.zip -r -oC:/generated_files/mirai/jre/
+        
+        echo "Downloading mcl..."
+        Invoke-WebRequest -URI https://github.com/iTXTech/mirai-console-loader/releases/download/v2.1.2/mcl-2.1.2.zip -OutFile C:/tmp_files/mcl.zip
+        7z x C:/tmp_files/mcl.zip -r -oC:/generated_files/mirai/
+        cd C:/generated_files/mirai/
+        $search  = [Regex]::Escape('set JAVA_BINARY=java')
+        $replace = 'set JAVA_BINARY=jre\jre-17.0.6\bin\java.exe'
+
+        (Get-Content -Path 'C:/generated_files/mirai/mcl.cmd' -Raw) -replace $search, $replace | Set-Content -Path 'C:/generated_files/mirai/mcl.cmd'
+        ./mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
+        ./mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
+        ./mcl.cmd --dry-run
+
+        cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
         echo "Downloading Python3.9 ..."
-        wget https://www.python.org/ftp/python/3.9.13/python-3.9.13-embed-amd64.zip -O /tmp/python.zip
-        unzip /tmp/python.zip -d chatgpt/python3.9
+        Invoke-WebRequest https://www.python.org/ftp/python/3.9.13/python-3.9.13-embed-amd64.zip -OutFile C:/tmp_files/python.zip
+        7z x C:/tmp_files/python.zip -r -oC:/generated_files/chatgpt/python3.9
 
         echo "Downloading get-pip.py ..."
-        wget https://bootstrap.pypa.io/get-pip.py -O chatgpt/python3.9/get-pip.py
-        echo "import site" >> chatgpt/python3.9/python39._pth
+        Invoke-WebRequest -URI https://bootstrap.pypa.io/get-pip.py -OutFile C:/generated_files/chatgpt/python3.9/get-pip.py
+        echo "import site" >> C:/generated_files/chatgpt/python3.9/python39._pth
 
         echo "Moving files..."
-        mv chatgpt/.github/quickstarts/windows/ files/
+        mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
 
         echo "Replacing..."
-        sed -i 's/<mirai-http-api 中的 verifyKey>/1234567890/' chatgpt/config.example.cfg
-        cp files/scripts/初始化.cmd .
-
-        find . -type f -print0 | xargs -0 dos2unix
+        cp C:/generated_files/files/scripts/初始化.cmd C:/generated_files/
         
-        echo "Packing..."
-        zip -r quickstart-windows-amd64 chatgpt mirai files 初始化.cmd
+        Invoke-WebRequest -URI https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -OutFile C:/tmp_files/presets.zip
+        7z x C:/tmp_files/presets.zip -oC:/tmp_files/
+        Copy-Item C:\tmp_files\awesome-chatgpt-qq-presets-master\*  -Destination C:\generated_files\chatgpt\presets\ -Recurse
+        
+        Invoke-WebRequest -URI https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.mxe-cross-win64.7z -O C:/tmp_files/wkhtmltox.7z
+        
+        echo "Setting up wkhtmltox"
+        7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
+        cp C:/tmp_files/wkhtmltox/bin/wkhtmltoimage.exe C:\generated_files\chatgpt\
+        
+        echo "Downloading packages..."
+        cd C:/generated_files/chatgpt
+        python3.9\python.exe C:/generated_files/chatgpt/python3.9/get-pip.py
+        python3.9\python.exe -m pip install -r requirements.txt
+        
+        echo "Packing..." 
+        cd C:/generated_files
+        7z a quickstart-windows-amd64.zip C:\generated_files\*
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: quickstart-windows-amd64.zip
+        path: |
+          C:\generated_files\quickstart-windows-amd64.zip
     - name: Upload compressed files to release
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: quickstart-windows-amd64.zip
+        file: C:\generated_files\quickstart-windows-amd64.zip
         asset_name: Windows-quickstart-${{ github.ref }}.zip
         tag: ${{ github.ref }}
         overwrite: true

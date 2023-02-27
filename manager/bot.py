@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import time
@@ -37,20 +38,31 @@ class BotInfo(asyncio.Lock):
 
     unused_conversations_pools = {}
 
-    lastAccessed = None
-    """Date when bot is accessed last time"""
+    accessed_at = []
+    """访问时间，仅保存一小时以内的时间"""
 
-    lastFailure = None
-    """Date when bot encounter an error last time"""
+    last_rate_limited = None
+    """上一次遇到限流的时间"""
 
     def __init__(self, bot, mode):
         self.bot = bot
         self.mode = mode
         super().__init__()
 
-    """更新预设对话池"""
+    def update_accessed_at(self):
+        """更新最后一次请求的时间，用于流量统计"""
+        current_time = datetime.datetime.now()
+        self.accessed_at.append(current_time)
+        self.refresh_accessed_at()
+
+    def refresh_accessed_at(self):
+        # 删除栈顶过期的信息
+        current_time = datetime.datetime.now()
+        while len(self.accessed_at) > 0 and current_time - self.accessed_at[0] > datetime.timedelta(hours=1):
+            self.accessed_at.pop(0)
 
     def update_conversation_pools(self):
+        """更新预设对话池"""
         for key in config.presets.keywords.keys():
             if key not in self.unused_conversations_pools:
                 self.unused_conversations_pools = []
@@ -64,18 +76,16 @@ class BotInfo(asyncio.Lock):
                     text = text.replace('User:', '')
                 self.ask(text)
 
-    """向 ChatGPT 发送提问"""
-
     def ask(self, prompt, conversation_id=None, parent_id=None):
+        """向 ChatGPT 发送提问"""
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
         if self.mode == 'proxy' or self.mode == 'browserless':
             final_resp = None
-            for final_resp in resp:
-                pass
-            if final_resp is None:
-                raise Exception("OpenAI 在返回结果时出现了错误")
+            for final_resp in resp: ...
+            self.update_accessed_at()
             return final_resp
         else:
+            self.update_accessed_at()
             return resp
 
     def __str__(self) -> str:

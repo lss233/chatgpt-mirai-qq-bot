@@ -18,7 +18,7 @@ from graia.ariadne.event.message import MessageEvent, TempMessage
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
 from graia.broadcast.exceptions import ExecutionStop
-from requests.exceptions import SSLError
+from requests.exceptions import SSLError, ProxyError
 from graia.ariadne.model import Friend, Group, Member
 from graia.ariadne.message.commander import Commander, Slot, Arg
 from loguru import logger
@@ -30,6 +30,8 @@ from config import Config
 from utils.text_to_img import to_image
 from manager.ratelimit import RateLimitManager
 import time
+from revChatGPT.V1 import Error as V1Error
+import datetime
 
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
@@ -95,15 +97,32 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return config.presets.loaded_successful
             elif is_new_session:
                 # 新会话
-                async for progress in session.load_conversation():
-                    await app.send_message(target, progress, quote=source if config.response.quote else False)
+                async for _ in session.load_conversation():
+                    # await app.send_message(target, progress, quote=source if config.response.quote else False)
+                    pass
 
             # 正常交流
             resp = await session.get_chat_response(message)
             if resp:
                 logger.debug(f"{session_id} - {session.chatbot.id} {resp}")
                 return resp.strip()
-        except SSLError as e:
+        except V1Error as e:
+            # Rate limit
+            if e.code == 2:
+                current_time = datetime.datetime.now()
+                session.chatbot.refresh_accessed_at()
+                first_accessed_at = session.chatbot.accessed_at[0] if len(session.chatbot.accessed_at) > 0 \
+                    else current_time - datetime.timedelta(hours=1)
+                remaining = divmod(current_time - first_accessed_at, datetime.datetime.timedelta(60))
+                minute = remaining[0]
+                second = remaining[1].seconds
+                return config.response.error_request_too_many.format(exc=e, remaining=f"{minute}分{second}秒")
+            if e.code == 1:
+                return config.response.error_server_overloaded.format(exc=e)
+            if e.code == 4 or e.code == 5:
+                return config.response.error_session_authenciate_failed.format(exc=e)
+            return config.response.error_format.format(exc=e)
+        except (SSLError, ProxyError) as e:
             logger.exception(e)
             return config.response.error_network_failure.format(exc=e)
         except Exception as e:
@@ -145,7 +164,8 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
                                                                              current_time=current_time)
 
     if config.text_to_image.always:
-        await app.send_message(friend, to_image(response), quote=source if config.response.quote else False)
+        await app.send_message(friend, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
+                               quote=source if config.response.quote else False)
     else:
         await app.send_message(friend, response, quote=source if config.response.quote else False)
 
@@ -172,11 +192,12 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
                                                                              current_time=current_time)
 
     if config.text_to_image.always:
-        await app.send_message(group, to_image(response), quote=source if config.response.quote else False)
+        await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
+                               quote=source if config.response.quote else False)
     else:
         event = await app.send_message(group, response, quote=source if config.response.quote else False)
         if event.source.id < 0:
-            await app.send_message(group, to_image(response),
+            await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
                                    quote=source if config.response.quote else False)
 
 
@@ -197,7 +218,7 @@ async def start_background():
     try:
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
-    except Exception as e:
+    except:
         logger.error("OpenAI 服务器失败！")
         exit(-1)
     logger.info("OpenAI 服务器登录成功")

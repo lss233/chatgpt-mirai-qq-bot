@@ -86,6 +86,7 @@ class TextToImage(BaseModel):
     """横坐标"""
     offset_y: int = 50
     """纵坐标"""
+    wkhtmltoimage: Union[str, None] = None
 
 
 class Trigger(BaseModel):
@@ -109,7 +110,7 @@ class Response(BaseModel):
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n{exc}"
+    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{remaining}\n{exc}"
 
     error_server_overloaded: str = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
     """服务器提示 429 错误时的回复 """
