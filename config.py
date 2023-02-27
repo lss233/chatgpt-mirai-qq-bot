@@ -22,6 +22,8 @@ class Mirai(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
+    browserless_endpoint: Union[str, None] = None
+    """自定义无浏览器登录模式的接入点"""
     accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]]
 
 

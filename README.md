@@ -480,6 +480,8 @@ access_token = "一串内容为 eyJhbGciOiJS*****X7GdA 的东西"
 ```properties
 # 前面别的东西
 [openai]
+# 无浏览器模式接入点，如果未知请勿添加此配置项
+browserless_endpoint = "xxxx"
 # OpenAI 相关设置
 
 # 第 N 个 OpenAI 账号的登录信息

@@ -4,6 +4,7 @@ import asyncio
 from manager.bot import BotManager, BotInfo
 import atexit
 from loguru import logger
+import revChatGPT.V1 as V1
 
 config = Config.load_config()
 if type(config.openai) is OpenAIAuths:
@@ -14,6 +15,8 @@ else:
 
 
 def setup():
+    if "browserless_endpoint" in config.openai.dict() and config.openai.browserless_endpoint is not None:
+        V1.BASE_URL = config.openai.browserless_endpoint
     botManager.login()
     config.scan_presets()
 
