@@ -342,13 +342,13 @@ loaded_successful = "预设加载成功！"
 # 额度限制功能，可以在 wiki 中了解此功能的用法
 
 # 额度使用达到此比例时进行警告
-warning_rate: float = 0.8
+warning_rate = 0.8
 
 # 警告消息
-warning_msg: str = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
+warning_msg = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
 
 # 超额消息
-exceed: str = "已达到额度限制，请等待下一小时继续和我对话。"
+exceed = "已达到额度限制，请等待下一小时继续和我对话。"
 ```
 
 ### 多账号支持  
