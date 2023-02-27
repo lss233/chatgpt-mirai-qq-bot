@@ -1,7 +1,7 @@
 from typing import Tuple
 from config import Config, OpenAIAuths
 import asyncio
-from manager import BotManager, BotInfo
+from manager.bot import BotManager, BotInfo
 import atexit
 from loguru import logger
 

@@ -14,9 +14,13 @@ from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
+from graia.ariadne.event.message import MessageEvent, TempMessage
 from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.ariadne.model import Friend, Group
+from graia.broadcast.exceptions import ExecutionStop
 from requests.exceptions import SSLError, ProxyError
+from graia.ariadne.model import Friend, Group, Member
+from graia.ariadne.message.commander import Commander, Slot, Arg
 from loguru import logger
 
 import re
@@ -24,6 +28,8 @@ import asyncio
 import chatbot
 from config import Config
 from utils.text_to_img import to_image
+from manager.ratelimit import RateLimitManager
+import time
 from revChatGPT.V1 import Error as V1Error
 import datetime
 
@@ -37,6 +43,8 @@ app = Ariadne(
         WebsocketClientConfig(host=config.mirai.ws_url),
     ),
 )
+
+rateLimitManager = RateLimitManager()
 
 
 async def create_timeout_task(target: Union[Friend, Group], source: Source):
@@ -127,18 +135,34 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return config.response.error_session_authenciate_failed.format(exc=e)
             logger.exception(e)
             return config.response.error_format.format(exc=e)
+        else:
+            # 更新额度
+            rateLimitManager.increment_usage('好友' if isinstance(target, Friend) else '群组', target.id)
         finally:
             if timeout_task:
                 timeout_task.cancel()
     # 排队结束
 
 
-@app.broadcast.receiver("FriendMessage")
+@app.broadcast.receiver("FriendMessage", priority=19)
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
                                   chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
-    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
+    if chain.display.startswith("."):
+        return
+    rate_usage = rateLimitManager.check_exceed('好友', friend.id)
+    if rate_usage >= 1:
+        response = config.ratelimit.exceed
+    else:
+        response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
+        if rate_usage >= config.ratelimit.warning_rate:
+            limit = rateLimitManager.get_limit('好友', friend.id)
+            usage = rateLimitManager.get_usage('好友', friend.id)
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
+                                                                             current_time=current_time)
+
     if config.text_to_image.always:
         await app.send_message(friend, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
                                quote=source if config.response.quote else False)
@@ -151,9 +175,22 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
     MessageChain, DetectPrefix(config.trigger.prefix)]
 
 
-@app.broadcast.receiver("GroupMessage")
+@app.broadcast.receiver("GroupMessage", priority=19)
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    response = await handle_message(group, f"group-{group.id}", chain.display, source)
+    if chain.display.startswith("."):
+        return
+    rate_usage = rateLimitManager.check_exceed('群组', group.id)
+    if rate_usage >= 1:
+        return config.ratelimit.exceed
+    else:
+        response = await handle_message(group, f"group-{group.id}", chain.display, source)
+        if rate_usage >= config.ratelimit.warning_rate:
+            limit = rateLimitManager.get_limit('群组', group.id)
+            usage = rateLimitManager.get_usage('群组', group.id)
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
+                                                                             current_time=current_time)
+
     if config.text_to_image.always:
         await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
                                quote=source if config.response.quote else False)
@@ -186,6 +223,48 @@ async def start_background():
         exit(-1)
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
+
+
+cmd = Commander(app.broadcast)
+
+
+@cmd.command(".设置 {msg_type: str} {msg_id: str} 额度为 {rate: int} 条/小时")
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str,
+                      rate: int):
+    try:
+        if not sender.id == config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        if msg_type != "群组" and msg_type != "好友":
+            return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+        if msg_id != '默认' and not msg_id.isdecimal():
+            return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
+        rateLimitManager.update(msg_type, msg_id, rate)
+        return await app.send_message(event, "额度更新成功！")
+    finally:
+        raise ExecutionStop()
+
+
+@cmd.command(".查看 {msg_type: str} {msg_id: str} 的使用情况")
+async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str):
+    try:
+        if isinstance(event, TempMessage):
+            # ignored
+            return
+        if not sender.id == config.mirai.manager_qq and not sender.id == int(msg_id):
+            return await app.send_message(event, "您没有权限执行这个操作")
+        if msg_type != "群组" and msg_type != "好友":
+            return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+        if msg_id != '默认' and not msg_id.isdecimal():
+            return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
+        limit = rateLimitManager.get_limit(msg_type, msg_id)
+        if limit is None:
+            return await app.send_message(event, f"{msg_type} {msg_id} 没有额度限制。")
+        usage = rateLimitManager.get_usage(msg_type, msg_id)
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        return await app.send_message(event,
+                                      f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
+    finally:
+        raise ExecutionStop()
 
 
 app.launch_blocking()
