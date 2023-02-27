@@ -68,6 +68,10 @@
               white-space: pre-wrap !important;
               word-wrap: break-word !important;
             }
+            .text-results {
+                width: 150px;
+                height: 150px;
+            }
         </style>
         <script nonce="{csp-nonce}" type="text/x-mathjax-config">
             MathJax.Hub.Config({
@@ -81,6 +85,10 @@
         <!-- 插入 Markdown 转换后的 HTML -->
         <div>
             {content}
+        </div>
+        <hr>
+        <div class="footer">
+            <img class="text-results" src="{qrcode}">
         </div>
     </body>
 </html>

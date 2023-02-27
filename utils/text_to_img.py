@@ -24,9 +24,11 @@ from pygments.styles.xcode import XcodeStyle
 from loguru import logger
 import imgkit
 import shutil
+import qrcode
 import random
 import string
 import html
+import base64
 
 config = Config.load_config()
 
@@ -286,6 +288,12 @@ def md_to_html(text):
 
     return h
 
+def get_qr_data(text):
+    image = qrcode.make(text)
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue())
+    return "data:image/jpeg;base64," + img_str.decode('utf-8')
 
 def text_to_image(text):
     content = md_to_html(text)
@@ -295,7 +303,7 @@ def text_to_image(text):
     # 输出html到字符串io流
     with StringIO() as output_file:
         # 填充正文
-        output_file.write(template_html.replace("{content}", content))
+        output_file.write(template_html.replace("{qrcode}", get_qr_data(text)).replace("{content}", content))
 
         # wkhtmltoimage是用apt安装的，安装wkhtmltopdf附带，binary文件在/usr/bin/wkhtmltoimage
         imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
@@ -305,6 +313,7 @@ def text_to_image(text):
         temp_jpg_filename = temp_jpg_file.name
         temp_jpg_file.close()
         with StringIO(output_file.getvalue()) as input_file:
+            print(output_file.getvalue())
             ok = False
             try:
                 # 调用imgkit将html转为图片
