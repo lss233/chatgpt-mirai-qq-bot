@@ -288,12 +288,14 @@ def md_to_html(text):
 
     return h
 
+
 def get_qr_data(text):
     image = qrcode.make(text)
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue())
     return "data:image/jpeg;base64," + img_str.decode('utf-8')
+
 
 def text_to_image(text):
     content = md_to_html(text)
@@ -320,7 +322,6 @@ def text_to_image(text):
                 ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
                     "enable-local-file-access": False,  # 禁用local，防止 SSRF
                     "width": config.text_to_image.width,  # 图片宽度
-                    'javascript-delay': '3000',
                 },
                                       output_path=temp_jpg_filename)
                 if ok:
