@@ -113,7 +113,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 session.chatbot.refresh_accessed_at()
                 first_accessed_at = session.chatbot.accessed_at[0] if len(session.chatbot.accessed_at) > 0 \
                     else current_time - datetime.timedelta(hours=1)
-                remaining = divmod(current_time - first_accessed_at, datetime.datetime.timedelta(60))
+                remaining = divmod(current_time - first_accessed_at, datetime.timedelta(60))
                 minute = remaining[0]
                 second = remaining[1].seconds
                 return config.response.error_request_too_many.format(exc=e, remaining=f"{minute}分{second}秒")
@@ -266,5 +266,4 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
     finally:
         raise ExecutionStop()
 
-#to_image("# Markdown\n* Text 1\n* Text 2\n * Text 3\n# Line \n* Topic")
 app.launch_blocking()
