@@ -24,6 +24,7 @@ import asyncio
 import chatbot
 from config import Config
 from utils.text_to_img import to_image
+import conversation_manager
 
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
@@ -43,10 +44,31 @@ async def create_timeout_task(target: Union[Friend, Group], source: Source):
 
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    number = session_id.split('-')[1]
     if not message.strip():
         return config.response.placeholder
 
     timeout_task = None
+
+    # 如果消息包含help命令（config.trigger.help_command所定义的内容），则回滚会话
+    if message.strip() in config.trigger.help_command:
+        return config.response.help_command.format(max_sessions=config.max_record.max_sessions)
+
+    # 如果消息包含 会话列表 命令（config.trigger.talk_list_command所定义的内容），则输出会话列表
+    if message.strip() in config.trigger.talk_list_command:
+        return "会话列表如下：\n" + '\n'.join(f"{i+1}. {x}" for i, x in enumerate(conversation_manager.get_user_sessions(number)))
+
+    # 如果消息包含会话上限x命令，则进入会话x
+    max_record_search = re.search(config.trigger.max_talk_sessions, message)
+    if max_record_search:
+        conversation_manager.update_max_sessions(number, int(max_record_search.group(1)))
+        if int(max_record_search.group(1)) > 10:
+                max_record = 10
+        elif int(max_record_search.group(1)) < 1:
+                max_record = 1
+        else:
+                max_record = int(max_record_search.group(1))
+        return f"会话上限已设置为{max_record}！"
 
     session, is_new_session = chatbot.get_chat_session(session_id)
 
@@ -120,11 +142,17 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
                                   chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
     if friend.id == config.mirai.qq:
         return
-    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
+    response = await handle_message(friend, f"fd-{friend.id}-", chain.display, source)
     if config.text_to_image.always:
         await app.send_message(friend, to_image(response), quote=source if config.response.quote else False)
     else:
-        await app.send_message(friend, response, quote=source if config.response.quote else False)
+        # 否则直接发送响应
+        if len(response) <= 3000:
+            await app.send_message(friend, response, quote=source if config.response.quote else False)
+        else:
+            chunks = [response[i:i+3000] for i in range(0, len(response), 3000)]
+            for chunk in chunks:
+                await app.send_message(friend, chunk, quote=source if config.response.quote else False)
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
@@ -134,7 +162,7 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 
 @app.broadcast.receiver("GroupMessage")
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    response = await handle_message(group, f"group-{group.id}", chain.display, source)
+    response = await handle_message(group, f"gp-{group.id}-", chain.display, source)
     if config.text_to_image.always:
         await app.send_message(group, to_image(response), quote=source if config.response.quote else False)
     else:

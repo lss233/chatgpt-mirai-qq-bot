@@ -43,13 +43,15 @@ class OpenAIAuthBase(BaseModel):
     auto_remove_old_conversations: bool = False
     """自动删除旧的对话"""
 
+
     class Config(BaseConfig):
         extra = Extra.allow
 
 
 class OpenAIEmailAuth(OpenAIAuthBase):
-    email: str
+    email: str = ''
     """OpenAI 注册邮箱"""
+
     password: str
     """OpenAI 密码"""
     isMicrosoftLogin: bool = False
@@ -84,7 +86,11 @@ class TextToImage(BaseModel):
     """横坐标"""
     offset_y: int = 50
     """纵坐标"""
+    wkhtmltoimage: Union[str, None] = None
 
+class Max_Record(BaseModel):
+    max_sessions: int = 5
+    """会话数量上限"""
 
 class Trigger(BaseModel):
     prefix: List[str] = [""]
@@ -95,6 +101,23 @@ class Trigger(BaseModel):
     """重置会话的命令"""
     rollback_command: List[str] = ["回滚会话"]
     """回滚会话的命令"""
+    help_command: List[str] = ["help"]
+    """请求帮助的命令"""
+    talk_list_command: List[str] = ["会话列表"]
+    """会话列表的命令"""
+    clear_talk_command: List[str] = ["清空会话"]
+    """清空会话的命令"""
+    max_talk_sessions: str = r"会话上限\s*(\d+)"
+
+    goto_talk: str = r"进入会话\s*(\d+)"
+
+    delete_talk: str = r"删除会话\s*(\d+)"
+
+    read_talk: str = r"读取会话\s*(\d+)"
+
+    rename_talk: str = r"会话名\s*[:：]\s*([^:：\s]+)"
+
+
 
 
 class Response(BaseModel):
@@ -148,6 +171,21 @@ class Response(BaseModel):
     queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
     """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
 
+    help_command: str = (
+        "功能列表：\n"
+        "样例：指令 - 指令的功能\n"
+        "帮助 - 显示功能列表\n"
+        "重置会话 - 离开当前会话（保留），开启新的会话\n"
+        "回滚会话 - 回滚一次对话\n"
+        "会话名：*** - 设置当前会话名(开始会话之后才能设置)\n" 
+        "会话列表 - 显示自己现有的会话列表\n"
+        "进入会话x - 进入会话列表中第x个会话\n"
+        "读取会话x - 读取会话列表中第x的会话的所有会话记录\n"
+        "删除会话x - 删除会话列表中第x个会话\n"
+        "清空会话 - 清空自己所有的会话\n"
+        "会话上限x - 设置自己会话数量上限x，最大为{max_sessions}"
+    )
+
 
 class System(BaseModel):
     accept_group_invite: bool = False
@@ -172,6 +210,7 @@ class Config(BaseModel):
     response: Response = Response()
     system: System = System()
     presets: Preset = Preset()
+    max_record: Max_Record = Max_Record()
 
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
