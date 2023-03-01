@@ -300,7 +300,7 @@ def text_to_image(text):
     img_url = None
     if text.startswith('[img]'):
         img_url = text[5:];
-        content = "<img src='"+img_url+"'/>"
+        content = "<img width='100%' src='"+img_url+"'/>"
     else:
         content = md_to_html(text)
 
