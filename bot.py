@@ -48,7 +48,7 @@ rateLimitManager = RateLimitManager()
 
 
 async def respond_as_image(target: Union[Friend, Group], source: Source, response):
-    return await app.send_message(target, to_image(response),
+    return await app.send_message(target, await to_image(response),
                                   quote=source if config.response.quote else False)
 
 
