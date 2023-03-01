@@ -21,6 +21,7 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
+from open_ai_bot import OpenAIBot
 
 config = Config.load_config()
 
@@ -44,9 +45,12 @@ class BotInfo(asyncio.Lock):
     last_rate_limited = None
     """上一次遇到限流的时间"""
 
+    openAiBot = None
+
     def __init__(self, bot, mode):
         self.bot = bot
         self.mode = mode
+        self.openAiBot = OpenAIBot();
         super().__init__()
 
     def update_accessed_at(self):
@@ -77,8 +81,14 @@ class BotInfo(asyncio.Lock):
                 self.ask(text)
 
     def ask(self, prompt, conversation_id=None, parent_id=None):
-        """向 ChatGPT 发送提问"""
-        resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
+        if self.check_prefix(prompt,config.trigger.image_create_prefix):
+            resp = self.openAiBot.ask("create_img",prompt,conversation_id,parent_id)
+            logger.info(f"create image resp: {resp}")
+            self.update_accessed_at()
+            return resp
+        else:
+            """向 ChatGPT 发送提问"""
+            resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
         if self.mode == 'proxy' or self.mode == 'browserless':
             final_resp = None
             for final_resp in resp: ...
@@ -87,6 +97,12 @@ class BotInfo(asyncio.Lock):
         else:
             self.update_accessed_at()
             return resp
+
+    def check_prefix(self, content, prefix_list):
+        for prefix in prefix_list:
+            if content.startswith(prefix):
+                return prefix
+        return None
 
     def __str__(self) -> str:
         return self.bot.__str__()
