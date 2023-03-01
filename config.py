@@ -11,6 +11,8 @@ import toml
 class Mirai(BaseModel):
     qq: int
     """Bot 的 QQ 号"""
+    manager_qq: int = 0
+    """机器人管理员的 QQ 号"""
     api_key: str
     """mirai-api-http 的 verifyKey"""
     http_url: str = "http://localhost:8080"
@@ -20,6 +22,8 @@ class Mirai(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
+    browserless_endpoint: Union[str, None] = None
+    """自定义无浏览器登录模式的接入点"""
     accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]]
 
 
@@ -88,7 +92,7 @@ class TextToImage(BaseModel):
     """纵坐标"""
     wkhtmltoimage: Union[str, None] = None
 
-class Max_Record(BaseModel):
+class MaxRecord(BaseModel):
     max_sessions: int = 5
     """会话数量上限"""
 
@@ -130,7 +134,7 @@ class Response(BaseModel):
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n{exc}"
+    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{remaining}\n{exc}"
 
     error_server_overloaded: str = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
     """服务器提示 429 错误时的回复 """
@@ -201,6 +205,15 @@ class Preset(BaseModel):
     loaded_successful: str = "预设加载成功！"
     scan_dir: str = "./presets"
 
+class Ratelimit(BaseModel):
+    warning_rate: float = 0.8
+    """额度使用达到此比例时进行警告"""
+
+    warning_msg: str = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
+    """警告消息"""
+
+    exceed: str = "已达到额度限制，请等待下一小时继续和我对话。"
+    """超额消息"""
 
 class Config(BaseModel):
     mirai: Mirai
@@ -210,7 +223,8 @@ class Config(BaseModel):
     response: Response = Response()
     system: System = System()
     presets: Preset = Preset()
-    max_record: Max_Record = Max_Record()
+    max_record: MaxRecord = MaxRecord()
+    ratelimit: Ratelimit = Ratelimit()
 
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():

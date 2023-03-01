@@ -1,12 +1,13 @@
 from typing import Tuple
 from config import Config, OpenAIAuths
 import asyncio
-from manager import BotManager, BotInfo
+from manager.bot import BotManager, BotInfo
 import atexit
 from loguru import logger
 import conversation_manager
 import re
 from tinydb import TinyDB, Query
+import revChatGPT.V1 as V1
 
 config = Config.load_config()
 if type(config.openai) is OpenAIAuths:
@@ -17,6 +18,8 @@ else:
 
 
 def setup():
+    if "browserless_endpoint" in config.openai.dict() and config.openai.browserless_endpoint is not None:
+        V1.BASE_URL = config.openai.browserless_endpoint
     botManager.login()
     config.scan_presets()
 
@@ -37,9 +40,8 @@ class ChatSession:
 
     async def load_conversation(self, keyword='default'):
         if keyword not in config.presets.keywords:
-            if keyword == 'default':
-                pass
-            raise ValueError("预设不存在，请检查你的输入是否有问题！")
+            if not keyword == 'default':
+                raise ValueError("预设不存在，请检查你的输入是否有问题！")
         else:
             presets = config.load_preset(keyword)
             for text in presets:

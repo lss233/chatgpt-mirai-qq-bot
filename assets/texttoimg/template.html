@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" initial-scale="1"/>
+    <title>Parsed content</title>
+    <!-- 本地文件能加快渲染 -->
+    <!-- 
+    <link href="default.css" rel="stylesheet" />
+    <link href="github-md.css" rel="stylesheet" />
+    <script src="github-md.js"></script>
+    <script src="tex-chtml.js"></script>
+    <script src="jquery.min.js"></script>
+    <script src="jquery.qrcode.min.js"></script>
+    -->
+
+    <!-- cdn加速也不赖 -->
+<!--    <link href="default.css" rel="stylesheet" />-->
+     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/default.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/github-md.css" />
+    <script src="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/github-md.js"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/mathjax/3.2.2/es5/tex-chtml-full.min.js"></script> -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</head>
+
+<body>
+    <div id="header"><div></div></div>
+    <div id="content">{content}</div>
+    <div id="footer">
+        <div class="qrc">
+            <div id="qrcode">
+                <img src="{qrcode}" alt="" srcset="" width="120" height="120">
+            </div>
+        </div>
+    </div>
+    <script>
+        hljs.highlightAll();
+        MathJax.Hub.Config({
+              config: ["MMLorHTML.js"],
+              jax: ["input/TeX", "output/HTML-CSS", "output/NativeMML"],
+              extensions: []
+            });
+        document.querySelectorAll('code').forEach(item => {
+            let lang = item.classList[0]?.split('-')[1];
+            if (lang) {
+              item.title = `[lang: ${lang}]`;
+            }
+        });
+    </script>
+</body>
+
+</html>

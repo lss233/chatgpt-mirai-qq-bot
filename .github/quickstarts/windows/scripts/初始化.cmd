@@ -15,15 +15,15 @@ ECHO 提示：请注意安装路径中不要有空格，否则可能会导致安
 pause 
 
 cd "%BASE_DIR%\mirai"
-mcl-installer.exe
+@REM mcl-installer.exe
 
-ECHO 安装 mirai-api-http 插件...
-ECHO 插件介绍：https://github.com/project-mirai/mirai-api-http
-cmd /c mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
-
-ECHO 安装 mirai-device-generator 插件...
-ECHO 插件介绍：https://github.com/cssxsh/mirai-device-generator
-cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
+@REM ECHO 安装 mirai-api-http 插件...
+@REM ECHO 插件介绍：https://github.com/project-mirai/mirai-api-http
+@REM cmd /c mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
+@REM
+@REM ECHO 安装 mirai-device-generator 插件...
+@REM ECHO 插件介绍：https://github.com/cssxsh/mirai-device-generator
+@REM cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
 
 cd "%BASE_DIR%"
 ECHO 复制 mirai-http-api 配置信息...
@@ -37,7 +37,7 @@ ECHO 接下来开始初始化 ChatGPT
 ECHO 初始化 pip...
 set PYTHON_EXECUTABLE="%cd%\python3.9\python.exe"
 cd "%BASE_DIR%\chatgpt\python3.9"
-%PYTHON_EXECUTABLE% get-pip.py
+@REM %PYTHON_EXECUTABLE% get-pip.py
 
 ECHO 安装依赖...
 cd "%BASE_DIR%\chatgpt"

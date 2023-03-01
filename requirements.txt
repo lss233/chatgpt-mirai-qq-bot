@@ -1,8 +1,14 @@
 graia-ariadne>=0.10.3
-revChatGPT[unofficial]==2.3.5
+revChatGPT[unofficial]==2.3.11
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
 loguru~=0.6.0
 asyncio~=3.4.3
 pydantic~=1.10.5
+
+markdown~=3.4.1
+python-markdown-math~=0.8
+pygments~=2.10.0
+imgkit~=1.2.2
+qrcode
