@@ -24,6 +24,8 @@ class Mirai(BaseModel):
 class OpenAIAuths(BaseModel):
     browserless_endpoint: Union[str, None] = None
     """自定义无浏览器登录模式的接入点"""
+    secret_key: str = None
+    """OpenAi密钥"""
     accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]]
 
 
@@ -100,6 +102,8 @@ class Trigger(BaseModel):
     """重置会话的命令"""
     rollback_command: List[str] = ["回滚会话"]
     """回滚会话的命令"""
+    image_create_prefix: List[str] = ["画", "看", "找"]
+    """图片创建前缀"""
 
 
 class Response(BaseModel):
