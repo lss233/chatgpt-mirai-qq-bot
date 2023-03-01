@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" initial-scale="1"/>
-    <title>Marked in the browser</title>
+    <title>Parsed content</title>
     <!-- 本地文件能加快渲染 -->
     <!-- 
     <link href="default.css" rel="stylesheet" />
@@ -16,101 +16,37 @@
     -->
 
     <!-- cdn加速也不赖 -->
-    <link href="default.css" rel="stylesheet" />
-    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/default.css" /> -->
+<!--    <link href="default.css" rel="stylesheet" />-->
+     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/default.css" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/github-md.css" />
     <script src="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/github-md.js"></script>
     <!-- <script src="https://cdn.bootcdn.net/ajax/libs/mathjax/3.2.2/es5/tex-chtml-full.min.js"></script> -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/marked/4.2.12/marked.min.js"></script>
 </head>
 
 <body>
-    <div id="header"><div>By 来自东方的访客</div></div>
-    <div id="content"></div>
+    <div id="header"><div></div></div>
+    <div id="content">{content}</div>
     <div id="footer">
         <div class="qrc">
-            <div id="qrcode"></div>
-            <div class="md-download"><a href="javascript:d()">点击下载</a></div>
+            <div id="qrcode">
+                <img src="{qrcode}" alt="" srcset="" width="120" height="120">
+            </div>
         </div>
     </div>
     <script>
-        let val = "",
-        // 二维码跳转链接
-        // 推荐一个短链接跳转到长链接，一定程度美化二维码，支持微信和QQ安全检测
-        // https://www.985.so
-        url = "{替换二维码链接}";
-        // markdown文本，如果留空，则从location.href中的参数中获取，用于网站搭建
-        val = `通过求得其积分因子$mu(x)$，将微分方程乘以积分因子得到：\n\n$$mu(x)y' + mu(x)p(x)y = mu(x)q(x)$$\n\n左侧为乘积法则的形式，可以写为：\n\n$$\frac{d}{dx}[mu(x)y] = mu(x)q(x)$$\n\n通过积分并化简得到：\n\n$$y = \frac{1}{mu(x)}(int mu(x)q(x)dx + C)$$\n\n其中$C$为常数。`
-        
-        /**
-         * 扫码跳转逻辑
-         * [网站]?tex=[markdown base64]&d=[json baseb4]
-         * 
-         * 例子：https://bincooo.github.io/cdn/md/index.html?tex=JTBBJTBBIyUyMCVFNyVBRSU4MCVFNSU4RSU4NiUwQSUwQSMjJTIwJUU0JUI4JUFBJUU0JUJBJUJBJUU0JUJGJUExJUU2JTgxJUFGJTBBJTBBLSUyMCVFNSVBNyU5MyVFNSU5MCU4RCVFRiVCQyU5QSVFNiU5RCU4RSVFNyU5NCVCMCVFNiU4OSU4MCUwQS0lMjAlRTUlQjklQjQlRTklQkUlODQlRUYlQkMlOUEyNCVFNSVCMiU4MSUwQS0lMjAlRTUlQUQlQTYlRTUlOEUlODYlRUYlQkMlOUElRTYlOUMlQUMlRTclQTclOTElRTYlQUYlOTUlRTQlQjglOUElRTclOTQlOUYlMEEtJTIwJUU3JTg4JUIxJUU1JUE1JUJEJUVGJUJDJTlBJUU1JTk2JTlDJUU2JUFDJUEyJUU1JTk2JTlEJUU3JUJBJUEyJUU4JThDJUI2JUVGJUJDJThDJUU3JUJCJThGJUU1JUI4JUI4JUU1JTgxJUE1JUU4JUJBJUFCJTBBJTBBIyMlMjAlRTUlQjclQTUlRTQlQkQlOUMlRTclQkIlOEYlRTUlOEUlODYlMEElMEEtJTIwJUU1JTlDJUE4JUU0JUJDJTlBJUU1JTkxJTk4JUU1JTg4JUI2JUU5JUE0JTkwJUU1JThFJTg1JUU2JThCJTg1JUU0JUJCJUJCJUU2JTlDJThEJUU1JThBJUExJUU1JTkxJTk4JTBBJTBBIyMlMjAlRTUlQkElOTQlRTglODElOTglRTglODElOEMlRTQlQkQlOEQlMEElMEEtJTIwJUU1JUJBJTk0JUU4JTgxJTk4JUU4JTgxJThDJUU0JUJEJThEJUVGJUJDJTlBSE9NTyVFNCVCOSU4QiVFNSVBRSVCNiUyMCVFNyVBNyU5MSVFNiU4QSU4MCVFNiU5NiVCMCVFOSU5NyVCQiVFNyVCQyU5NiVFOCVCRSU5MSUwQS0lMjAlRTQlQjglQUElRTQlQkElQkElRTQlQkMlOTglRTUlOEElQkYlRUYlQkMlOUElRTUlOTYlODQlRTQlQkElOEUlRTUlODYlOTklRTQlQkQlOUMlRUYlQkMlOEMlRTUlODUlQjMlRTYlQjMlQTglRTclQTclOTElRTYlOEElODAlRTYlOTYlQjAlRTklOTclQkIlRUYlQkMlOEMlRTUlOEIlQTQlRTUlQTUlOEIlRTUlQTUlQkQlRTUlQUQlQTYlRUYlQkMlOEMlRTYlOUMlODklRTglQjQlQTMlRTQlQkIlQkIlRTUlQkYlODMlRTUlOTIlOEMlRTUlOUIlQTIlRTklOTglOUYlRTUlOTAlODglRTQlQkQlOUMlRTclQjIlQkUlRTclQTUlOUUlMEElMEEjIyUyMCVFOCU4MSU5NCVFNyVCMyVCQiVFNiU5NiVCOSVFNSVCQyU4RiUwQSUwQS0lMjAlRTYlODklOEIlRTYlOUMlQkElRTUlOEYlQjclRTclQTAlODElRUYlQkMlOUExMjM0NTY3ODkxMCUwQS0lMjAlRTclOTQlQjUlRTUlQUQlOTAlRTklODIlQUUlRTclQUUlQjElRUYlQkMlOUFsaV90aWFuc3VvQGVtYWlsLmNvbSUwQSUwQSVFNiU4NCU5RiVFOCVCMCVBMiVFNiU4MiVBOCVFOSU5OCU4NSVFOCVBRiVCQiVFNiU4OCU5MSVFNyU5QSU4NCVFNyVBRSU4MCVFNSU4RSU4NiVFRiVCQyU4QyVFNiU5QyU5RiVFNSVCRSU4NSVFOCU4MyVCRCVFNiU5QyU4OSVFNiU5QyVCQSVFNCVCQyU5QSVFNSU4QSVBMCVFNSU4NSVBNSVFOCVCNCVCNSVFNSU4NSVBQyVFNSU4RiVCOCVFNyU5QSU4NCVFNSU5QiVBMiVFOSU5OCU5RiVFMyU4MCU4MiUwQQ==&d=JTdCJTIybmFtZSUyMjolMjIlRTYlOUQlOEUlRTclOTklQkQlRTQlQjglOEQlRTUlQTQlQUElRTclOTklQkQlMjIlN0Q=
-         * 
-         *      
-         */
-        // console.log('aaaaaa', btoa(encodeURI(JSON.stringify({name: '李白不太白'}))))
-        if (!val) {
-            const tex = location.search;
-            if (tex.startsWith('?tex=')) {
-                const split = tex.substr(5).split('&d=');
-                val = decodeURI(atob(split[0]));
-                if (split[1]) {
-                    const json = JSON.parse(decodeURI(atob(split[1])));
-                    url = json.url;
-                    document.querySelector('#header>div').innerText = `By ${json.name}`;
-                }
-            }
-        }
-        if (!url) {
-            url = "https://bincooo.github.io/vuepress-doc";
-        }
-
-        val = val.replaceAll(/([^$]{1})\$([^$]{1,})\$/g, '$$$$$2$$$$');
-        document.getElementById('content').innerHTML=marked.parse(val);
         hljs.highlightAll();
         MathJax.Hub.Config({
               config: ["MMLorHTML.js"],
               jax: ["input/TeX", "output/HTML-CSS", "output/NativeMML"],
               extensions: []
             });
-        let codes = document.querySelectorAll('code');
-        codes.forEach(item => {
+        document.querySelectorAll('code').forEach(item => {
             let lang = item.classList[0]?.split('-')[1];
             if (lang) {
               item.title = `[lang: ${lang}]`;
             }
         });
-        $('#qrcode').qrcode({
-            width: 120,
-            height: 120,
-            background: "#f0f0f0",//背景颜色  
-            foreground: "#000000", //前景颜色
-            correctLevel :0,//纠错等级 
-            text: url
-        });
-
-        /**
-         * 移动端好像无法下载
-         */
-        function download(filename, text) {
-          var element = document.createElement('a');
-          element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-          element.setAttribute('download', filename);
-          element.style.display = 'none';
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
-        }
-
-        function d() {
-            download('marked.md', val);
-        }
-        // console.log('https://bincooo.github.com/qrcode?tex=' + btoa(encodeURI(val)))
     </script>
 </body>
 
