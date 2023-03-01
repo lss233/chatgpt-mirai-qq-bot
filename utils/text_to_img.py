@@ -295,7 +295,7 @@ async def get_qr_data(text):
     """将 Markdown 文本保存到 Mozilla Pastebin，并获得 URL"""
     async with aiohttp.ClientSession() as session:
         payload = {'expires': '86400', 'format': 'url', 'lexer': '_markdown', 'content': text}
-        async with session.post(' https://pastebin.mozilla.org/api/',
+        async with session.post('https://pastebin.mozilla.org/api/',
                                 data=payload) as resp:
             image = qrcode.make(await resp.text())
             buffered = BytesIO()
