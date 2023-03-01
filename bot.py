@@ -47,6 +47,24 @@ app = Ariadne(
 rateLimitManager = RateLimitManager()
 
 
+async def respond_as_image(target: Union[Friend, Group], source: Source, response):
+    return await app.send_message(target, to_image(response),
+                                  quote=source if config.response.quote else False)
+
+
+async def respond_as_text(target: Union[Friend, Group], source: Source, response):
+    return await app.send_message(target, response, quote=source if config.response.quote else False)
+
+
+async def respond(target: Union[Friend, Group], source: Source, response):
+    if config.text_to_image.always:
+        await respond_as_image(target, source, response)
+    else:
+        event = await respond_as_text(target, source, response)
+        if event.source.id < 0:
+            await respond_as_image(target, source, response)
+
+
 async def create_timeout_task(target: Union[Friend, Group], source: Source):
     await asyncio.sleep(config.response.timeout)
     await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
@@ -97,9 +115,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return config.presets.loaded_successful
             elif is_new_session:
                 # 新会话
-                async for _ in session.load_conversation():
-                    # await app.send_message(target, progress, quote=source if config.response.quote else False)
-                    pass
+                async for _ in session.load_conversation(): ...
 
             # 正常交流
             resp = await session.get_chat_response(message)
@@ -113,9 +129,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 session.chatbot.refresh_accessed_at()
                 first_accessed_at = session.chatbot.accessed_at[0] if len(session.chatbot.accessed_at) > 0 \
                     else current_time - datetime.timedelta(hours=1)
-                remaining = divmod(current_time - first_accessed_at, datetime.datetime.timedelta(60))
-                minute = remaining[0]
-                second = remaining[1].seconds
+                remaining = divmod(current_time - first_accessed_at, datetime.timedelta(60))
+                minute = remaining[0], second = remaining[1].seconds
                 return config.response.error_request_too_many.format(exc=e, remaining=f"{minute}分{second}秒")
             if e.code == 1:
                 return config.response.error_server_overloaded.format(exc=e)
@@ -162,12 +177,7 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
             current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
             response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
                                                                              current_time=current_time)
-
-    if config.text_to_image.always:
-        await app.send_message(friend, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
-                               quote=source if config.response.quote else False)
-    else:
-        await app.send_message(friend, response, quote=source if config.response.quote else False)
+    await respond(friend, source, response)
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
@@ -191,14 +201,8 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
             response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
                                                                              current_time=current_time)
 
-    if config.text_to_image.always:
-        await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
-                               quote=source if config.response.quote else False)
-    else:
-        event = await app.send_message(group, response, quote=source if config.response.quote else False)
-        if event.source.id < 0:
-            await app.send_message(group, await asyncio.get_event_loop().run_in_executor(None, to_image, response),
-                                   quote=source if config.response.quote else False)
+    await respond(group, source, response)
+
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")
@@ -266,5 +270,6 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
     finally:
         raise ExecutionStop()
 
-#to_image("# Markdown\n* Text 1\n* Text 2\n * Text 3\n# Line \n* Topic")
+
+# to_image("# Markdown\n* Text 1\n* Text 2\n * Text 3\n# Line \n* Topic")
 app.launch_blocking()

@@ -204,17 +204,17 @@ class BotManager:
         def get_access_token(bot: V1Chatbot):
             return bot.session.headers.get('Authorization').removeprefix('Bearer ')
 
-        if 'access_token' in cached_account:
+        if  cached_account.get('access_token'):
             logger.info("尝试使用 access_token 登录中...")
-            config['access_token'] = cached_account['access_token']
+            config['access_token'] = cached_account.get('access_token')
             bot = V1Chatbot(config=config)
             if __V1_check_auth(bot):
                 return BotInfo(bot, account.mode)
 
-        if 'session_token' in cached_account:
+        if cached_account.get('session_token'):
             logger.info("尝试使用 session_token 登录中...")
             config.pop('access_token', None)
-            config['session_token'] = cached_account['session_token']
+            config['session_token'] = cached_account.get('session_token')
             bot = V1Chatbot(config=config)
             self.__save_login_cache(account=account, cache={
                 "session_token": config['session_token'],
@@ -223,15 +223,15 @@ class BotManager:
             if __V1_check_auth(bot):
                 return BotInfo(bot, account.mode)
 
-        if 'password' in cached_account:
+        if cached_account.get('password'):
             logger.info("尝试使用 email + password 登录中...")
             config.pop('access_token', None)
             config.pop('session_token', None)
-            config['email'] = cached_account['email']
-            config['password'] = cached_account['password']
+            config['email'] = cached_account.get('email')
+            config['password'] = cached_account.get('password')
             bot = V1Chatbot(config=config)
             self.__save_login_cache(account=account, cache={
-                "session_token": bot.config['session_token'],
+                "session_token": bot.config.get('session_token'),
                 "access_token": get_access_token(bot)
             })
             if __V1_check_auth(bot):
