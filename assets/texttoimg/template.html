@@ -5,23 +5,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" initial-scale="1"/>
     <title>Parsed content</title>
-    <!-- 本地文件能加快渲染 -->
-    <!-- 
-    <link href="default.css" rel="stylesheet" />
-    <link href="github-md.css" rel="stylesheet" />
-    <script src="github-md.js"></script>
-    <script src="tex-chtml.js"></script>
-    <script src="jquery.min.js"></script>
-    <script src="jquery.qrcode.min.js"></script>
-    -->
 
-    <!-- cdn加速也不赖 -->
-<!--    <link href="default.css" rel="stylesheet" />-->
-     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/default.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/github-md.css" />
-    <script src="https://cdn.jsdelivr.net/gh/bincooo/cdn@main/md/github-md.js"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/mathjax/3.2.2/es5/tex-chtml-full.min.js"></script> -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <link href="{path_texttoimg}/css/default.css" rel="stylesheet" />
+    <link href="{path_texttoimg}/css/github-md.css" rel="stylesheet" >
+    <script src="{path_texttoimg}/js/highlight.js"></script>
+    <script src="{path_texttoimg}/js/MathJax.js"></script>
+    <style>
+        #MathJax_Message {
+            display: none;
+        }
+        .content {
+            min-height: 200px;
+        }
+    </style>
 </head>
 
 <body>
