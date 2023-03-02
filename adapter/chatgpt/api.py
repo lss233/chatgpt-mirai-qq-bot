@@ -1,24 +1,27 @@
 from typing import Generator
 
-import aiohttp
-
 from adapter.botservice import BotAdapter
-from bots.openai.api import OpenAIAPIBot
+from revChatGPT.V3 import Chatbot as OpenAIChatbot
+from manager.bot import BotManager
+
 
 class ChatGPTAPIAdapter(BotAdapter):
-    conversations: list = []
+    conversation: list = []
     """聊天记录"""
 
-    bot: OpenAIAPIBot
+    bot: OpenAIChatbot
     """实例"""
 
-
     def __int__(self):
-        self.bot = OpenAIAPIBot.pick()
+        self.bot = BotManager.pick('chatgpt-api')
 
+    async def rollback(self):
+        self.bot.rollback()
+        self.conversation = self.bot.conversation
 
-    async def rollback(self): ...
+    async def on_reset(self): ...
 
-    async def reset(self): ...
-
-    async def ask(self, msg: str) -> Generator[str]: ...
+    async def ask(self, prompt: str) -> Generator[str]:
+        self.bot.conversation = self.conversation
+        yield self.bot.ask_stream(prompt=prompt)
+        self.conversation = self.bot.conversation
