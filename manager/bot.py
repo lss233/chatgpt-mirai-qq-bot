@@ -1,7 +1,11 @@
 import datetime
 import os
 import sys
+
 import time
+import datetime
+import conversation_manager
+
 
 from requests.exceptions import SSLError
 
@@ -21,16 +25,21 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
-
+import base64
+import json
 config = Config.load_config()
 
 
 class BotInfo(asyncio.Lock):
     id = 0
 
+    account_id: str  #记录当前账户的user_id，用于定位账户
+
     account: OpenAIAuthBase
 
     bot: Union[V1Chatbot, BrowserChatbot]
+
+    time: datetime.datetime
 
     mode: str
 
@@ -123,7 +132,7 @@ class BotManager:
 
     def login(self):
         for i, account in enumerate(self.accounts):
-            logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
+            logger.info(f"正在登录第 {i+1} 个 OpenAI 账号\n")
             try:
                 if account.mode == "proxy" or account.mode == "browserless":
                     bot = self.__login_V1(account)
@@ -133,6 +142,13 @@ class BotManager:
                     raise Exception("未定义的登录类型：" + account.mode)
                 bot.id = i
                 bot.account = account
+                bot.time = datetime.datetime.now()
+                bot_access_token = bot.bot.session.headers.get('Authorization').removeprefix('Bearer ')
+                bot_access_token = bot_access_token.split('.')
+                bot_access_token = (base64.urlsafe_b64decode(bot_access_token[1] + '=' * (4 - len(bot_access_token[1]) % 4))).decode('utf-8')
+                bot_access_token = json.loads(bot_access_token)
+                bot.account_id = bot_access_token["https://api.openai.com/auth"]["user_id"]  #从bot_access_token中获取user_id
+                logger.success(f"该用户的user_id = {bot.account_id}")
                 self.bots.append(bot)
                 logger.success("登录成功！", i=i + 1)
                 logger.debug("等待 8 秒……")
@@ -153,7 +169,9 @@ class BotManager:
         if len(self.bots) < 1:
             logger.error("所有账号均登录失败，无法继续启动！")
             exit(-2)
-        logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！")
+        logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！\n")
+
+
 
     def __login_browser(self, account) -> BotInfo:
         logger.info("模式：浏览器登录")
@@ -240,7 +258,20 @@ class BotManager:
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
 
-    def pick(self) -> BotInfo:
-        if self.roundrobin is None:
-            self.roundrobin = itertools.cycle(self.bots)
-        return next(self.roundrobin)
+    def pick(self) -> BotInfo:  #选一个bot.time最小的，说明闲置时间最长
+        # if self.roundrobin is None:
+            # self.roundrobin = itertools.cycle(self.bots)
+        # return next(self.roundrobin)
+        id = 0
+        for i in range(1, len(self.bots)):
+            if self.bots[id].time > self.bots[i].time:
+                        id = i
+        return self.bots[id]
+
+    def pick_id(self, account_id) -> BotInfo:  #返回指定id的账号
+        for i in range(len(self.bots)):
+            if self.bots[i].account_id == account_id:
+                return self.bots[i]
+
+    def update_bot_time(self, id):  #更新指定bot的时间，在向机器人发消息的时候就更新bot的时间
+        self.bots[id].time = datetime.datetime.now()
