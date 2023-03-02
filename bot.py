@@ -219,6 +219,7 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 @app.broadcast.receiver(AccountLaunch)
 async def start_background():
+    await to_image("Suck\n```code```\n$$r=mv^3$$")
     try:
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
