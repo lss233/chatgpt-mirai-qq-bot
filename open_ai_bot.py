@@ -5,8 +5,9 @@ from config import Config
 import openai
 import uuid
 
-
 config = Config.load_config()
+
+
 # OpenAI对话模型API (可用)
 class OpenAIBot:
     def __init__(self):
@@ -21,7 +22,7 @@ class OpenAIBot:
         resp['conversation_id'] = conversation_id
         resp['parent_id'] = parent_id
         if type == 'create_img':
-            resp['message'] = "[img]"+self.create_img(prompt[1:])
+            resp['message'] = "![img](" + self.create_img(prompt[1:] + ")")
         return resp
 
     def reply_text(self, query):
@@ -49,9 +50,9 @@ class OpenAIBot:
         try:
             logger.info(f"[OPEN_AI] image_query={query}")
             response = openai.Image.create(
-                prompt=query,    #图片描述
-                n=1,             #每次生成图片的数量
-                size="512x512"   #图片大小,可选有 256x256, 512x512, 1024x1024
+                prompt=query,  # 图片描述
+                n=1,  # 每次生成图片的数量
+                size="512x512"  # 图片大小,可选有 256x256, 512x512, 1024x1024
             )
             image_url = response['data'][0]['url']
             logger.info(f"[OPEN_AI] image_url={image_url}")
@@ -97,4 +98,3 @@ class OpenAIBot:
             if query.endswith(symbol):
                 return query
         return query + "?"
-

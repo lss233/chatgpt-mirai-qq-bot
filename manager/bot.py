@@ -81,8 +81,8 @@ class BotInfo(asyncio.Lock):
                 self.ask(text)
 
     def ask(self, prompt, conversation_id=None, parent_id=None):
-        if self.check_prefix(prompt,config.trigger.image_create_prefix):
-            resp = self.openAiBot.ask("create_img",prompt,conversation_id,parent_id)
+        if self.check_prefix(prompt, config.trigger.image_create_prefix):
+            resp = self.openAiBot.ask("create_img", prompt, conversation_id, parent_id)
             logger.info(f"create image resp: {resp}")
             self.update_accessed_at()
             return resp
