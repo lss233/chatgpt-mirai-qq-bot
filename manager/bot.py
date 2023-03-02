@@ -11,10 +11,11 @@ import asyncio
 import itertools
 from typing import Union, List
 import os
+from revChatGPT.V3 import Chatbot as V3Chatbot
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
-from config import Config
+from config import Config, OpenAIAPIKey
 from config import OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
 import OpenAIAuth
 import urllib3.exceptions
@@ -30,7 +31,7 @@ class BotInfo(asyncio.Lock):
 
     account: OpenAIAuthBase
 
-    bot: Union[V1Chatbot, BrowserChatbot]
+    bot: Union[V1Chatbot, BrowserChatbot, V3Chatbot]
 
     mode: str
 
@@ -45,6 +46,7 @@ class BotInfo(asyncio.Lock):
     """上一次遇到限流的时间"""
 
     def __init__(self, bot, mode):
+        self.conversations = {}
         self.bot = bot
         self.mode = mode
         super().__init__()
@@ -78,15 +80,21 @@ class BotInfo(asyncio.Lock):
 
     def ask(self, prompt, conversation_id=None, parent_id=None):
         """向 ChatGPT 发送提问"""
-        resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
-        if self.mode == 'proxy' or self.mode == 'browserless':
-            final_resp = None
-            for final_resp in resp: ...
-            self.update_accessed_at()
-            return final_resp
+        if isinstance(self.bot, V3Chatbot):
+            self.bot.conversation = self.conversations.get(conversation_id, [])
+            resp = self.bot.ask(prompt)
+            self.conversations[conversation_id] = self.bot.conversation
+            return {"message": resp}
         else:
-            self.update_accessed_at()
-            return resp
+            resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
+            if self.mode == 'proxy' or self.mode == 'browserless':
+                final_resp = None
+                for final_resp in resp: ...
+                self.update_accessed_at()
+                return final_resp
+            else:
+                self.update_accessed_at()
+                return resp
 
     def __str__(self) -> str:
         return self.bot.__str__()
@@ -106,12 +114,12 @@ class BotManager:
     bots: List[BotInfo] = []
     """Bot list"""
 
-    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAPIKey]]
     """Account infos"""
 
     roundrobin: itertools.cycle = None
 
-    def __init__(self, accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]) -> None:
+    def __init__(self, accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAPIKey]]) -> None:
         self.accounts = accounts
         try:
             os.mkdir('data')
@@ -125,7 +133,9 @@ class BotManager:
         for i, account in enumerate(self.accounts):
             logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
             try:
-                if account.mode == "proxy" or account.mode == "browserless":
+                if isinstance(account, OpenAIAPIKey):
+                    bot = self.__login_apikey(account)
+                elif account.mode == "proxy" or account.mode == "browserless":
                     bot = self.__login_V1(account)
                 elif account.mode == "browser":
                     bot = self.__login_browser(account)
@@ -154,7 +164,10 @@ class BotManager:
             logger.error("所有账号均登录失败，无法继续启动！")
             exit(-2)
         logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！")
-
+    def __login_apikey(self, account) -> APIBotInfo:
+        logger.info("模式： API 登录")
+        bot = V3Chatbot(account.api_key)
+        return BotInfo(bot, 'apikey')
     def __login_browser(self, account) -> BotInfo:
         logger.info("模式：浏览器登录")
         logger.info("这需要你拥有最新版的 Chrome 浏览器。")
