@@ -238,8 +238,8 @@ paid = false
 [text_to_image]
 # 文字转图片
 
-# 持续开启，设置后所有的消息以图片发送，减小风控概率  
-always = true
+# 默认开启，设置后所有的消息默认以图片发送，减小风控概率  
+default = true
 
 # 字体大小
 font_size = 30

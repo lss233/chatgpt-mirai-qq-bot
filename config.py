@@ -82,8 +82,8 @@ class BingAuths(BaseModel):
     accounts: List[BingCookiePath]
     """Bing 的账号列表"""
 class TextToImage(BaseModel):
-    always: bool = False
-    """持续开启，设置后所有的文字均以图片方式发送"""
+    default: bool = False
+    """默认开启，设置后新会话默认以图片模式发送"""
     font_size: int = 30
     """字号"""
     width: int = 700

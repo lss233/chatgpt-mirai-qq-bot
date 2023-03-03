@@ -7,7 +7,7 @@ from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.ms.bing import BingAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException
-from renderer.renderer import Renderer, FullTextRenderer
+from renderer.renderer import Renderer, FullTextRenderer, MarkdownImageRenderer
 
 handlers = dict()
 
@@ -19,7 +19,10 @@ class ConversationContext:
     preset: str = None
 
     def __init__(self, _type):
-        self.renderer = FullTextRenderer()
+        if config.text_to_image.default:
+            self.renderer = MarkdownImageRenderer()
+        else:
+            self.renderer = FullTextRenderer()
         if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter()
         elif _type == 'chatgpt-api':
