@@ -35,6 +35,7 @@
 * [x] 支持 ChatGPT Plus
 * [x] 支持 ChatGPT API
 * [x] 支持 Bing 聊天
+* [x] 指定用户/群组额度限制 
 * [x] 预设人格初始化
 
 
@@ -45,8 +46,12 @@
 
 ![Preview](.github/preview.png)
 
+## 🐎 命令
 
-## 🔧 使用
+你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/) 了解机器人的内部命令和用法。  
+
+
+## 🔧 搭建
 
 如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
@@ -642,7 +647,6 @@ title_pattern="qq-{session_id}"
 字体文件存放于 `fonts/` 目录中。  
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
-
 
 ## 🎈 相似项目
 
