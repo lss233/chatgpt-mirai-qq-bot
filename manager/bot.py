@@ -84,7 +84,7 @@ class BotInfo(asyncio.Lock):
             self.bot.conversation = self.conversations.get(conversation_id, [])
             resp = self.bot.ask(prompt)
             self.conversations[conversation_id] = self.bot.conversation
-            return {"message": resp}
+            return {"message": resp, "conversation_id": conversation_id, "parent_id": "Not supported"}
         else:
             resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
             if self.mode == 'proxy' or self.mode == 'browserless':
