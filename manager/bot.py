@@ -54,6 +54,11 @@ class BotManager:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
     def login(self):
+        self.bots = {
+            "chatgpt-web": [],
+            "openai-api": [],
+            "bing-cookie": []
+        }
         self.login_bing()
         self.login_openai()
     def login_bing(self):

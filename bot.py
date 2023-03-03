@@ -2,8 +2,9 @@ import os
 import sys
 
 
-
 sys.path.append(os.getcwd())
+import constants
+
 from typing import Union
 from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne
@@ -244,6 +245,18 @@ async def start_background():
 
 cmd = Commander(app.broadcast)
 
+@cmd.command(".重新加载配置文件")
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
+    try:
+        if not sender.id == config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        constants.config = config.load_config()
+        await app.send_message(event, "配置文件重新载入完毕！")
+        await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
+        botManager.login()
+        await app.send_message(event, "登录结束")
+    finally:
+        raise ExecutionStop()
 
 @cmd.command(".设置 {msg_type: str} {msg_id: str} 额度为 {rate: int} 条/小时")
 async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str,
