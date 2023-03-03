@@ -265,7 +265,10 @@ auto_remove_old_conversations = true
 # 缺点：
 # 1. 烧钱
 [[openai.accounts]]
+# 你的 API key，可以在这里看： https://platform.openai.com/account/api-keys
 api_key="sk-xxxxx"
+# 如果你在国内，需要配置代理
+proxy="http://127.0.0.1:1080"
 
 # 第 5 个 OpenAI 账号
 # 理论上你可以添加无限多个 OpenAI 账号
