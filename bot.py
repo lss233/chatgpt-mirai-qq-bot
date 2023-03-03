@@ -32,7 +32,8 @@ from manager.ratelimit import RateLimitManager
 import time
 from revChatGPT.V1 import Error as V1Error
 import datetime
-
+from conversation import ConversationHandler
+from middlewares.ratelimit import MiddlewareRatelimit
 config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
@@ -70,20 +71,52 @@ async def create_timeout_task(target: Union[Friend, Group], source: Source):
     await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
 
 
+middlewares = [MiddlewareRatelimit()]
+
+
+async def handle_rollback(target: Union[Friend, Group], session_id: str, source: Source) -> str:
+    """回滚会话"""
+    conversation_handler: ConversationHandler = ConversationHandler.get_handler(session_id)
+    if conversation_handler.current_conversation.rollback():
+        return config.response.rollback_success
+    return config.response.rollback_fail
+
+
+async def handle_reset(target: Union[Friend, Group], session_id: str, source: Source) -> str:
+    """重置会话"""
+    conversation_handler: ConversationHandler = ConversationHandler.get_handler(session_id)
+    conversation_handler.current_conversation.reset()
+    return config.response.reset
+
+async def handle_keyword_preset(target: Union[Friend, Group], session_id: str, source: Source) -> str:
+    pass
+
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    """正常聊天"""
     if not message.strip():
         return config.response.placeholder
 
     timeout_task = None
 
-    session, is_new_session = chatbot.get_chat_session(session_id)
+    conversation_handler: ConversationHandler = ConversationHandler.get_handler(session_id)
 
-    # 回滚
-    if message.strip() in config.trigger.rollback_command:
-        resp = session.rollback_conversation()
-        if resp:
-            return config.response.rollback_success
-        return config.response.rollback_fail
+    def final_call(session_id, source, target, message):
+        conversation_handler.current_conversation.ask(message)
+
+    def wrapper(n, m):
+        def call(session_id, source, target, message):
+            m.handle_request(session_id, source, target, message, n)
+        return call
+
+    next = final_call
+    for m in middlewares:
+        next = wrapper(next, m)
+
+    # 开始处理
+    next(session_id, source, target, message)
+
+
+    session, is_new_session = chatbot.get_chat_session(session_id)
 
     # 队列满时拒绝新的消息
     if 0 < config.response.max_queue_size < session.chatbot.queue_size:
@@ -204,7 +237,6 @@ async def group_message_listener(group: Group, source: Source, chain: GroupTrigg
     await respond(group, source, response)
 
 
-
 @app.broadcast.receiver("NewFriendRequestEvent")
 async def on_friend_request(event: NewFriendRequestEvent):
     if config.system.accept_friend_request:
@@ -219,7 +251,6 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 @app.broadcast.receiver(AccountLaunch)
 async def start_background():
-    await to_image("Suck\n```code```\n$$r=mv^3$$")
     try:
         logger.info("OpenAI 服务器登录中……")
         chatbot.setup()
@@ -253,7 +284,6 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
 async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str):
     try:
         if isinstance(event, TempMessage):
-            # ignored
             return
         if not sender.id == config.mirai.manager_qq and not sender.id == int(msg_id):
             return await app.send_message(event, "您没有权限执行这个操作")
@@ -270,5 +300,6 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
         raise ExecutionStop()
+
 
 app.launch_blocking()
