@@ -93,7 +93,7 @@ class ConversationHandler:
             conversation = ConversationContext(_type)
             self.conversations.append(conversation)
             return conversation
-        return self.conversations[0]
+        return self.conversations[-1]
         # raise Exception("Too many conversations")
 
     """切换对话上下文"""
