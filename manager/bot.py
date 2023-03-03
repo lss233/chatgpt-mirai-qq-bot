@@ -21,9 +21,6 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
-import tempfile
-import json
-
 
 class BotManager:
     """Bot lifecycle manager."""
