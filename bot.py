@@ -23,12 +23,14 @@ from loguru import logger
 
 import asyncio
 from utils.text_to_img import to_image
-from manager.ratelimit import RateLimitManager
+import re
 import time
 from conversation import ConversationHandler
 from middlewares.ratelimit import MiddlewareRatelimit
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
+from requests.exceptions import SSLError, ProxyError
+from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
@@ -109,18 +111,48 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         await response(session_id, target, source, msg)
 
     async def request(a, b, c, prompt, e):
+        task = None
+
+        # 初始化会话
         if not conversation_handler.current_conversation:
             conversation_handler.current_conversation = await conversation_handler.create("chatgpt-web")
-        async for rendered in conversation_handler.current_conversation.ask(prompt):
-            if rendered:
-                action = lambda session_id, source, target, prompt, rendered, respond: respond(rendered)
-                for m in middlewares:
-                    action = wrap_respond(action, m)
 
-                # 开始处理 handle_response
-                await action(session_id, source, target, prompt, rendered, respond)
-        for m in middlewares:
-            await m.handle_respond_completed(session_id, source, target, prompt, respond)
+        # 加载预设
+        preset_search = re.search(config.presets.command, message)
+        if preset_search:
+            logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
+            task = conversation_handler.current_conversation.load_preset(preset_search.group(1))
+        elif not conversation_handler.current_conversation.preset:
+            # 当前没有预设
+            logger.trace(f"{session_id} - 未检测到预设，正在执行默认预设……")
+            # 隐式加载不回复预设内容
+            async for _ in conversation_handler.current_conversation.load_preset('default'): ...
+
+        # 没有任务那就聊天吧！
+        if not task:
+            task = conversation_handler.current_conversation.ask(prompt)
+        try:
+            async for rendered in task:
+                if rendered:
+                    action = lambda session_id, source, target, prompt, rendered, respond: respond(rendered)
+                    for m in middlewares:
+                        action = wrap_respond(action, m)
+
+                    # 开始处理 handle_response
+                    await action(session_id, source, target, prompt, rendered, respond)
+            for m in middlewares:
+                await m.handle_respond_completed(session_id, source, target, prompt, respond)
+        except ConcurrentMessageException as e: # Chatbot 账号同时收到多条消息
+            await respond(config.response.error_request_concurrent_error)
+        except BotRatelimitException as e: # Chatbot 账号限流
+            await respond(config.response.error_request_too_many.format(exc=e, remaining=e.estimated_at))
+        except PresetNotFoundException: # 预设不存在
+            await respond("预设不存在，请检查你的输入是否有问题！")
+        except (SSLError, ProxyError) as e: # 网络异常
+            await respond(config.response.error_network_failure.format(exc=e))
+        except Exception as e: # 未处理的异常
+            logger.exception(e)
+            await respond(config.response.error_format.format(exc=e))
 
     action = request
     for m in middlewares:

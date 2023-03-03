@@ -13,3 +13,6 @@ class BotAdapter:
 
     async def on_reset(self): ...
     """当会话被重置时，此函数被调用"""
+
+    async def preset_ask(self, role: str, text: str): ...
+    """以预设方式进行提问"""

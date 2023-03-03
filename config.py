@@ -114,6 +114,8 @@ class Response(BaseModel):
 
     error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{remaining}\n{exc}"
 
+    error_request_concurrent_error: str = "当前有其他人正在和我进行聊天，请稍后再给我发消息吧！"
+
     error_server_overloaded: str = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
     """服务器提示 429 错误时的回复 """
 

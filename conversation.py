@@ -3,6 +3,8 @@ from typing import List
 import manager.bot
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
+from constants import config
+from exceptions import PresetNotFoundException
 from renderer.renderer import Renderer, FullTextRenderer
 
 handlers = dict()
@@ -12,6 +14,7 @@ class ConversationContext:
     type: str
     adapter: BotAdapter
     renderer: Renderer
+    preset: str = None
 
     def __init__(self, _type):
         self.renderer = FullTextRenderer()
@@ -32,6 +35,25 @@ class ConversationContext:
 
     def rollback(self):
         pass
+
+    async def load_preset(self, keyword: str):
+        if keyword not in config.presets.keywords:
+            if not keyword == 'default':
+                raise PresetNotFoundException(keyword)
+        else:
+            presets = config.load_preset(keyword)
+            for text in presets:
+                if text.startswith('#'):
+                    continue
+                else:
+                    # 判断格式是否为 role: 文本
+                    if ':' in text:
+                        role, text = text.split(':', 2)
+                    else:
+                        role = 'system'
+                    async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
+                        yield item
+        self.preset = keyword
 
 
 class ConversationHandler:
