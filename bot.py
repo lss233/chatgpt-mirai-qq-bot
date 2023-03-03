@@ -266,7 +266,7 @@ async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Mem
     try:
         if isinstance(event, TempMessage):
             return
-        if not sender.id == config.mirai.manager_qq and not sender.id == int(msg_id):
+        if not sender.id == config.mirai.manager_qq or not sender.id == int(msg_id):
             return await app.send_message(event, "您没有权限执行这个操作")
         if msg_type != "群组" and msg_type != "好友":
             return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
