@@ -5,8 +5,6 @@ class BotAdapter:
     """定义所有 Chatbot 的通用接口"""
     preset_name: str = "default"
 
-    def __int__(self): ...
-
     async def ask(self, msg: str) -> Generator[str, None, None]: ...
     """向 AI 发送消息"""
 

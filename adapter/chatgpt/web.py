@@ -1,8 +1,10 @@
 from typing import Generator
 
 from adapter.botservice import BotAdapter
+from chatbot.chatgpt import ChatGPTBrowserChatbot
 
-from revChatGPT.V1 import Chatbot as OpenAIChatbot
+from manager.bot import BotManager
+from constants import config, botManager
 
 
 class ChatGPTWebAdapter(BotAdapter):
@@ -15,12 +17,14 @@ class ChatGPTWebAdapter(BotAdapter):
     conversation_id_prev_queue = []
     parent_id_prev_queue = []
 
-    bot: OpenAIChatbot
+    bot: ChatGPTBrowserChatbot = None
     """实例"""
 
-    def __int__(self):
+    def __init__(self):
+        self.bot = botManager.pick('chatgpt-web')
         self.conversation_id = None
         self.parent_id = None
+        super().__init__()
 
     async def rollback(self):
         self.conversation_id = self.conversation_id_prev_queue.pop()
@@ -30,5 +34,21 @@ class ChatGPTWebAdapter(BotAdapter):
         if self.conversation_id is not None:
             self.bot.delete_conversation(self.conversation_id)
 
-    async def ask(self, prompt: str) -> Generator[str]:
-        yield self.bot.ask(prompt, self.conversation_id, self.parent_id)
+    async def ask(self, prompt: str) -> Generator[str, None, None]:
+        # 队列满时拒绝新的消息
+        if 0 < config.response.max_queue_size < self.bot.queue_size:
+            yield config.response.queue_full
+            return
+        else:
+            # 提示用户：请求已加入队列
+            if self.bot.queue_size > config.response.queued_notice_size:
+                yield config.response.queued_notice.format(queue_size=self.bot.queue_size)
+        async with self.bot:
+            for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
+                if self.conversation_id:
+                    self.conversation_id_prev_queue.append(self.conversation_id)
+                if self.parent_id:
+                    self.conversation_id_prev_queue.append(self.parent_id)
+                self.conversation_id = resp["conversation_id"]
+                self.parent_id = resp["parent_id"]
+                yield resp["message"]

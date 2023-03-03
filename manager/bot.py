@@ -1,20 +1,19 @@
-import datetime
 import os
 import sys
-import time
 
 from requests.exceptions import SSLError
 
+from adapter.botservice import BotAdapter
+from chatbot.chatgpt import ChatGPTBrowserChatbot
+
 sys.path.append(os.getcwd())
 
-import asyncio
 import itertools
-from typing import Union, List
+from typing import Union, List, Dict
 import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
-from config import Config
 from config import OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
 import OpenAIAuth
 import urllib3.exceptions
@@ -22,96 +21,22 @@ import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
 
-config = Config.load_config()
-
-
-class BotInfo(asyncio.Lock):
-    id = 0
-
-    account: OpenAIAuthBase
-
-    bot: Union[V1Chatbot, BrowserChatbot]
-
-    mode: str
-
-    queue_size: int = 0
-
-    unused_conversations_pools = {}
-
-    accessed_at = []
-    """访问时间，仅保存一小时以内的时间"""
-
-    last_rate_limited = None
-    """上一次遇到限流的时间"""
-
-    def __init__(self, bot, mode):
-        self.bot = bot
-        self.mode = mode
-        super().__init__()
-
-    def update_accessed_at(self):
-        """更新最后一次请求的时间，用于流量统计"""
-        current_time = datetime.datetime.now()
-        self.accessed_at.append(current_time)
-        self.refresh_accessed_at()
-
-    def refresh_accessed_at(self):
-        # 删除栈顶过期的信息
-        current_time = datetime.datetime.now()
-        while len(self.accessed_at) > 0 and current_time - self.accessed_at[0] > datetime.timedelta(hours=1):
-            self.accessed_at.pop(0)
-
-    def update_conversation_pools(self):
-        """更新预设对话池"""
-        for key in config.presets.keywords.keys():
-            if key not in self.unused_conversations_pools:
-                self.unused_conversations_pools = []
-            preset = config.load_preset(preset)
-            self.bot.parent_id = None
-            self.bot.conversation_id = None
-            for text in preset:
-                if text.startswith('ChatGPT:'):
-                    pass
-                if text.startswith('User:'):
-                    text = text.replace('User:', '')
-                self.ask(text)
-
-    def ask(self, prompt, conversation_id=None, parent_id=None):
-        """向 ChatGPT 发送提问"""
-        resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
-        if self.mode == 'proxy' or self.mode == 'browserless':
-            final_resp = None
-            for final_resp in resp: ...
-            self.update_accessed_at()
-            return final_resp
-        else:
-            self.update_accessed_at()
-            return resp
-
-    def __str__(self) -> str:
-        return self.bot.__str__()
-
-    async def __aenter__(self) -> None:
-        self.queue_size = self.queue_size + 1
-        return await super().__aenter__()
-
-    async def __aexit__(self, exc_type: type[BaseException], exc: BaseException, tb) -> None:
-        self.queue_size = self.queue_size - 1
-        return await super().__aexit__(exc_type, exc, tb)
-
 
 class BotManager:
     """Bot lifecycle manager."""
 
-    bots: List[BotInfo] = []
+    bots: Dict[str, List] = {
+        "chatgpt-web": [],
+        "openai-api": []
+    }
     """Bot list"""
 
-    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]
+    accounts: List[OpenAIAuthBase]
     """Account infos"""
 
-    roundrobin: itertools.cycle = None
+    roundrobin: Dict[str, itertools.cycle] = {}
 
-    def __init__(self, accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth]]) -> None:
+    def __init__(self, accounts: List[OpenAIAuthBase]) -> None:
         self.accounts = accounts
         try:
             os.mkdir('data')
@@ -127,16 +52,17 @@ class BotManager:
             try:
                 if account.mode == "proxy" or account.mode == "browserless":
                     bot = self.__login_V1(account)
+                    self.bots["chatgpt-web"].append(bot)
                 elif account.mode == "browser":
                     bot = self.__login_browser(account)
+                    self.bots["chatgpt-web"].append(bot)
                 else:
                     raise Exception("未定义的登录类型：" + account.mode)
                 bot.id = i
                 bot.account = account
-                self.bots.append(bot)
                 logger.success("登录成功！", i=i + 1)
-                logger.debug("等待 8 秒……")
-                time.sleep(8)
+                # logger.debug("等待 8 秒……")
+                # time.sleep(8)
             except OpenAIAuth.Error as e:
                 logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
             except (SSLError, urllib3.exceptions.MaxRetryError) as e:
@@ -155,7 +81,7 @@ class BotManager:
             exit(-2)
         logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！")
 
-    def __login_browser(self, account) -> BotInfo:
+    def __login_browser(self, account) -> ChatGPTBrowserChatbot:
         logger.info("模式：浏览器登录")
         logger.info("这需要你拥有最新版的 Chrome 浏览器。")
         logger.info("即将打开浏览器窗口……")
@@ -166,7 +92,7 @@ class BotManager:
                 "检测到您正在使用 xpra 虚拟显示环境，请使用你自己的浏览器访问 http://你的IP:14500，密码：{XPRA_PASSWORD}以看见浏览器。",
                 XPRA_PASSWORD=os.environ.get('XPRA_PASSWORD'))
         bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False))
-        return BotInfo(bot, account.mode)
+        return ChatGPTBrowserChatbot(bot, account.mode)
 
     def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
         """保存登录缓存"""
@@ -181,7 +107,7 @@ class BotManager:
         cache = self.cache_db.get(q.account == account_sha)
         return cache['cache'] if cache is not None else dict()
 
-    def __login_V1(self, account: OpenAIAuthBase) -> BotInfo:
+    def __login_V1(self, account: OpenAIAuthBase) -> ChatGPTBrowserChatbot:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
@@ -194,22 +120,22 @@ class BotManager:
             config['proxy'] = account.proxy
 
         # 我承认这部分代码有点蠢
-        def __V1_check_auth(bot) -> bool:
+        def __V1_check_auth() -> bool:
             try:
                 bot.get_conversations(0, 1)
                 return True
             except (V1Error, KeyError) as e:
                 return False
 
-        def get_access_token(bot: V1Chatbot):
+        def get_access_token():
             return bot.session.headers.get('Authorization').removeprefix('Bearer ')
 
-        if  cached_account.get('access_token'):
+        if cached_account.get('access_token'):
             logger.info("尝试使用 access_token 登录中...")
             config['access_token'] = cached_account.get('access_token')
             bot = V1Chatbot(config=config)
-            if __V1_check_auth(bot):
-                return BotInfo(bot, account.mode)
+            if __V1_check_auth():
+                return ChatGPTBrowserChatbot(bot, account.mode)
 
         if cached_account.get('session_token'):
             logger.info("尝试使用 session_token 登录中...")
@@ -218,10 +144,10 @@ class BotManager:
             bot = V1Chatbot(config=config)
             self.__save_login_cache(account=account, cache={
                 "session_token": config['session_token'],
-                "access_token": get_access_token(bot),
+                "access_token": get_access_token(),
             })
-            if __V1_check_auth(bot):
-                return BotInfo(bot, account.mode)
+            if __V1_check_auth():
+                return ChatGPTBrowserChatbot(bot, account.mode)
 
         if cached_account.get('password'):
             logger.info("尝试使用 email + password 登录中...")
@@ -232,15 +158,15 @@ class BotManager:
             bot = V1Chatbot(config=config)
             self.__save_login_cache(account=account, cache={
                 "session_token": bot.config.get('session_token'),
-                "access_token": get_access_token(bot)
+                "access_token": get_access_token()
             })
-            if __V1_check_auth(bot):
-                return BotInfo(bot, account.mode)
+            if __V1_check_auth():
+                return ChatGPTBrowserChatbot(bot, account.mode)
         # Invalidate cache
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
 
-    def pick(self) -> BotInfo:
-        if self.roundrobin is None:
-            self.roundrobin = itertools.cycle(self.bots)
-        return next(self.roundrobin)
+    def pick(self, type: str):
+        if not type in self.roundrobin:
+            self.roundrobin[type] = itertools.cycle(self.bots[type])
+        return next(self.roundrobin[type])
