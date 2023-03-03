@@ -74,10 +74,18 @@ class OpenAIAPIKey(OpenAIAuthBase):
     api_key: str
     """OpenAI 的 api_key"""
 
+class BingCookiePath(BaseModel):
+    cookie_content: str
+    """Bing 的 Cookie 文件内容"""
 
+class BingAuths(BaseModel):
+    accounts: List[BingCookiePath]
+    """Bing 的账号列表"""
 class TextToImage(BaseModel):
     always: bool = False
-    """持续开启，设置后所有的文字均以图片方式发送"""
+    """强制开启，设置后所有的会话强制以图片发送"""
+    default: bool = False
+    """默认开启，设置后新会话默认以图片模式发送"""
     font_size: int = 30
     """字号"""
     width: int = 700
@@ -100,7 +108,12 @@ class Trigger(BaseModel):
     """重置会话的命令"""
     rollback_command: List[str] = ["回滚会话"]
     """回滚会话的命令"""
-
+    switch_command: str = r"切换AI (.+)"
+    """切换AI的命令"""
+    image_only_command: List[str] = ["图片模式"]
+    """切换至图片回复模式"""
+    text_only_command: List[str] = ["文本模式"]
+    """切换至文本回复模式"""
 
 class Response(BaseModel):
     error_format: str = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。"
@@ -113,6 +126,8 @@ class Response(BaseModel):
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
     error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{remaining}\n{exc}"
+
+    error_request_concurrent_error: str = "当前有其他人正在和我进行聊天，请稍后再给我发消息吧！"
 
     error_server_overloaded: str = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
     """服务器提示 429 错误时的回复 """
@@ -129,7 +144,7 @@ class Response(BaseModel):
     rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦！"
     """成功回滚时发送的消息"""
 
-    rollback_fail = "回滚失败，没有更早的记录了！"
+    rollback_fail = "回滚失败，没有更早的记录了！如果你想要重新开始，请发送：{reset}"
     """回滚失败时发送的消息"""
 
     quote: bool = True
@@ -180,7 +195,8 @@ class Ratelimit(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAIAuths, OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]
+    openai: Union[OpenAIAuths, None]
+    bing: Union[BingAuths, None]
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
