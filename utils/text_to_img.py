@@ -320,56 +320,57 @@ def screenshot(html_path, width, saved_path):
 
 
 async def text_to_image(text):
-    content = md_to_html(text)
+    ok = False
+    try:
+        content = md_to_html(text)
 
-    image = None
+        image = None
 
-    asset_folder = os.path.join(os.getcwd(), 'assets', 'texttoimg')
+        asset_folder = os.path.join(os.getcwd(), 'assets', 'texttoimg')
 
-    # 输出html到字符串io流
-    with StringIO() as output_file:
-        # 填充正文
-        output_file.write(template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri())
-                          .replace("{qrcode}", await get_qr_data(text))
-                          .replace("{content}", content))
+        # 输出html到字符串io流
+        with StringIO() as output_file:
+            # 填充正文
+            output_file.write(template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri())
+                              .replace("{qrcode}", await get_qr_data(text))
+                              .replace("{content}", content))
 
-        # 创建临时jpg文件
-        temp_jpg_file = NamedTemporaryFile(mode='w+b', suffix='.png', delete=False)
-        temp_jpg_filename = temp_jpg_file.name
-        temp_jpg_file.close()
+            # 创建临时jpg文件
+            temp_jpg_file = NamedTemporaryFile(mode='w+b', suffix='.png', delete=False)
+            temp_jpg_filename = temp_jpg_file.name
+            temp_jpg_file.close()
 
-        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', delete=False)
-        temp_html_filename = temp_html_file.name
-        with StringIO(output_file.getvalue()) as input_file:
-            print(output_file.getvalue())
-            ok = False
-
-            try:
-                temp_html_file.write(output_file.getvalue())
-                # 调用imgkit将html转为图片
-                screenshot(temp_html_file.name, config.text_to_image.width, temp_jpg_filename)
-                # ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
-                #     "enable-local-file-access": "",
-                #     "allow": asset_folder,
-                #     "width": config.text_to_image.width,  # 图片宽度
-                #     "javascript-delay": "1000"
-                # },
-                #                       output_path=temp_jpg_filename)
-                # 调用PIL将图片读取为 JPEG，RGB 格式
-                image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
-                ok = True
-            except Exception as e:
-                logger.exception(e)
-            finally:
-                # 删除临时文件
-                if os.path.exists(temp_jpg_filename):
-                    os.remove(temp_jpg_filename)
-                if os.path.exists(temp_html_filename):
-                    temp_html_file.close()
-                    os.remove(temp_html_filename)
-
-        if not ok:
-            image = text_to_image_raw(text)
+            temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', delete=False)
+            temp_html_filename = temp_html_file.name
+            with StringIO(output_file.getvalue()) as input_file:
+                try:
+                    temp_html_file.write(output_file.getvalue())
+                    # 调用imgkit将html转为图片
+                    screenshot(temp_html_file.name, config.text_to_image.width, temp_jpg_filename)
+                    # ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
+                    #     "enable-local-file-access": "",
+                    #     "allow": asset_folder,
+                    #     "width": config.text_to_image.width,  # 图片宽度
+                    #     "javascript-delay": "1000"
+                    # },
+                    #                       output_path=temp_jpg_filename)
+                    # 调用PIL将图片读取为 JPEG，RGB 格式
+                    image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
+                    ok = True
+                except Exception as e:
+                    logger.exception(e)
+                finally:
+                    # 删除临时文件
+                    if os.path.exists(temp_jpg_filename):
+                        os.remove(temp_jpg_filename)
+                    if os.path.exists(temp_html_filename):
+                        temp_html_file.close()
+                        os.remove(temp_html_filename)
+    except Exception as e:
+        logger.exception(e)
+        logger.error("生成图片失败！使用传统模式……")
+    if not ok:
+        image = text_to_image_raw(text)
 
     return image
 
