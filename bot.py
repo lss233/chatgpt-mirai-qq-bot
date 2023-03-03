@@ -1,7 +1,7 @@
 import os
 import sys
 
-from tls_client.exceptions import TLSClientExeption
+
 
 sys.path.append(os.getcwd())
 from typing import Union
@@ -21,6 +21,10 @@ from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.broadcast.exceptions import ExecutionStop
 from graia.ariadne.model import Friend, Group, Member
 from graia.ariadne.message.commander import Commander
+from graia.ariadne.message.element import Image
+from tls_client.exceptions import TLSClientExeption
+
+from renderer.renderer import MarkdownImageRenderer, FullTextRenderer
 from loguru import logger
 
 import asyncio
@@ -56,6 +60,10 @@ async def response_as_text(target: Union[Friend, Group], source: Source, respons
 
 
 async def response(session_id: str, target: Union[Friend, Group], source: Source, response):
+    # 如果是非字符串
+    if isinstance(response, Image) or isinstance(response, MessageChain):
+        return await app.send_message(target, response, quote=source if config.response.quote else False)
+
     if config.text_to_image.always:
         await response_as_image(target, source, response)
     else:
@@ -104,6 +112,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     async def request(a, b, c, prompt: str, e):
         try:
             task = None
+
+            # 此处为会话不存在时可以执行的指令
+
             bot_type_search = re.search(config.trigger.switch_command, prompt)
             # 初始化会话
             if bot_type_search:
@@ -114,12 +125,26 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             elif not conversation_handler.current_conversation:
                 conversation_handler.current_conversation = await conversation_handler.create("chatgpt-web")
 
+            # 此处为会话存在后可执行的指令
+
             # 重置会话
             if prompt in config.trigger.reset_command:
                 task = conversation_handler.current_conversation.reset()
+
             # 回滚会话
             elif prompt in config.trigger.rollback_command:
                 task = conversation_handler.current_conversation.rollback()
+
+            elif prompt in config.trigger.image_only_command:
+                conversation_handler.current_conversation.renderer = MarkdownImageRenderer()
+                await respond(f"已切换至纯图片模式，接下来我的回复将会以图片呈现！")
+                return
+
+            elif prompt in config.trigger.text_only_command:
+                conversation_handler.current_conversation.renderer = FullTextRenderer()
+                await respond(f"已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
+                return
+
             # 加载预设
             preset_search = re.search(config.presets.command, prompt)
             if preset_search:

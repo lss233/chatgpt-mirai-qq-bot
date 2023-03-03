@@ -108,7 +108,10 @@ class Trigger(BaseModel):
     """回滚会话的命令"""
     switch_command: str = r"切换AI (.+)"
     """切换AI的命令"""
-
+    image_only_command: List[str] = ["图片模式"]
+    """切换至图片回复模式"""
+    text_only_command: List[str] = ["文本模式"]
+    """切换至文本回复模式"""
 
 class Response(BaseModel):
     error_format: str = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。"
