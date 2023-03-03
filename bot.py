@@ -34,6 +34,7 @@ import re
 import time
 from conversation import ConversationHandler
 from middlewares.ratelimit import MiddlewareRatelimit
+from middlewares.timeout import MiddlewareTimeout
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
 from requests.exceptions import SSLError, ProxyError
@@ -73,20 +74,8 @@ async def response(session_id: str, target: Union[Friend, Group], source: Source
             await response_as_image(target, source, response)
 
 
-async def create_timeout_task(target: Union[Friend, Group], source: Source):
-    await asyncio.sleep(config.response.timeout)
-    await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
 
-
-middlewares = [MiddlewareRatelimit()]
-
-
-async def handle_rollback(target: Union[Friend, Group], session_id: str, source: Source) -> str:
-    """回滚会话"""
-    conversation_handler: ConversationHandler = ConversationHandler.get_handler(session_id)
-    if conversation_handler.current_conversation.rollback():
-        return config.response.rollback_success
-    return config.response.rollback_fail
+middlewares = [MiddlewareTimeout(), MiddlewareRatelimit()]
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
     """正常聊天"""
@@ -109,6 +98,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
     async def respond(msg: str):
         await response(session_id, target, source, msg)
+        for m in middlewares:
+            await m.on_respond(session_id, source, target, message, msg)
 
     async def request(a, b, c, prompt: str, e):
         try:

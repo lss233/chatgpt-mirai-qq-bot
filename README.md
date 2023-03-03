@@ -308,6 +308,9 @@ cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  Microso
 [text_to_image]
 # 文字转图片
 
+# 是否强制开启，设置后所有的消息强制以图片发送，减小风控概率  
+always = true
+
 # 是否默认开启，设置后所有的消息默认以图片发送，减小风控概率  
 default = true
 
