@@ -17,6 +17,9 @@
         .content {
             min-height: 200px;
         }
+        .MathJax {
+            font-size: 25px !important;
+        }
     </style>
 </head>
 
@@ -31,18 +34,24 @@
         </div>
     </div>
     <script>
-        hljs.highlightAll();
         MathJax.Hub.Config({
               config: ["MMLorHTML.js"],
               jax: ["input/TeX", "output/HTML-CSS", "output/NativeMML"],
               extensions: []
             });
-        document.querySelectorAll('code').forEach(item => {
-            let lang = item.classList[0]?.split('-')[1];
-            if (lang) {
-              item.title = `[lang: ${lang}]`;
+        hljs.initHighlighting();
+        var codes = document.querySelectorAll('code')
+        for (var i = 0; i < codes.length; i++) {
+            var item = codes[i]
+            try {
+                var lang = item.classList[0].split('-')[1];
+                if (lang) {
+                  item.title = "[lang: " + lang + "]";
+                }
+            } catch (e) {
+
             }
-        });
+        }
     </script>
 </body>
 

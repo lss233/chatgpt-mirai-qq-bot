@@ -1,5 +1,6 @@
 import os
 import sys
+sys.path.append(os.getcwd())
 
 from requests.exceptions import SSLError
 
@@ -7,11 +8,10 @@ from adapter.botservice import BotAdapter
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from exceptions import NoAvailableBotException
 
-sys.path.append(os.getcwd())
-
 import itertools
 from typing import Union, List, Dict
 import os
+from revChatGPT.V3 import Chatbot as V3Chatbot
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger

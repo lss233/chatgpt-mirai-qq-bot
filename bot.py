@@ -224,6 +224,7 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 @app.broadcast.receiver(AccountLaunch)
 async def start_background():
+    await to_image("$$mc^2$$ test")
     try:
         logger.info("OpenAI 服务器登录中……")
         botManager.login()

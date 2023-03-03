@@ -5,6 +5,7 @@ import os
 from tempfile import NamedTemporaryFile
 
 import aiohttp
+import imgkit
 
 from config import Config
 from PIL import Image, ImageDraw, ImageFont
@@ -305,20 +306,6 @@ async def get_qr_data(text):
             return "data:image/jpeg;base64," + img_str.decode('utf-8')
 
 
-def screenshot(html_path, width, saved_path):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--hide-scrollbars")
-    chrome_options.add_argument(f"--force-device-scale-factor=1.0")
-    driver = webdriver.Chrome(options=chrome_options)
-    driver.get(html_path)
-    image = driver.find_element(By.XPATH, '//body').screenshot_as_png
-    with open(saved_path, "wb") as outfile:
-        outfile.write(image)
-    # driver.save_screenshot(saved_path)
-    driver.close()
-
-
 async def text_to_image(text):
     ok = False
     try:
@@ -340,35 +327,37 @@ async def text_to_image(text):
             temp_jpg_filename = temp_jpg_file.name
             temp_jpg_file.close()
 
-            temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', delete=False)
-            temp_html_filename = temp_html_file.name
-            with StringIO(output_file.getvalue()) as input_file:
-                try:
-                    temp_html_file.write(output_file.getvalue())
-                    # 调用imgkit将html转为图片
-                    screenshot(temp_html_file.name, config.text_to_image.width, temp_jpg_filename)
-                    # ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
-                    #     "enable-local-file-access": "",
-                    #     "allow": asset_folder,
-                    #     "width": config.text_to_image.width,  # 图片宽度
-                    #     "javascript-delay": "1000"
-                    # },
-                    #                       output_path=temp_jpg_filename)
-                    # 调用PIL将图片读取为 JPEG，RGB 格式
-                    image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
-                    ok = True
-                except Exception as e:
-                    logger.exception(e)
-                finally:
-                    # 删除临时文件
-                    if os.path.exists(temp_jpg_filename):
-                        os.remove(temp_jpg_filename)
-                    if os.path.exists(temp_html_filename):
-                        temp_html_file.close()
-                        os.remove(temp_html_filename)
+        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', delete=False)
+        temp_html_filename = temp_html_file.name
+        imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
+        with StringIO(output_file.getvalue()) as input_file:
+            ok = False
+            try:
+                temp_html_file.write(output_file.getvalue())
+                # 调用imgkit将html转为图片
+                ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
+                    "enable-local-file-access": "",
+                    "allow": asset_folder,
+                    "width": config.text_to_image.width,  # 图片宽度
+                    "debug-javascript": "",
+                    "javascript-delay": "1000"
+                },
+                                      output_path=temp_jpg_filename)
+                # 调用PIL将图片读取为 JPEG，RGB 格式
+                image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
+                ok = True
+            except Exception as e:
+                logger.exception(e)
+            finally:
+                # 删除临时文件
+                if os.path.exists(temp_jpg_filename):
+                    os.remove(temp_jpg_filename)
+                if os.path.exists(temp_html_filename):
+                    temp_html_file.close()
+                    os.remove(temp_html_filename)
     except Exception as e:
         logger.exception(e)
-        logger.error("生成图片失败！使用传统模式……")
+        logger.error("Markdown 渲染失败，使用备用模式")
     if not ok:
         image = text_to_image_raw(text)
 
