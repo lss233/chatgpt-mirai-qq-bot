@@ -47,6 +47,9 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         while len(self.accessed_at) > 0 and current_time - self.accessed_at[0] > datetime.timedelta(hours=1):
             self.accessed_at.pop(0)
 
+    def delete_conversation(self, conversation_id):
+        self.bot.delete_conversation(conversation_id)
+
     def ask(self, prompt, conversation_id=None, parent_id=None):
         """向 ChatGPT 发送提问"""
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)

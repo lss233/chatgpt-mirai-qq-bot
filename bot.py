@@ -76,18 +76,6 @@ async def handle_rollback(target: Union[Friend, Group], session_id: str, source:
         return config.response.rollback_success
     return config.response.rollback_fail
 
-
-async def handle_reset(target: Union[Friend, Group], session_id: str, source: Source) -> str:
-    """重置会话"""
-    conversation_handler: ConversationHandler = ConversationHandler.get_handler(session_id)
-    conversation_handler.current_conversation.reset()
-    return config.response.reset
-
-
-async def handle_keyword_preset(target: Union[Friend, Group], session_id: str, source: Source) -> str:
-    pass
-
-
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
     """正常聊天"""
     if not message.strip():
@@ -110,17 +98,23 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     async def respond(msg: str):
         await response(session_id, target, source, msg)
 
-    async def request(a, b, c, prompt, e):
+    async def request(a, b, c, prompt: str, e):
         task = None
-
         # 初始化会话
         if not conversation_handler.current_conversation:
             conversation_handler.current_conversation = await conversation_handler.create("chatgpt-web")
 
+        # 重置会话
+        if prompt in config.trigger.reset_command:
+            task = conversation_handler.current_conversation.reset()
+        # 回滚会话
+        elif prompt in config.trigger.rollback_command:
+            task = conversation_handler.current_conversation.rollback()
         # 加载预设
         preset_search = re.search(config.presets.command, message)
         if preset_search:
             logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
+            await conversation_handler.current_conversation.reset()
             task = conversation_handler.current_conversation.load_preset(preset_search.group(1))
         elif not conversation_handler.current_conversation.preset:
             # 当前没有预设
@@ -142,6 +136,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     await action(session_id, source, target, prompt, rendered, respond)
             for m in middlewares:
                 await m.handle_respond_completed(session_id, source, target, prompt, respond)
+
         except ConcurrentMessageException as e: # Chatbot 账号同时收到多条消息
             await respond(config.response.error_request_concurrent_error)
         except BotRatelimitException as e: # Chatbot 账号限流
@@ -159,7 +154,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         action = wrap_request(action, m)
 
     # 开始处理
-    await action(session_id, source, target, message, respond)
+    await action(session_id, source, target, message.strip(), respond)
 
 
 @app.broadcast.receiver("FriendMessage", priority=19)

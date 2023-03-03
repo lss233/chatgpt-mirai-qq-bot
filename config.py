@@ -131,7 +131,7 @@ class Response(BaseModel):
     rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦！"
     """成功回滚时发送的消息"""
 
-    rollback_fail = "回滚失败，没有更早的记录了！"
+    rollback_fail = "回滚失败，没有更早的记录了！如果你想要重新开始，请发送：{reset}"
     """回滚失败时发送的消息"""
 
     quote: bool = True

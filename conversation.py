@@ -25,7 +25,8 @@ class ConversationContext:
         self.type = _type
 
     async def reset(self):
-        pass
+        await self.adapter.on_reset()
+        yield config.response.reset
 
     async def ask(self, prompt: str, name: str = None):
         async with self.renderer:
@@ -33,8 +34,12 @@ class ConversationContext:
                 yield await self.renderer.render(item)
             yield await self.renderer.result()
 
-    def rollback(self):
-        pass
+    async def rollback(self):
+        resp = await self.adapter.rollback()
+        if isinstance(resp, bool):
+            yield config.response.rollback_success if resp else config.response.rollback_fail.format(reset=config.trigger.reset_command)
+        else:
+            yield resp
 
     async def load_preset(self, keyword: str):
         if keyword not in config.presets.keywords:

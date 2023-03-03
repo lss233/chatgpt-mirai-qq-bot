@@ -32,8 +32,11 @@ class ChatGPTWebAdapter(BotAdapter):
         super().__init__()
 
     async def rollback(self):
-        self.conversation_id = self.conversation_id_prev_queue.pop()
-        self.parent_id = self.parent_id_prev_queue.pop()
+        if len(self.parent_id_prev_queue) > 0:
+            self.parent_id = self.parent_id_prev_queue.pop()
+            return True
+        else:
+            return False
 
     async def on_reset(self):
         if self.conversation_id is not None:
