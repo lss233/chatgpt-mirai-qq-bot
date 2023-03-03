@@ -79,7 +79,7 @@ class BingCookiePath(BaseModel):
     """Bing 的 Cookie 文件内容"""
 
 class BingAuths(BaseModel):
-    accounts: List[BingCookiePath]
+    accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 class TextToImage(BaseModel):
     always: bool = False
@@ -196,7 +196,7 @@ class Ratelimit(BaseModel):
 class Config(BaseModel):
     mirai: Mirai
     openai: Union[OpenAIAuths, None]
-    bing: Union[BingAuths, None]
+    bing: BingAuths = BingAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()

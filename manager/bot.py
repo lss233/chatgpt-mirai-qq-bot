@@ -56,7 +56,8 @@ class BotManager:
             "openai-api": [],
             "bing-cookie": []
         }
-        self.login_bing()
+        if len(self.bing) > 0:
+            self.login_bing()
         self.login_openai()
     def login_bing(self):
         for i, account in enumerate(self.bing):
