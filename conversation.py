@@ -4,6 +4,7 @@ import manager.bot
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
+from adapter.ms.bing import BingAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException
 from renderer.renderer import Renderer, FullTextRenderer
@@ -23,6 +24,8 @@ class ConversationContext:
             self.adapter = ChatGPTWebAdapter()
         elif _type == 'chatgpt-api':
             self.adapter = ChatGPTAPIAdapter()
+        elif _type == 'bing':
+            self.adapter = BingAdapter()
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type

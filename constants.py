@@ -4,5 +4,5 @@ from manager.bot import BotManager
 config = Config.load_config()
 config.scan_presets()
 
-botManager = BotManager(config.openai.accounts)
+botManager = BotManager(config)
 

@@ -15,12 +15,14 @@ import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
-from config import OpenAIAuthBase, OpenAIAPIKey
+from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingAuths, BingCookiePath
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
+import tempfile
+import json
 
 
 class BotManager:
@@ -28,17 +30,22 @@ class BotManager:
 
     bots: Dict[str, List] = {
         "chatgpt-web": [],
-        "openai-api": []
+        "openai-api": [],
+        "bing-cookie": []
     }
     """Bot list"""
 
-    accounts: List[OpenAIAuthBase]
-    """Account infos"""
+    openai: List[OpenAIAuthBase]
+    """OpenAI Account infos"""
+
+    bing: List[BingCookiePath]
+    """Bing Account Infos"""
 
     roundrobin: Dict[str, itertools.cycle] = {}
 
-    def __init__(self, accounts: List[OpenAIAuthBase]) -> None:
-        self.accounts = accounts
+    def __init__(self, config: Config) -> None:
+        self.openai = config.openai.accounts
+        self.bing = config.bing.accounts
         try:
             os.mkdir('data')
             logger.warning(
@@ -46,9 +53,24 @@ class BotManager:
         except:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
-
     def login(self):
-        for i, account in enumerate(self.accounts):
+        self.login_bing()
+        self.login_openai()
+    def login_bing(self):
+        for i, account in enumerate(self.bing):
+            logger.info("正在解析第 {i} 个 Bing 账号", i=i + 1)
+            try:
+                self.bots["bing-cookie"].append(account)
+                logger.success("登录成功！", i=i + 1)
+            except Exception as e:
+                    logger.error("未知错误：")
+                    logger.exception(e)
+        if len(self.bots) < 1:
+            logger.error("所有 Bing 账号均登录失败！")
+        logger.success(f"成功登录 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
+    def login_openai(self):
+        counter = 0
+        for i, account in enumerate(self.openai):
             logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
             try:
                 if isinstance(account, OpenAIAPIKey):
@@ -65,6 +87,7 @@ class BotManager:
                 bot.id = i
                 bot.account = account
                 logger.success("登录成功！", i=i + 1)
+                counter = counter + 1
                 # logger.debug("等待 8 秒……")
                 # time.sleep(8)
             except OpenAIAuth.Error as e:
@@ -81,9 +104,8 @@ class BotManager:
                     logger.error("未知错误：")
                     logger.exception(e)
         if len(self.bots) < 1:
-            logger.error("所有账号均登录失败，无法继续启动！")
-            exit(-2)
-        logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！")
+            logger.error("所有 OpenAI 账号均登录失败！")
+        logger.success(f"成功登录 {counter}/{len(self.openai)} 个 OpenAI 账号！")
 
     def __login_browser(self, account) -> ChatGPTBrowserChatbot:
         logger.info("模式：浏览器登录")

@@ -6,6 +6,9 @@ class BotTypeNotFoundException(Exception): ...
 
 class NoAvailableBotException(Exception): ...
 
+
+class BotOperationNotSupportedException(Exception): ...
+
 class BotRatelimitException(Exception):
     estimated_at: str
     def __init__(self, estimated_at):

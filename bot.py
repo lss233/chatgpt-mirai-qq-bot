@@ -1,6 +1,8 @@
 import os
 import sys
 
+from tls_client.exceptions import TLSClientExeption
+
 sys.path.append(os.getcwd())
 from typing import Union
 from typing_extensions import Annotated
@@ -31,7 +33,7 @@ from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
 from requests.exceptions import SSLError, ProxyError
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
-    BotTypeNotFoundException, NoAvailableBotException
+    BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
@@ -143,7 +145,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     await action(session_id, source, target, prompt, rendered, respond)
             for m in middlewares:
                 await m.handle_respond_completed(session_id, source, target, prompt, respond)
-
+        except BotOperationNotSupportedException:
+            await respond("暂不支持此操作，抱歉！")
         except ConcurrentMessageException as e: # Chatbot 账号同时收到多条消息
             await respond(config.response.error_request_concurrent_error)
         except BotRatelimitException as e: # Chatbot 账号限流
@@ -151,10 +154,10 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         except NoAvailableBotException: # 预设不存在
             await respond("没有账号，不支持使用此 AI！")
         except BotTypeNotFoundException as e: # 预设不存在
-            await respond(f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n")
+            await respond(f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n* bing - 微软 Bing 聊天机器人\n")
         except PresetNotFoundException: # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (SSLError, ProxyError) as e: # 网络异常
+        except (TLSClientExeption, SSLError, ProxyError) as e: # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
         except Exception as e: # 未处理的异常
             logger.exception(e)
