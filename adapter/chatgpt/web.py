@@ -61,6 +61,9 @@ class ChatGPTWebAdapter(BotAdapter):
                     self.conversation_id = resp["conversation_id"]
                     self.parent_id = resp["parent_id"]
                     yield resp["message"]
+            except AttributeError as e:
+                if str(e).startswith("'str' object has no attribute 'get'"):
+                    yield "出现故障，请发送”{reset}“重新开始！".format(reset=config.trigger.reset_command)
             except V1Error as e:
                 if e.code == 2:
                     current_time = datetime.datetime.now()
