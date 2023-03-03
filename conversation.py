@@ -2,9 +2,10 @@ from typing import List
 
 import manager.bot
 from adapter.botservice import BotAdapter
+from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from constants import config
-from exceptions import PresetNotFoundException
+from exceptions import PresetNotFoundException, BotTypeNotFoundException
 from renderer.renderer import Renderer, FullTextRenderer
 
 handlers = dict()
@@ -20,8 +21,10 @@ class ConversationContext:
         self.renderer = FullTextRenderer()
         if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter()
+        elif _type == 'chatgpt-api':
+            self.adapter = ChatGPTAPIAdapter()
         else:
-            raise Exception("Unsupported adapter")
+            raise BotTypeNotFoundException(_type)
         self.type = _type
 
     async def reset(self):
@@ -83,7 +86,6 @@ class ConversationHandler:
         if len(self.conversations) < 1:
             conversation = ConversationContext(_type)
             self.conversations.append(conversation)
-            print("Duck")
             return conversation
         return self.conversations[0]
         # raise Exception("Too many conversations")

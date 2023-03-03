@@ -30,7 +30,8 @@ from middlewares.ratelimit import MiddlewareRatelimit
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
 from requests.exceptions import SSLError, ProxyError
-from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException
+from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
+    BotTypeNotFoundException, NoAvailableBotException
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
@@ -99,33 +100,39 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         await response(session_id, target, source, msg)
 
     async def request(a, b, c, prompt: str, e):
-        task = None
-        # 初始化会话
-        if not conversation_handler.current_conversation:
-            conversation_handler.current_conversation = await conversation_handler.create("chatgpt-web")
-
-        # 重置会话
-        if prompt in config.trigger.reset_command:
-            task = conversation_handler.current_conversation.reset()
-        # 回滚会话
-        elif prompt in config.trigger.rollback_command:
-            task = conversation_handler.current_conversation.rollback()
-        # 加载预设
-        preset_search = re.search(config.presets.command, message)
-        if preset_search:
-            logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
-            await conversation_handler.current_conversation.reset()
-            task = conversation_handler.current_conversation.load_preset(preset_search.group(1))
-        elif not conversation_handler.current_conversation.preset:
-            # 当前没有预设
-            logger.trace(f"{session_id} - 未检测到预设，正在执行默认预设……")
-            # 隐式加载不回复预设内容
-            async for _ in conversation_handler.current_conversation.load_preset('default'): ...
-
-        # 没有任务那就聊天吧！
-        if not task:
-            task = conversation_handler.current_conversation.ask(prompt)
         try:
+            task = None
+            bot_type_search = re.search(config.trigger.switch_command, prompt)
+            # 初始化会话
+            if bot_type_search:
+                conversation_handler.current_conversation = await conversation_handler.create(bot_type_search.group(1).strip())
+                await respond(f"已切换至 {bot_type_search.group(1).strip()}，现在开始和我聊天吧！")
+                return
+            # 初始化会话
+            elif not conversation_handler.current_conversation:
+                conversation_handler.current_conversation = await conversation_handler.create("chatgpt-web")
+
+            # 重置会话
+            if prompt in config.trigger.reset_command:
+                task = conversation_handler.current_conversation.reset()
+            # 回滚会话
+            elif prompt in config.trigger.rollback_command:
+                task = conversation_handler.current_conversation.rollback()
+            # 加载预设
+            preset_search = re.search(config.presets.command, prompt)
+            if preset_search:
+                logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
+                async for _ in conversation_handler.current_conversation.reset(): ...
+                task = conversation_handler.current_conversation.load_preset(preset_search.group(1))
+            elif not conversation_handler.current_conversation.preset:
+                # 当前没有预设
+                logger.trace(f"{session_id} - 未检测到预设，正在执行默认预设……")
+                # 隐式加载不回复预设内容
+                async for _ in conversation_handler.current_conversation.load_preset('default'): ...
+
+            # 没有任务那就聊天吧！
+            if not task:
+                task = conversation_handler.current_conversation.ask(prompt)
             async for rendered in task:
                 if rendered:
                     action = lambda session_id, source, target, prompt, rendered, respond: respond(rendered)
@@ -141,6 +148,10 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             await respond(config.response.error_request_concurrent_error)
         except BotRatelimitException as e: # Chatbot 账号限流
             await respond(config.response.error_request_too_many.format(exc=e, remaining=e.estimated_at))
+        except NoAvailableBotException: # 预设不存在
+            await respond("没有账号，不支持使用此 AI！")
+        except BotTypeNotFoundException as e: # 预设不存在
+            await respond(f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n")
         except PresetNotFoundException: # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
         except (SSLError, ProxyError) as e: # 网络异常

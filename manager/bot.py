@@ -5,6 +5,7 @@ from requests.exceptions import SSLError
 
 from adapter.botservice import BotAdapter
 from chatbot.chatgpt import ChatGPTBrowserChatbot
+from exceptions import NoAvailableBotException
 
 sys.path.append(os.getcwd())
 
@@ -14,7 +15,7 @@ import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
-from config import OpenAIAuthBase, OpenAIEmailAuth, OpenAISessionTokenAuth
+from config import OpenAIAuthBase, OpenAIAPIKey
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
@@ -50,7 +51,10 @@ class BotManager:
         for i, account in enumerate(self.accounts):
             logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
             try:
-                if account.mode == "proxy" or account.mode == "browserless":
+                if isinstance(account, OpenAIAPIKey):
+                    bot = self.__login_openai_apikey(account)
+                    self.bots["openai-api"].append(bot)
+                elif account.mode == "proxy" or account.mode == "browserless":
                     bot = self.__login_V1(account)
                     self.bots["chatgpt-web"].append(bot)
                 elif account.mode == "browser":
@@ -166,7 +170,12 @@ class BotManager:
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
 
+    def __login_openai_apikey(self, account):
+        return account
+
     def pick(self, type: str):
         if not type in self.roundrobin:
             self.roundrobin[type] = itertools.cycle(self.bots[type])
+        if len(self.bots[type]) == 0:
+            raise NoAvailableBotException()
         return next(self.roundrobin[type])
