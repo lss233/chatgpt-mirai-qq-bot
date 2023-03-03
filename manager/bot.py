@@ -164,7 +164,7 @@ class BotManager:
             logger.error("所有账号均登录失败，无法继续启动！")
             exit(-2)
         logger.success(f"成功登录 {len(self.bots)}/{len(self.accounts)} 个账号！")
-    def __login_apikey(self, account) -> APIBotInfo:
+    def __login_apikey(self, account) -> BotInfo:
         logger.info("模式： API 登录")
         bot = V3Chatbot(account.api_key)
         return BotInfo(bot, 'apikey')
