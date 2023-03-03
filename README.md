@@ -9,10 +9,10 @@
 
 
 > **2023/2/10**  
-> 本项目分为 ChatGPT(网页) 版和 API 版两种模式。  
->  ChatGPT(网页) 版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
+> 本项目分为 ChatGPT 版和 GPT-3 版两种模式。  
+>  ChatGPT 版代表版本号为 v2.x 的版本； GPT-3 版代表版本号为 v1.6 的版本  
 > 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
-> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 API 版。
+> 当前浏览的是 ChatGPT 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 GPT-3 版。
 
 
 ***
