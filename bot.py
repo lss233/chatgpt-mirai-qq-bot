@@ -170,7 +170,7 @@ async def start_background():
         logger.info("OpenAI 服务器登录中……")
         botManager.login()
     except:
-        logger.error("OpenAI 服务器失败！")
+        logger.error("OpenAI 服务器登录失败！")
         exit(-1)
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
