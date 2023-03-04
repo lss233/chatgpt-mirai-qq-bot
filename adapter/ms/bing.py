@@ -64,6 +64,8 @@ class BingAdapter(BotAdapter):
             yield text
         else:
             logger.debug(f"[预设] 发送：{text}")
+            item = None
             async for item in self.ask(text): ...
-            logger.debug(f"[预设] Chatbot 回应：{item}")
+            if item:
+                logger.debug(f"[预设] Chatbot 回应：{item}")
             pass  # 不发送 AI 的回应，免得串台
