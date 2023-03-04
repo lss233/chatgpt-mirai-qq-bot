@@ -33,6 +33,8 @@ class ChatGPTAPIAdapter(BotAdapter):
 
     async def on_reset(self):
         self.bot.conversation = []
+        self.api_info = botManager.pick('openai-api')
+        self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         full_response = ''
