@@ -91,7 +91,7 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665
 # 修改 /path/to/config.cfg 为你 config.cfg 的位置
 # XPRA_PASSWORD=123456 中的 123456 是你的 Xpra 密码，建议修改
 docker run --name mirai-chatgpt-bot \
-    -e XPRA_PASSWORD=123456 \ 
+    -e XPRA_PASSWORD=123456 \
     -v /path/to/config.cfg:/app/config.cfg \
     --network host \
     lss233/chatgpt-mirai-qq-bot:browser-version
