@@ -14,6 +14,7 @@ from loguru import logger
 class BingAdapter(BotAdapter):
     cookieData = None
     cookieFile = None
+    count: int = 0
 
     bot: EdgeChatbot
     """实例"""
@@ -42,7 +43,8 @@ class BingAdapter(BotAdapter):
         await self.bot.reset()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        parsed_content = ''
+        self.count = self.count + 1
+        parsed_content = f'{self.count} / 6:'
         async for final, response in self.bot.ask_stream(prompt):
             if not final:
                 yield response
