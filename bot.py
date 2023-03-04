@@ -114,7 +114,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return
             # 初始化会话
             elif not conversation_handler.current_conversation:
-                conversation_handler.current_conversation = await conversation_handler.create("chatgpt-web")
+                conversation_handler.current_conversation = await conversation_handler.create(config.response.default_ai)
 
             # 此处为会话存在后可执行的指令
 
@@ -167,8 +167,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             await respond(config.response.error_request_concurrent_error)
         except BotRatelimitException as e: # Chatbot 账号限流
             await respond(config.response.error_request_too_many.format(exc=e, remaining=e.estimated_at))
-        except NoAvailableBotException: # 预设不存在
-            await respond("没有账号，不支持使用此 AI！")
+        except NoAvailableBotException as e: # 预设不存在
+            await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
         except BotTypeNotFoundException as e: # 预设不存在
             await respond(f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n* bing - 微软 Bing 聊天机器人\n")
         except PresetNotFoundException: # 预设不存在

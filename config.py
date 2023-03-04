@@ -116,6 +116,9 @@ class Trigger(BaseModel):
     """切换至文本回复模式"""
 
 class Response(BaseModel):
+    default_ai: Union[str, None] = None
+    """默认使用的 AI 类型，不填写时自动推测"""
+
     error_format: str = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。"
     """发生错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 

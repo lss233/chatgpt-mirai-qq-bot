@@ -4,14 +4,12 @@ sys.path.append(os.getcwd())
 
 from requests.exceptions import SSLError
 
-from adapter.botservice import BotAdapter
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from exceptions import NoAvailableBotException
 
 import itertools
 from typing import Union, List, Dict
 import os
-from revChatGPT.V3 import Chatbot as V3Chatbot
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
@@ -21,6 +19,7 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
+
 
 class BotManager:
     """Bot lifecycle manager."""
@@ -41,8 +40,9 @@ class BotManager:
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
-        self.openai = config.openai.accounts
-        self.bing = config.bing.accounts
+        self.config = config
+        self.openai = config.openai.accounts if config.openai else []
+        self.bing = config.bing.accounts if config.bing else []
         try:
             os.mkdir('data')
             logger.warning(
@@ -50,6 +50,7 @@ class BotManager:
         except:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
+
     def login(self):
         self.bots = {
             "chatgpt-web": [],
@@ -59,6 +60,18 @@ class BotManager:
         if len(self.bing) > 0:
             self.login_bing()
         self.login_openai()
+        count = sum(len(v) for v in self.bots.values())
+        if count < 1:
+            logger.error("所有账号登录失败，程序无法启动！")
+            exit(-2)
+
+        # 自动推测默认 AI
+        if not self.config.response.default_ai:
+            for k, v in self.bots.items():
+                if len(v) > 0:
+                    self.config.response.default_ai = k
+                    break
+
     def login_bing(self):
         for i, account in enumerate(self.bing):
             logger.info("正在解析第 {i} 个 Bing 账号", i=i + 1)
@@ -66,11 +79,12 @@ class BotManager:
                 self.bots["bing-cookie"].append(account)
                 logger.success("登录成功！", i=i + 1)
             except Exception as e:
-                    logger.error("未知错误：")
-                    logger.exception(e)
+                logger.error("未知错误：")
+                logger.exception(e)
         if len(self.bots) < 1:
             logger.error("所有 Bing 账号均登录失败！")
         logger.success(f"成功登录 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
+
     def login_openai(self):
         counter = 0
         for i, account in enumerate(self.openai):
@@ -202,5 +216,5 @@ class BotManager:
         if not type in self.roundrobin:
             self.roundrobin[type] = itertools.cycle(self.bots[type])
         if len(self.bots[type]) == 0:
-            raise NoAvailableBotException()
+            raise NoAvailableBotException(type)
         return next(self.roundrobin[type])
