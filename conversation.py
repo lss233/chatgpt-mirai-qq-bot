@@ -75,7 +75,7 @@ class ConversationHandler:
     每个聊天窗口拥有一个 ConversationHandler，
     负责管理多个不同的 ConversationContext
     """
-    conversations = []
+    conversations = {}
     """当前聊天窗口下所有的会话"""
 
     current_conversation: ConversationContext = None
@@ -89,12 +89,12 @@ class ConversationHandler:
     """创建新的上下文"""
 
     async def create(self, _type: str):
-        if len(self.conversations) < 1:
+        if _type in self.conversations:
+            return self.conversations[_type]
+        else:
             conversation = ConversationContext(_type)
-            self.conversations.append(conversation)
+            self.conversations[_type] = conversation
             return conversation
-        return self.conversations[-1]
-        # raise Exception("Too many conversations")
 
     """切换对话上下文"""
 
