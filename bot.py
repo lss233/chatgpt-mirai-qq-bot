@@ -39,6 +39,7 @@ from middlewares.ratelimit import manager as ratelimit_manager
 from requests.exceptions import SSLError, ProxyError
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException
+from middlewares.baiducloud import MiddlewareBaiduCloud
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
@@ -74,7 +75,7 @@ async def response(session_id: str, target: Union[Friend, Group], source: Source
 
 
 
-middlewares = [MiddlewareTimeout(), MiddlewareRatelimit()]
+middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud()]
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
     """正常聊天"""
