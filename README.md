@@ -400,16 +400,17 @@ queued_notice_size = 3
 queued_notice = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
 
 [baiducloud]
-#是否启动百度云内容安全审核
+# 是否启动百度云内容安全审核
+# 注册地址: http://console.bce.baidu.com/ai/#/ai/antiporn/overview/index
 check = false
 
-#百度云API_KEY 24位英文数字字符串
+# 百度云API_KEY 24位英文数字字符串
 baidu_api_key = ""
 
-#百度云SECRET_KEY 32位的英文数字字符串
+# 百度云SECRET_KEY 32位的英文数字字符串
 baidu_secret_key =""
 
-#不合规消息自定义返回
+# 不合规消息自定义返回
 illgalmessage = "[百度云]请珍惜机器人，当前返回内容不合规"
 
 [system]
