@@ -1045,6 +1045,9 @@ body {
     max-width: 800px;
     margin: 0 auto;
 }
+code {
+    white-space: pre-wrap !important;
+}
 html, body {
     min-height: 100vh;
 }

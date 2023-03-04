@@ -289,7 +289,11 @@ def md_to_html(text):
     ]
     md = markdown.Markdown(extensions=extensions)
     h = md.convert(text)
+    # 获取 Pygments 生成的 CSS 样式
+    css_style = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
 
+    # 将 CSS 样式插入到 HTML 中
+    h = f"<style>{css_style}</style>\n{h}"
     return h
 
 
@@ -297,13 +301,17 @@ async def get_qr_data(text):
     """将 Markdown 文本保存到 Mozilla Pastebin，并获得 URL"""
     async with aiohttp.ClientSession() as session:
         payload = {'expires': '86400', 'format': 'url', 'lexer': '_markdown', 'content': text}
-        async with session.post('https://pastebin.mozilla.org/api/',
-                                data=payload) as resp:
-            image = qrcode.make(await resp.text())
-            buffered = BytesIO()
-            image.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue())
-            return "data:image/jpeg;base64," + img_str.decode('utf-8')
+        try:
+            async with session.post('https://pastebin.mozilla.org/api/',
+                                    data=payload) as resp:
+                url = await resp.text()
+        except Exception as e:
+            url = "上传失败：" + str(e)
+        image = qrcode.make(url)
+        buffered = BytesIO()
+        image.save(buffered, format="JPEG")
+        img_str = base64.b64encode(buffered.getvalue())
+        return "data:image/jpeg;base64," + img_str.decode('utf-8')
 
 
 async def text_to_image(text):
@@ -318,8 +326,8 @@ async def text_to_image(text):
         # 输出html到字符串io流
         with StringIO() as output_file:
             # 填充正文
-            html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri())\
-                .replace("{qrcode}", await get_qr_data(text))\
+            html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri()) \
+                .replace("{qrcode}", await get_qr_data(text)) \
                 .replace("{content}", content)
             output_file.write(html)
 
