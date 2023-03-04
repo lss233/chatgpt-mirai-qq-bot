@@ -35,6 +35,7 @@
 * [x] 支持 ChatGPT Plus
 * [x] 支持 ChatGPT API
 * [x] 支持 Bing 聊天
+* [x] 支持接入百度云内容审核（主要是防封）
 * [x] 指定用户/群组额度限制 
 * [x] 预设人格初始化
 
@@ -397,6 +398,19 @@ queued_notice_size = 3
 
 # 新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数
 queued_notice = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
+
+[baiducloud]
+#是否启动百度云内容安全审核
+check = false
+
+#百度云API_KEY 24位英文数字字符串
+baidu_api_key = ""
+
+#百度云SECRET_KEY 32位的英文数字字符串
+baidu_secret_key =""
+
+#不合规消息自定义返回
+illgalmessage = "[百度云]请珍惜机器人，当前返回内容不合规"
 
 [system]
 # 是否自动同意进群邀请
