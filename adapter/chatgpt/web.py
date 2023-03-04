@@ -46,6 +46,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
+        self.bot = botManager.pick('chatgpt-web')
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         # 队列满时拒绝新的消息
         if 0 < config.response.max_queue_size < self.bot.queue_size:
