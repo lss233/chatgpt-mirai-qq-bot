@@ -182,11 +182,11 @@ class System(BaseModel):
 class BaiduCloud(BaseModel):
     check: bool = False
     """是否启动百度云内容安全审核"""
-    baidu_api_key: str
+    baidu_api_key: str =""
     """百度云API_KEY 24位英文数字字符串"""
-    baidu_secret_key: str
+    baidu_secret_key: str =""
     """百度云SECRET_KEY 32位的英文数字字符串"""
-    illgalmessage : str
+    illgalmessage : str ="[百度云]请珍惜机器人，当前返回内容不合规"
     """不合规消息自定义返回"""
 
 class Preset(BaseModel):
