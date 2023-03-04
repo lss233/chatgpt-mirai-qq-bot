@@ -67,12 +67,15 @@ class BotManager:
 
         # 自动推测默认 AI
         if not self.config.response.default_ai:
-            for k, v in self.bots.items():
-                if len(v) > 0:
-                    self.config.response.default_ai = k
-                    break
-        if self.config.response.default_ai == "openai-api":
-            self.config.response.default_ai = "chatgpt-api"
+            if len(self.bots['chatgpt-web']) > 0:
+                self.config.response.default_ai = 'chatgpt-web'
+            elif len(self.bots['openai-api']) > 0:
+                self.config.response.default_ai = 'chatgpt-api'
+            elif len(self.bots['bing-cookie']) > 0:
+                self.config.response.default_ai = 'bing'
+            else:
+                self.config.response.default_ai = 'chatgpt-web'
+
     def login_bing(self):
         for i, account in enumerate(self.bing):
             logger.info("正在解析第 {i} 个 Bing 账号", i=i + 1)
