@@ -40,3 +40,14 @@ class BingAdapter(BotAdapter):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         async for response in self.bot.ask_stream(prompt):
             yield response
+
+    async def preset_ask(self, role: str, text: str):
+        if role.endswith('bot') or role == 'chatgpt':
+            logger.debug(f"[预设] 响应：{text}")
+            yield text
+        else:
+            logger.debug(f"[预设] 发送：{text}")
+            async for item in self.ask(text): ...
+            logger.debug(f"[预设] Chatbot 回应：{item}")
+            pass # 不发送 AI 的回应，免得串台
+
