@@ -14,5 +14,4 @@ pygments~=2.10.0
 imgkit~=1.2.2
 qrcode
 openai
-EdgeGPT
-pytest-asyncio
+EdgeGPT==0.0.51
