@@ -168,7 +168,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         except ConcurrentMessageException as e: # Chatbot 账号同时收到多条消息
             await respond(config.response.error_request_concurrent_error)
         except BotRatelimitException as e: # Chatbot 账号限流
-            await respond(config.response.error_request_too_many.format(exc=e, remaining=e.estimated_at))
+            await respond(config.response.error_request_too_many.format(exc=e))
         except NoAvailableBotException as e: # 预设不存在
             await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
         except BotTypeNotFoundException as e: # 预设不存在

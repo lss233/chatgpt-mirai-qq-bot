@@ -72,7 +72,7 @@ class ChatGPTWebAdapter(BotAdapter):
                     self.bot.refresh_accessed_at()
                     first_accessed_at = self.bot.accessed_at[0] if len(self.bot.accessed_at) > 0 \
                         else current_time - datetime.timedelta(hours=1)
-                    remaining = divmod(current_time - first_accessed_at, datetime.timedelta(60))
+                    remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
                     minute = remaining[0]
                     second = remaining[1].seconds
                     raise BotRatelimitException(f"{minute}分{second}秒")
