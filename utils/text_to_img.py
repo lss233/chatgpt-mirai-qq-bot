@@ -318,22 +318,23 @@ async def text_to_image(text):
         # 输出html到字符串io流
         with StringIO() as output_file:
             # 填充正文
-            output_file.write(template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri())
-                              .replace("{qrcode}", await get_qr_data(text))
-                              .replace("{content}", content))
+            html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri())\
+                .replace("{qrcode}", await get_qr_data(text))\
+                .replace("{content}", content)
+            output_file.write(html)
 
             # 创建临时jpg文件
-            temp_jpg_file = NamedTemporaryFile(mode='w+b', suffix='.png', delete=False)
+            temp_jpg_file = NamedTemporaryFile(mode='w+b', suffix='.png')
             temp_jpg_filename = temp_jpg_file.name
             temp_jpg_file.close()
 
-        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', delete=False)
+        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html')
         temp_html_filename = temp_html_file.name
         imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
-        with StringIO(output_file.getvalue()) as input_file:
+        with StringIO(html) as input_file:
             ok = False
             try:
-                temp_html_file.write(output_file.getvalue())
+                temp_html_file.write(html)
                 # 调用imgkit将html转为图片
                 ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
                     "enable-local-file-access": "",
@@ -352,9 +353,6 @@ async def text_to_image(text):
                 # 删除临时文件
                 if os.path.exists(temp_jpg_filename):
                     os.remove(temp_jpg_filename)
-                if os.path.exists(temp_html_filename):
-                    temp_html_file.close()
-                    os.remove(temp_html_filename)
     except Exception as e:
         logger.exception(e)
         logger.error("Markdown 渲染失败，使用备用模式")
