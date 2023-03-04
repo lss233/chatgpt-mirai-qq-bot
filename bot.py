@@ -96,6 +96,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         return call
 
     async def respond(msg: str):
+        if not msg:
+            return
         await response(session_id, target, source, msg)
         for m in middlewares:
             await m.on_respond(session_id, source, target, message, msg)

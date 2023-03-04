@@ -9,6 +9,8 @@ from exceptions import BotOperationNotSupportedException
 import tempfile
 import json
 from loguru import logger
+
+
 class BingAdapter(BotAdapter):
     cookieData = None
     cookieFile = None
@@ -27,19 +29,24 @@ class BingAdapter(BotAdapter):
         self.cookieFile.write(json.dumps(self.cookieData))
         self.cookieFile.close()
         self.bot = EdgeChatbot(self.cookieFile.name)
+
     def __del__(self):
-        logger.debug("[Bing] 释放 Cookie 文件……")
-        os.remove(self.cookieFile.name)
+        if self.cookieFile:
+            logger.debug("[Bing] 释放 Cookie 文件……")
+            os.remove(self.cookieFile.name)
+
     async def rollback(self):
         raise BotOperationNotSupportedException()
 
     async def on_reset(self):
         await self.bot.reset()
-        self.cookieData.delete()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        async for response in self.bot.ask_stream(prompt):
-            yield response
+        async for final, response in self.bot.ask_stream(prompt):
+            if not final:
+                yield response
+            else:
+                print(response)
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role == 'chatgpt':
@@ -49,5 +56,4 @@ class BingAdapter(BotAdapter):
             logger.debug(f"[预设] 发送：{text}")
             async for item in self.ask(text): ...
             logger.debug(f"[预设] Chatbot 回应：{item}")
-            pass # 不发送 AI 的回应，免得串台
-
+            pass  # 不发送 AI 的回应，免得串台
