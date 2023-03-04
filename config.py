@@ -215,7 +215,7 @@ class Config(BaseModel):
     system: System = System()
     presets: Preset = Preset()
     ratelimit: Ratelimit = Ratelimit()
-    baiducloud: BaiduCloud
+    baiducloud: BaiduCloud = BaiduCloud()
     
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
