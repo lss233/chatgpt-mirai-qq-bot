@@ -60,8 +60,13 @@ class ChatGPTWebAdapter(BotAdapter):
                         self.conversation_id_prev_queue.append(self.conversation_id)
                     if self.parent_id:
                         self.conversation_id_prev_queue.append(self.parent_id)
-                    self.conversation_id = resp["conversation_id"]
-                    self.parent_id = resp["parent_id"]
+                    if not self.conversation_id:
+                        self.conversation_id = resp["conversation_id"]
+
+                    # 确保是当前的会话，才更新 parent_id
+                    if self.conversation_id == resp["conversation_id"]:
+                        self.parent_id = resp["parent_id"]
+                    logger.debug(f"[ChatGPT-Web] {resp['conversation_id']} - {resp['message']}")
                     yield resp["message"]
             except AttributeError as e:
                 if str(e).startswith("'str' object has no attribute 'get'"):
