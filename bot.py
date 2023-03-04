@@ -82,7 +82,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if not message.strip():
         return config.response.placeholder
 
-    conversation_handler: ConversationHandler = await ConversationHandler.get_handler(session_id)
 
     def wrap_request(n, m):
         async def call(session_id, source, target, message, respond):
@@ -108,6 +107,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             task = None
 
             # 此处为会话不存在时可以执行的指令
+            conversation_handler: ConversationHandler = await ConversationHandler.get_handler(session_id)
+            print(conversation_handler)
 
             bot_type_search = re.search(config.trigger.switch_command, prompt)
             # 初始化会话
@@ -120,6 +121,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 conversation_handler.current_conversation = await conversation_handler.create(config.response.default_ai)
 
             # 此处为会话存在后可执行的指令
+            print(conversation_handler.current_conversation)
 
             # 重置会话
             if prompt in config.trigger.reset_command:
