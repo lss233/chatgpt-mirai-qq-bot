@@ -39,7 +39,11 @@ class MiddlewareBaiduCloud(Middleware):
                 payload = "text=" + rendered
                 logger.debug("向百度云发送:" + payload)
                 headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'}
-                response = requests.request("POST", baidu_url, headers=headers, data=payload.encode('utf-8'))
+
+                if isinstance(payload, str):
+                    payload = payload.encode('utf-8')
+
+                response = requests.request("POST", baidu_url, headers=headers, data=payload)
                 response_dict = json.loads(response.text)
                 # 处理百度云审核结果
                 if "error_code" in response_dict:
@@ -52,8 +56,9 @@ class MiddlewareBaiduCloud(Middleware):
                         logger.success("百度云判定结果：" + conclusion)
                         return await action(session_id, source, target, prompt, rendered, respond)
                     else:
+                        msg = response_dict['data'][0]['msg']
                         logger.error("百度云判定结果：" + conclusion)
-                        conclusion = config.baiducloud.illgalmessage
+                        conclusion = f"{config.baiducloud.illgalmessage}\n原因：{msg}"
                 # 返回百度云审核结果
                 return await action(session_id, source, target, prompt, conclusion, respond)
             # 未审核消息路径
