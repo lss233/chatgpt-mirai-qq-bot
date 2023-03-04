@@ -1,7 +1,6 @@
 import os
 import sys
 
-
 sys.path.append(os.getcwd())
 import constants
 
@@ -34,6 +33,7 @@ import time
 from conversation import ConversationHandler
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
+from manager.bot import BotManager
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
 from requests.exceptions import SSLError, ProxyError
@@ -247,6 +247,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         config.scan_presets()
         await app.send_message(event, "配置文件重新载入完毕！")
         await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
+        constants.botManager = BotManager(config)
         botManager.login()
         await app.send_message(event, "登录结束")
     finally:
