@@ -40,21 +40,27 @@ class BingAdapter(BotAdapter):
         raise BotOperationNotSupportedException()
 
     async def on_reset(self):
+        self.count = 0
         await self.bot.reset()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
-        parsed_content = f'剩余回复数：{self.count} / 6:'
+        remaining_conversations = f'剩余回复数：{self.count} / 8:\n'
+        parsed_content = ''
         async for final, response in self.bot.ask_stream(prompt):
             if not final:
-                yield response
+                yield remaining_conversations + response
                 parsed_content = response
             else:
                 try:
+                    if parsed_content == '':
+                        yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
+                        self.on_reset()
+                        return
                     parsed_content = parsed_content + '\n猜你想问：\n'
                     for suggestion in response["item"]["messages"][-1].get("suggestedResponses", []):
                         parsed_content = parsed_content + f"* {suggestion.get('text')}\n"
-                    yield f'剩余回复数：{self.count} / 6:' + parsed_content
+                    yield remaining_conversations + parsed_content
                 except Exception as e:
                     logger.exception(e)
 
