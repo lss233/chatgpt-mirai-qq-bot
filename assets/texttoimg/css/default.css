@@ -1036,7 +1036,7 @@ nav.app-nav.no-badge>ul>li {
 }
 
 html {
-    background-color: white;
+    background-color: #ededed;
 }
 
 body {
@@ -1045,7 +1045,14 @@ body {
     max-width: 800px;
     margin: 0 auto;
 }
-
+html, body {
+    min-height: 100vh;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 #header>div {
     border-bottom: 1px solid #b82857;
     display: inline-block;
