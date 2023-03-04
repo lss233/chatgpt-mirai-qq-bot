@@ -52,6 +52,8 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     def ask(self, prompt, conversation_id=None, parent_id=None):
         """向 ChatGPT 发送提问"""
+        self.bot.conversation_id = None
+        self.bot.parent_id = None
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
         if self.mode == 'proxy' or self.mode == 'browserless':
             for r in resp:

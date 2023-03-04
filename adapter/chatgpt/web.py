@@ -1,6 +1,7 @@
 import datetime
 from typing import Generator
 
+import uuid as uuid
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -41,7 +42,8 @@ class ChatGPTWebAdapter(BotAdapter):
     async def on_reset(self):
         if self.conversation_id is not None:
             self.bot.delete_conversation(self.conversation_id)
-
+        self.conversation_id = None
+        self.parent_id = None
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         # 队列满时拒绝新的消息
         if 0 < config.response.max_queue_size < self.bot.queue_size:
