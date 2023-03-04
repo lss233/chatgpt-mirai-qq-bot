@@ -26,7 +26,8 @@ class ChatGPTWebAdapter(BotAdapter):
     bot: ChatGPTBrowserChatbot = None
     """实例"""
 
-    def __init__(self):
+    def __init__(self, session_id: str = "unknown"):
+        self.session_id = session_id
         self.bot = botManager.pick('chatgpt-web')
         self.conversation_id = None
         self.parent_id = None
@@ -40,8 +41,9 @@ class ChatGPTWebAdapter(BotAdapter):
             return False
 
     async def on_reset(self):
-        if self.conversation_id is not None:
-            self.bot.delete_conversation(self.conversation_id)
+        if self.bot.account.auto_remove_old_conversations:
+            if self.conversation_id is not None:
+                self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
     async def ask(self, prompt: str) -> Generator[str, None, None]:
@@ -60,8 +62,13 @@ class ChatGPTWebAdapter(BotAdapter):
                         self.conversation_id_prev_queue.append(self.conversation_id)
                     if self.parent_id:
                         self.conversation_id_prev_queue.append(self.parent_id)
+
+                    # 初始化会话 ID
                     if not self.conversation_id:
                         self.conversation_id = resp["conversation_id"]
+                        if self.bot.account.title_pattern:
+                            self.bot.rename_conversation(self.conversation_id, self.bot.account.title_pattern
+                                                         .format(session_id=self.session_id))
 
                     # 确保是当前的会话，才更新 parent_id
                     if self.conversation_id == resp["conversation_id"]:

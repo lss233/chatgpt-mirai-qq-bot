@@ -16,7 +16,8 @@ class ChatGPTAPIAdapter(BotAdapter):
     bot: OpenAIChatbot = None
     """实例"""
 
-    def __init__(self):
+    def __init__(self, session_id: str = "unknown"):
+        self.session_id = session_id
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
         self.conversation_id = None

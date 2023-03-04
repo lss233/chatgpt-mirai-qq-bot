@@ -18,17 +18,19 @@ class ConversationContext:
     renderer: Renderer
     preset: str = None
 
-    def __init__(self, _type):
+    def __init__(self, _type: str, session_id: str):
+        self.session_id = session_id
+
         if config.text_to_image.default:
             self.renderer = MarkdownImageRenderer()
         else:
             self.renderer = FullTextRenderer()
         if _type == 'chatgpt-web':
-            self.adapter = ChatGPTWebAdapter()
+            self.adapter = ChatGPTWebAdapter(self.session_id)
         elif _type == 'chatgpt-api':
-            self.adapter = ChatGPTAPIAdapter()
+            self.adapter = ChatGPTAPIAdapter(self.session_id)
         elif _type == 'bing':
-            self.adapter = BingAdapter()
+            self.adapter = BingAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
@@ -80,8 +82,10 @@ class ConversationHandler:
 
     current_conversation: ConversationContext = None
 
-    def __int__(self, ):
-        ...
+    session_id: str = 'unknown'
+
+    def __init__(self, session_id: str):
+        self.session_id = session_id
 
     def list(self) -> List[ConversationContext]:
         ...
@@ -92,7 +96,7 @@ class ConversationHandler:
         if _type in self.conversations:
             return self.conversations[_type]
         else:
-            conversation = ConversationContext(_type)
+            conversation = ConversationContext(_type, self.session_id)
             self.conversations[_type] = conversation
             return conversation
 
@@ -107,5 +111,5 @@ class ConversationHandler:
     @classmethod
     async def get_handler(cls, session_id: str):
         if session_id not in handlers:
-            handlers[session_id] = ConversationHandler()
+            handlers[session_id] = ConversationHandler(session_id)
         return handlers[session_id]

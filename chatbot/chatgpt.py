@@ -41,6 +41,9 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         self.accessed_at.append(current_time)
         self.refresh_accessed_at()
 
+    def rename_conversation(self, conversation_id: str, title: str):
+        self.bot.change_title(conversation_id, title)
+
     def refresh_accessed_at(self):
         # 删除栈顶过期的信息
         current_time = datetime.datetime.now()
@@ -52,8 +55,8 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     def ask(self, prompt, conversation_id=None, parent_id=None):
         """向 ChatGPT 发送提问"""
-        self.bot.conversation_id = None
-        self.bot.parent_id = None
+        self.bot.conversation_id = conversation_id
+        self.bot.parent_id = parent_id
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
         if self.mode == 'proxy' or self.mode == 'browserless':
             for r in resp:

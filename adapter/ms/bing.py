@@ -19,7 +19,8 @@ class BingAdapter(BotAdapter):
     bot: EdgeChatbot
     """实例"""
 
-    def __init__(self):
+    def __init__(self, session_id: str = "unknown"):
+        self.session_id = session_id
         account = botManager.pick('bing-cookie')
         self.cookieData = []
         for line in account.cookie_content.split("; "):
