@@ -244,6 +244,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         if not sender.id == config.mirai.manager_qq:
             return await app.send_message(event, "您没有权限执行这个操作")
         constants.config = config.load_config()
+        config.scan_presets()
         await app.send_message(event, "配置文件重新载入完毕！")
         await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
         botManager.login()
