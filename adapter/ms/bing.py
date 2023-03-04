@@ -42,11 +42,19 @@ class BingAdapter(BotAdapter):
         await self.bot.reset()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
+        parsed_content = ''
         async for final, response in self.bot.ask_stream(prompt):
             if not final:
                 yield response
+                parsed_content = response
             else:
-                print(response)
+                try:
+                    parsed_content = parsed_content + '\n猜你想问：\n'
+                    for suggestion in response["item"]["messages"][-1].get("suggestedResponses", []):
+                        parsed_content = parsed_content + f"* {suggestion.get('text')}\n"
+                    yield parsed_content
+                except Exception as e:
+                    logger.exception(e)
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role == 'chatgpt':
