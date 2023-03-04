@@ -44,7 +44,7 @@ class BingAdapter(BotAdapter):
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
-        parsed_content = f'{self.count} / 6:'
+        parsed_content = f'剩余回复数：{self.count} / 6:'
         async for final, response in self.bot.ask_stream(prompt):
             if not final:
                 yield response
@@ -54,7 +54,7 @@ class BingAdapter(BotAdapter):
                     parsed_content = parsed_content + '\n猜你想问：\n'
                     for suggestion in response["item"]["messages"][-1].get("suggestedResponses", []):
                         parsed_content = parsed_content + f"* {suggestion.get('text')}\n"
-                    yield parsed_content
+                    yield f'剩余回复数：{self.count} / 6:' + parsed_content
                 except Exception as e:
                     logger.exception(e)
 
