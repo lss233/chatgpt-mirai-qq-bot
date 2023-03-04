@@ -16,3 +16,4 @@ qrcode
 openai
 EdgeGPT
 pytest-asyncio
+pyreadline3

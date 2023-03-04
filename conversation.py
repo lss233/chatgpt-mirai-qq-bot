@@ -62,7 +62,7 @@ class ConversationContext:
                 else:
                     # 判断格式是否为 role: 文本
                     if ':' in text:
-                        role, text = text.split(':', 2)
+                        role, text = text.split(':', 1)
                     else:
                         role = 'system'
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
