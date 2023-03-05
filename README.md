@@ -354,6 +354,9 @@ prefix_group = [ "",]
 # 则会直接把 “你好” 两个字发给 New Bing AI
 prefix_ai = { "chatgpt-web" = ["gpt"], "bing-c" = ["bing"] }
 
+# AI 画图的前缀
+# 需要有 OpenAI 的 api_key 才能使用
+prefix_image = ["画", "看"]
 # 配置群里如何让机器人响应，"at" 表示需要群里 @ 机器人，"mention" 表示 @ 或者以机器人名字开头都可以，"none" 表示不需要
 require_mention = "at"
 
