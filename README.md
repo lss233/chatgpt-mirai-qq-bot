@@ -368,6 +368,12 @@ rollback_command = [ "回滚会话",]
 
 [response]
 # 默认使用的 AI 类型，不填写时自动推测
+# 目前支持的类型：
+# chatgpt-web: 网页版 ChatGPT
+# chatgpt-api: API 版 ChatGPT (GPT3.5-turbo)
+# bing-c: New Bing (新必应对话风格-创造力)
+# bing-p: New Bing (新必应对话风格-精确)
+# bing-b: New Bing (新必应对话风格-平衡)
 default_ai = "chatgpt-web"
 # 匹配指令成功但没有对话内容时发送的消息
 placeholder = "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
