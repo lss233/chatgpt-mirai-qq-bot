@@ -166,7 +166,8 @@ class BotManager:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
-        config['proxy'] = self.__check_proxy(account)
+        if self.__check_proxy(account):
+            config['proxy'] = account.proxy
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:
