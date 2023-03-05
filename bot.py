@@ -1,6 +1,8 @@
 import os
 import sys
 
+import openai
+
 sys.path.append(os.getcwd())
 import constants
 
@@ -107,7 +109,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
             # 此处为会话不存在时可以执行的指令
             conversation_handler = await ConversationHandler.get_handler(session_id)
-
+            conversation_context = None
             # 指定前缀对话
             if ' ' in prompt:
                 for ai_type, prefixes in config.trigger.prefix_ai.items():
@@ -131,9 +133,11 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             elif not conversation_handler.current_conversation:
                 conversation_handler.current_conversation = await conversation_handler.create(
                     config.response.default_ai)
+            # 最终要选择的对话上下文
+            if not conversation_context:
                 conversation_context = conversation_handler.current_conversation
 
-                # 此处为会话存在后可执行的指令
+            # 此处为会话存在后可执行的指令
 
             # 重置会话
             if prompt in config.trigger.reset_command:
@@ -180,6 +184,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     await action(session_id, source, target, prompt, rendered, respond)
             for m in middlewares:
                 await m.handle_respond_completed(session_id, source, target, prompt, respond)
+        except openai.error.InvalidRequestError:
+            await respond("上传的图片太大了！")
         except BotOperationNotSupportedException:
             await respond("暂不支持此操作，抱歉！")
         except ConcurrentMessageException as e:  # Chatbot 账号同时收到多条消息

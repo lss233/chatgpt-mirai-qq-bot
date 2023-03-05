@@ -1,8 +1,10 @@
+import io
 from typing import List, Dict
 
 from EdgeGPT import ConversationStyle
+from PIL import Image
 from graia.amnesia.message import MessageChain
-from graia.ariadne.message.element import Image
+from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -62,18 +64,20 @@ class ConversationContext:
 
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
         # 检查是否为 画图指令
-        if ' ' in prompt:
-            prefix, prompt = prompt.split(' ', 1)
-            if prefix in config.trigger.prefix_image:
+        for prefix in config.trigger.prefix_image:
+            if prompt.startswith(prefix):
                 if not self.openai_api:
-                    yield "没有 OpenAI API-key，无法使用此功能！"
-                if chain.has(Image):
-                    image = chain.get_first(Image)
-                    image_data = await self.openai_api.image_variation(src_img=await image.get_bytes())
+                    yield "没有 OpenAI API-key，无法使用画图功能！"
+                prompt = prompt.removeprefix(prefix)
+                if chain.has(GraiaImage):
+                    image = chain.get_first(GraiaImage)
+                    raw_bytes = io.BytesIO(await image.get_bytes())
+                    raw_image = Image.open(raw_bytes)
+                    image_data = await self.openai_api.image_variation(src_img=raw_image)
                 else:
                     image_data = await self.openai_api.image_creation(prompt)
                 logger.debug("[OpenAI Image] Downloaded")
-                yield Image(data_bytes=image_data)
+                yield GraiaImage(data_bytes=image_data)
                 return
 
         async with self.renderer:
