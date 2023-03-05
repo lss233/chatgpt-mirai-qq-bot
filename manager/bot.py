@@ -21,17 +21,6 @@ from tinydb import TinyDB, Query
 import hashlib
 
 
-def __check_proxy(account):
-    if account.proxy is not None:
-        logger.info(f"正在检查代理配置：{account.proxy}")
-        from urllib.parse import urlparse
-        proxy_addr = urlparse(account.proxy)
-        if not network.is_open(proxy_addr.hostname, proxy_addr.port):
-            raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-        return account.proxy
-    return None
-
-
 class BotManager:
     """Bot lifecycle manager."""
 
@@ -151,6 +140,15 @@ class BotManager:
         bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False))
         return ChatGPTBrowserChatbot(bot, account.mode)
 
+    def __check_proxy(self, account):
+        if account.proxy is not None:
+            logger.info(f"正在检查代理配置：{account.proxy}")
+            from urllib.parse import urlparse
+            proxy_addr = urlparse(account.proxy)
+            if not network.is_open(proxy_addr.hostname, proxy_addr.port):
+                raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
+            return account.proxy
+        return None
     def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
         """保存登录缓存"""
         account_sha = hashlib.sha256(account.json().encode('utf8')).hexdigest()
@@ -168,7 +166,7 @@ class BotManager:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
-        config['proxy'] = __check_proxy(account)
+        config['proxy'] = self.__check_proxy(account)
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:
@@ -218,6 +216,7 @@ class BotManager:
         raise Exception("All login method failed")
 
     def __login_openai_apikey(self, account):
+        self.__check_proxy(account)
         return account
 
     def pick(self, type: str):
