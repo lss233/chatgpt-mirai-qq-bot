@@ -116,6 +116,8 @@ class Trigger(BaseModel):
     """重置会话的命令"""
     rollback_command: List[str] = ["回滚会话"]
     """回滚会话的命令"""
+    prefix_image: List[str] = ["画", "看"]
+    """图片创建前缀"""
     switch_command: str = r"切换AI (.+)"
     """切换AI的命令"""
     image_only_command: List[str] = ["图片模式"]
