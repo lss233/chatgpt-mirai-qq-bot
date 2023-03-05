@@ -348,7 +348,6 @@ async def text_to_image(text):
                     "enable-local-file-access": "",
                     "allow": asset_folder,
                     "width": config.text_to_image.width,  # 图片宽度
-                    "debug-javascript": "",
                     "javascript-delay": "1000"
                 },
                                       output_path=temp_jpg_filename)
