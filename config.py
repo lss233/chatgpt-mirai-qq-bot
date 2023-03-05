@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Literal
+from typing import List, Union, Literal, Dict
 from pydantic import BaseModel, BaseConfig, Extra
 from charset_normalizer import from_bytes
 from loguru import logger
@@ -101,7 +101,15 @@ class TextToImage(BaseModel):
 
 class Trigger(BaseModel):
     prefix: List[str] = [""]
-    """触发响应的前缀，默认不需要"""
+    """全局的触发响应前缀，同时适用于私聊和群聊，默认不需要"""
+    prefix_friend: List[str] = [""]
+    """私聊中的触发响应前缀，默认不需要"""
+    prefix_group: List[str] = [""]
+    """群聊中的触发响应前缀，默认不需要"""
+
+    prefix_ai: Dict[str, List[str]] = dict()
+    """特定类型 AI 的前缀，以此前缀开头将直接发消息至指定 AI 会话"""
+
     require_mention: Literal["at", "mention", "none"] = "at"
     """群内 [需要 @ 机器人 / 需要 @ 或以机器人名称开头 / 不需要 @] 才响应（请注意需要先 @ 机器人后接前缀）"""
     reset_command: List[str] = ["重置会话"]

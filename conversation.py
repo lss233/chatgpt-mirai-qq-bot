@@ -97,9 +97,21 @@ class ConversationHandler:
 
     def list(self) -> List[ConversationContext]:
         ...
+    """
+    获取或创建新的上下文
+    这里的代码和 create 是一样的
+    因为 create 之后会加入多会话功能
+    """
+
+    async def first_or_create(self, _type: str):
+        if _type in self.conversations:
+            return self.conversations[_type]
+        else:
+            conversation = ConversationContext(_type, self.session_id)
+            self.conversations[_type] = conversation
+            return conversation
 
     """创建新的上下文"""
-
     async def create(self, _type: str):
         if _type in self.conversations:
             return self.conversations[_type]

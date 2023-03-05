@@ -108,8 +108,21 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             # 此处为会话不存在时可以执行的指令
             conversation_handler = await ConversationHandler.get_handler(session_id)
 
-            # 初始化会话
-            if bot_type_search := re.search(config.trigger.switch_command, prompt):
+            # 指定前缀对话
+            if ' ' in prompt:
+                for ai_type, prefixes in config.trigger.prefix_ai.items():
+                    for prefix in prefixes:
+                        if prefix + ' ' in prompt:
+                            conversation_context = await conversation_handler.first_or_create(ai_type)
+                            break
+                    else:
+                        # Continue if the inner loop wasn't broken.
+                        continue
+                    # Inner loop was broken, break the outer.
+                    break
+
+            # 不带前缀 - 正常初始化会话
+            elif bot_type_search := re.search(config.trigger.switch_command, prompt):
                 conversation_handler.current_conversation = await conversation_handler.create(
                     bot_type_search.group(1).strip())
                 await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
@@ -118,19 +131,20 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             elif not conversation_handler.current_conversation:
                 conversation_handler.current_conversation = await conversation_handler.create(
                     config.response.default_ai)
+                conversation_context = conversation_handler.current_conversation
 
-            # 此处为会话存在后可执行的指令
+                # 此处为会话存在后可执行的指令
 
             # 重置会话
             if prompt in config.trigger.reset_command:
-                task = conversation_handler.current_conversation.reset()
+                task = conversation_context.reset()
 
             # 回滚会话
             elif prompt in config.trigger.rollback_command:
-                task = conversation_handler.current_conversation.rollback()
+                task = conversation_context.rollback()
 
             elif prompt in config.trigger.image_only_command:
-                conversation_handler.current_conversation.renderer = MarkdownImageRenderer()
+                conversation_context.renderer = MarkdownImageRenderer()
                 await respond(f"已切换至纯图片模式，接下来我的回复将会以图片呈现！")
                 return
 
@@ -138,24 +152,24 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 if config.text_to_image.always:
                     await respond(f"不要！由于管理员设置了强制开启图片模式，无法切换到文本模式！")
                 else:
-                    conversation_handler.current_conversation.renderer = FullTextRenderer()
+                    conversation_context.renderer = FullTextRenderer()
                     await respond(f"已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
                 return
 
             # 加载预设
             if preset_search := re.search(config.presets.command, prompt):
                 logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
-                async for _ in conversation_handler.current_conversation.reset(): ...
-                task = conversation_handler.current_conversation.load_preset(preset_search.group(1))
-            elif not conversation_handler.current_conversation.preset:
+                async for _ in conversation_context.reset(): ...
+                task = conversation_context.load_preset(preset_search.group(1))
+            elif not conversation_context.preset:
                 # 当前没有预设
                 logger.trace(f"{session_id} - 未检测到预设，正在执行默认预设……")
                 # 隐式加载不回复预设内容
-                async for _ in conversation_handler.current_conversation.load_preset('default'): ...
+                async for _ in conversation_context.load_preset('default'): ...
 
             # 没有任务那就聊天吧！
             if not task:
-                task = conversation_handler.current_conversation.ask(prompt)
+                task = conversation_context.ask(prompt)
             async for rendered in task:
                 if rendered:
                     action = lambda session_id, source, target, prompt, rendered, respond: respond(rendered)
@@ -197,10 +211,12 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     # 开始处理
     await action(session_id, source, target, message.strip(), respond)
 
+FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
+
 
 @app.broadcast.receiver("FriendMessage", priority=19)
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
-                                  chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
+                                  chain: FriendTrigger):
     if friend.id == config.mirai.qq:
         return
     if chain.display.startswith("."):
@@ -209,7 +225,7 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
-    config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[
+    config.trigger.prefix + config.trigger.prefix_group)] if config.trigger.require_mention != "none" else Annotated[
     MessageChain, DetectPrefix(config.trigger.prefix)]
 
 
