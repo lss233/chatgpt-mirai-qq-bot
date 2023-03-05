@@ -2,6 +2,8 @@ import os
 import sys
 
 sys.path.append(os.getcwd())
+import constants
+
 from typing import Union
 from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne
@@ -16,24 +18,29 @@ from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from graia.ariadne.event.message import MessageEvent, TempMessage
 from graia.ariadne.event.lifecycle import AccountLaunch
-from graia.ariadne.model import Friend, Group
 from graia.broadcast.exceptions import ExecutionStop
-from requests.exceptions import SSLError, ProxyError
 from graia.ariadne.model import Friend, Group, Member
-from graia.ariadne.message.commander import Commander, Slot, Arg
+from graia.ariadne.message.commander import Commander
+from graia.ariadne.message.element import Image
+from tls_client.exceptions import TLSClientExeption
+
+from renderer.renderer import MarkdownImageRenderer, FullTextRenderer
 from loguru import logger
 
-import re
-import asyncio
-import chatbot
-from config import Config
 from utils.text_to_img import to_image
-from manager.ratelimit import RateLimitManager
+import re
 import time
-from revChatGPT.V1 import Error as V1Error
-import datetime
+from conversation import ConversationHandler
+from middlewares.ratelimit import MiddlewareRatelimit
+from middlewares.timeout import MiddlewareTimeout
+from manager.bot import BotManager
+from constants import config, botManager
+from middlewares.ratelimit import manager as ratelimit_manager
+from requests.exceptions import SSLError, ProxyError
+from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
+    BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException
+from middlewares.baiducloud import MiddlewareBaiduCloud
 
-config = Config.load_config()
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 app = Ariadne(
     ariadne_config(
@@ -44,144 +51,181 @@ app = Ariadne(
     ),
 )
 
-rateLimitManager = RateLimitManager()
 
-
-async def respond_as_image(target: Union[Friend, Group], source: Source, response):
+async def response_as_image(target: Union[Friend, Group], source: Source, response):
     return await app.send_message(target, await to_image(response),
                                   quote=source if config.response.quote else False)
 
 
-async def respond_as_text(target: Union[Friend, Group], source: Source, response):
+async def response_as_text(target: Union[Friend, Group], source: Source, response):
     return await app.send_message(target, response, quote=source if config.response.quote else False)
 
 
-async def respond(target: Union[Friend, Group], source: Source, response):
+async def response(session_id: str, target: Union[Friend, Group], source: Source, response):
+    # 如果是非字符串
+    if isinstance(response, Image) or isinstance(response, MessageChain):
+        return await app.send_message(target, response, quote=source if config.response.quote else False)
+
     if config.text_to_image.always:
-        await respond_as_image(target, source, response)
+        await response_as_image(target, source, response)
     else:
-        event = await respond_as_text(target, source, response)
+        event = await response_as_text(target, source, response)
         if event.source.id < 0:
-            await respond_as_image(target, source, response)
+            await response_as_image(target, source, response)
 
 
-async def create_timeout_task(target: Union[Friend, Group], source: Source):
-    await asyncio.sleep(config.response.timeout)
-    await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
+middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud()]
 
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+    """正常聊天"""
     if not message.strip():
         return config.response.placeholder
 
-    timeout_task = None
+    def wrap_request(n, m):
+        async def call(session_id, source, target, message, respond):
+            await m.handle_request(session_id, source, target, message, respond, n)
 
-    session, is_new_session = chatbot.get_chat_session(session_id)
+        return call
 
-    # 回滚
-    if message.strip() in config.trigger.rollback_command:
-        resp = session.rollback_conversation()
-        if resp:
-            return config.response.rollback_success
-        return config.response.rollback_fail
+    def wrap_respond(n, m):
+        async def call(session_id, source, target, message, rendered, respond):
+            await m.handle_respond(session_id, source, target, message, rendered, respond, n)
 
-    # 队列满时拒绝新的消息
-    if 0 < config.response.max_queue_size < session.chatbot.queue_size:
-        return config.response.queue_full
-    else:
-        # 提示用户：请求已加入队列
-        if session.chatbot.queue_size > config.response.queued_notice_size:
-            await app.send_message(target, config.response.queued_notice.format(queue_size=session.chatbot.queue_size),
-                                   quote=source if config.response.quote else False)
+        return call
 
-    # 以下开始需要排队
+    async def respond(msg: str):
+        if not msg:
+            return
+        await response(session_id, target, source, msg)
+        for m in middlewares:
+            await m.on_respond(session_id, source, target, message, msg)
 
-    async with session.chatbot:
+    async def request(a, b, c, prompt: str, e):
         try:
+            task = None
 
-            timeout_task = asyncio.create_task(create_timeout_task(target, source))
+            # 此处为会话不存在时可以执行的指令
+            conversation_handler = await ConversationHandler.get_handler(session_id)
+
+            # 指定前缀对话
+            if ' ' in prompt:
+                for ai_type, prefixes in config.trigger.prefix_ai.items():
+                    for prefix in prefixes:
+                        if prefix + ' ' in prompt:
+                            conversation_context = await conversation_handler.first_or_create(ai_type)
+                            break
+                    else:
+                        # Continue if the inner loop wasn't broken.
+                        continue
+                    # Inner loop was broken, break the outer.
+                    break
+
+            # 不带前缀 - 正常初始化会话
+            elif bot_type_search := re.search(config.trigger.switch_command, prompt):
+                conversation_handler.current_conversation = await conversation_handler.create(
+                    bot_type_search.group(1).strip())
+                await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
+                return
+            # 初始化会话
+            elif not conversation_handler.current_conversation:
+                conversation_handler.current_conversation = await conversation_handler.create(
+                    config.response.default_ai)
+                conversation_context = conversation_handler.current_conversation
+
+                # 此处为会话存在后可执行的指令
 
             # 重置会话
-            if message.strip() in config.trigger.reset_command:
-                session.reset_conversation()
-                return config.response.reset
+            if prompt in config.trigger.reset_command:
+                task = conversation_context.reset()
 
-            # 加载关键词人设
-            preset_search = re.search(config.presets.command, message)
-            if preset_search:
-                session.reset_conversation()
-                async for progress in session.load_conversation(preset_search.group(1)):
-                    await app.send_message(target, progress, quote=source if config.response.quote else False)
-                return config.presets.loaded_successful
-            elif is_new_session:
-                # 新会话
-                async for _ in session.load_conversation(): ...
+            # 回滚会话
+            elif prompt in config.trigger.rollback_command:
+                task = conversation_context.rollback()
 
-            # 正常交流
-            resp = await session.get_chat_response(message)
-            if resp:
-                logger.debug(f"{session_id} - {session.chatbot.id} {resp}")
-                return resp.strip()
-        except V1Error as e:
-            # Rate limit
-            if e.code == 2:
-                current_time = datetime.datetime.now()
-                session.chatbot.refresh_accessed_at()
-                first_accessed_at = session.chatbot.accessed_at[0] if len(session.chatbot.accessed_at) > 0 \
-                    else current_time - datetime.timedelta(hours=1)
-                remaining = divmod(current_time - first_accessed_at, datetime.timedelta(60))
-                minute = remaining[0], second = remaining[1].seconds
-                return config.response.error_request_too_many.format(exc=e, remaining=f"{minute}分{second}秒")
-            if e.code == 1:
-                return config.response.error_server_overloaded.format(exc=e)
-            if e.code == 4 or e.code == 5:
-                return config.response.error_session_authenciate_failed.format(exc=e)
-            return config.response.error_format.format(exc=e)
-        except (SSLError, ProxyError) as e:
+            elif prompt in config.trigger.image_only_command:
+                conversation_context.renderer = MarkdownImageRenderer()
+                await respond(f"已切换至纯图片模式，接下来我的回复将会以图片呈现！")
+                return
+
+            elif prompt in config.trigger.text_only_command:
+                if config.text_to_image.always:
+                    await respond(f"不要！由于管理员设置了强制开启图片模式，无法切换到文本模式！")
+                else:
+                    conversation_context.renderer = FullTextRenderer()
+                    await respond(f"已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
+                return
+
+            # 加载预设
+            if preset_search := re.search(config.presets.command, prompt):
+                logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
+                async for _ in conversation_context.reset(): ...
+                task = conversation_context.load_preset(preset_search.group(1))
+            elif not conversation_context.preset:
+                # 当前没有预设
+                logger.trace(f"{session_id} - 未检测到预设，正在执行默认预设……")
+                # 隐式加载不回复预设内容
+                async for _ in conversation_context.load_preset('default'): ...
+
+            # 没有任务那就聊天吧！
+            if not task:
+                task = conversation_context.ask(prompt)
+            async for rendered in task:
+                if rendered:
+                    action = lambda session_id, source, target, prompt, rendered, respond: respond(rendered)
+                    for m in middlewares:
+                        action = wrap_respond(action, m)
+
+                    # 开始处理 handle_response
+                    await action(session_id, source, target, prompt, rendered, respond)
+            for m in middlewares:
+                await m.handle_respond_completed(session_id, source, target, prompt, respond)
+        except BotOperationNotSupportedException:
+            await respond("暂不支持此操作，抱歉！")
+        except ConcurrentMessageException as e:  # Chatbot 账号同时收到多条消息
+            await respond(config.response.error_request_concurrent_error)
+        except BotRatelimitException as e:  # Chatbot 账号限流
+            await respond(config.response.error_request_too_many.format(exc=e))
+        except NoAvailableBotException as e:  # 预设不存在
+            await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
+        except BotTypeNotFoundException as e:  # 预设不存在
+            await respond(
+                f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n"
+                f"* chatgpt-web - ChatGPT 网页版\n"
+                f"* chatgpt-api - ChatGPT API版\n"
+                f"* bing-c - 微软 New Bing (创造力)\n"
+                f"* bing-b - 微软 New Bing (平衡)\n"
+                f"* bing-p - 微软 New Bing (精确)\n")
+        except PresetNotFoundException:  # 预设不存在
+            await respond("预设不存在，请检查你的输入是否有问题！")
+        except (TLSClientExeption, SSLError, ProxyError) as e:  # 网络异常
+            await respond(config.response.error_network_failure.format(exc=e))
+        except Exception as e:  # 未处理的异常
             logger.exception(e)
-            return config.response.error_network_failure.format(exc=e)
-        except Exception as e:
-            # Other un-handled exceptions
-            if 'Too many requests' in str(e):
-                return config.response.error_request_too_many.format(exc=e)
-            elif 'overloaded' in str(e):
-                return config.response.error_server_overloaded.format(exc=e)
-            elif 'Unauthorized' in str(e):
-                return config.response.error_session_authenciate_failed.format(exc=e)
-            logger.exception(e)
-            return config.response.error_format.format(exc=e)
-        else:
-            # 更新额度
-            rateLimitManager.increment_usage('好友' if isinstance(target, Friend) else '群组', target.id)
-        finally:
-            if timeout_task:
-                timeout_task.cancel()
-    # 排队结束
+            await respond(config.response.error_format.format(exc=e))
+
+    action = request
+    for m in middlewares:
+        action = wrap_request(action, m)
+
+    # 开始处理
+    await action(session_id, source, target, message.strip(), respond)
+
+FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
 
 
 @app.broadcast.receiver("FriendMessage", priority=19)
 async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
-                                  chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
+                                  chain: FriendTrigger):
     if friend.id == config.mirai.qq:
         return
     if chain.display.startswith("."):
         return
-    rate_usage = rateLimitManager.check_exceed('好友', friend.id)
-    if rate_usage >= 1:
-        response = config.ratelimit.exceed
-    else:
-        response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
-        if rate_usage >= config.ratelimit.warning_rate:
-            limit = rateLimitManager.get_limit('好友', friend.id)
-            usage = rateLimitManager.get_usage('好友', friend.id)
-            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
-                                                                             current_time=current_time)
-    await respond(friend, source, response)
+    await handle_message(friend, f"friend-{friend.id}", chain.display, source)
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
-    config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[
+    config.trigger.prefix + config.trigger.prefix_group)] if config.trigger.require_mention != "none" else Annotated[
     MessageChain, DetectPrefix(config.trigger.prefix)]
 
 
@@ -189,20 +233,7 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     if chain.display.startswith("."):
         return
-    rate_usage = rateLimitManager.check_exceed('群组', group.id)
-    if rate_usage >= 1:
-        return config.ratelimit.exceed
-    else:
-        response = await handle_message(group, f"group-{group.id}", chain.display, source)
-        if rate_usage >= config.ratelimit.warning_rate:
-            limit = rateLimitManager.get_limit('群组', group.id)
-            usage = rateLimitManager.get_usage('群组', group.id)
-            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-            response = response + '\n' + config.ratelimit.warning_msg.format(usage=usage['count'], limit=limit['rate'],
-                                                                             current_time=current_time)
-
-    await respond(group, source, response)
-
+    await handle_message(group, f"group-{group.id}", chain.display, source)
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")
@@ -221,15 +252,31 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 async def start_background():
     try:
         logger.info("OpenAI 服务器登录中……")
-        chatbot.setup()
+        botManager.login()
     except:
-        logger.error("OpenAI 服务器失败！")
+        logger.error("OpenAI 服务器登录失败！")
         exit(-1)
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
 
 
 cmd = Commander(app.broadcast)
+
+
+@cmd.command(".重新加载配置文件")
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
+    try:
+        if not sender.id == config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        constants.config = config.load_config()
+        config.scan_presets()
+        await app.send_message(event, "配置文件重新载入完毕！")
+        await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
+        constants.botManager = BotManager(config)
+        botManager.login()
+        await app.send_message(event, "登录结束")
+    finally:
+        raise ExecutionStop()
 
 
 @cmd.command(".设置 {msg_type: str} {msg_id: str} 额度为 {rate: int} 条/小时")
@@ -242,7 +289,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
             return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
         if msg_id != '默认' and not msg_id.isdecimal():
             return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
-        rateLimitManager.update(msg_type, msg_id, rate)
+        ratelimit_manager.update(msg_type, msg_id, rate)
         return await app.send_message(event, "额度更新成功！")
     finally:
         raise ExecutionStop()
@@ -252,22 +299,20 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
 async def show_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str):
     try:
         if isinstance(event, TempMessage):
-            # ignored
             return
-        if not sender.id == config.mirai.manager_qq and not sender.id == int(msg_id):
-            return await app.send_message(event, "您没有权限执行这个操作")
         if msg_type != "群组" and msg_type != "好友":
             return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
         if msg_id != '默认' and not msg_id.isdecimal():
             return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
-        limit = rateLimitManager.get_limit(msg_type, msg_id)
+        limit = ratelimit_manager.get_limit(msg_type, msg_id)
         if limit is None:
             return await app.send_message(event, f"{msg_type} {msg_id} 没有额度限制。")
-        usage = rateLimitManager.get_usage(msg_type, msg_id)
+        usage = ratelimit_manager.get_usage(msg_type, msg_id)
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         return await app.send_message(event,
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
         raise ExecutionStop()
+
 
 app.launch_blocking()

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Literal
+from typing import List, Union, Literal, Dict
 from pydantic import BaseModel, BaseConfig, Extra
 from charset_normalizer import from_bytes
 from loguru import logger
@@ -24,9 +24,7 @@ class Mirai(BaseModel):
 class OpenAIAuths(BaseModel):
     browserless_endpoint: Union[str, None] = None
     """自定义无浏览器登录模式的接入点"""
-    secret_key: str = None
-    """OpenAi密钥"""
-    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]]
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth, OpenAIAPIKey]]
 
 
 class OpenAIAuthBase(BaseModel):
@@ -76,10 +74,18 @@ class OpenAIAPIKey(OpenAIAuthBase):
     api_key: str
     """OpenAI 的 api_key"""
 
+class BingCookiePath(BaseModel):
+    cookie_content: str
+    """Bing 的 Cookie 文件内容"""
 
+class BingAuths(BaseModel):
+    accounts: List[BingCookiePath] = []
+    """Bing 的账号列表"""
 class TextToImage(BaseModel):
     always: bool = False
-    """持续开启，设置后所有的文字均以图片方式发送"""
+    """强制开启，设置后所有的会话强制以图片发送"""
+    default: bool = False
+    """默认开启，设置后新会话默认以图片模式发送"""
     font_size: int = 30
     """字号"""
     width: int = 700
@@ -95,18 +101,34 @@ class TextToImage(BaseModel):
 
 class Trigger(BaseModel):
     prefix: List[str] = [""]
-    """触发响应的前缀，默认不需要"""
+    """全局的触发响应前缀，同时适用于私聊和群聊，默认不需要"""
+    prefix_friend: List[str] = [""]
+    """私聊中的触发响应前缀，默认不需要"""
+    prefix_group: List[str] = [""]
+    """群聊中的触发响应前缀，默认不需要"""
+
+    prefix_ai: Dict[str, List[str]] = dict()
+    """特定类型 AI 的前缀，以此前缀开头将直接发消息至指定 AI 会话"""
+
     require_mention: Literal["at", "mention", "none"] = "at"
     """群内 [需要 @ 机器人 / 需要 @ 或以机器人名称开头 / 不需要 @] 才响应（请注意需要先 @ 机器人后接前缀）"""
     reset_command: List[str] = ["重置会话"]
     """重置会话的命令"""
     rollback_command: List[str] = ["回滚会话"]
     """回滚会话的命令"""
-    image_create_prefix: List[str] = ["画", "看", "找"]
+    prefix_image: List[str] = ["画", "看"]
     """图片创建前缀"""
-
+    switch_command: str = r"切换AI (.+)"
+    """切换AI的命令"""
+    image_only_command: List[str] = ["图片模式"]
+    """切换至图片回复模式"""
+    text_only_command: List[str] = ["文本模式"]
+    """切换至文本回复模式"""
 
 class Response(BaseModel):
+    default_ai: Union[str, None] = None
+    """默认使用的 AI 类型，不填写时自动推测"""
+
     error_format: str = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。"
     """发生错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
@@ -116,7 +138,9 @@ class Response(BaseModel):
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{remaining}\n{exc}"
+    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{exc}\n"
+
+    error_request_concurrent_error: str = "当前有其他人正在和我进行聊天，请稍后再给我发消息吧！"
 
     error_server_overloaded: str = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
     """服务器提示 429 错误时的回复 """
@@ -133,7 +157,7 @@ class Response(BaseModel):
     rollback_success = "已回滚至上一条对话，你刚刚发的我就忘记啦！"
     """成功回滚时发送的消息"""
 
-    rollback_fail = "回滚失败，没有更早的记录了！"
+    rollback_fail = "回滚失败，没有更早的记录了！如果你想要重新开始，请发送：{reset}"
     """回滚失败时发送的消息"""
 
     quote: bool = True
@@ -165,6 +189,15 @@ class System(BaseModel):
     accept_friend_request: bool = False
     """自动接收好友请求"""
 
+class BaiduCloud(BaseModel):
+    check: bool = False
+    """是否启动百度云内容安全审核"""
+    baidu_api_key: str =""
+    """百度云API_KEY 24位英文数字字符串"""
+    baidu_secret_key: str =""
+    """百度云SECRET_KEY 32位的英文数字字符串"""
+    illgalmessage : str ="[百度云]请珍惜机器人，当前返回内容不合规"
+    """不合规消息自定义返回"""
 
 class Preset(BaseModel):
     command: str = r"加载预设 (\w+)"
@@ -184,14 +217,16 @@ class Ratelimit(BaseModel):
 
 class Config(BaseModel):
     mirai: Mirai
-    openai: Union[OpenAIAuths, OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth]
+    openai: Union[OpenAIAuths, None]
+    bing: BingAuths = BingAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
     presets: Preset = Preset()
     ratelimit: Ratelimit = Ratelimit()
-
+    baiducloud: BaiduCloud = BaiduCloud()
+    
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
             if os.path.isfile(path):

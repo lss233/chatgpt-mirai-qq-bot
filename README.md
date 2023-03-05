@@ -9,10 +9,10 @@
 
 
 > **2023/2/10**  
-> 本项目分为 ChatGPT(网页) 版和 API 版两种模式。  
->  ChatGPT(网页) 版代表版本号为 v1.5.x 的版本； API 版代表版本号为 v1.6 的版本  
+> 本项目分为 ChatGPT 版和 GPT-3 版两种模式。  
+>  ChatGPT 版代表版本号为 v2.x 的版本； GPT-3 版代表版本号为 v1.6 的版本  
 > 具体区别见：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/82  
-> 当前浏览的是网页版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 API 版。
+> 当前浏览的是 ChatGPT 版，点[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/tree/api-version)切换至 GPT-3 版。
 
 
 ***
@@ -33,6 +33,10 @@
 * [x] 多种方式登录 OpenAI
 * [x] 多账号支持
 * [x] 支持 ChatGPT Plus
+* [x] 支持 ChatGPT API
+* [x] 支持 Bing 聊天
+* [x] 支持接入百度云内容审核（主要是防封）
+* [x] 指定用户/群组额度限制 
 * [x] 预设人格初始化
 
 
@@ -43,8 +47,12 @@
 
 ![Preview](.github/preview.png)
 
+## 🐎 命令
 
-## 🔧 使用
+你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/) 了解机器人的内部命令和用法。  
+
+
+## 🔧 搭建
 
 如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
 
@@ -66,7 +74,6 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665
 
 <details>
     <summary>Linux: 通过 Docker Compose 部署 （自带 Mirai)</summary>
-
 我们使用 `docker-compose.yaml` 整合了 [lss233/mirai-http](https://github.com/lss233/mirai-http-docker) 和本项目来实现快速部署。  
 但是在部署过程中仍然需要一些步骤来进行配置。  
 
@@ -84,7 +91,7 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665
 # 修改 /path/to/config.cfg 为你 config.cfg 的位置
 # XPRA_PASSWORD=123456 中的 123456 是你的 Xpra 密码，建议修改
 docker run --name mirai-chatgpt-bot \
-    -e XPRA_PASSWORD=123456 \ 
+    -e XPRA_PASSWORD=123456 \
     -v /path/to/config.cfg:/app/config.cfg \
     --network host \
     lss233/chatgpt-mirai-qq-bot:browser-version
@@ -154,33 +161,36 @@ api_key = "1234567890" # mirai-http-api 中的 verifyKey
 http_url = "http://localhost:8080" # mirai-http-api 中的 http 回调地址
 ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
 
+# ==== OpenAI 账号部分开始
 [openai]
 # OpenAI 相关设置
 
-# 第 1 个 OpenAI 账号的登录信息
+# 你可以用多种不同的方式登录 OpenAI
+# 你也可以登录很多个不同的账号（无限多个）
+# 下面的例子会向你演示使用不同方式登录时
+# 配置文件的写法
+
+# 第 1 个 OpenAI 账号
+# 使用 access_token 登录
+# 优点：
+# 1. 适用于在国内网络环境
+# 2. 适用于通过 Google / 微软 注册的 OpenAI 账号
+# 3. 登录过程较快
+# 缺点：
+# 1. 有效期为 30 天，到期后需更换
 [[openai.accounts]]
-# 模式选择，详情见下方 README
-mode = "browser"
+mode = "browserless"
 
-# 你的 OpenAI 邮箱
-email = "xxxx" 
-# 你的 OpenAI 密码
-password = "xxx"
+# 你的 access_token，登录 OpenAI 后访问`https://chat.openai.com/api/auth/session`获取
+access_token = "一串 ey 开头的东西"
 
-# 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
-# 此时的 password 可以直接删除 (email 必填)
-# 提示：如果使用此模式，请删除下方 session_token 前面的 "#" 号，并给上方的 password 前面加上 "#"
-# session_token = "一串 ey 开头的东西"
-
-# 你的 OpenAI access_token，登录后访问`https://chat.openai.com/api/auth/session`获取
-# 提示：如果使用此模式，请删除下方 access_token 前面的 "#" 号，并给上方的 email、password 前面加上 "#"
-# access_token = "一串 ey 开头的东西"
+# 下面是所有的 OpenAI 账号都可以有的设置
+# ========= 开始 ========
 
 # 如果你在国内，需要配置代理
-# 提示：如果使用此功能，请删除下方 proxy 前面的 "#" 号
-# proxy="http://127.0.0.1:1080"
+proxy="http://127.0.0.1:1080"
 
-# 使用 ChatGPT Plus（plus 用户此项设置为 true）
+# 使用 ChatGPT Plus（plus 用户此项设置为 true 使用 legacy 模型）
 paid = false
 
 # 是否开启标题自动重命名
@@ -192,75 +202,157 @@ paid = false
 # 是否自动删除旧的对话，开启后用户发送重置对话时会自动删除以前的会话内容
 # auto_remove_old_conversations = true
 
-# 以下是多账号的设置
-# 如果你想同时使用多个账号进行负载均衡，就删掉前面的注释
+# ===== 结束 =====
 
-# # 第 2 个 OpenAI 账号的登录信息
-# [[openai.accounts]]
-# 模式选择，详情见下方 README
-# mode = "browser"
+# 第 2 个 OpenAI 账号
+# 使用 session_token 登录
+# 此方法已很少人使用
+# 优点：
+# 1. 适用于通过 Google / 微软 注册的 OpenAI 账号
+# 缺点：
+# 1. 有效期较短，具体时间未知
+# 2. 登录过程需要几秒钟时间
+[[openai.accounts]]
+mode = "browserless"
 
-# # 你的 OpenAI 邮箱
-# email = "xxxx" 
-# # 你的 OpenAI 密码
-# password = "xxx"
+# 你的 session_token，使用方法见 README
+session_token = "一串 ey 开头的东西"
 
-# # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
-# # 此时 email 和 password 可以直接删除
-# # session_token = "一串 ey 开头的东西"
+# 如果你在国内，需要配置代理
+proxy="http://127.0.0.1:1080"
 
-# # 如果你在国内，需要配置代理
-# # proxy="http://127.0.0.1:1080"
+# 使用 ChatGPT Plus（plus 用户此项设置为 true 使用 legacy 模型）
+paid = false
 
-# # 使用 ChatGPT Plus（plus 用户此项设置为 true）
-# paid = false
+# 是否开启标题自动重命名
+title_pattern="qq-{session_id}"
 
-# # 第 3 个 OpenAI 账号的登录信息
-# [[openai.accounts]]
-# 模式选择，详情见下方 README
-# mode = "browser"
+# 是否自动删除旧的对话
+auto_remove_old_conversations = true
 
-# # 你的 OpenAI 邮箱
-# email = "xxxx" 
-# # 你的 OpenAI 密码
-# password = "xxx"
+# 第 3 个 OpenAI 账号
+# 使用 邮箱+密码 登录
+# 优点：
+# 1. 自动刷新 access_token 和 session_token，无需人工操作
+# 缺点：
+# 1. 需要国外网络环境
+# 2. 如果使用代理，需要确保你的代理未被 OpenAI 封禁
+[[openai.accounts]]
+mode = "browserless"
 
-# # 对于通过 Google 登录或者微软登录的同学，可以使用 session_token 登录
-# # 此时 email 和 password 可以直接删除
-# # session_token = "一串 ey 开头的东西"
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
 
-# # 如果你在国内，需要配置代理
-# # proxy="http://127.0.0.1:1080"
+# 如果你在国内，需要配置代理
+proxy="http://127.0.0.1:1080"
 
-# # 使用 ChatGPT Plus（plus 用户此项设置为 true）
-# paid = false
+# 使用 ChatGPT Plus（plus 用户此项设置为 true 使用 legacy 模型）
+paid = false
+
+# 是否开启标题自动重命名
+title_pattern="qq-{session_id}"
+
+# 是否自动删除旧的对话
+auto_remove_old_conversations = true
+
+# 第 4 个 OpenAI 账号
+# 使用 api key 登录
+# 当你设置了 API Key 之后
+# 你就可以使用 OpenAI 中收费的 ChatGPT API、AI 画图等功能
+# 优点：
+# 1. 响应快
+# 缺点：
+# 1. 烧钱
+[[openai.accounts]]
+# 你的 API key，可以在这里看： https://platform.openai.com/account/api-keys
+api_key="sk-xxxxx"
+# 如果你在国内，需要配置代理
+proxy="http://127.0.0.1:1080"
+
+# 第 5 个 OpenAI 账号
+# 理论上你可以添加无限多个 OpenAI 账号
+# 你可以自行添加或删除配置文件来设置账号信息
+[[openai.accounts]]
+mode = "browserless"
+
+# 你的 OpenAI 邮箱
+email = "xxxx" 
+# 你的 OpenAI 密码
+password = "xxx"
+
+# 如果你在国内，需要配置代理
+proxy="http://127.0.0.1:1080"
+
+# 使用 ChatGPT Plus（plus 用户此项设置为 true 使用 legacy 模型）
+paid = false
+
+# 是否开启标题自动重命名
+title_pattern="qq-{session_id}"
+
+# 是否自动删除旧的对话
+auto_remove_old_conversations = true
+
+# === OpenAI 账号部分结束
+
+
+# === Bing 设置部分开始
+# 如果你没有 Bing 账号，可以直接删除这部分
+[bing]
+
+# 第 1 个 Bing 账号
+# 理论上，你可以添加无限多个 Bing 账号。  
+# 多账号的配置方法和 OpenAI 的一样。
+[[bing.accounts]]
+# 你的账号 Cookie，获取方法见 README
+cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  MicrosoftApplicationsTelemetryDeviceId=xxxxxx-xxxx-xxxx-xxx-xxxxx; ...一串很长的文本...'
+# === Bing 设置部分结束
 
 [text_to_image]
 # 文字转图片
 
-# 持续开启，设置后所有的消息以图片发送，减小风控概率  
+# 是否强制开启，设置后所有的消息强制以图片发送，减小风控概率  
 always = true
 
-# 字体大小
+# 是否默认开启，设置后所有的消息默认以图片发送，减小风控概率  
+default = true
+
+# [备用模式]字体大小
 font_size = 30
 
-# 图片宽度
+# [备用模式]图片宽度
 width = 700
 
-# 字体
+# [备用模式]字体
 font_path = "fonts/sarasa-mono-sc-regular.ttf" 
 
-# 起始点 X
+# [备用模式]起始点 X
 offset_x = 50 
 
-# 起始点 Y
+# [备用模式]起始点 Y
 offset_y = 50 
 
 [trigger]
 # 配置机器人要如何响应，下面所有项均可选 (也就是可以直接删掉那一行)
 
-# 符合前缀才会响应，可以自己增减
+# 全局聊天前缀，在群聊和私聊中，符合下面的前缀才会响应，可以自己增减
 prefix = [ "",]
+
+# 私聊聊天前缀，在私聊中，符合下面的前缀也会响应，可以自己增减
+prefix_friend = [ "",]
+
+# 群聊聊天前缀，在群聊中，符合下面的前缀也会响应，可以自己增减
+prefix_group = [ "",]
+
+# 直接和指定的 AI 对话（不切换AI）
+# 此处的前缀是在上面的前缀之后的
+# 例： 
+# prefix = [ "ask" ]
+# prefix_ai = { "bing-c" = ["bing"] }
+# 则用户发送： ask bing 你好
+# 则会直接把 “你好” 两个字发给 New Bing AI
+prefix_ai = { "chatgpt-web" = ["gpt"], "bing-c" = ["bing"] }
 
 # 配置群里如何让机器人响应，"at" 表示需要群里 @ 机器人，"mention" 表示 @ 或者以机器人名字开头都可以，"none" 表示不需要
 require_mention = "at"
@@ -272,11 +364,13 @@ reset_command = [ "重置会话",]
 rollback_command = [ "回滚会话",]
 
 [response]
+# 默认使用的 AI 类型，不填写时自动推测
+default_ai = "chatgpt-web"
 # 匹配指令成功但没有对话内容时发送的消息
 placeholder = "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
 
 # 发生错误时要发送的消息
-error_format = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n{exc}"
+error_format = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚会话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n{exc}"
 
 # 发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符
 error_network_failure = "网络故障！连接 OpenAI 服务器失败，我需要更好的网络才能服务！\n{exc}"
@@ -319,6 +413,20 @@ queued_notice_size = 3
 
 # 新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数
 queued_notice = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
+
+[baiducloud]
+# 是否启动百度云内容安全审核
+# 注册地址: http://console.bce.baidu.com/ai/#/ai/antiporn/overview/index
+check = false
+
+# 百度云API_KEY 24位英文数字字符串
+baidu_api_key = ""
+
+# 百度云SECRET_KEY 32位的英文数字字符串
+baidu_secret_key =""
+
+# 不合规消息自定义返回
+illgalmessage = "[百度云]请珍惜机器人，当前返回内容不合规"
 
 [system]
 # 是否自动同意进群邀请
@@ -459,7 +567,7 @@ email = "你的邮箱"
 	"expires": "2023-03-18T09:11:03.546Z",
 	"accessToken": "eyJhbGciOiJS*****X7GdA"
 }
-``` 
+```
 获取以上 JSON 中`accessToken` 后面的值即可，有效期在 30 天左右。过期后需要重新设置。  
 
 ```properties
@@ -472,7 +580,7 @@ access_token = "一串内容为 eyJhbGciOiJS*****X7GdA 的东西"
 **浏览器登录不了？使用无浏览器模式！**
 
 如果你登录过程中遇到了卡死的情况，
-  
+
 可以尝试设置 `mode="browserless"` 配置项。  
 
 开启后，你的账户密码将发送至一个第三方的代理服务器进行验证。  
@@ -526,7 +634,7 @@ proxy="http://127.0.0.1:1080"
 # 省略的账号信息
 
 title_pattern="qq-{session_id}"
-```  
+```
 
 当你按照这个格式进行设置之后，新创建的对话将会以 `qq-friend-好友QQ` 或 `qq-group-群号` 进行命名。
 
@@ -535,6 +643,18 @@ title_pattern="qq-{session_id}"
 * 如果是一个好友给机器人发送消息，则 `{session_id}` 会变成 `qq-friend-好友QQ`  
 
 * 如果是一个群聊给机器人发送消息，则 `{session_id}` 会变成 `qq-group-群号`  
+
+### Bing 账号 Cookie 获取方法
+
+你需要通过电脑浏览器来获得 Bing Cookie，如果你有别的手段能获得 cookie 的话也是可以的。  
+
+1. 确认你有 Bing 机器人的聊天测试资格
+2. 打开 https://bing.com
+3. 按下 F12，打开开发者工具（DevTools）
+4. 找到 控制台（或 Console），输入 `document.cookie` 然后回车
+5. 复制接下来出现的一段文本，这就是你的 Cookie
+
+
 
 ## 🦊 加载预设
 
@@ -565,7 +685,6 @@ title_pattern="qq-{session_id}"
 字体文件存放于 `fonts/` 目录中。  
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
-
 
 ## 🎈 相似项目
 
