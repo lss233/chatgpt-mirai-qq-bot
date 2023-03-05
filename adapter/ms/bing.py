@@ -24,10 +24,10 @@ class BingAdapter(BotAdapter):
         self.session_id = session_id
         self.conversation_style = conversation_style
         account = botManager.pick('bing-cookie')
-        self.cookieData = dict()
+        self.cookieData = []
         for line in account.cookie_content.split("; "):
-            key, value = line.split("=", 1)
-            self.cookieData[key] = value
+            name, value = line.split("=", 1)
+            self.cookieData.append({"name": name, "value": value})
 
         self.bot = EdgeChatbot(cookies=self.cookieData)
 
