@@ -40,8 +40,8 @@ class ChatGPTAPIAdapter(BotAdapter):
         full_response = ''
         for content in self.bot.ask_stream(prompt):
             full_response += content
-            logger.debug("[ChatGPT-API] 响应：" + content)
             yield full_response
+        logger.debug("[ChatGPT-API] 响应：" + full_response)
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role == 'chatgpt':

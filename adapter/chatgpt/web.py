@@ -1,7 +1,6 @@
 import datetime
 from typing import Generator
 
-import uuid as uuid
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -74,8 +73,8 @@ class ChatGPTWebAdapter(BotAdapter):
                     # 确保是当前的会话，才更新 parent_id
                     if self.conversation_id == resp["conversation_id"]:
                         self.parent_id = resp["parent_id"]
-                    logger.debug(f"[ChatGPT-Web] {resp['conversation_id']} - {resp['message']}")
                     yield resp["message"]
+                logger.debug(f"[ChatGPT-Web] {resp['conversation_id']} - {resp['message']}")
             except AttributeError as e:
                 if str(e).startswith("'str' object has no attribute 'get'"):
                     yield "出现故障，请发送”{reset}“重新开始！".format(reset=config.trigger.reset_command)

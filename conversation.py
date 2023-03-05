@@ -1,6 +1,5 @@
-from typing import List
+from typing import List, Dict
 
-import manager.bot
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
@@ -77,7 +76,7 @@ class ConversationHandler:
     每个聊天窗口拥有一个 ConversationHandler，
     负责管理多个不同的 ConversationContext
     """
-    conversations = {}
+    conversations: Dict[str, ConversationContext]
     """当前聊天窗口下所有的会话"""
 
     current_conversation: ConversationContext = None
@@ -85,6 +84,7 @@ class ConversationHandler:
     session_id: str = 'unknown'
 
     def __init__(self, session_id: str):
+        self.conversations = dict()
         self.session_id = session_id
 
     def list(self) -> List[ConversationContext]:

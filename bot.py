@@ -74,14 +74,13 @@ async def response(session_id: str, target: Union[Friend, Group], source: Source
             await response_as_image(target, source, response)
 
 
-
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud()]
+
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
-
 
     def wrap_request(n, m):
         async def call(session_id, source, target, message, respond):
@@ -107,21 +106,20 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             task = None
 
             # 此处为会话不存在时可以执行的指令
-            conversation_handler: ConversationHandler = await ConversationHandler.get_handler(session_id)
-            print(conversation_handler)
+            conversation_handler = await ConversationHandler.get_handler(session_id)
 
-            bot_type_search = re.search(config.trigger.switch_command, prompt)
             # 初始化会话
-            if bot_type_search:
-                conversation_handler.current_conversation = await conversation_handler.create(bot_type_search.group(1).strip())
+            if bot_type_search := re.search(config.trigger.switch_command, prompt):
+                conversation_handler.current_conversation = await conversation_handler.create(
+                    bot_type_search.group(1).strip())
                 await respond(f"已切换至 {bot_type_search.group(1).strip()}，现在开始和我聊天吧！")
                 return
             # 初始化会话
             elif not conversation_handler.current_conversation:
-                conversation_handler.current_conversation = await conversation_handler.create(config.response.default_ai)
+                conversation_handler.current_conversation = await conversation_handler.create(
+                    config.response.default_ai)
 
             # 此处为会话存在后可执行的指令
-            print(conversation_handler.current_conversation)
 
             # 重置会话
             if prompt in config.trigger.reset_command:
@@ -137,13 +135,15 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 return
 
             elif prompt in config.trigger.text_only_command:
-                conversation_handler.current_conversation.renderer = FullTextRenderer()
-                await respond(f"已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
+                if config.text_to_image.always:
+                    await respond(f"不要！由于管理员设置了强制开启图片模式，无法切换到文本模式！")
+                else:
+                    conversation_handler.current_conversation.renderer = FullTextRenderer()
+                    await respond(f"已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
                 return
 
             # 加载预设
-            preset_search = re.search(config.presets.command, prompt)
-            if preset_search:
+            if preset_search := re.search(config.presets.command, prompt):
                 logger.trace(f"{session_id} - 正在执行预设： {preset_search.group(1)}")
                 async for _ in conversation_handler.current_conversation.reset(): ...
                 task = conversation_handler.current_conversation.load_preset(preset_search.group(1))
@@ -168,19 +168,20 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 await m.handle_respond_completed(session_id, source, target, prompt, respond)
         except BotOperationNotSupportedException:
             await respond("暂不支持此操作，抱歉！")
-        except ConcurrentMessageException as e: # Chatbot 账号同时收到多条消息
+        except ConcurrentMessageException as e:  # Chatbot 账号同时收到多条消息
             await respond(config.response.error_request_concurrent_error)
-        except BotRatelimitException as e: # Chatbot 账号限流
+        except BotRatelimitException as e:  # Chatbot 账号限流
             await respond(config.response.error_request_too_many.format(exc=e))
-        except NoAvailableBotException as e: # 预设不存在
+        except NoAvailableBotException as e:  # 预设不存在
             await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
-        except BotTypeNotFoundException as e: # 预设不存在
-            await respond(f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n* bing - 微软 Bing 聊天机器人\n")
-        except PresetNotFoundException: # 预设不存在
+        except BotTypeNotFoundException as e:  # 预设不存在
+            await respond(
+                f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n* bing - 微软 Bing 聊天机器人\n")
+        except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (TLSClientExeption, SSLError, ProxyError) as e: # 网络异常
+        except (TLSClientExeption, SSLError, ProxyError) as e:  # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
-        except Exception as e: # 未处理的异常
+        except Exception as e:  # 未处理的异常
             logger.exception(e)
             await respond(config.response.error_format.format(exc=e))
 
@@ -240,6 +241,7 @@ async def start_background():
 
 cmd = Commander(app.broadcast)
 
+
 @cmd.command(".重新加载配置文件")
 async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
     try:
@@ -254,6 +256,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         await app.send_message(event, "登录结束")
     finally:
         raise ExecutionStop()
+
 
 @cmd.command(".设置 {msg_type: str} {msg_id: str} 额度为 {rate: int} 条/小时")
 async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str,
