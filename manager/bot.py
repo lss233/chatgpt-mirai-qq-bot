@@ -21,6 +21,17 @@ from tinydb import TinyDB, Query
 import hashlib
 
 
+def __check_proxy(account):
+    if account.proxy is not None:
+        logger.info(f"正在检查代理配置：{account.proxy}")
+        from urllib.parse import urlparse
+        proxy_addr = urlparse(account.proxy)
+        if not network.is_open(proxy_addr.hostname, proxy_addr.port):
+            raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
+        return account.proxy
+    return None
+
+
 class BotManager:
     """Bot lifecycle manager."""
 
@@ -81,13 +92,14 @@ class BotManager:
             logger.info("正在解析第 {i} 个 Bing 账号", i=i + 1)
             try:
                 self.bots["bing-cookie"].append(account)
-                logger.success("登录成功！", i=i + 1)
+
+                logger.success("解析成功！", i=i + 1)
             except Exception as e:
-                logger.error("未知错误：")
+                logger.error("解析失败：")
                 logger.exception(e)
         if len(self.bots) < 1:
-            logger.error("所有 Bing 账号均登录失败！")
-        logger.success(f"成功登录 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
+            logger.error("所有 Bing 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
 
     def login_openai(self):
         counter = 0
@@ -109,8 +121,6 @@ class BotManager:
                 bot.account = account
                 logger.success("登录成功！", i=i + 1)
                 counter = counter + 1
-                # logger.debug("等待 8 秒……")
-                # time.sleep(8)
             except OpenAIAuth.Error as e:
                 logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
             except (SSLError, urllib3.exceptions.MaxRetryError) as e:
@@ -118,7 +128,7 @@ class BotManager:
             except Exception as e:
                 err_msg = str(e)
                 if "failed to connect to the proxy server" in err_msg:
-                    logger.error("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！{exc}", exc=e)
+                    logger.error("{exc}", exc=e)
                 elif "All login method failed" in err_msg:
                     logger.error("登录失败! 所有登录方法均已失效,请检查 IP、代理或者登录信息是否正确{exc}", exc=e)
                 else:
@@ -158,13 +168,7 @@ class BotManager:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
-        if account.proxy is not None:
-            logger.info(f"正在检查代理配置：{account.proxy}")
-            from urllib.parse import urlparse
-            proxy_addr = urlparse(account.proxy)
-            if not network.is_open(proxy_addr.hostname, proxy_addr.port):
-                raise Exception("failed to connect to the proxy server")
-            config['proxy'] = account.proxy
+        config['proxy'] = __check_proxy(account)
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:

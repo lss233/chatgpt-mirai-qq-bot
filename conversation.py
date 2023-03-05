@@ -1,5 +1,7 @@
 from typing import List, Dict
 
+from EdgeGPT import ConversationStyle
+
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
@@ -30,6 +32,12 @@ class ConversationContext:
             self.adapter = ChatGPTAPIAdapter(self.session_id)
         elif _type == 'bing':
             self.adapter = BingAdapter(self.session_id)
+        elif _type == 'bing-c':
+            self.adapter = BingAdapter(self.session_id, ConversationStyle.creative)
+        elif _type == 'bing-b':
+            self.adapter = BingAdapter(self.session_id, ConversationStyle.balanced)
+        elif _type == 'bing-p':
+            self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type

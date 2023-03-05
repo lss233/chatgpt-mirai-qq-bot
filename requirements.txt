@@ -14,7 +14,7 @@ pygments~=2.10.0
 imgkit~=1.2.2
 qrcode~=7.4.2
 openai
-EdgeGPT==0.0.51
+EdgeGPT==0.0.55
 aiohttp~=3.8.4
 selenium~=4.8.2
 OpenAIAuth~=0.3.2

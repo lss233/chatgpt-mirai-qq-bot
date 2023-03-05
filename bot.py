@@ -112,7 +112,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             if bot_type_search := re.search(config.trigger.switch_command, prompt):
                 conversation_handler.current_conversation = await conversation_handler.create(
                     bot_type_search.group(1).strip())
-                await respond(f"已切换至 {bot_type_search.group(1).strip()}，现在开始和我聊天吧！")
+                await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
                 return
             # 初始化会话
             elif not conversation_handler.current_conversation:
@@ -176,7 +176,12 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
             await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
         except BotTypeNotFoundException as e:  # 预设不存在
             await respond(
-                f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n* chatgpt-web - ChatGPT 网页版\n* chatgpt-api - ChatGPT API版\n* bing - 微软 Bing 聊天机器人\n")
+                f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n"
+                f"* chatgpt-web - ChatGPT 网页版\n"
+                f"* chatgpt-api - ChatGPT API版\n"
+                f"* bing-c - 微软 New Bing (创造力)\n"
+                f"* bing-b - 微软 New Bing (平衡)\n"
+                f"* bing-p - 微软 New Bing (精确)\n")
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
         except (TLSClientExeption, SSLError, ProxyError) as e:  # 网络异常
