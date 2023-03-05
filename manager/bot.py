@@ -19,7 +19,6 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
-from open_ai_bot import OpenAIBot
 
 
 class BotManager:

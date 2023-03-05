@@ -1,13 +1,17 @@
 from typing import List, Dict
 
 from EdgeGPT import ConversationStyle
+from graia.amnesia.message import MessageChain
+from graia.ariadne.message.element import Image
+from loguru import logger
 
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.ms.bing import BingAdapter
+from adapter.openai.api import OpenAIAPIAdapter
 from constants import config
-from exceptions import PresetNotFoundException, BotTypeNotFoundException
+from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException
 from renderer.renderer import Renderer, FullTextRenderer, MarkdownImageRenderer
 
 handlers = dict()
@@ -16,7 +20,11 @@ handlers = dict()
 class ConversationContext:
     type: str
     adapter: BotAdapter
+    """聊天机器人适配器"""
     renderer: Renderer
+    """渲染器"""
+    openai_api: OpenAIAPIAdapter = None
+    """OpenAI API适配器，提供聊天之外的功能"""
     preset: str = None
 
     def __init__(self, _type: str, session_id: str):
@@ -42,11 +50,32 @@ class ConversationContext:
             raise BotTypeNotFoundException(_type)
         self.type = _type
 
+        # 没有就算了
+        try:
+            self.openai_api = OpenAIAPIAdapter(session_id)
+        except NoAvailableBotException:
+            pass
+
     async def reset(self):
         await self.adapter.on_reset()
         yield config.response.reset
 
-    async def ask(self, prompt: str, name: str = None):
+    async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
+        # 检查是否为 画图指令
+        if ' ' in prompt:
+            prefix, prompt = prompt.split(' ', 1)
+            if prefix in config.trigger.prefix_image:
+                if not self.openai_api:
+                    yield "没有 OpenAI API-key，无法使用此功能！"
+                if chain.has(Image):
+                    image = chain.get_first(Image)
+                    image_data = await self.openai_api.image_variation(src_img=await image.get_bytes())
+                else:
+                    image_data = await self.openai_api.image_creation(prompt)
+                logger.debug("[OpenAI Image] Downloaded")
+                yield Image(data_bytes=image_data)
+                return
+
         async with self.renderer:
             async for item in self.adapter.ask(prompt):
                 yield await self.renderer.render(item)

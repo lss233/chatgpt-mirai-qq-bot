@@ -77,7 +77,7 @@ async def response(session_id: str, target: Union[Friend, Group], source: Source
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud()]
 
 
-async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
+async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source, chain: MessageChain) -> str:
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
@@ -122,7 +122,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     break
 
             # 不带前缀 - 正常初始化会话
-            elif bot_type_search := re.search(config.trigger.switch_command, prompt):
+            if bot_type_search := re.search(config.trigger.switch_command, prompt):
                 conversation_handler.current_conversation = await conversation_handler.create(
                     bot_type_search.group(1).strip())
                 await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
@@ -169,7 +169,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
             # 没有任务那就聊天吧！
             if not task:
-                task = conversation_context.ask(prompt)
+                task = conversation_context.ask(prompt=prompt, chain=chain)
             async for rendered in task:
                 if rendered:
                     action = lambda session_id, source, target, prompt, rendered, respond: respond(rendered)
@@ -221,7 +221,7 @@ async def friend_message_listener(app: Ariadne, friend: Friend, source: Source,
         return
     if chain.display.startswith("."):
         return
-    await handle_message(friend, f"friend-{friend.id}", chain.display, source)
+    await handle_message(friend, f"friend-{friend.id}", chain.display, source, chain)
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
@@ -233,7 +233,7 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
     if chain.display.startswith("."):
         return
-    await handle_message(group, f"group-{group.id}", chain.display, source)
+    await handle_message(group, f"group-{group.id}", chain.display, source, chain)
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")
