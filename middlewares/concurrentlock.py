@@ -19,14 +19,15 @@ class MiddlewareConcurrentLock(Middleware):
         ...
 
     async def handle_request(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             respond: Callable, conversation_context, action: Callable):
+                             respond: Callable, conversation_context: Union[conversation.ConversationContext, None],
+                             action: Callable):
         handler = await conversation.ConversationHandler.get_handler(session_id)
 
         if session_id not in self.ctx:
             self.ctx[session_id] = QueueInfo()
         queue_info = self.ctx[session_id]
-
-        if internal_queue := conversation_context.adapter.get_queue_info():
+        selected_ctx = handler.current_conversation if conversation_context is None else conversation_context
+        if internal_queue := selected_ctx.adapter.get_queue_info():
             logger.debug("[Concurrent] 使用 Adapter 内部的 Queue")
             # 如果 Adapter 内部实现了 Queue，则用在用他们的之前先把中间件的队先排完
             logger.debug(f"[Concurrent] 排队中间件{queue_info}中，前面还有 {queue_info.size} 个人！")
