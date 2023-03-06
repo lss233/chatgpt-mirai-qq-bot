@@ -184,8 +184,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     await action(session_id, source, target, prompt, rendered, respond)
             for m in middlewares:
                 await m.handle_respond_completed(session_id, source, target, prompt, respond)
-        except openai.error.InvalidRequestError:
-            await respond("上传的图片太大了！")
+        except openai.error.InvalidRequestError as e:
+            await respond("服务器拒绝了您的请求，原因是" + str(e))
         except BotOperationNotSupportedException:
             await respond("暂不支持此操作，抱歉！")
         except ConcurrentMessageException as e:  # Chatbot 账号同时收到多条消息
