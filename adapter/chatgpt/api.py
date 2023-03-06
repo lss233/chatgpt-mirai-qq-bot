@@ -1,5 +1,7 @@
-from typing import Generator
+from typing import Generator, Union
 
+import asyncio
+import janus
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -8,10 +10,10 @@ from revChatGPT.V3 import Chatbot as OpenAIChatbot
 from config import OpenAIAPIKey
 from constants import botManager
 
+
 class ChatGPTAPIAdapter(BotAdapter):
     api_info: OpenAIAPIKey = None
     """API Key"""
-
 
     bot: OpenAIChatbot = None
     """实例"""
@@ -36,11 +38,34 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
+    def ask_sync(self, sync_q, prompt):
+        try:
+            for resp in self.bot.ask_stream(prompt):
+                sync_q.put(resp)
+            sync_q.put(None)
+        except Exception as e:
+            sync_q.put(e)
+        sync_q.join()
+
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         full_response = ''
-        for content in self.bot.ask_stream(prompt):
-            full_response += content
+        queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
+        loop = asyncio.get_running_loop()
+        future = loop.run_in_executor(None, self.ask_sync, queue.sync_q, prompt)
+        while not queue.async_q.closed:
+            resp = await queue.async_q.get()
+            queue.async_q.task_done()
+            if isinstance(resp, Exception):
+                # 出现了错误
+                raise resp
+            elif resp is None:
+                # 发完了
+                break
+            full_response += resp
             yield full_response
+        await future
+        queue.close()
+        await queue.wait_closed()
         logger.debug("[ChatGPT-API] 响应：" + full_response)
 
     async def preset_ask(self, role: str, text: str):
@@ -51,4 +76,3 @@ class ChatGPTAPIAdapter(BotAdapter):
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
         self.bot.conversation.append({"role": role, "content": text})
-

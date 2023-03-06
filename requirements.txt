@@ -13,9 +13,13 @@ python-markdown-math~=0.8
 pygments~=2.10.0
 imgkit~=1.2.2
 qrcode~=7.4.2
-openai
+openai~=0.26.5
 EdgeGPT==0.0.55
-aiohttp~=3.8.4
-selenium~=4.8.2
+aiohttp~=3.8.3
+selenium~=4.8.0
 OpenAIAuth~=0.3.2
 urllib3~=1.26.14
+
+requests~=2.28.2
+uuid~=1.30
+janus~=1.0.0

@@ -1,6 +1,8 @@
 import datetime
-from typing import Generator
+from typing import Generator, Union
 
+import asyncio
+import janus
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -46,6 +48,16 @@ class ChatGPTWebAdapter(BotAdapter):
         self.conversation_id = None
         self.parent_id = None
         self.bot = botManager.pick('chatgpt-web')
+
+    def ask_sync(self, sync_q, prompt):
+        try:
+            for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
+                sync_q.put(resp)
+            sync_q.put(None)
+        except Exception as e:
+            sync_q.put(e)
+        sync_q.join()
+
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         # 队列满时拒绝新的消息
         if 0 < config.response.max_queue_size < self.bot.queue_size:
@@ -57,7 +69,20 @@ class ChatGPTWebAdapter(BotAdapter):
                 yield config.response.queued_notice.format(queue_size=self.bot.queue_size)
         async with self.bot:
             try:
-                for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
+                queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
+                loop = asyncio.get_running_loop()
+                future = loop.run_in_executor(None, self.ask_sync, queue.sync_q, prompt)
+                last_response = None
+                while not queue.async_q.closed:
+                    resp = await queue.async_q.get()
+                    queue.async_q.task_done()
+                    if isinstance(resp, Exception):
+                        # 出现了错误
+                        raise resp
+                    elif resp is None:
+                        # 发完了
+                        break
+                    last_response = resp
                     if self.conversation_id:
                         self.conversation_id_prev_queue.append(self.conversation_id)
                     if self.parent_id:
@@ -74,7 +99,11 @@ class ChatGPTWebAdapter(BotAdapter):
                     if self.conversation_id == resp["conversation_id"]:
                         self.parent_id = resp["parent_id"]
                     yield resp["message"]
-                logger.debug(f"[ChatGPT-Web] {resp['conversation_id']} - {resp['message']}")
+
+                await future
+                queue.close()
+                await queue.wait_closed()
+                logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")
             except AttributeError as e:
                 if str(e).startswith("'str' object has no attribute 'get'"):
                     yield "出现故障，请发送”{reset}“重新开始！".format(reset=config.trigger.reset_command)
@@ -103,4 +132,3 @@ class ChatGPTWebAdapter(BotAdapter):
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
             pass  # 不发送 AI 的回应，免得串台
-

@@ -1,5 +1,8 @@
 import os
 import sys
+
+from revChatGPT import V1
+
 sys.path.append(os.getcwd())
 
 from requests.exceptions import SSLError
@@ -43,6 +46,8 @@ class BotManager:
         self.config = config
         self.openai = config.openai.accounts if config.openai else []
         self.bing = config.bing.accounts if config.bing else []
+        if config.openai.browserless_endpoint:
+            V1.BASE_URL = config.openai.browserless_endpoint
         try:
             os.mkdir('data')
             logger.warning(
