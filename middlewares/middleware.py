@@ -6,8 +6,8 @@ from graia.ariadne.model import Friend, Group
 
 class Middleware:
     async def handle_request(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             respond: Callable, action: Callable):
-        await action(session_id, source, target, prompt, respond)
+                             respond: Callable, conversation_context, action: Callable):
+        await action(session_id, source, target, prompt, conversation_context, respond)
 
     async def handle_respond(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
                              rendered: str, respond: Callable, action: Callable):

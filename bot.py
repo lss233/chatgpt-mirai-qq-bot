@@ -85,10 +85,31 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
+    # 此处为会话不存在时可以执行的指令
+    conversation_handler = await ConversationHandler.get_handler(session_id)
+    conversation_context = None
+    # 指定前缀对话
+    if ' ' in message:
+        for ai_type, prefixes in config.trigger.prefix_ai.items():
+            for prefix in prefixes:
+                if prefix + ' ' in message:
+                    conversation_context = await conversation_handler.first_or_create(ai_type)
+                    break
+            else:
+                # Continue if the inner loop wasn't broken.
+                continue
+            # Inner loop was broken, break the outer.
+            break
+    if not conversation_handler.current_conversation:
+        conversation_handler.current_conversation = await conversation_handler.create(
+            config.response.default_ai)
+        # 最终要选择的对话上下文
+    if not conversation_context:
+        conversation_context = conversation_handler.current_conversation
 
     def wrap_request(n, m):
-        async def call(session_id, source, target, message, respond):
-            await m.handle_request(session_id, source, target, message, respond, n)
+        async def call(session_id, source, target, message, conversation_context, respond):
+            await m.handle_request(session_id, source, target, message, respond, conversation_context, n)
 
         return call
 
@@ -105,25 +126,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         for m in middlewares:
             await m.on_respond(session_id, source, target, message, msg)
 
-    async def request(a, b, c, prompt: str, e):
+    async def request(a, b, c, prompt: str, e, f):
         try:
             task = None
-
-            # 此处为会话不存在时可以执行的指令
-            conversation_handler = await ConversationHandler.get_handler(session_id)
-            conversation_context = None
-            # 指定前缀对话
-            if ' ' in prompt:
-                for ai_type, prefixes in config.trigger.prefix_ai.items():
-                    for prefix in prefixes:
-                        if prefix + ' ' in prompt:
-                            conversation_context = await conversation_handler.first_or_create(ai_type)
-                            break
-                    else:
-                        # Continue if the inner loop wasn't broken.
-                        continue
-                    # Inner loop was broken, break the outer.
-                    break
 
             # 不带前缀 - 正常初始化会话
             if bot_type_search := re.search(config.trigger.switch_command, prompt):
@@ -131,13 +136,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     bot_type_search.group(1).strip())
                 await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
                 return
-            # 初始化会话
-            elif not conversation_handler.current_conversation:
-                conversation_handler.current_conversation = await conversation_handler.create(
-                    config.response.default_ai)
-            # 最终要选择的对话上下文
-            if not conversation_context:
-                conversation_context = conversation_handler.current_conversation
 
             # 此处为会话存在后可执行的指令
 
@@ -217,7 +215,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         action = wrap_request(action, m)
 
     # 开始处理
-    await action(session_id, source, target, message.strip(), respond)
+    await action(session_id, source, target, message.strip(), conversation_context, respond)
 
 FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
 
