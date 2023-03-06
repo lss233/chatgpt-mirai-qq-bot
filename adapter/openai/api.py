@@ -2,6 +2,7 @@
 import tempfile
 from typing import Generator
 import aiohttp
+from PIL import Image
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -48,9 +49,9 @@ class OpenAIAPIAdapter(BotAdapter):
         logger.debug(f"[OpenAI Image] Response: {image_url}")
         return await self.__download_image(image_url)
 
-    async def image_variation(self, src_img):
+    async def image_variation(self, src_img: Image):
         f = tempfile.mktemp(suffix='.png')
-        src_img.save(f, 'PNG')
+        src_img.save(f, format='PNG')
         response = await openai.Image.acreate_variation(
             api_key=self.api_info.api_key,
             image=open(f, 'rb'),
