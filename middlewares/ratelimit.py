@@ -16,12 +16,12 @@ class MiddlewareRatelimit(Middleware):
         ...
 
     async def handle_request(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             respond: Callable, action: Callable):
+                             respond: Callable, conversation_context, action: Callable):
         rate_usage = manager.check_exceed('好友' if isinstance(target, Friend) else '群组', str(target.id))
         if rate_usage >= 1:
             await respond(config.ratelimit.exceed)
             return
-        await action(session_id, source, target, prompt, respond)
+        await action(session_id, source, target, prompt, conversation_context, respond)
 
     async def handle_respond_completed(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
                                        respond: Callable):

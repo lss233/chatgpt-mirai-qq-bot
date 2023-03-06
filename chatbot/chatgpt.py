@@ -2,6 +2,7 @@ import datetime
 import os
 import sys
 
+
 sys.path.append(os.getcwd())
 
 import asyncio
@@ -9,6 +10,7 @@ from typing import Union
 from revChatGPT.V1 import Chatbot as V1Chatbot
 from revChatGPT.Unofficial import Chatbot as BrowserChatbot
 from config import OpenAIAuthBase
+from utils import QueueInfo
 
 
 class ChatGPTBrowserChatbot(asyncio.Lock):
@@ -20,7 +22,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     mode: str
 
-    queue_size: int = 0
+    queue: QueueInfo
 
     unused_conversations_pools = {}
 
@@ -33,6 +35,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
     def __init__(self, bot, mode):
         self.bot = bot
         self.mode = mode
+        self.queue = QueueInfo()
         super().__init__()
 
     def update_accessed_at(self):
@@ -55,6 +58,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     def ask(self, prompt, conversation_id=None, parent_id=None):
         """向 ChatGPT 发送提问"""
+        # self.queue 已交给 MiddlewareConcurrentLock 处理，此处不处理
         self.bot.conversation_id = conversation_id
         self.bot.parent_id = parent_id
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
@@ -68,11 +72,3 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     def __str__(self) -> str:
         return self.bot.__str__()
-
-    async def __aenter__(self) -> None:
-        self.queue_size = self.queue_size + 1
-        return await super().__aenter__()
-
-    async def __aexit__(self, exc_type: type[BaseException], exc: BaseException, tb) -> None:
-        self.queue_size = self.queue_size - 1
-        return await super().__aexit__(exc_type, exc, tb)
