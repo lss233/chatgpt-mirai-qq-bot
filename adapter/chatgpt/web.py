@@ -112,6 +112,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 if e.code == 2:
                     current_time = datetime.datetime.now()
                     self.bot.refresh_accessed_at()
+                    logger.debug("[ChatGPT-Web] accessed at: " + self.bot.accessed_at)
                     first_accessed_at = self.bot.accessed_at[0] if len(self.bot.accessed_at) > 0 \
                         else current_time - datetime.timedelta(hours=1)
                     remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
