@@ -26,9 +26,11 @@ class MiddlewareTimeout(Middleware):
         if session_id in self.ctx:
             self.ctx[session_id].cancel()
         self.ctx[session_id] = asyncio.create_task(create_timeout_task(respond))
-        await asyncio.gather(
-            action(session_id, source, target, prompt, respond), self.ctx[session_id]
-        )
+
+        await action(session_id, source, target, prompt, respond)
+        # await asyncio.gather(
+        #     action(session_id, source, target, prompt, respond), self.ctx[session_id]
+        # )
 
     async def on_respond(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
                                  rendered: str):

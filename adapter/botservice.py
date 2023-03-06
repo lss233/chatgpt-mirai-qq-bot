@@ -4,6 +4,10 @@ from typing import Generator
 class BotAdapter:
     """定义所有 Chatbot 的通用接口"""
     preset_name: str = "default"
+
+    def get_queue_info(self): ...
+    """获取内部队列"""
+
     def __init__(self, session_id: str = "unknown"): ...
 
     async def ask(self, msg: str) -> Generator[str, None, None]: ...
