@@ -3,6 +3,7 @@ import sys
 
 import openai
 
+
 sys.path.append(os.getcwd())
 import constants
 
@@ -35,6 +36,7 @@ import time
 from conversation import ConversationHandler
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
+from middlewares.concurrentlock import MiddlewareConcurrentLock
 from manager.bot import BotManager
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
@@ -76,7 +78,7 @@ async def response(session_id: str, target: Union[Friend, Group], source: Source
             await response_as_image(target, source, response)
 
 
-middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud()]
+middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source, chain: MessageChain) -> str:
