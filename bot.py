@@ -103,9 +103,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if not conversation_handler.current_conversation:
         conversation_handler.current_conversation = await conversation_handler.create(
             config.response.default_ai)
-        # 最终要选择的对话上下文
-    if not conversation_context:
-        conversation_context = conversation_handler.current_conversation
+
+
 
     def wrap_request(n, m):
         async def call(session_id, source, target, message, conversation_context, respond):
@@ -126,7 +125,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
         for m in middlewares:
             await m.on_respond(session_id, source, target, message, msg)
 
-    async def request(a, b, c, prompt: str, e, f):
+    async def request(a, b, c, prompt: str, conversation_context, f):
         try:
             task = None
 
@@ -136,7 +135,9 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                     bot_type_search.group(1).strip())
                 await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
                 return
-
+            # 最终要选择的对话上下文
+            if not conversation_context:
+                conversation_context = conversation_handler.current_conversation
             # 此处为会话存在后可执行的指令
 
             # 重置会话
