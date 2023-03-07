@@ -27,14 +27,14 @@ class ChatGPTAPIAdapter(BotAdapter):
         super().__init__()
 
     async def rollback(self):
-        if len(self.bot.conversation) > 0:
+        if len(self.bot.conversation["default"]) > 0:
             self.bot.rollback()
             return True
         else:
             return False
 
     async def on_reset(self):
-        self.bot.conversation = []
+        self.bot.conversation["default"] = []
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
@@ -75,4 +75,4 @@ class ChatGPTAPIAdapter(BotAdapter):
             role = 'assistant'
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
-        self.bot.conversation.append({"role": role, "content": text})
+        self.bot.conversation["default"].append({"role": role, "content": text})
