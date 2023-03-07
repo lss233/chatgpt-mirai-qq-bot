@@ -22,6 +22,7 @@ jobs:
         cd C:/generated_files
         mkdir mirai
         mkdir chatgpt
+        mkdir mirai/plugins
         echo "Downloading JRE..."
         Invoke-WebRequest -URI https://download.bell-sw.com/java/17.0.6+10/bellsoft-jre17.0.6+10-windows-amd64.zip -OutFile C:/tmp_files/jre.zip
         7z x C:/tmp_files/jre.zip -r -oC:/generated_files/mirai/jre/
@@ -34,6 +35,9 @@ jobs:
         $replace = 'set JAVA_BINARY=jre\jre-17.0.6\bin\java.exe'
 
         (Get-Content -Path 'C:/generated_files/mirai/mcl.cmd' -Raw) -replace $search, $replace | Set-Content -Path 'C:/generated_files/mirai/mcl.cmd'
+
+        Invoke-WebRequest -URI https://github.com/cssxsh/fix-protocol-version/releases/download/v1.0.0/fix-protocol-version-1.0.0.mirai2.jar -OutFile C:/generated_files/mirai/plugins/fix-protocol-version-1.0.0.mirai2.jar
+
         ./mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
         ./mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
         ./mcl.cmd --dry-run
