@@ -107,6 +107,18 @@ docker run --name mirai-chatgpt-bot \
 我们为 Windows 用户制作了一个快速启动包，可以在 [Release](https://github.com/lss233/chatgpt-mirai-qq-bot/releases) 中找到。    
 
 文件名为：`quickstart-windows-amd64.zip`  或者 `Windows快速部署包.zip`
+
+</details>
+
+<details>
+    <summary>Mac: 快速部署包 (自带 Mirai，新人推荐）</summary>
+
+Windows快速部署包Mac用户也可以使用，@magisk317 已测试通过，功能基本都正常
+不过，需要注意的是，如果需要使用图片模式，由于`wkhtmltoimage.exe`在Mac上无法运行，可以使用`wkhtmltopdf`代替，安装命令：
+```
+brew install --cask wkhtmltopdf
+```
+brew的安装及使用方法详见：[链接](https://brew.sh/index_zh-cn)
 </details>
 
 <details>
