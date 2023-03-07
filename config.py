@@ -102,9 +102,9 @@ class TextToImage(BaseModel):
 class Trigger(BaseModel):
     prefix: List[str] = [""]
     """全局的触发响应前缀，同时适用于私聊和群聊，默认不需要"""
-    prefix_friend: List[str] = [""]
+    prefix_friend: List[str] = []
     """私聊中的触发响应前缀，默认不需要"""
-    prefix_group: List[str] = [""]
+    prefix_group: List[str] = []
     """群聊中的触发响应前缀，默认不需要"""
 
     prefix_ai: Dict[str, List[str]] = dict()
