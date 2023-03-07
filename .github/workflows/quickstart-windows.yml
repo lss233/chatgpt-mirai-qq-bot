@@ -43,13 +43,13 @@ jobs:
         ./mcl.cmd --dry-run
 
         cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
-        echo "Downloading Python3.9 ..."
-        Invoke-WebRequest https://www.python.org/ftp/python/3.9.13/python-3.9.13-embed-amd64.zip -OutFile C:/tmp_files/python.zip
-        7z x C:/tmp_files/python.zip -r -oC:/generated_files/chatgpt/python3.9
+        echo "Downloading Python3.11 ..."
+        Invoke-WebRequest https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip -OutFile C:/tmp_files/python.zip
+        7z x C:/tmp_files/python.zip -r -oC:/generated_files/chatgpt/python3.11
 
         echo "Downloading get-pip.py ..."
-        Invoke-WebRequest -URI https://bootstrap.pypa.io/get-pip.py -OutFile C:/generated_files/chatgpt/python3.9/get-pip.py
-        echo "import site" >> C:/generated_files/chatgpt/python3.9/python39._pth
+        Invoke-WebRequest -URI https://bootstrap.pypa.io/get-pip.py -OutFile C:/generated_files/chatgpt/python3.11/get-pip.py
+        echo "import site" >> C:/generated_files/chatgpt/python3.11/python311._pth
 
         echo "Moving files..."
         mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
@@ -69,8 +69,8 @@ jobs:
         
         echo "Downloading packages..."
         cd C:/generated_files/chatgpt
-        python3.9\python.exe C:/generated_files/chatgpt/python3.9/get-pip.py
-        python3.9\python.exe -m pip install -r requirements.txt
+        python3.11\python.exe C:/generated_files/chatgpt/python3.11/get-pip.py
+        python3.11\python.exe -m pip install -r requirements.txt
         
         echo "Packing..." 
         cd C:/generated_files
