@@ -124,7 +124,7 @@ brew的安装及使用方法详见：[链接](https://brew.sh/index_zh-cn)
 <details>
     <summary>手动部署</summary>
 
-提示：你需要 Python >= 3.9 才能运行本项目  
+提示：你需要 Python >= 3.11 才能运行本项目  
 
 1. 部署 Mirai ，安装 mirai-http-api 插件。
 

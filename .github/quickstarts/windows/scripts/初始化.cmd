@@ -35,8 +35,8 @@ cd "%BASE_DIR%\chatgpt"
 
 ECHO 接下来开始初始化 ChatGPT
 ECHO 初始化 pip...
-set PYTHON_EXECUTABLE="%cd%\python3.9\python.exe"
-cd "%BASE_DIR%\chatgpt\python3.9"
+set PYTHON_EXECUTABLE="%cd%\python3.11\python.exe"
+cd "%BASE_DIR%\chatgpt\python3.11"
 @REM %PYTHON_EXECUTABLE% get-pip.py
 
 ECHO 安装依赖...

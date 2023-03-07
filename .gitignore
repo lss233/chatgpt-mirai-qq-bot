@@ -1,6 +1,6 @@
 config.json
 config.cfg
 __pycache__/
-python3.9/
+python3.11/
 .idea/
 data/*.json
