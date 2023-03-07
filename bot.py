@@ -25,7 +25,6 @@ from graia.broadcast.exceptions import ExecutionStop
 from graia.ariadne.model import Friend, Group, Member
 from graia.ariadne.message.commander import Commander
 from graia.ariadne.message.element import Image
-from tls_client.exceptions import TLSClientExeption
 
 from renderer.renderer import MarkdownImageRenderer, FullTextRenderer
 from loguru import logger
@@ -205,7 +204,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 f"* bing-p - 微软 New Bing (精确)\n")
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (TLSClientExeption, SSLError, ProxyError) as e:  # 网络异常
+        except (SSLError, ProxyError) as e:  # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
         except Exception as e:  # 未处理的异常
             logger.exception(e)
