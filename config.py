@@ -74,13 +74,17 @@ class OpenAIAPIKey(OpenAIAuthBase):
     api_key: str
     """OpenAI 的 api_key"""
 
+
 class BingCookiePath(BaseModel):
     cookie_content: str
     """Bing 的 Cookie 文件内容"""
 
+
 class BingAuths(BaseModel):
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
+
+
 class TextToImage(BaseModel):
     always: bool = False
     """强制开启，设置后所有的会话强制以图片发送"""
@@ -124,6 +128,7 @@ class Trigger(BaseModel):
     """切换至图片回复模式"""
     text_only_command: List[str] = ["文本模式"]
     """切换至文本回复模式"""
+
 
 class Response(BaseModel):
     default_ai: Union[str, None] = None
@@ -189,21 +194,24 @@ class System(BaseModel):
     accept_friend_request: bool = False
     """自动接收好友请求"""
 
+
 class BaiduCloud(BaseModel):
     check: bool = False
     """是否启动百度云内容安全审核"""
-    baidu_api_key: str =""
+    baidu_api_key: str = ""
     """百度云API_KEY 24位英文数字字符串"""
-    baidu_secret_key: str =""
+    baidu_secret_key: str = ""
     """百度云SECRET_KEY 32位的英文数字字符串"""
-    illgalmessage : str ="[百度云]请珍惜机器人，当前返回内容不合规"
+    illgalmessage: str = "[百度云]请珍惜机器人，当前返回内容不合规"
     """不合规消息自定义返回"""
+
 
 class Preset(BaseModel):
     command: str = r"加载预设 (\w+)"
     keywords: dict[str, str] = dict()
     loaded_successful: str = "预设加载成功！"
     scan_dir: str = "./presets"
+
 
 class Ratelimit(BaseModel):
     warning_rate: float = 0.8
@@ -214,6 +222,7 @@ class Ratelimit(BaseModel):
 
     exceed: str = "已达到额度限制，请等待下一小时继续和我对话。"
     """超额消息"""
+
 
 class Config(BaseModel):
     mirai: Mirai
@@ -226,7 +235,7 @@ class Config(BaseModel):
     presets: Preset = Preset()
     ratelimit: Ratelimit = Ratelimit()
     baiducloud: BaiduCloud = BaiduCloud()
-    
+
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
             if os.path.isfile(path):

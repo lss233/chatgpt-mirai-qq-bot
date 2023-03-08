@@ -1,8 +1,9 @@
 import os
 import sys
+import re
+import time
 
 import openai
-
 
 sys.path.append(os.getcwd())
 import constants
@@ -30,8 +31,7 @@ from renderer.renderer import MarkdownImageRenderer, FullTextRenderer
 from loguru import logger
 
 from utils.text_to_img import to_image
-import re
-import time
+
 from conversation import ConversationHandler
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
@@ -80,7 +80,8 @@ async def response(session_id: str, target: Union[Friend, Group], source: Source
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
-async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source, chain: MessageChain) -> str:
+async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source,
+                         chain: MessageChain) -> str:
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
@@ -102,8 +103,6 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
     if not conversation_handler.current_conversation:
         conversation_handler.current_conversation = await conversation_handler.create(
             config.response.default_ai)
-
-
 
     def wrap_request(n, m):
         async def call(session_id, source, target, message, conversation_context, respond):
@@ -216,6 +215,7 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
 
     # 开始处理
     await action(session_id, source, target, message.strip(), conversation_context, respond)
+
 
 FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
 

@@ -29,7 +29,6 @@ class ConversationContext:
     """OpenAI API适配器，提供聊天之外的功能"""
     preset: str = None
 
-
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
@@ -89,7 +88,8 @@ class ConversationContext:
     async def rollback(self):
         resp = await self.adapter.rollback()
         if isinstance(resp, bool):
-            yield config.response.rollback_success if resp else config.response.rollback_fail.format(reset=config.trigger.reset_command)
+            yield config.response.rollback_success if resp else config.response.rollback_fail.format(
+                reset=config.trigger.reset_command)
         else:
             yield resp
 
@@ -131,6 +131,7 @@ class ConversationHandler:
 
     def list(self) -> List[ConversationContext]:
         ...
+
     """
     获取或创建新的上下文
     这里的代码和 create 是一样的
@@ -146,6 +147,7 @@ class ConversationHandler:
             return conversation
 
     """创建新的上下文"""
+
     async def create(self, _type: str):
         if _type in self.conversations:
             return self.conversations[_type]
