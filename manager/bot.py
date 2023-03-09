@@ -1,26 +1,27 @@
 import os
 import sys
-import hashlib
-import itertools
+import urllib.request
 
+import openai
 from revChatGPT import V1
-
-sys.path.append(os.getcwd())
 
 from requests.exceptions import SSLError
 
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from exceptions import NoAvailableBotException
 
+import itertools
 from typing import Union, List, Dict
+import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.V0 import Chatbot as BrowserChatbot
 from loguru import logger
-from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingAuths, BingCookiePath
+from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
+import hashlib
 
 
 class BotManager:
@@ -61,12 +62,14 @@ class BotManager:
             "openai-api": [],
             "bing-cookie": []
         }
+        self.__setup_system_proxy()
         if len(self.bing) > 0:
             self.login_bing()
-        self.login_openai()
+        if len(self.openai) > 0:
+            self.login_openai()
         count = sum(len(v) for v in self.bots.values())
         if count < 1:
-            logger.error("所有账号登录失败，程序无法启动！")
+            logger.error("没有登录成功的账号，程序无法启动！")
             exit(-2)
 
         # 自动推测默认 AI
@@ -144,14 +147,29 @@ class BotManager:
         bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False))
         return ChatGPTBrowserChatbot(bot, account.mode)
 
-    def __check_proxy(self, account):
-        if account.proxy is not None:
-            logger.info(f"正在检查代理配置：{account.proxy}")
+    def __setup_system_proxy(self):
+
+        system_proxy = None
+        for url in urllib.request.getproxies().values():
+            try:
+                system_proxy = self.__check_proxy(url)
+                if system_proxy is not None:
+                    break
+            except:
+                pass
+        if system_proxy is not None:
+            openai.proxy = system_proxy
+
+    def __check_proxy(self, proxy):
+        if proxy is not None:
+            logger.info(f"正在检查代理配置：{proxy}")
             from urllib.parse import urlparse
-            proxy_addr = urlparse(account.proxy)
+            proxy_addr = urlparse(proxy)
             if not network.is_open(proxy_addr.hostname, proxy_addr.port):
                 raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-            return account.proxy
+            return proxy
+        else:
+            return openai.proxy
         return None
 
     def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
@@ -171,7 +189,7 @@ class BotManager:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
-        if self.__check_proxy(account):
+        if self.__check_proxy(account.proxy):
             config['proxy'] = account.proxy
 
         # 我承认这部分代码有点蠢
@@ -222,7 +240,7 @@ class BotManager:
         raise Exception("All login method failed")
 
     def __login_openai_apikey(self, account):
-        self.__check_proxy(account)
+        self.__check_proxy(account.proxy)
         return account
 
     def pick(self, type: str):
