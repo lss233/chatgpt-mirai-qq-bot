@@ -24,6 +24,12 @@ class Mirai(BaseModel):
     reverse_ws_port: Optional[int] = 8554
     """mirai-api-http 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
+class TelegramBot(BaseModel):
+    bot_token: str
+    """Bot 大爹给的 token"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
 class OpenAIAuths(BaseModel):
     browserless_endpoint: Union[str, None] = None
     """自定义无浏览器登录模式的接入点"""
@@ -228,8 +234,9 @@ class Ratelimit(BaseModel):
 
 
 class Config(BaseModel):
-    mirai: Mirai
-    openai: Union[OpenAIAuths, None]
+    mirai: Optional[Mirai] = None
+    telegram: Optional[TelegramBot] = None
+    openai: Optional[OpenAIAuths] = None
     bing: BingAuths = BingAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()

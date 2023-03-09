@@ -1,10 +1,8 @@
 import json
-from typing import Union, Callable
+from typing import Callable
 
 import aiohttp
-from graia.ariadne.message import Source
 from graia.ariadne.message.element import Image
-from graia.ariadne.model import Friend, Group
 from loguru import logger
 
 from config import Config
@@ -50,8 +48,7 @@ class MiddlewareBaiduCloud(Middleware):
     def __init__(self):
         ...
 
-    async def handle_respond(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             rendered: str, respond: Callable, action: Callable):
+    async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
         try:
             if config.baiducloud.check:
                 access_token = await read_access_token()
@@ -65,7 +62,7 @@ class MiddlewareBaiduCloud(Middleware):
 
                 # 不处理图片信息
                 if isinstance(rendered, Image):
-                    return await action(session_id, source, target, prompt, rendered, respond)
+                    return await action(session_id, prompt, rendered, respond)
 
                 async with aiohttp.ClientSession() as session:
                     async with session.post(baidu_url, headers=headers, data={'text': rendered}) as response:
@@ -76,19 +73,19 @@ class MiddlewareBaiduCloud(Middleware):
                     conclusion = response_dict["conclusion"]
                     if conclusion in "合规":
                         logger.success(f"百度云判定结果：{conclusion}")
-                        return await action(session_id, source, target, prompt, rendered, respond)
+                        return await action(session_id, prompt, rendered, respond)
                     else:
                         msg = response_dict['data'][0]['msg']
                         logger.error(f"百度云判定结果：{conclusion}")
                         conclusion = f"{config.baiducloud.illgalmessage}\n原因：{msg}"
-                        return await action(session_id, source, target, prompt, conclusion, respond)
+                        return await action(session_id, prompt, conclusion, respond)
             # 未审核消息路径
             else:
-                return await action(session_id, source, target, prompt, rendered, respond)
+                return await action(session_id, prompt, rendered, respond)
         except aiohttp.ClientError as e:
             logger.error(f"HTTP error occurred: {e}")
             conclusion = f"百度云判定出错\n以下是原消息：{rendered}"
-            return await action(session_id, source, target, prompt, conclusion, respond)
+            return await action(session_id, prompt, conclusion, respond)
         except json.JSONDecodeError as e:
             logger.error(f"JSON decode error occurred: {e}")
         except StopIteration as e:
