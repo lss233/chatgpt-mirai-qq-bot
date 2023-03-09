@@ -1,5 +1,4 @@
 import asyncio
-import os
 from typing import Generator
 
 from adapter.botservice import BotAdapter
@@ -7,8 +6,6 @@ from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle
 
 from constants import botManager
 from exceptions import BotOperationNotSupportedException
-import tempfile
-import json
 from loguru import logger
 import re
 
@@ -49,7 +46,7 @@ class BingAdapter(BotAdapter):
             async for final, response in self.bot.ask_stream(prompt=prompt,
                                                              conversation_style=self.conversation_style):
                 if not final:
-                    response = re.sub(r"\[\^\d+\^\]","",response)
+                    response = re.sub(r"\[\^\d+\^\]", "", response)
                     yield remaining_conversations + response
                     parsed_content = response
                 else:
@@ -68,7 +65,6 @@ class BingAdapter(BotAdapter):
             yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
             await self.on_reset()
             return
-
 
     async def preset_ask(self, role: str, text: str):
         # 不会给 Bing 提供预设

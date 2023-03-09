@@ -24,6 +24,10 @@ cd "%BASE_DIR%\mirai"
 @REM ECHO 安装 mirai-device-generator 插件...
 @REM ECHO 插件介绍：https://github.com/cssxsh/mirai-device-generator
 @REM cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
+@REM
+@REM ECHO 安装 fix-protocol-version 插件...
+@REM ECHO 插件介绍：https://github.com/cssxsh/fix-protocol-version
+@REM cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:fix-protocol-version --channel stable --type plugin
 
 cd "%BASE_DIR%"
 ECHO 复制 mirai-http-api 配置信息...

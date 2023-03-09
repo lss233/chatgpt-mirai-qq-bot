@@ -1,5 +1,7 @@
 import os
 import sys
+import hashlib
+import itertools
 
 from revChatGPT import V1
 
@@ -10,9 +12,7 @@ from requests.exceptions import SSLError
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from exceptions import NoAvailableBotException
 
-import itertools
 from typing import Union, List, Dict
-import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
 from revChatGPT.V0 import Chatbot as BrowserChatbot
 from loguru import logger
@@ -21,7 +21,6 @@ import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
-import hashlib
 
 
 class BotManager:
@@ -154,6 +153,7 @@ class BotManager:
                 raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
             return account.proxy
         return None
+
     def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
         """保存登录缓存"""
         account_sha = hashlib.sha256(account.json().encode('utf8')).hexdigest()

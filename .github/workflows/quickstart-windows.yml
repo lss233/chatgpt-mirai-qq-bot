@@ -40,6 +40,7 @@ jobs:
 
         ./mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
         ./mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
+        ./mcl.cmd --update-package xyz.cssxsh.mirai:fix-protocol-version --channel stable --type plugin
         ./mcl.cmd --dry-run
 
         cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\

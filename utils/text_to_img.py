@@ -12,12 +12,10 @@ from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import itertools
 import unicodedata
-from PIL import Image
 from graia.ariadne.message.element import Image as GraiaImage
 from charset_normalizer import from_bytes
 
 # Do not delete this line, it has be loaded before markdown
-import utils.zipimporter_patch
 import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.tables import TableExtension
@@ -30,9 +28,6 @@ import shutil
 import qrcode
 import base64
 from PIL import Image
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
 
 config = Config.load_config()
 
