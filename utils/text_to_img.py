@@ -331,7 +331,7 @@ async def text_to_image(text):
             temp_jpg_filename = temp_jpg_file.name
             temp_jpg_file.close()
 
-        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html')
+        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', encoding='utf-8')
         temp_html_filename = temp_html_file.name
         imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
         with StringIO(html) as input_file:
