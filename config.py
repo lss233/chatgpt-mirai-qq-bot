@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Literal, Dict
+from typing import List, Union, Literal, Dict, Optional
 from pydantic import BaseModel, BaseConfig, Extra
 from charset_normalizer import from_bytes
 from loguru import logger
@@ -19,7 +19,10 @@ class Mirai(BaseModel):
     """mirai-api-http 的 http 适配器地址"""
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
-
+    reverse_ws_host: str = "0.0.0.0"
+    """mirai-api-http 的 反向 ws 主机号"""
+    reverse_ws_port: Optional[int] = 8554
+    """mirai-api-http 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
 class OpenAIAuths(BaseModel):
     browserless_endpoint: Union[str, None] = None

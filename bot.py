@@ -3,6 +3,7 @@ import sys
 import re
 import time
 
+from graia.amnesia.builtins.aiohttp import AiohttpServerService
 
 sys.path.append(os.getcwd())
 import openai
@@ -13,7 +14,7 @@ from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,
     WebsocketClientConfig,
-    config as ariadne_config,
+    config as ariadne_config, WebsocketServerConfig,
 )
 from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
@@ -44,14 +45,25 @@ from exceptions import PresetNotFoundException, BotRatelimitException, Concurren
 from middlewares.baiducloud import MiddlewareBaiduCloud
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
-app = Ariadne(
-    ariadne_config(
-        config.mirai.qq,  # 配置详见
-        config.mirai.api_key,
-        HttpClientConfig(host=config.mirai.http_url),
-        WebsocketClientConfig(host=config.mirai.ws_url),
-    ),
-)
+if config.mirai.reverse_ws_port:
+    Ariadne.config(default_account=config.mirai.qq)
+    app = Ariadne(
+        ariadne_config(
+            config.mirai.qq,  # 配置详见
+            config.mirai.api_key,
+            WebsocketServerConfig()
+        ),
+    )
+    app.launch_manager.add_launchable(AiohttpServerService(config.mirai.reverse_ws_host, config.mirai.reverse_ws_port))
+else:
+    app = Ariadne(
+        ariadne_config(
+            config.mirai.qq,  # 配置详见
+            config.mirai.api_key,
+            HttpClientConfig(host=config.mirai.http_url),
+            WebsocketClientConfig(host=config.mirai.ws_url),
+        ),
+    )
 
 
 async def response_as_image(target: Union[Friend, Group], source: Source, response):

@@ -170,9 +170,14 @@ manager_qq = 请修改为机器人管理员的QQ号
 # 以下设置如果不懂 无需理会
 
 api_key = "1234567890" # mirai-http-api 中的 verifyKey
-http_url = "http://localhost:8080" # mirai-http-api 中的 http 回调地址
-ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
-
+# mirai api http 反向连接模式
+# 使用此模式可以将本项目与 mirai 分离在两个不同服务器部署
+reverse_ws_host = "localhost"
+reverse_ws_port = 8554
+# mirai api http 正向连接模式
+# 使用此模式时需注释上面的反向连接模式
+# http_url = "http://localhost:8080"
+# ws_url = "http://localhost:8080"
 # ==== OpenAI 账号部分开始
 [openai]
 # OpenAI 相关设置
