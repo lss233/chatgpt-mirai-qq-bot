@@ -12,5 +12,5 @@ if config.telegram:
     import telegram_bot
 else:
     logger.info("检测到 mirai 配置，将以 mirai 模式启动……")
-    import mirai
+    import ariadne_bot
 
