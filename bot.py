@@ -3,7 +3,7 @@ import sys
 import re
 import time
 
-from graia.amnesia.builtins.aiohttp import AiohttpServerService
+
 
 sys.path.append(os.getcwd())
 import openai
@@ -16,6 +16,7 @@ from graia.ariadne.connection.config import (
     WebsocketClientConfig,
     config as ariadne_config, WebsocketServerConfig,
 )
+from graia.amnesia.builtins.aiohttp import AiohttpServerService
 from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe

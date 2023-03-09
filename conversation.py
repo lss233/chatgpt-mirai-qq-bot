@@ -29,6 +29,7 @@ class ConversationContext:
     """OpenAI API适配器，提供聊天之外的功能"""
     preset: str = None
 
+
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
