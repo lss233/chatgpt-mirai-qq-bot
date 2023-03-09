@@ -3,11 +3,10 @@ import sys
 import re
 import time
 
-import openai
 
 sys.path.append(os.getcwd())
+import openai
 import constants
-
 from typing import Union
 from typing_extensions import Annotated
 from graia.ariadne.app import Ariadne

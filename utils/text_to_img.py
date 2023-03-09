@@ -14,7 +14,7 @@ import itertools
 import unicodedata
 from graia.ariadne.message.element import Image as GraiaImage
 from charset_normalizer import from_bytes
-
+import utils.zipimporter_patch
 # Do not delete this line, it has be loaded before markdown
 import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
