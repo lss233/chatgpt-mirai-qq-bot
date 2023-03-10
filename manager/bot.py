@@ -249,7 +249,7 @@ class BotManager:
         if openai.proxy is None:
             openai.proxy = account.proxy
         try:
-            openai.Model.list(api_key=account.api_key)
+            openai.Model.list(api_key=account.api_key, user="user-test")
         except:
             pass
         return account

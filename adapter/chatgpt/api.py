@@ -9,6 +9,9 @@ from revChatGPT.V3 import Chatbot as OpenAIChatbot
 
 from config import OpenAIAPIKey
 from constants import botManager
+import ctypes
+
+hashu = lambda word: ctypes.c_uint64(hash(word)).value
 
 
 class ChatGPTAPIAdapter(BotAdapter):
@@ -18,8 +21,11 @@ class ChatGPTAPIAdapter(BotAdapter):
     bot: OpenAIChatbot = None
     """实例"""
 
+    hashed_user_id: str
+
     def __init__(self, session_id: str = "unknown"):
         self.session_id = session_id
+        self.hashed_user_id = "user-" + hashu("session_id").to_bytes(8, "big").hex()
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
         self.conversation_id = None
@@ -40,7 +46,7 @@ class ChatGPTAPIAdapter(BotAdapter):
 
     def ask_sync(self, sync_q, prompt):
         try:
-            for resp in self.bot.ask_stream(prompt):
+            for resp in self.bot.ask_stream(prompt, role=self.hashed_user_id):
                 sync_q.put(resp)
             sync_q.put(None)
         except Exception as e:
