@@ -323,7 +323,8 @@ async def text_to_image(text):
             # 填充正文
             html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri()) \
                 .replace("{qrcode}", await get_qr_data(text)) \
-                .replace("{content}", content)
+                .replace("{content}", content) \
+                .replace("{font_size_texttoimg}", str(config.text_to_image.font_size))
             output_file.write(html)
 
             # 创建临时jpg文件
