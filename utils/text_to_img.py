@@ -318,13 +318,16 @@ async def text_to_image(text):
 
         asset_folder = os.path.join(os.getcwd(), 'assets', 'texttoimg')
 
+        font_path = os.path.join(os.getcwd(), config.text_to_image.font_path)
+
         # 输出html到字符串io流
         with StringIO() as output_file:
             # 填充正文
             html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri()) \
                 .replace("{qrcode}", await get_qr_data(text)) \
                 .replace("{content}", content) \
-                .replace("{font_size_texttoimg}", str(config.text_to_image.font_size))
+                .replace("{font_size_texttoimg}", str(config.text_to_image.font_size)) \
+                .replace("{font_path_texttoimg}", pathlib.Path(font_path).as_uri())
             output_file.write(html)
 
             # 创建临时jpg文件

@@ -1,5 +1,5 @@
 body {
-    font-family: "Microsoft Yahei",Helvetica,arial,sans-serif;
+    font-family: "Custom Font","Microsoft Yahei",Helvetica,arial,sans-serif;
     font-size: 1rem;
     line-height: 1.6;
     padding-top: 10px;
@@ -366,7 +366,6 @@ code {
 }
 
 body {
-    font-family: "JetBrains Mono",sans-serif!important;
     color: var(--drake-text-color);
     -webkit-font-feature-settings: "liga"on,"calt"on;
     -webkit-font-smoothing: subpixel-antialiased;
