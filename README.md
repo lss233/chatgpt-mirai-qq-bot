@@ -330,13 +330,13 @@ always = true
 # 是否默认开启，设置后所有的消息默认以图片发送，减小风控概率  
 default = true
 
-# [备用模式]字体大小
+# 字体大小
 font_size = 30
 
-# [备用模式]图片宽度
+# 图片宽度
 width = 700
 
-# [备用模式]字体
+# 字体
 font_path = "fonts/sarasa-mono-sc-regular.ttf" 
 
 # [备用模式]起始点 X
