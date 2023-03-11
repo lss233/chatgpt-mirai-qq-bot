@@ -7,6 +7,15 @@ import os
 import sys
 import toml
 
+class Onebot(BaseModel):
+    qq: int
+    """Bot 的 QQ 号"""
+    manager_qq: int = 0
+    """机器人管理员的 QQ 号"""
+    reverse_ws_host: str = "0.0.0.0"
+    """go-cqhttp 的 反向 ws 主机号"""
+    reverse_ws_port: Optional[int] = 8554
+    """go-cqhttp 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
 class Mirai(BaseModel):
     qq: int
@@ -234,6 +243,7 @@ class Ratelimit(BaseModel):
 
 
 class Config(BaseModel):
+    onebot: Optional[Onebot] = None
     mirai: Optional[Mirai] = None
     telegram: Optional[TelegramBot] = None
     openai: Optional[OpenAIAuths] = None

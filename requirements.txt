@@ -25,3 +25,4 @@ uuid~=1.30
 janus~=1.0.0
 
 python-telegram-bot
+aiocqhttp
