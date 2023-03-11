@@ -122,7 +122,7 @@ async def _(event: Event):
 async def _(event: Event):
     if not event.message == ".重新加载配置文件":
         return
-    if not event.user_id == config.mirai.manager_qq:
+    if not event.user_id == config.onebot.manager_qq:
         return await bot.send(event, "您没有权限执行这个操作")
     constants.config = config.load_config()
     config.scan_presets()
@@ -139,7 +139,7 @@ async def _(event: Event):
     match = re.match(pattern, event.message.strip())
     if not match:
         return
-    if not event.user_id == config.mirai.manager_qq:
+    if not event.user_id == config.onebot.manager_qq:
         return await bot.send(event, "您没有权限执行这个操作")
     msg_type, msg_id, rate = match.groups()
     rate = int(rate)
