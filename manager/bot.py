@@ -193,8 +193,8 @@ class BotManager:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
-        if self.__check_proxy(account.proxy):
-            config['proxy'] = account.proxy
+        if proxy := self.__check_proxy(account.proxy):
+            config['proxy'] = proxy
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:
@@ -244,10 +244,9 @@ class BotManager:
         raise Exception("All login method failed")
 
     def __login_openai_apikey(self, account):
-        self.__check_proxy(account.proxy)
         logger.info("尝试使用 api_key 登录中...")
-        if openai.proxy is None:
-            openai.proxy = account.proxy
+        if proxy := self.__check_proxy(account.proxy):
+            openai.proxy = proxy
         try:
             openai.Model.list(api_key=account.api_key, user="user-test")
         except:
