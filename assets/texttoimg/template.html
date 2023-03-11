@@ -10,6 +10,7 @@
     <link href="{path_texttoimg}/css/github-md.css" rel="stylesheet" >
     <script src="{path_texttoimg}/js/highlight.js"></script>
     <script src="{path_texttoimg}/js/MathJax.js"></script>
+    <script src="{path_texttoimg}/js/twemoji.min.js"></script>
     <style>
         #MathJax_Message {
             display: none;
@@ -41,6 +42,11 @@
         </div>
     </div>
     <script>
+        twemoji.parse(document.getElementById("content"), {
+            base: '{path_texttoimg}',
+            folder: '/emoji/png',
+            ext: '.png'
+        });
         MathJax.Hub.Config({
               config: ["MMLorHTML.js"],
               jax: ["input/TeX", "output/HTML-CSS", "output/NativeMML"],
