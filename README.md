@@ -505,11 +505,10 @@ qq = 请填写机器人的 QQ 号
 manager_qq = 请修改为机器人管理员的QQ号
 
 api_key = "1234567890" # mirai-http-api 中的 verifyKey
-# mirai api http 反向连接模式
-# 使用此模式可以将本项目与 mirai 分离在两个不同服务器部署
 reverse_ws_host = "0.0.0.0"
 reverse_ws_port = 8554
 ```
+这样你就可以把本程序放在云服务器上，而 Mirai 可以放在自己的电脑上，从而避免触发 QQ 的异地登录保护。  
 
 
 #### OneBot (go-cqhttp)
