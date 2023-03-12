@@ -82,6 +82,8 @@ async def _(event: Event):
         return
 
     async def response(resp):
+        if config.response.quote:
+            resp = f'[CQ:reply,id={event.message_id}]' + resp
         if isinstance(resp, str):
             print("ret ", await bot.send(event, resp))
         elif isinstance(resp, Image):
@@ -110,6 +112,8 @@ async def _(event: Event):
         return
 
     async def response(resp):
+        if config.response.quote:
+            resp = f'[CQ:reply,id={event.message_id}]' + resp
         if isinstance(resp, str):
             print("ret ", await bot.send(event, resp))
         elif isinstance(resp, Image):
