@@ -27,10 +27,14 @@ class MentionMe:
     def __init__(self, name: Union[bool, str] = True) -> None:
         self.name = name
 
-    async def __call__(self, chain: MessageChain, _) -> Optional[MessageChain]:
+    async def __call__(self, chain: MessageChain, event: Event) -> Optional[MessageChain]:
         first = chain[0]
         if isinstance(first, At) and first.target == config.onebot.qq:
             return MessageChain(chain.__root__[1:], inline=True).removeprefix(" ")
+        elif isinstance(first, Plain):
+            member_info = await bot.get_group_member_info(group_id=event.group_id, user_id=config.onebot.qq)
+            if member_info.get("nickname") and chain.startswith(member_info.get("nickname")):
+                return chain.removeprefix(" ")
         raise ExecutionStop
 
 
@@ -107,7 +111,7 @@ async def _(event: Event):
     chain = transform_message_chain(event.message)
     try:
         for it in GroupTrigger:
-            chain = await it(chain, None)
+            chain = await it(chain, event)
     except:
         return
 
