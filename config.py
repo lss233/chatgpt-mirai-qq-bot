@@ -30,7 +30,7 @@ class Mirai(BaseModel):
     """mirai-api-http 的 ws 适配器地址"""
     reverse_ws_host: str = "0.0.0.0"
     """mirai-api-http 的 反向 ws 主机号"""
-    reverse_ws_port: Optional[int] = 8554
+    reverse_ws_port: Optional[int] = None
     """mirai-api-http 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
 class TelegramBot(BaseModel):
