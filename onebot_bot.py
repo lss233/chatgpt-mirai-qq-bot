@@ -1,4 +1,5 @@
 # bot.py
+import re
 import time
 from typing import Union, Optional
 
@@ -16,7 +17,6 @@ from middlewares.ratelimit import manager as ratelimit_manager
 
 bot = CQHttp()
 
-import re
 
 botManager.login()
 
@@ -35,7 +35,7 @@ class MentionMe:
 
 
 def transform_message_chain(text: str) -> MessageChain:
-    pattern = r"\[CQ:(\w+),((?:\w+=\S+(?:,|(?=\])))+)\]"
+    pattern = r"\[CQ:(\w+),([^\]]+)\]"
     matches = re.finditer(pattern, text)
 
     message_classes = {
@@ -171,7 +171,7 @@ async def _(event: Event):
     usage = ratelimit_manager.get_usage(msg_type, msg_id)
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     return await bot.send(event,
-                                  f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
+                          f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
 
 bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
