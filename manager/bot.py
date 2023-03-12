@@ -22,6 +22,7 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
+import json
 
 
 class BotManager:
@@ -71,7 +72,10 @@ class BotManager:
         if count < 1:
             logger.error("没有登录成功的账号，程序无法启动！")
             exit(-2)
-
+        else:
+            # 输出登录状况
+            for k, v in self.bots.items():
+                logger.info(f"AI 类型：{k} - 可用账号： {len(v)} 个")
         # 自动推测默认 AI
         if not self.config.response.default_ai:
             if len(self.bots['chatgpt-web']) > 0:
@@ -189,8 +193,8 @@ class BotManager:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
-        if self.__check_proxy(account.proxy):
-            config['proxy'] = account.proxy
+        if proxy := self.__check_proxy(account.proxy):
+            config['proxy'] = proxy
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:
@@ -240,7 +244,13 @@ class BotManager:
         raise Exception("All login method failed")
 
     def __login_openai_apikey(self, account):
-        self.__check_proxy(account.proxy)
+        logger.info("尝试使用 api_key 登录中...")
+        if proxy := self.__check_proxy(account.proxy):
+            openai.proxy = proxy
+        try:
+            openai.Model.list(api_key=account.api_key, user="user-test")
+        except:
+            pass
         return account
 
     def pick(self, type: str):

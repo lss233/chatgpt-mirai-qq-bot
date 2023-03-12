@@ -1,9 +1,7 @@
-import time
-from typing import Union, Callable, Dict
+from typing import Callable, Dict, Optional
 
 import asyncio
-from graia.ariadne.message import Source
-from graia.ariadne.model import Friend, Group
+from conversation import ConversationContext
 from loguru import logger
 
 from constants import config
@@ -23,29 +21,24 @@ class MiddlewareTimeout(Middleware):
     def __init__(self):
         ...
 
-    async def handle_request(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             respond: Callable, conversation_context, action: Callable):
+    async def handle_request(self, session_id: str, prompt: str, respond: Callable,
+                             conversation_context: Optional[ConversationContext], action: Callable):
         if session_id in self.ctx:
             self.ctx[session_id].cancel()
         self.ctx[session_id] = asyncio.create_task(create_timeout_task(respond))
 
-        await action(session_id, source, target, prompt, conversation_context, respond)
-        # await asyncio.gather(
-        #     action(session_id, source, target, prompt, respond), self.ctx[session_id]
-        # )
+        await action(session_id, prompt, conversation_context, respond)
 
-    async def on_respond(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                         rendered: str):
+    async def on_respond(self, session_id: str, prompt: str, rendered: str):
         if rendered and session_id in self.ctx:
             self.ctx[session_id].cancel()
             del self.ctx[session_id]
             logger.debug("[Timeout] 取消计时……")
 
-    async def handle_respond(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             rendered: str, respond: Callable, action: Callable):
+    async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
         if rendered and session_id in self.ctx:
             self.ctx[session_id].cancel()
             del self.ctx[session_id]
             logger.debug("[Timeout] 取消计时……")
 
-        await action(session_id, source, target, prompt, rendered, respond)
+        await action(session_id, prompt, rendered, respond)

@@ -1,5 +1,5 @@
-graia-ariadne>=0.10.3
-revChatGPT[unofficial]==3.1.8.2
+graia-ariadne==0.11.1
+revChatGPT[unofficial]==3.0.5
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
@@ -23,3 +23,6 @@ urllib3~=1.26.14
 requests~=2.28.2
 uuid~=1.30
 janus~=1.0.0
+
+python-telegram-bot
+aiocqhttp

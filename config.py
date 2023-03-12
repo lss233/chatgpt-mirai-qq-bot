@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Union, Literal, Dict
+from typing import List, Union, Literal, Dict, Optional
 from pydantic import BaseModel, BaseConfig, Extra
 from charset_normalizer import from_bytes
 from loguru import logger
@@ -7,6 +7,15 @@ import os
 import sys
 import toml
 
+class Onebot(BaseModel):
+    qq: int
+    """Bot 的 QQ 号"""
+    manager_qq: int = 0
+    """机器人管理员的 QQ 号"""
+    reverse_ws_host: str = "0.0.0.0"
+    """go-cqhttp 的 反向 ws 主机号"""
+    reverse_ws_port: Optional[int] = 8554
+    """go-cqhttp 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
 class Mirai(BaseModel):
     qq: int
@@ -19,7 +28,16 @@ class Mirai(BaseModel):
     """mirai-api-http 的 http 适配器地址"""
     ws_url: str = "http://localhost:8080"
     """mirai-api-http 的 ws 适配器地址"""
+    reverse_ws_host: str = "0.0.0.0"
+    """mirai-api-http 的 反向 ws 主机号"""
+    reverse_ws_port: Optional[int] = 8554
+    """mirai-api-http 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
+class TelegramBot(BaseModel):
+    bot_token: str
+    """Bot 大爹给的 token"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
 
 class OpenAIAuths(BaseModel):
     browserless_endpoint: Union[str, None] = None
@@ -225,8 +243,10 @@ class Ratelimit(BaseModel):
 
 
 class Config(BaseModel):
-    mirai: Mirai
-    openai: Union[OpenAIAuths, None]
+    onebot: Optional[Onebot] = None
+    mirai: Optional[Mirai] = None
+    telegram: Optional[TelegramBot] = None
+    openai: Optional[OpenAIAuths] = None
     bing: BingAuths = BingAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()

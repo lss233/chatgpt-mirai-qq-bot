@@ -7,6 +7,10 @@
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
+> **2023/3/11**  
+> 由于近期 Mirai 登录异常,我们支持了 OneBot 协议 (go-cqhttp) 和 Telegram Bot 协议   
+> 大家可以用支持这些协议的程序继续和 ChatGPT 聊天  
+> 配置方法见下  
 
 > **2023/2/10**  
 > 本项目分为 ChatGPT 版和 GPT-3 版两种模式。  
@@ -38,6 +42,7 @@
 * [x] 支持接入百度云内容审核（主要是防封）
 * [x] 指定用户/群组额度限制 
 * [x] 预设人格初始化
+* [x] 支持 Mirai、 go-cqhttp、 Telegram Bot
 
 
 * [交流群](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 会发布最新的项目动态。  
@@ -170,12 +175,19 @@ manager_qq = 请修改为机器人管理员的QQ号
 # 以下设置如果不懂 无需理会
 
 api_key = "1234567890" # mirai-http-api 中的 verifyKey
-http_url = "http://localhost:8080" # mirai-http-api 中的 http 回调地址
-ws_url = "http://localhost:8080"# mirai-http-api 中的 ws 回调地址
-
+# mirai api http 反向连接模式
+# 使用此模式可以将本项目与 mirai 分离在两个不同服务器部署
+reverse_ws_host = "localhost"
+reverse_ws_port = 8554
+# mirai api http 正向连接模式
+# 使用此模式时需注释上面的反向连接模式
+# http_url = "http://localhost:8080"
+# ws_url = "http://localhost:8080"
 # ==== OpenAI 账号部分开始
 [openai]
 # OpenAI 相关设置
+# 自 3月9日 开始，不设置此项将无法正常使用 browserless 模式下的网页版 ChatGPT
+browserless_endpoint = "https://bypass.duti.tech/api/"
 
 # 你可以用多种不同的方式登录 OpenAI
 # 你也可以登录很多个不同的账号（无限多个）
@@ -480,7 +492,54 @@ warning_msg = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条�
 exceed = "已达到额度限制，请等待下一小时继续和我对话。"
 ```
 
-### 多账号支持  
+### 对接至机器人平台  
+
+为了应对 QQ 的登录失败问题，我们提供了多种不同的方法。 
+
+#### Mirai 反向 Websocket 连接
+
+```properties
+[mirai]
+# Mirai 相关设置
+qq = 请填写机器人的 QQ 号
+manager_qq = 请修改为机器人管理员的QQ号
+
+api_key = "1234567890" # mirai-http-api 中的 verifyKey
+reverse_ws_host = "0.0.0.0"
+reverse_ws_port = 8554
+```
+这样你就可以把本程序放在云服务器上，而 Mirai 可以放在自己的电脑上，从而避免触发 QQ 的异地登录保护。  
+
+
+#### OneBot (go-cqhttp)
+
+将 `config.cfg` 中的 `[mirai]` 块删除，然后加入以下配置：  
+```properties
+[onebot]
+qq=请修改为你机器人的QQ号
+manager_qq = 请修改为机器人管理员的QQ号
+# 此处的  reverse_ws_host 和 reverse_ws_port 对应
+# go-cqhttp 中的 反向WS Universal 地址，如：ws://localhost:6555/ws
+reverse_ws_host = "localhost"
+reverse_ws_port = 6555
+```
+就可以使用 go-cqhttp 或者其他支持 OneBot 协议的程序和 ChatGPT 聊天！
+
+#### Telegram Bot
+
+将 `config.cfg` 中的 `[mirai]` 块删除，然后加入以下配置：
+
+```properties
+[telegram]
+# 这个 token 是找 BotFather 要的
+bot_token = "你的 Bot token"
+# 如果部署在国内，就填这个设置代理
+# 不填的话就会读取系统的代理设置
+proxy = "http://localhost:1080"
+```
+就可以使用 Telegram 机器人和 ChatGPT 聊天！
+
+### OpenAI 多账号支持  
 
 你可以登录多个不同的 OpenAI 账号，当机器人开始产生新对话时，我们会从你登录的账号中选择**一个**来使用 ChatGPT 和用户聊天。 
 
@@ -604,13 +663,13 @@ access_token = "一串内容为 eyJhbGciOiJS*****X7GdA 的东西"
 
 可以尝试设置 `mode="browserless"` 配置项。  
 
-开启后，你的账户密码将发送至一个第三方的代理服务器进行验证。  
+开启后，你向 ChatGPT 发送的消息将通过一个第三方的服务器进行转发。  
 
 ```properties
 # 前面别的东西
 [openai]
-# 无浏览器模式接入点，如果未知请勿添加此配置项
-browserless_endpoint = "xxxx"
+# 无浏览器模式接入点，欢迎在交流群中分享你的接入点
+browserless_endpoint = "https://bypass.duti.tech/api/"
 # OpenAI 相关设置
 
 # 第 N 个 OpenAI 账号的登录信息
@@ -674,8 +733,6 @@ title_pattern="qq-{session_id}"
 3. 按下 F12，打开开发者工具（DevTools）
 4. 找到 控制台（或 Console），输入 `document.cookie` 然后回车
 5. 复制接下来出现的一段文本，这就是你的 Cookie
-
-
 
 ## 🦊 加载预设
 

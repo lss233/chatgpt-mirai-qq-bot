@@ -9,6 +9,9 @@ from revChatGPT.V3 import Chatbot as OpenAIChatbot
 
 from config import OpenAIAPIKey
 from constants import botManager
+import ctypes
+
+hashu = lambda word: ctypes.c_uint64(hash(word)).value
 
 
 class ChatGPTAPIAdapter(BotAdapter):
@@ -18,8 +21,11 @@ class ChatGPTAPIAdapter(BotAdapter):
     bot: OpenAIChatbot = None
     """实例"""
 
+    hashed_user_id: str
+
     def __init__(self, session_id: str = "unknown"):
         self.session_id = session_id
+        self.hashed_user_id = "user-" + hashu("session_id").to_bytes(8, "big").hex()
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
         self.conversation_id = None
@@ -27,20 +33,20 @@ class ChatGPTAPIAdapter(BotAdapter):
         super().__init__()
 
     async def rollback(self):
-        if len(self.bot.conversation["default"]) > 0:
+        if len(self.bot.conversation) > 0:
             self.bot.rollback()
             return True
         else:
             return False
 
     async def on_reset(self):
-        self.bot.conversation["default"] = []
+        self.bot.conversation = []
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
     def ask_sync(self, sync_q, prompt):
         try:
-            for resp in self.bot.ask_stream(prompt):
+            for resp in self.bot.ask_stream(prompt, role=self.hashed_user_id):
                 sync_q.put(resp)
             sync_q.put(None)
         except Exception as e:
@@ -75,4 +81,4 @@ class ChatGPTAPIAdapter(BotAdapter):
             role = 'assistant'
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
-        self.bot.conversation["default"].append({"role": role, "content": text})
+        self.bot.conversation.append({"role": role, "content": text})

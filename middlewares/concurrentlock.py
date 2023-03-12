@@ -1,14 +1,9 @@
-import time
-from typing import Union, Callable, Dict
-
-import asyncio
-from graia.ariadne.message import Source
-from graia.ariadne.model import Friend, Group
+from typing import Callable, Dict, Optional
 from loguru import logger
 
 from constants import config
 from middlewares.middleware import Middleware
-import conversation
+from conversation import ConversationContext, ConversationHandler
 from utils import QueueInfo
 
 
@@ -18,10 +13,9 @@ class MiddlewareConcurrentLock(Middleware):
     def __init__(self):
         ...
 
-    async def handle_request(self, session_id, source: Source, target: Union[Friend, Group], prompt: str,
-                             respond: Callable, conversation_context: Union[conversation.ConversationContext, None],
-                             action: Callable):
-        handler = await conversation.ConversationHandler.get_handler(session_id)
+    async def handle_request(self, session_id: str, prompt: str, respond: Callable,
+                             conversation_context: Optional[ConversationContext], action: Callable):
+        handler = await ConversationHandler.get_handler(session_id)
 
         if session_id not in self.ctx:
             self.ctx[session_id] = QueueInfo()
@@ -46,4 +40,4 @@ class MiddlewareConcurrentLock(Middleware):
         logger.debug(f"[Concurrent] 排队中{queue_info}，前面还有 {queue_info.size} 个人！")
         async with queue_info:
             logger.debug(f"[Concurrent] 排到了！")
-            await action(session_id, source, target, prompt, conversation_context, respond)
+            await action(session_id, prompt, conversation_context, respond)
