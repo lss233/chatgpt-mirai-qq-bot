@@ -85,9 +85,9 @@ async def _(event: Event):
         if config.response.quote:
             resp = f'[CQ:reply,id={event.message_id}]' + resp
         if isinstance(resp, str):
-            print("ret ", await bot.send(event, resp))
+            await bot.send(event, resp)
         elif isinstance(resp, Image):
-            print("ret ", await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]"))
+            await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
 
     try:
         await handle_message(response, f"friend-{event.user_id}", msg.display, chain)
@@ -115,9 +115,9 @@ async def _(event: Event):
         if config.response.quote:
             resp = f'[CQ:reply,id={event.message_id}]' + resp
         if isinstance(resp, str):
-            print("ret ", await bot.send(event, resp))
+            await bot.send(event, resp)
         elif isinstance(resp, Image):
-            print("ret ", await bot.send(event, f"[CQ:image,file=base64://{resp},type=show,id=40000]"))
+            await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
 
     await handle_message(response, f"group-{event.user_id}", chain.display)
 
