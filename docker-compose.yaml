@@ -18,6 +18,7 @@ services:
       XPRA_PASSWORD: 'lss233' # XPRA 密码，建议修改
     ports:
       - "14500:14500"
+      - "8554:8554"
     volumes:
       - ./config.cfg:/app/config.cfg
       - ./data:/app/data
