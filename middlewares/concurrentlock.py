@@ -24,7 +24,7 @@ class MiddlewareConcurrentLock(Middleware):
         if internal_queue := selected_ctx.adapter.get_queue_info():
             logger.debug("[Concurrent] 使用 Adapter 内部的 Queue")
             # 如果 Adapter 内部实现了 Queue，则用在用他们的之前先把中间件的队先排完
-            logger.debug(f"[Concurrent] 排队中间件{queue_info}中，前面还有 {queue_info.size} 个人！")
+            logger.debug(f"[Concurrent] 排队中，前面还有 {queue_info.size} 个人！")
             async with queue_info:
                 queue_info = internal_queue
         # 队列满时拒绝新的消息
@@ -37,7 +37,7 @@ class MiddlewareConcurrentLock(Middleware):
             if queue_info.size > config.response.queued_notice_size:
                 await respond(config.response.queued_notice.format(queue_size=queue_info.size))
         # 在队列中执行
-        logger.debug(f"[Concurrent] 排队中{queue_info}，前面还有 {queue_info.size} 个人！")
+        logger.debug(f"[Concurrent] 排队中，前面还有 {queue_info.size} 个人！")
         async with queue_info:
             logger.debug(f"[Concurrent] 排到了！")
             await action(session_id, prompt, conversation_context, respond)
