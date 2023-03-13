@@ -9,7 +9,7 @@ from revChatGPT import V1
 from requests.exceptions import SSLError, RequestException
 
 from chatbot.chatgpt import ChatGPTBrowserChatbot
-from exceptions import NoAvailableBotException
+from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 import itertools
 from typing import Union, List, Dict
@@ -128,6 +128,8 @@ class BotManager:
                 logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
             except (RequestException, SSLError, urllib3.exceptions.MaxRetryError) as e:
                 logger.error("登录失败! 连接 OpenAI 服务器失败,请更换代理节点重试！{exc}", exc=e)
+            except APIKeyNoFundsError:
+                logger.error("登录失败! API 账号余额不足，无法继续使用。")
             except Exception as e:
                 err_msg = str(e)
                 if "failed to connect to the proxy server" in err_msg:
@@ -255,10 +257,15 @@ class BotManager:
         logger.info("尝试使用 api_key 登录中...")
         if proxy := self.__check_proxy(account.proxy):
             openai.proxy = proxy
-        try:
-            openai.Model.list(api_key=account.api_key, user="user-test")
-        except:
-            pass
+        logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "*********" + account.api_key[-4:])
+
+        resp = requests.get(f"{openai.api_base}/dashboard/billing/credit_grants", headers={
+            "Authorization": f"Bearer {account.api_key}"
+        }, proxies={"https": openai.proxy, "http": openai.proxy} if openai.proxy else None)
+        total_available = resp.json().get("total_available")
+        logger.success(f"查询到 API 可用余额： {total_available}美元")
+        if int(total_available) <= 0:
+            raise APIKeyNoFundsError("API 余额不足，无法继续使用。")
         return account
 
     def pick(self, type: str):

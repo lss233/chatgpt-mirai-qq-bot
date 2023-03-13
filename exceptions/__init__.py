@@ -18,3 +18,6 @@ class BotRatelimitException(Exception):
 
     def __init__(self, estimated_at):
         self.estimated_at = estimated_at
+
+
+class APIKeyNoFundsError(Exception): ...
