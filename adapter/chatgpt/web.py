@@ -77,7 +77,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 if self.conversation_id:
                     self.conversation_id_prev_queue.append(self.conversation_id)
                 if self.parent_id:
-                    self.conversation_id_prev_queue.append(self.parent_id)
+                    self.parent_id_prev_queue.append(self.parent_id)
 
                 # 初始化会话 ID
                 if not self.conversation_id:
