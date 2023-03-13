@@ -133,7 +133,13 @@ async def start_background():
         exit(-1)
     logger.info("OpenAI 服务器登录成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
+    if config.mirai.reverse_ws_port:
+        logger.info("[提示] 当前为反向 ws 模式，请确保你的 mirai api http 设置了正确的 reverse-ws adapter 配置")
+        logger.info("[提示] 配置不正确会导致 Mirai 端出现错误提示。")
 
+    else:
+        logger.info("[提示] 当前为正向 ws + http 模式，请确保你的 mirai api http 设置了正确的 ws 和 http 配置")
+        logger.info("[提示] 配置不正确或 Miria 未登录 QQ 都会导致 【Websocket reconnecting...】 提示的出现。")
 
 cmd = Commander(app.broadcast)
 
