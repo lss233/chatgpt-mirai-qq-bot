@@ -186,8 +186,14 @@ reverse_ws_port = 8554
 # ==== OpenAI 账号部分开始
 [openai]
 # OpenAI 相关设置
+# 自定义 ChatGPT 的 browserless 接入点
 # 自 3月9日 开始，不设置此项将无法正常使用 browserless 模式下的网页版 ChatGPT
-browserless_endpoint = "https://bypass.duti.tech/api/"
+browserless_endpoint = "https://bypass.duti.tech/"
+
+# 自定义 OpenAI 的 API 接口基础地址
+# 通过此功能，你可以搭建一个 OpenAI 的反向代理来避免网络问题
+# 例如此项目：https://github.com/Ice-Hazymoon/openai-scf-proxy
+# api_endpoint = "https://api.openai.com/v1"
 
 # 你可以用多种不同的方式登录 OpenAI
 # 你也可以登录很多个不同的账号（无限多个）
