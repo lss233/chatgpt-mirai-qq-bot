@@ -68,6 +68,8 @@ class BotManager:
         if len(self.bing) > 0:
             self.login_bing()
         if len(self.openai) > 0:
+            if self.config.openai.api_endpoint:
+                openai.api_base = self.config.openai.api_endpoint
             self.login_openai()
         count = sum(len(v) for v in self.bots.values())
         if count < 1:
@@ -172,7 +174,7 @@ class BotManager:
             proxy_addr = urlparse(proxy)
             if not network.is_open(proxy_addr.hostname, proxy_addr.port):
                 raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-            req = requests.get(self.config.openai.browserless_endpoint + "/api/", proxies={
+            requests.get(self.config.openai.browserless_endpoint + "/api/", proxies={
                 "https": proxy,
                 "http": proxy
             })
