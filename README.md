@@ -669,7 +669,7 @@ access_token = "一串内容为 eyJhbGciOiJS*****X7GdA 的东西"
 # 前面别的东西
 [openai]
 # 无浏览器模式接入点，欢迎在交流群中分享你的接入点
-browserless_endpoint = "https://bypass.duti.tech/api/"
+browserless_endpoint = "https://bypass.duti.tech/"
 # OpenAI 相关设置
 
 # 第 N 个 OpenAI 账号的登录信息
