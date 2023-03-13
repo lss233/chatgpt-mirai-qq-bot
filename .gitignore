@@ -4,3 +4,4 @@ __pycache__/
 python3.11/
 .idea/
 data/*.json
+.chatgpt_cache.json
