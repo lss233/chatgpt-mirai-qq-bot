@@ -4,7 +4,7 @@ from typing import Callable
 import openai
 from graia.ariadne.message.chain import MessageChain
 from loguru import logger
-from requests.exceptions import SSLError, ProxyError
+from requests.exceptions import SSLError, ProxyError, RequestException
 
 from constants import config
 from conversation import ConversationHandler
@@ -141,7 +141,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                 f"* bing-p - 微软 New Bing (精确)\n")
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (SSLError, ProxyError) as e:  # 网络异常
+        except (RequestException, SSLError, ProxyError) as e:  # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
         except Exception as e:  # 未处理的异常
             logger.exception(e)
