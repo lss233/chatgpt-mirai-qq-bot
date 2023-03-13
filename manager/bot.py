@@ -3,9 +3,10 @@ import sys
 import urllib.request
 
 import openai
+import requests
 from revChatGPT import V1
 
-from requests.exceptions import SSLError
+from requests.exceptions import SSLError, RequestException
 
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from exceptions import NoAvailableBotException
@@ -123,8 +124,8 @@ class BotManager:
                 counter = counter + 1
             except OpenAIAuth.Error as e:
                 logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
-            except (SSLError, urllib3.exceptions.MaxRetryError) as e:
-                logger.error("登录失败! 连接 OpenAI 服务器失败,请检查网络和本地代理设置！{exc}", exc=e)
+            except (RequestException, SSLError, urllib3.exceptions.MaxRetryError) as e:
+                logger.error("登录失败! 连接 OpenAI 服务器失败,请更换代理节点重试！{exc}", exc=e)
             except Exception as e:
                 err_msg = str(e)
                 if "failed to connect to the proxy server" in err_msg:
@@ -166,11 +167,16 @@ class BotManager:
 
     def __check_proxy(self, proxy):
         if proxy is not None:
-            logger.info(f"正在检查代理配置：{proxy}")
+            logger.info(f"[代理测试] 正在检查代理配置：{proxy}")
             from urllib.parse import urlparse
             proxy_addr = urlparse(proxy)
             if not network.is_open(proxy_addr.hostname, proxy_addr.port):
                 raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
+            req = requests.get(self.config.openai.browserless_endpoint + "/api/", proxies={
+                "https": proxy,
+                "http": proxy
+            })
+            logger.success(f"[代理测试] 连接成功！")
             return proxy
         else:
             return openai.proxy

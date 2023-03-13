@@ -40,7 +40,7 @@ class TelegramBot(BaseModel):
     """可选的代理地址，留空则检测系统代理"""
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint: Union[str, None] = None
+    browserless_endpoint: Union[str, None] = "https://bypass.duti.tech/"
     """自定义无浏览器登录模式的接入点"""
     accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth, OpenAIAPIKey]]
 
