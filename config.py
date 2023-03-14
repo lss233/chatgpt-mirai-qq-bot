@@ -151,6 +151,8 @@ class Trigger(BaseModel):
     """切换至图片回复模式"""
     text_only_command: List[str] = ["文本模式"]
     """切换至文本回复模式"""
+    ignore_regex: List[str] = []
+    """忽略满足条件的正则表达式"""
 
 
 class Response(BaseModel):
