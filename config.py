@@ -7,6 +7,7 @@ import os
 import sys
 import toml
 
+
 class Onebot(BaseModel):
     qq: int
     """Bot 的 QQ 号"""
@@ -16,6 +17,7 @@ class Onebot(BaseModel):
     """go-cqhttp 的 反向 ws 主机号"""
     reverse_ws_port: Optional[int] = None
     """go-cqhttp 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
+
 
 class Mirai(BaseModel):
     qq: int
@@ -33,17 +35,29 @@ class Mirai(BaseModel):
     reverse_ws_port: Optional[int] = None
     """mirai-api-http 的 反向 ws 端口号，填写后开启 反向 ws 模式"""
 
+
 class TelegramBot(BaseModel):
     bot_token: str
     """Bot 大爹给的 token"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+
+class OpenAIGPT3Params(BaseModel):
+    temperature: float = 1
+    max_tokens: int = 3000
+    top_p: float = 1
+    presence_penalty: float = 1.0
+    frequency_penalty: float = -1.0
+
+
 class OpenAIAuths(BaseModel):
     browserless_endpoint: Union[str, None] = "https://bypass.duti.tech/"
     """自定义无浏览器登录模式的接入点"""
     api_endpoint: Union[str, None] = "https://api.openai.com/v1"
     """自定义 OpenAI API 的接入点"""
+
+    gpt3_params: OpenAIGPT3Params = OpenAIGPT3Params()
 
     accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth, OpenAIAPIKey]]
 
