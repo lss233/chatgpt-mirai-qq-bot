@@ -188,7 +188,7 @@ reverse_ws_port = 8554
 # 使用此模式时需注释上面的反向连接模式
 # http_url = "http://localhost:8080"
 # ws_url = "http://localhost:8080"
-# ==== OpenAI 账号部分开始
+# ==== OpenAI 部分开始
 [openai]
 # OpenAI 相关设置
 # 自定义 ChatGPT 的 browserless 接入点
@@ -199,6 +199,19 @@ browserless_endpoint = "https://bypass.duti.tech/"
 # 通过此功能，你可以搭建一个 OpenAI 的反向代理来避免网络问题
 # 例如此项目：https://github.com/Ice-Hazymoon/openai-scf-proxy
 # api_endpoint = "https://api.openai.com/v1"
+
+# 以下是 GPT3(.5) 的模型参数
+# 在使用 API 调用时有效
+# 参数具体含义可以见 https://platform.openai.com/docs/api-reference/completions/create
+# 如果你不了解，可以保持默认
+[[openai.gpt3_params]]
+temperature = 1
+max_tokens = 3000
+top_p = 1
+presence_penalty = 1.0
+frequency_penalty = -1.0
+
+# 以下是 OpenAI 账号设置
 
 # 你可以用多种不同的方式登录 OpenAI
 # 你也可以登录很多个不同的账号（无限多个）

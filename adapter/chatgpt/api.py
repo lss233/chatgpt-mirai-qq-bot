@@ -9,7 +9,7 @@ from adapter.botservice import BotAdapter
 from revChatGPT.V3 import Chatbot
 
 from config import OpenAIAPIKey
-from constants import botManager
+from constants import botManager, config
 import ctypes
 import json
 
@@ -38,10 +38,13 @@ class OpenAIChatbot(Chatbot):
                 "messages": self.conversation,
                 "stream": True,
                 # kwargs
-                "temperature": kwargs.get("temperature", 0.7),
-                "top_p": kwargs.get("top_p", 1),
-                "n": kwargs.get("n", 1),
+                "temperature": config.openai.api_params.temperature,
+                "top_p": config.openai.api_params.top_p,
+                "presence_penalty": config.openai.api_params.presence_penalty,
+                "frequency_penalty": config.openai.api_params.frequency_penalty,
+                "n": 1,
                 "user": role,
+                "max_tokens": config.openai.api_params.max_tokens,
             },
             stream=True,
         )
