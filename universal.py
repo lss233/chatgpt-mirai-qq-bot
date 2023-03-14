@@ -19,10 +19,16 @@ from renderer.renderer import MarkdownImageRenderer, FullTextRenderer
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
-async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported")) -> str:
+async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported")):
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
+
+    for r in config.trigger.ignore_regex:
+        if re.match(r, message):
+            logger.debug(f"此消息满足正则表达式： {r}，忽略……")
+            return
+
     # 此处为会话不存在时可以执行的指令
     conversation_handler = await ConversationHandler.get_handler(session_id)
     conversation_context = None
