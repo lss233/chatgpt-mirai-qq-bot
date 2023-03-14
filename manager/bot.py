@@ -1,7 +1,5 @@
-import os
-import sys
 import urllib.request
-
+from urllib.parse import urlparse
 import openai
 import requests
 from revChatGPT import V1
@@ -23,7 +21,6 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
-import json
 
 
 class BotManager:
@@ -172,7 +169,6 @@ class BotManager:
     def __check_proxy(self, proxy):
         if proxy is not None:
             logger.info(f"[代理测试] 正在检查代理配置：{proxy}")
-            from urllib.parse import urlparse
             proxy_addr = urlparse(proxy)
             if not network.is_open(proxy_addr.hostname, proxy_addr.port):
                 raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
