@@ -2,16 +2,77 @@ from typing import Generator, Union
 
 import asyncio
 import janus
+import openai
 from loguru import logger
 
 from adapter.botservice import BotAdapter
-from revChatGPT.V3 import Chatbot as OpenAIChatbot
+from revChatGPT.V3 import Chatbot
 
 from config import OpenAIAPIKey
 from constants import botManager
 import ctypes
+import json
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
+
+
+class OpenAIChatbot(Chatbot):
+    def ask_stream(self, prompt: str, role: str = "user", **kwargs) -> str:
+        """
+        Ask a question
+        """
+        api_key = kwargs.get("api_key")
+        self.__add_to_conversation(prompt, "user")
+        self.__truncate_conversation()
+        # Get response
+        if self.proxy:
+            self.session.proxies = {
+                "http": self.proxy,
+                "https": self.proxy,
+            }
+        response = self.session.post(
+            f"{openai.api_base}/chat/completions",
+            headers={"Authorization": "Bearer " + (api_key or self.api_key)},
+            json={
+                "model": self.engine,
+                "messages": self.conversation,
+                "stream": True,
+                # kwargs
+                "temperature": kwargs.get("temperature", 0.7),
+                "top_p": kwargs.get("top_p", 1),
+                "n": kwargs.get("n", 1),
+                "user": role,
+            },
+            stream=True,
+        )
+        if response.status_code != 200:
+            raise Exception(
+                f"Error: {response.status_code} {response.reason} {response.text}",
+            )
+        response_role: str = None
+        full_response: str = ""
+        for line in response.iter_lines():
+            print(line)
+            if not line:
+                continue
+            # Remove "data: "
+            line = line.decode("utf-8")[6:]
+            if line == "[DONE]":
+                break
+            resp: dict = json.loads(line)
+            choices = resp.get("choices")
+            if not choices:
+                continue
+            delta = choices[0].get("delta")
+            if not delta:
+                continue
+            if "role" in delta:
+                response_role = delta["role"]
+            if "content" in delta:
+                content = delta["content"]
+                full_response += content
+                yield content
+        self.__add_to_conversation(full_response, response_role)
 
 
 class ChatGPTAPIAdapter(BotAdapter):
