@@ -33,7 +33,7 @@ class ConversationContext:
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
-        if config.text_to_image.default:
+        if config.text_to_image.default or config.text_to_image.always:
             self.renderer = MarkdownImageRenderer()
         else:
             self.renderer = FullTextRenderer()
