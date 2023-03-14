@@ -87,7 +87,7 @@ async def _(event: Event):
 
     async def response(resp):
         if isinstance(resp, Image):
-            await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
+            return await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
         if config.response.quote:
             resp = f'[CQ:reply,id={event.message_id}]' + resp
         await bot.send(event, resp)
@@ -116,7 +116,7 @@ async def _(event: Event):
 
     async def response(resp):
         if isinstance(resp, Image):
-            await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
+            return await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
         if config.response.quote:
             resp = f'[CQ:reply,id={event.message_id}]' + resp
         await bot.send(event, resp)
