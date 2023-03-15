@@ -26,3 +26,5 @@ janus~=1.0.0
 
 python-telegram-bot
 aiocqhttp
+tls-client
+undetected_chromedriver
