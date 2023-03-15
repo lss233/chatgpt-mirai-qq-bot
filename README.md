@@ -206,7 +206,7 @@ browserless_endpoint = "https://bypass.duti.tech/"
 # 例如此项目：https://github.com/Ice-Hazymoon/openai-scf-proxy
 # api_endpoint = "https://api.openai.com/v1"
 
-# 以下是 GPT3(.5) 的模型参数
+# 以下是 GPT3(.5) 和 GPT4 的模型参数
 # 在使用 API 调用时有效
 # 参数具体含义可以见 https://platform.openai.com/docs/api-reference/completions/create
 # 如果你不了解，可以保持默认
@@ -232,6 +232,7 @@ frequency_penalty = -1.0
 # 3. 登录过程较快
 # 缺点：
 # 1. 有效期为 30 天，到期后需更换
+# 2. 有可能会封号
 [[openai.accounts]]
 mode = "browserless"
 
@@ -266,6 +267,7 @@ paid = false
 # 缺点：
 # 1. 有效期较短，具体时间未知
 # 2. 登录过程需要几秒钟时间
+# 3. 有可能会封号
 [[openai.accounts]]
 mode = "browserless"
 
@@ -320,8 +322,11 @@ auto_remove_old_conversations = true
 # 你就可以使用 OpenAI 中收费的 ChatGPT API、AI 画图等功能
 # 优点：
 # 1. 响应快
+# 2. 不咋封号
+# 3， 可以调参
 # 缺点：
 # 1. 烧钱
+# 2. 暂不支持 GPT4 (3月15日)
 [[openai.accounts]]
 # 你的 API key，可以在这里看： https://platform.openai.com/account/api-keys
 api_key="sk-xxxxx"
