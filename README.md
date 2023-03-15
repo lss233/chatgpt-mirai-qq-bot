@@ -275,8 +275,11 @@ session_token = "一串 ey 开头的东西"
 # 如果你在国内，需要配置代理
 proxy="http://127.0.0.1:1080"
 
-# 使用 ChatGPT Plus（plus 用户此项设置为 true 使用 legacy 模型）
+# 使用 Legacy 模型（仅ChatGPT Plus用户）
 paid = false
+
+# 使用 GPT-4 模型 （仅ChatGPT Plus用户）
+gpt4 = false
 
 # 是否开启标题自动重命名
 title_pattern="qq-{session_id}"
