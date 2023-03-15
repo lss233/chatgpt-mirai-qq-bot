@@ -88,7 +88,7 @@ async def _(event: Event):
 
     async def response(resp):
         if isinstance(resp, Image):
-            return await bot.send(event, MessageSegment.image("base64://{resp.base64}"))
+            return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
         if config.response.quote:
             resp = MessageSegment.reply(event.message_id) + resp
         await bot.send(event, resp)
@@ -117,7 +117,7 @@ async def _(event: Event):
 
     async def response(resp):
         if isinstance(resp, Image):
-            return await bot.send(event, MessageSegment.image("base64://{resp.base64}"))
+            return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
         if config.response.quote:
             resp = MessageSegment.reply(event.message_id) + resp
         await bot.send(event, resp)
