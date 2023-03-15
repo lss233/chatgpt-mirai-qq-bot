@@ -7,6 +7,12 @@
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
+
+> **2023/3/15**  
+> 近期 browserless 模式封号严重      
+> 非 plus 用户建议还是玩 API 吧      
+
+
 > **2023/3/13**  
 > Mirai 用户现在可以通过安装 fix-protocol-version 插件并使用 MACOS 协议成功登录 QQ    
 > 一键部署脚本和 Windows 快速部署包已将此插件进行打包。    
