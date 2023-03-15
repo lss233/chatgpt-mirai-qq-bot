@@ -8,7 +8,7 @@ sys.path.append(os.getcwd())
 import asyncio
 from typing import Union
 from revChatGPT.V1 import Chatbot as V1Chatbot
-from revChatGPT.Unofficial import Chatbot as BrowserChatbot
+from Unofficial import Chatbot as BrowserChatbot
 from config import OpenAIAuthBase
 from utils import QueueInfo
 

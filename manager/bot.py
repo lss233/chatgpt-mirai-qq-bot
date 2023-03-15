@@ -205,6 +205,10 @@ class BotManager:
         config = dict()
         if proxy := self.__check_proxy(account.proxy):
             config['proxy'] = proxy
+        if cached_account.get('paid'):
+            config['paid'] = True
+        if cached_account.get('gpt4'):
+            config['model'] = 'gpt-4'
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:

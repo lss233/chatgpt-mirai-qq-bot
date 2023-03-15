@@ -61,6 +61,8 @@ class OpenAIAuthBase(BaseModel):
     """初始化对话所使用的UUID"""
     paid: bool = False
     """使用 ChatGPT Plus"""
+    gpt4: bool = False
+    """使用 GPT-4"""
     verbose: bool = False
     """启用详尽日志模式"""
     title_pattern: str = ""
