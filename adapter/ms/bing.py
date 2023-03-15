@@ -40,7 +40,7 @@ class BingAdapter(BotAdapter):
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
-        remaining_conversations = f'剩余回复数：{self.count} / 10:\n'
+        remaining_conversations = f'剩余回复数：{self.count} / 15:\n'
         parsed_content = ''
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
