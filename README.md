@@ -210,7 +210,7 @@ browserless_endpoint = "https://bypass.duti.tech/"
 # 在使用 API 调用时有效
 # 参数具体含义可以见 https://platform.openai.com/docs/api-reference/completions/create
 # 如果你不了解，可以保持默认
-[[openai.gpt3_params]]
+[openai.gpt3_params]
 temperature = 1
 max_tokens = 3000
 top_p = 1
