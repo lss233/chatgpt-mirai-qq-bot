@@ -5,7 +5,7 @@ from typing import Union, Optional
 
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, At, Plain
-from aiocqhttp import CQHttp, Event
+from aiocqhttp import CQHttp, Event, MessageSegment
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
 
@@ -37,7 +37,8 @@ class MentionMe:
                 return chain.removeprefix(" ")
         raise ExecutionStop
 
-
+# TODO: use MessageSegment
+# https://github.com/nonebot/aiocqhttp/blob/master/docs/common-topics.md
 def transform_message_chain(text: str) -> MessageChain:
     pattern = r"\[CQ:(\w+),([^\]]+)\]"
     matches = re.finditer(pattern, text)
@@ -87,9 +88,9 @@ async def _(event: Event):
 
     async def response(resp):
         if isinstance(resp, Image):
-            return await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
+            return await bot.send(event, MessageSegment.image("base64://{resp.base64}"))
         if config.response.quote:
-            resp = f'[CQ:reply,id={event.message_id}]' + resp
+            resp = MessageSegment.reply(event.message_id) + resp
         await bot.send(event, resp)
 
     try:
@@ -116,9 +117,9 @@ async def _(event: Event):
 
     async def response(resp):
         if isinstance(resp, Image):
-            return await bot.send(event, f"[CQ:image,file=base64://{resp.base64},type=show,id=40000]")
+            return await bot.send(event, MessageSegment.image("base64://{resp.base64}"))
         if config.response.quote:
-            resp = f'[CQ:reply,id={event.message_id}]' + resp
+            resp = MessageSegment.reply(event.message_id) + resp
         await bot.send(event, resp)
 
     await handle_message(response, f"group-{event.user_id}", chain.display)
