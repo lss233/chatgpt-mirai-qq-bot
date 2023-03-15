@@ -1,4 +1,5 @@
 import ctypes
+import os
 from typing import Generator, Union
 
 import asyncio
@@ -69,6 +70,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
             ]
+        os.environ['API_URL'] = config.openai.api_endpoint + '/chat/completions'
         full_response = ''
         queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
         loop = asyncio.get_running_loop()
