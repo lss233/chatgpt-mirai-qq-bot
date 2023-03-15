@@ -67,6 +67,9 @@ class BotManager:
         if len(self.openai) > 0:
             if self.config.openai.api_endpoint:
                 openai.api_base = self.config.openai.api_endpoint
+            if not self.config.openai.browserless_endpoint.endswith("api/"):
+                logger.warning(f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+
             self.login_openai()
         count = sum(len(v) for v in self.bots.values())
         if count < 1:
