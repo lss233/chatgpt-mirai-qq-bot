@@ -1,17 +1,14 @@
+import ctypes
 from typing import Generator, Union
 
 import asyncio
 import janus
-import openai
 from loguru import logger
-
-from adapter.botservice import BotAdapter
 from revChatGPT.V3 import Chatbot as OpenAIChatbot
 
+from adapter.botservice import BotAdapter
 from config import OpenAIAPIKey
 from constants import botManager, config
-import ctypes
-import json
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
 
@@ -40,6 +37,9 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.conversation_id = None
         self.parent_id = None
         super().__init__()
+        self.bot.conversation[self.session_id] = [
+            {"role": "system", "content": self.bot.system_prompt}
+        ]
 
     async def rollback(self):
         if len(self.bot.conversation[self.session_id]) > 0:
@@ -49,7 +49,9 @@ class ChatGPTAPIAdapter(BotAdapter):
             return False
 
     async def on_reset(self):
-        self.bot.conversation[self.session_id] = []
+        self.bot.conversation[self.session_id] = [
+            {"role": "system", "content": self.bot.system_prompt}
+        ]
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
@@ -63,6 +65,10 @@ class ChatGPTAPIAdapter(BotAdapter):
         sync_q.join()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
+        if self.session_id in self.bot.conversation:
+            self.bot.conversation[self.session_id] = [
+                {"role": "system", "content": self.bot.system_prompt}
+            ]
         full_response = ''
         queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
         loop = asyncio.get_running_loop()
@@ -90,4 +96,6 @@ class ChatGPTAPIAdapter(BotAdapter):
             role = 'assistant'
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
+        if self.session_id in self.bot.conversation:
+            self.bot.conversation[self.session_id] = []
         self.bot.conversation[self.session_id].append({"role": role, "content": text})
