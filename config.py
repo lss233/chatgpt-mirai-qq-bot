@@ -52,7 +52,7 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint: Union[str, None] = "https://bypass.duti.tech/"
+    browserless_endpoint: Union[str, None] = "https://bypass.duti.tech/api/"
     """自定义无浏览器登录模式的接入点"""
     api_endpoint: Union[str, None] = "https://api.openai.com/v1"
     """自定义 OpenAI API 的接入点"""
