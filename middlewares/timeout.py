@@ -12,7 +12,7 @@ async def create_timeout_task(respond):
     logger.debug("[Timeout] 开始计时……")
     await asyncio.sleep(config.response.timeout)
     await respond(config.response.timeout_format)
-    logger.debug("[Timeout] 已超时")
+    logger.debug("[Timeout] 等待过久，发送提示")
 
 
 class MiddlewareTimeout(Middleware):
@@ -26,8 +26,10 @@ class MiddlewareTimeout(Middleware):
         if session_id in self.ctx:
             self.ctx[session_id].cancel()
         self.ctx[session_id] = asyncio.create_task(create_timeout_task(respond))
-
-        await action(session_id, prompt, conversation_context, respond)
+        try:
+            await asyncio.wait_for(action(session_id, prompt, conversation_context, respond), config.response.max_timeout)
+        except asyncio.TimeoutError:
+            await respond(config.response.cancel_wait_too_long)
 
     async def on_respond(self, session_id: str, prompt: str, rendered: str):
         if rendered and session_id in self.ctx:
