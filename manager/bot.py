@@ -205,6 +205,8 @@ class BotManager:
         config = dict()
         if proxy := self.__check_proxy(account.proxy):
             config['proxy'] = proxy
+        if cached_account.get('paid'):
+            config['paid'] = True
         if cached_account.get('gpt4'):
             config['model'] = 'gpt-4'
 
