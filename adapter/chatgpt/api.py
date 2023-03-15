@@ -6,7 +6,7 @@ import openai
 from loguru import logger
 
 from adapter.botservice import BotAdapter
-from revChatGPT.V3 import Chatbot
+from revChatGPT.V3 import Chatbot as OpenAIChatbot
 
 from config import OpenAIAPIKey
 from constants import botManager, config
@@ -14,68 +14,6 @@ import ctypes
 import json
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
-
-
-class OpenAIChatbot(Chatbot):
-    def ask_stream(self, prompt: str, role: str = "user", **kwargs) -> str:
-        """
-        Ask a question
-        """
-        api_key = kwargs.get("api_key")
-        self.__add_to_conversation(prompt, "user")
-        self.__truncate_conversation()
-        # Get response
-        if self.proxy:
-            self.session.proxies = {
-                "http": self.proxy,
-                "https": self.proxy,
-            }
-        response = self.session.post(
-            f"{openai.api_base}/chat/completions",
-            headers={"Authorization": "Bearer " + (api_key or self.api_key)},
-            json={
-                "model": self.engine,
-                "messages": self.conversation,
-                "stream": True,
-                # kwargs
-                "temperature": config.openai.api_params.temperature,
-                "top_p": config.openai.api_params.top_p,
-                "presence_penalty": config.openai.api_params.presence_penalty,
-                "frequency_penalty": config.openai.api_params.frequency_penalty,
-                "n": 1,
-                "user": role,
-                "max_tokens": config.openai.api_params.max_tokens,
-            },
-            stream=True,
-        )
-        if response.status_code != 200:
-            raise Exception(
-                f"Error: {response.status_code} {response.reason} {response.text}",
-            )
-        response_role: str = None
-        full_response: str = ""
-        for line in response.iter_lines():
-            print(line)
-            if not line:
-                continue
-            # Remove "data: "
-            line = line.decode("utf-8")[6:]
-            if line == "[DONE]":
-                break
-            resp: dict = json.loads(line)
-            choices = resp.get("choices")
-            if not choices:
-                continue
-            delta = choices[0].get("delta")
-            if not delta:
-                continue
-            if "role" in delta:
-                response_role = delta["role"]
-            if "content" in delta:
-                content = delta["content"]
-                full_response += content
-                yield content
-        self.__add_to_conversation(full_response, response_role)
 
 
 class ChatGPTAPIAdapter(BotAdapter):
@@ -91,26 +29,33 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.session_id = session_id
         self.hashed_user_id = "user-" + hashu("session_id").to_bytes(8, "big").hex()
         self.api_info = botManager.pick('openai-api')
-        self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
+        self.bot = OpenAIChatbot(
+            api_key=self.api_info.api_key,
+            presence_penalty=config.openai.gpt3_params.presence_penalty,
+            frequency_penalty=config.openai.gpt3_params.frequency_penalty,
+            top_p=config.openai.gpt3_params.top_p,
+            temperature=config.openai.gpt3_params.temperature,
+            max_tokens=config.openai.gpt3_params.max_tokens,
+        )
         self.conversation_id = None
         self.parent_id = None
         super().__init__()
 
     async def rollback(self):
-        if len(self.bot.conversation) > 0:
-            self.bot.rollback()
+        if len(self.bot.conversation[self.session_id]) > 0:
+            self.bot.rollback(convo_id=self.session_id)
             return True
         else:
             return False
 
     async def on_reset(self):
-        self.bot.conversation = []
+        self.bot.conversation[self.session_id] = []
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
     def ask_sync(self, sync_q, prompt):
         try:
-            for resp in self.bot.ask_stream(prompt, role=self.hashed_user_id):
+            for resp in self.bot.ask_stream(prompt, role=self.hashed_user_id, convo_id=self.session_id):
                 sync_q.put(resp)
             sync_q.put(None)
         except Exception as e:
@@ -145,4 +90,4 @@ class ChatGPTAPIAdapter(BotAdapter):
             role = 'assistant'
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
-        self.bot.conversation.append({"role": role, "content": text})
+        self.bot.conversation[self.session_id].append({"role": role, "content": text})
