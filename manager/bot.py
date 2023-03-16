@@ -13,7 +13,7 @@ import itertools
 from typing import Union, List, Dict
 import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
-from revChatGPT.V0 import Chatbot as BrowserChatbot
+from chatbot.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath
 import OpenAIAuth
