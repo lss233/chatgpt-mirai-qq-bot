@@ -44,15 +44,15 @@ class TelegramBot(BaseModel):
 
 
 class OpenAIGPT3Params(BaseModel):
-    temperature: float = 1
-    max_tokens: int = 3000
-    top_p: float = 1
-    presence_penalty: float = 1.0
-    frequency_penalty: float = -1.0
+    temperature: float = 0.5
+    max_tokens: int = 4000
+    top_p: float = 1.0
+    presence_penalty: float = 0.0
+    frequency_penalty: float = 0.0
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint: Union[str, None] = "https://bypass.duti.tech/"
+    browserless_endpoint: Union[str, None] = "https://bypass.duti.tech/api/"
     """自定义无浏览器登录模式的接入点"""
     api_endpoint: Union[str, None] = "https://api.openai.com/v1"
     """自定义 OpenAI API 的接入点"""
@@ -75,6 +75,8 @@ class OpenAIAuthBase(BaseModel):
     """初始化对话所使用的UUID"""
     paid: bool = False
     """使用 ChatGPT Plus"""
+    gpt4: bool = False
+    """使用 GPT-4"""
     verbose: bool = False
     """启用详尽日志模式"""
     title_pattern: str = ""
@@ -210,6 +212,12 @@ class Response(BaseModel):
 
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
+
+    max_timeout: float = 600.0
+    """最长等待时间，超过此时间取消回应"""
+
+    cancel_wait_too_long: str = "啊哦，这个问题有点难，让我想了好久也没想明白。试试换个问法？"
+    """发送提醒前允许的响应时间"""
 
     max_queue_size: int = 10
     """等待处理的消息的最大数量，如果要关闭此功能，设置为 0"""

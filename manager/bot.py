@@ -13,7 +13,7 @@ import itertools
 from typing import Union, List, Dict
 import os
 from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
-from revChatGPT.V0 import Chatbot as BrowserChatbot
+from chatbot.Unofficial import Chatbot as BrowserChatbot
 from loguru import logger
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath
 import OpenAIAuth
@@ -67,6 +67,9 @@ class BotManager:
         if len(self.openai) > 0:
             if self.config.openai.api_endpoint:
                 openai.api_base = self.config.openai.api_endpoint
+            if not self.config.openai.browserless_endpoint.endswith("api/"):
+                logger.warning(f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+
             self.login_openai()
         count = sum(len(v) for v in self.bots.values())
         if count < 1:
@@ -201,6 +204,10 @@ class BotManager:
         config = dict()
         if proxy := self.__check_proxy(account.proxy):
             config['proxy'] = proxy
+        if cached_account.get('paid'):
+            config['paid'] = True
+        if cached_account.get('gpt4'):
+            config['model'] = 'gpt-4'
 
         # 我承认这部分代码有点蠢
         def __V1_check_auth() -> bool:

@@ -36,11 +36,10 @@ class BingAdapter(BotAdapter):
     async def on_reset(self):
         self.count = 0
         await self.bot.reset()
-        self.lock = asyncio.Lock()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
-        remaining_conversations = f'剩余回复数：{self.count} / 10:\n'
+        remaining_conversations = f'剩余回复数：{self.count} / 15:\n'
         parsed_content = ''
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
@@ -50,11 +49,12 @@ class BingAdapter(BotAdapter):
                     yield remaining_conversations + response
                     parsed_content = response
                 else:
-                    suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
-                    if len(suggestions) > 0:
-                        parsed_content = parsed_content + '\n猜你想问：\n'
-                        for suggestion in suggestions:
-                            parsed_content = parsed_content + f"* {suggestion.get('text')}\n"
+                    if len(response["item"].get('messages', [])) > 1:
+                        suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
+                        if len(suggestions) > 0:
+                            parsed_content = parsed_content + '\n猜你想问：\n'
+                            for suggestion in suggestions:
+                                parsed_content = parsed_content + f"* {suggestion.get('text')}\n"
                     if parsed_content == '':
                         yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
                         await self.on_reset()

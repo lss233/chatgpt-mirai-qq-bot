@@ -7,6 +7,12 @@
 [![Docker Pulls](https://badgen.net/docker/pulls/lss233/chatgpt-mirai-qq-bot?icon=docker&label=pulls)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
+
+> **2023/3/15**  
+> 近期 browserless 模式封号严重      
+> 非 plus 用户建议还是玩 API 吧      
+
+
 > **2023/3/13**  
 > Mirai 用户现在可以通过安装 fix-protocol-version 插件并使用 MACOS 协议成功登录 QQ    
 > 一键部署脚本和 Windows 快速部署包已将此插件进行打包。    
@@ -193,23 +199,23 @@ reverse_ws_port = 8554
 # OpenAI 相关设置
 # 自定义 ChatGPT 的 browserless 接入点
 # 自 3月9日 开始，不设置此项将无法正常使用 browserless 模式下的网页版 ChatGPT
-browserless_endpoint = "https://bypass.duti.tech/"
+browserless_endpoint = "https://bypass.duti.tech/api/"
 
 # 自定义 OpenAI 的 API 接口基础地址
 # 通过此功能，你可以搭建一个 OpenAI 的反向代理来避免网络问题
 # 例如此项目：https://github.com/Ice-Hazymoon/openai-scf-proxy
 # api_endpoint = "https://api.openai.com/v1"
 
-# 以下是 GPT3(.5) 的模型参数
+# 以下是 GPT3(.5) 和 GPT4 的模型参数
 # 在使用 API 调用时有效
 # 参数具体含义可以见 https://platform.openai.com/docs/api-reference/completions/create
 # 如果你不了解，可以保持默认
-[[openai.gpt3_params]]
-temperature = 1
+[openai.gpt3_params]
+temperature = 0.5
 max_tokens = 3000
-top_p = 1
-presence_penalty = 1.0
-frequency_penalty = -1.0
+top_p = 1.0
+presence_penalty = 0.0
+frequency_penalty = 0.0
 
 # 以下是 OpenAI 账号设置
 
@@ -226,6 +232,7 @@ frequency_penalty = -1.0
 # 3. 登录过程较快
 # 缺点：
 # 1. 有效期为 30 天，到期后需更换
+# 2. 有可能会封号
 [[openai.accounts]]
 mode = "browserless"
 
@@ -260,6 +267,7 @@ paid = false
 # 缺点：
 # 1. 有效期较短，具体时间未知
 # 2. 登录过程需要几秒钟时间
+# 3. 有可能会封号
 [[openai.accounts]]
 mode = "browserless"
 
@@ -269,8 +277,11 @@ session_token = "一串 ey 开头的东西"
 # 如果你在国内，需要配置代理
 proxy="http://127.0.0.1:1080"
 
-# 使用 ChatGPT Plus（plus 用户此项设置为 true 使用 legacy 模型）
+# 使用 Legacy 模型（仅ChatGPT Plus用户）
 paid = false
+
+# 使用 GPT-4 模型 （仅ChatGPT Plus用户）
+gpt4 = false
 
 # 是否开启标题自动重命名
 title_pattern="qq-{session_id}"
@@ -311,8 +322,11 @@ auto_remove_old_conversations = true
 # 你就可以使用 OpenAI 中收费的 ChatGPT API、AI 画图等功能
 # 优点：
 # 1. 响应快
+# 2. 不咋封号
+# 3， 可以调参
 # 缺点：
 # 1. 烧钱
+# 2. 暂不支持 GPT4 (3月15日)
 [[openai.accounts]]
 # 你的 API key，可以在这里看： https://platform.openai.com/account/api-keys
 api_key="sk-xxxxx"
@@ -452,6 +466,12 @@ timeout = 30.0
 
 # 超过响应时间时要发送的提醒
 timeout_format = "我还在思考中，请再等一下~"
+
+max_timeout = 600
+# 对于每个提问的最长等待时间，超过此时间不再等待
+
+cancel_wait_too_long = "啊哦，这个问题有点难，让我想了好久也没想明白。试试换个问法？"
+# 超过最长等待时间后发送的信息
 
 # 重置会话时发送的消息
 reset = "会话已重置。"
