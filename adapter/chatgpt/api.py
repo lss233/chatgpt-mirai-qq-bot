@@ -66,7 +66,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         sync_q.join()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        if self.session_id in self.bot.conversation:
+        if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
             ]
