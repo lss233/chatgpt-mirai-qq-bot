@@ -98,6 +98,6 @@ class ChatGPTAPIAdapter(BotAdapter):
             role = 'assistant'
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
-        if not self.session_id in self.bot.conversation:
+        if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = []
         self.bot.conversation[self.session_id].append({"role": role, "content": text})

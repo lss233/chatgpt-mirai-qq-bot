@@ -213,7 +213,7 @@ class Response(BaseModel):
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
 
-    max_timeout: float = 120.0
+    max_timeout: float = 600.0
     """最长等待时间，超过此时间取消回应"""
 
     cancel_wait_too_long: str = "啊哦，这个问题有点难，让我想了好久也没想明白。试试换个问法？"

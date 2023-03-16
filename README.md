@@ -211,11 +211,11 @@ browserless_endpoint = "https://bypass.duti.tech/api/"
 # 参数具体含义可以见 https://platform.openai.com/docs/api-reference/completions/create
 # 如果你不了解，可以保持默认
 [openai.gpt3_params]
-temperature = 1
+temperature = 0.5
 max_tokens = 3000
-top_p = 1
-presence_penalty = 1.0
-frequency_penalty = -1.0
+top_p = 1.0
+presence_penalty = 0.0
+frequency_penalty = 0.0
 
 # 以下是 OpenAI 账号设置
 
@@ -467,7 +467,7 @@ timeout = 30.0
 # 超过响应时间时要发送的提醒
 timeout_format = "我还在思考中，请再等一下~"
 
-max_timeout = 120
+max_timeout = 600
 # 对于每个提问的最长等待时间，超过此时间不再等待
 
 cancel_wait_too_long = "啊哦，这个问题有点难，让我想了好久也没想明白。试试换个问法？"
