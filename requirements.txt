@@ -1,5 +1,5 @@
 graia-ariadne==0.11.1
-revChatGPT[unofficial]==4.0.0
+revChatGPT==4.0.2
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
@@ -14,7 +14,7 @@ pygments~=2.10.0
 imgkit~=1.2.2
 qrcode~=7.4.2
 openai~=0.26.5
-EdgeGPT==0.0.56.2
+EdgeGPT==0.0.57
 aiohttp~=3.8.3
 selenium~=4.8.0
 OpenAIAuth~=0.3.2

@@ -115,7 +115,8 @@ class OpenAIAPIKey(OpenAIAuthBase):
 class BingCookiePath(BaseModel):
     cookie_content: str
     """Bing 的 Cookie 文件内容"""
-
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
 
 class BingAuths(BaseModel):
     accounts: List[BingCookiePath] = []

@@ -28,7 +28,7 @@ class BingAdapter(BotAdapter):
             name, value = line.split("=", 1)
             self.cookieData.append({"name": name, "value": value})
 
-        self.bot = EdgeChatbot(cookies=self.cookieData)
+        self.bot = EdgeChatbot(cookies=self.cookieData, proxy=account.proxy)
 
     async def rollback(self):
         raise BotOperationNotSupportedException()

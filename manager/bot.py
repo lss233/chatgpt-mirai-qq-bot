@@ -93,9 +93,10 @@ class BotManager:
     def login_bing(self):
         for i, account in enumerate(self.bing):
             logger.info("正在解析第 {i} 个 Bing 账号", i=i + 1)
+            if proxy := self.__check_proxy(account.proxy):
+                account.proxy = proxy
             try:
                 self.bots["bing-cookie"].append(account)
-
                 logger.success("解析成功！", i=i + 1)
             except Exception as e:
                 logger.error("解析失败：")
