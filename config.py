@@ -44,11 +44,11 @@ class TelegramBot(BaseModel):
 
 
 class OpenAIGPT3Params(BaseModel):
-    temperature: float = 1
-    max_tokens: int = 3000
-    top_p: float = 1
-    presence_penalty: float = 1.0
-    frequency_penalty: float = -1.0
+    temperature: float = 0.5
+    max_tokens: int = 4000
+    top_p: float = 1.0
+    presence_penalty: float = 0.0
+    frequency_penalty: float = 0.0
 
 
 class OpenAIAuths(BaseModel):
