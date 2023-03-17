@@ -29,6 +29,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(
             api_key=self.api_info.api_key,
+            proxy=self.api_info.proxy,
             presence_penalty=config.openai.gpt3_params.presence_penalty,
             frequency_penalty=config.openai.gpt3_params.frequency_penalty,
             top_p=config.openai.gpt3_params.top_p,
