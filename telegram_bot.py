@@ -4,6 +4,7 @@ import sys
 import openai
 from graia.ariadne.message.element import Image
 from loguru import logger
+from telegram.request import HTTPXRequest
 
 from universal import handle_message
 
@@ -35,6 +36,8 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 app = ApplicationBuilder()\
     .proxy_url(config.telegram.proxy or openai.proxy)\
     .token(config.telegram.bot_token)\
+    .get_updates_request(HTTPXRequest(http_version="1.1")) \
+    .http_version('1.1') \
     .build()
 
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
