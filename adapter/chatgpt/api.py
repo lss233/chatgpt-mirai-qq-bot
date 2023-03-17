@@ -51,11 +51,12 @@ class ChatGPTAPIAdapter(BotAdapter):
             return False
 
     async def on_reset(self):
+        self.api_info = botManager.pick('openai-api')
+        self.bot.api_key = self.api_info.api_key
+        self.bot.proxy = self.api_info.proxy
         self.bot.conversation[self.session_id] = [
             {"role": "system", "content": self.bot.system_prompt}
         ]
-        self.api_info = botManager.pick('openai-api')
-        self.bot = OpenAIChatbot(api_key=self.api_info.api_key, proxy=self.api_info.proxy)
 
     def ask_sync(self, sync_q, prompt):
         try:
