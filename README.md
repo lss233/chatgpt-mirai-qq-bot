@@ -369,6 +369,8 @@ auto_remove_old_conversations = true
 [[bing.accounts]]
 # 你的账号 Cookie，获取方法见 README
 cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  MicrosoftApplicationsTelemetryDeviceId=xxxxxx-xxxx-xxxx-xxx-xxxxx; ...一串很长的文本...'
+# 如果你想用代理（可能有BUG）
+# proxy="http://127.0.0.1:1080"
 # === Bing 设置部分结束
 
 [text_to_image]
