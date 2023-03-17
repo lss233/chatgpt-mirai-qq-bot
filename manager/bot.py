@@ -45,8 +45,6 @@ class BotManager:
         self.config = config
         self.openai = config.openai.accounts if config.openai else []
         self.bing = config.bing.accounts if config.bing else []
-        if config.openai.browserless_endpoint:
-            V1.BASE_URL = config.openai.browserless_endpoint
         try:
             os.mkdir('data')
             logger.warning(
@@ -65,6 +63,8 @@ class BotManager:
         if len(self.bing) > 0:
             self.login_bing()
         if len(self.openai) > 0:
+            if self.config.openai.browserless_endpoint:
+                V1.BASE_URL = self.config.openai.browserless_endpoint
             if self.config.openai.api_endpoint:
                 openai.api_base = self.config.openai.api_endpoint
             if not self.config.openai.browserless_endpoint.endswith("api/"):
