@@ -42,7 +42,9 @@ class TelegramBot(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
-
+class DiscordBot(BaseModel):
+    bot_token: str
+    """Discord Bot 的 token"""
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
     max_tokens: int = 4000
@@ -274,6 +276,7 @@ class Config(BaseModel):
     onebot: Optional[Onebot] = None
     mirai: Optional[Mirai] = None
     telegram: Optional[TelegramBot] = None
+    discord: Optional[DiscordBot] = None
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     text_to_image: TextToImage = TextToImage()

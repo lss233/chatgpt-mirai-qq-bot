@@ -588,6 +588,18 @@ proxy = "http://localhost:1080"
 ```
 就可以使用 Telegram 机器人和 ChatGPT 聊天！
 
+#### Discord Bot
+
+将 `config.cfg` 中的 `[mirai]` `[telegram]` 块删除，注意跟上面的其他聊天工具机器人是冲突的，一次启动只能选一个，优先级为：onebot > telegram > discord > mirai
+然后加入以下配置：
+
+```properties
+[discord]
+bot_token = "你的 Bot token" 
+# chatgpt说，discord.py 不支持代理，我也没办法 (这句话也是gpt写的)
+```
+
+
 ### OpenAI 多账号支持  
 
 你可以登录多个不同的 OpenAI 账号，当机器人开始产生新对话时，我们会从你登录的账号中选择**一个**来使用 ChatGPT 和用户聊天。 
