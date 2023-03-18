@@ -2,7 +2,6 @@ import urllib.request
 from urllib.parse import urlparse
 
 import aiohttp
-import asyncio
 import openai
 import requests
 from aiohttp import ClientConnectorError
