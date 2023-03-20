@@ -128,7 +128,7 @@ async def _(event: Event):
 
     await handle_message(
         response,
-        f"group-{event.user_id}",
+        f"group-{event.group_id}",
         chain.display,
         is_manager=event.user_id == config.onebot.manager_qq
     )
