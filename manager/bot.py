@@ -1,7 +1,11 @@
 import urllib.request
 from urllib.parse import urlparse
+
+import aiohttp
+import asyncio
 import openai
 import requests
+from aiohttp import ClientConnectorError
 from revChatGPT import V1
 
 from requests.exceptions import SSLError, RequestException
@@ -21,6 +25,8 @@ import urllib3.exceptions
 import utils.network as network
 from tinydb import TinyDB, Query
 import hashlib
+import datetime
+from dateutil.relativedelta import relativedelta
 
 
 class BotManager:
@@ -53,7 +59,7 @@ class BotManager:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
 
-    def login(self):
+    async def login(self):
         self.bots = {
             "chatgpt-web": [],
             "openai-api": [],
@@ -68,9 +74,10 @@ class BotManager:
             if self.config.openai.api_endpoint:
                 openai.api_base = self.config.openai.api_endpoint
             if not self.config.openai.browserless_endpoint.endswith("api/"):
-                logger.warning(f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+                logger.warning(
+                    f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
 
-            self.login_openai()
+            await self.login_openai()
         count = sum(len(v) for v in self.bots.values())
         if count < 1:
             logger.error("没有登录成功的账号，程序无法启动！")
@@ -105,13 +112,13 @@ class BotManager:
             logger.error("所有 Bing 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
 
-    def login_openai(self):
+    async def login_openai(self):
         counter = 0
         for i, account in enumerate(self.openai):
             logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
             try:
                 if isinstance(account, OpenAIAPIKey):
-                    bot = self.__login_openai_apikey(account)
+                    bot = await self.__login_openai_apikey(account)
                     self.bots["openai-api"].append(bot)
                 elif account.mode == "proxy" or account.mode == "browserless":
                     bot = self.__login_V1(account)
@@ -127,7 +134,7 @@ class BotManager:
                 counter = counter + 1
             except OpenAIAuth.Error as e:
                 logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
-            except (RequestException, SSLError, urllib3.exceptions.MaxRetryError) as e:
+            except (RequestException, SSLError, urllib3.exceptions.MaxRetryError, ClientConnectorError) as e:
                 logger.error("登录失败! 连接 OpenAI 服务器失败,请更换代理节点重试！{exc}", exc=e)
             except APIKeyNoFundsError:
                 logger.error("登录失败! API 账号余额不足，无法继续使用。")
@@ -257,17 +264,47 @@ class BotManager:
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
 
-    def __login_openai_apikey(self, account):
+    async def check_api_info(self, account):
+        async with aiohttp.ClientSession() as session:
+            session.headers.add("Authorization", f"Bearer {account.api_key}")
+
+            resp = await session.get(f"{openai.api_base}/dashboard/billing/credit_grants", proxy=account.proxy)
+            resp = await resp.json()
+            grant_available = resp.get("total_available")
+            grant_used = resp.get("total_used")
+
+            resp = await session.get(f"{openai.api_base}/dashboard/billing/subscription", proxy=account.proxy)
+            resp = await resp.json()
+            has_payment_method = resp.get('has_payment_method')
+            hard_limit_usd = resp.get('hard_limit_usd')
+
+            current_month = datetime.datetime.now().replace(day=1)
+            next_month = current_month + relativedelta(months=1)
+
+            start_date = current_month.strftime('%Y-%m-%d')
+            end_date = next_month.strftime('%Y-%m-%d')
+            resp = await session.get(
+                f"{openai.api_base}/dashboard/billing/usage?start_date={start_date}&end_date={end_date}", proxy=account.proxy)
+            resp = await resp.json()
+            total_usage = resp.get("total_usage")
+
+        return grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd
+
+    async def __login_openai_apikey(self, account):
         logger.info("尝试使用 api_key 登录中...")
         if proxy := self.__check_proxy(account.proxy):
             openai.proxy = proxy
-        logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "*********" + account.api_key[-4:])
+        logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
 
-        resp = requests.get(f"{openai.api_base}/dashboard/billing/credit_grants", headers={
-            "Authorization": f"Bearer {account.api_key}"
-        }, proxies={"https": openai.proxy, "http": openai.proxy} if openai.proxy else None)
-        total_available = resp.json().get("total_available")
-        logger.success(f"查询到 API 可用余额： {total_available}美元")
+        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(account)
+
+        total_available = grant_available
+
+        if has_payment_method:
+            logger.success(f"查询到此 API 为订阅用户，本月已用：{total_usage}美元，硬上限：{hard_limit_usd}美元。")
+            total_available = total_available + hard_limit_usd - total_usage
+
+        logger.success(f"查询到 API 总可用余额： {total_available}美元")
         if int(total_available) <= 0:
             raise APIKeyNoFundsError("API 余额不足，无法继续使用。")
         return account

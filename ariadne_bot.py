@@ -1,3 +1,4 @@
+import asyncio
 import time
 from universal import handle_message
 import constants
@@ -19,7 +20,7 @@ from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.broadcast.exceptions import ExecutionStop
 from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
 from graia.ariadne.message.commander import Commander
-from graia.ariadne.message.element import Image
+from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward
 
 from loguru import logger
 
@@ -127,7 +128,7 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 async def start_background():
     try:
         logger.info("OpenAI 服务器登录中……")
-        botManager.login()
+        await botManager.login()
     except:
         logger.error("OpenAI 服务器登录失败！")
         exit(-1)
@@ -140,6 +141,7 @@ async def start_background():
     else:
         logger.info("[提示] 当前为正向 ws + http 模式，请确保你的 mirai api http 设置了正确的 ws 和 http 配置")
         logger.info("[提示] 配置不正确或 Miria 未登录 QQ 都会导致 【Websocket reconnecting...】 提示的出现。")
+
 
 cmd = Commander(app.broadcast)
 
@@ -154,7 +156,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         await app.send_message(event, "配置文件重新载入完毕！")
         await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
         constants.botManager = BotManager(config)
-        botManager.login()
+        await botManager.login()
         await app.send_message(event, "登录结束")
     finally:
         raise ExecutionStop()
@@ -195,5 +197,34 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
     finally:
         raise ExecutionStop()
 
+
+@cmd.command(".查询API余额")
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
+    try:
+        if not sender.id == config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        tasklist = []
+        bots = botManager.bots.get("openai-api", [])
+        for account in bots:
+            tasklist.append(botManager.check_api_info(account))
+        msg = await app.send_message(event, "查询中，请稍等……")
+
+        nodes = []
+        for account, r in zip(bots, await asyncio.gather(*tasklist)):
+            grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
+            total_available = grant_available
+            if has_payment_method:
+                total_available = total_available + hard_limit_usd - total_usage
+            answer = '' + account.api_key[:6] + "**" + account.api_key[-3:] + '\n'
+            answer = answer + f' - 本月已用: `{round(total_usage, 2)}$`\n' \
+                              f' - 可用：`{round(total_available, 2)}$`\n' \
+                              f' - 绑卡：{has_payment_method}'
+            node = ForwardNode(target=config.mirai.qq, message=MessageChain(Plain(answer)))
+            nodes.append(node)
+
+        await app.recall_message(msg)
+        await app.send_message(event, MessageChain(Forward(nodes)))
+    finally:
+        raise ExecutionStop()
 
 app.launch_blocking()

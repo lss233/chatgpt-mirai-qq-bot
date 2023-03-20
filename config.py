@@ -118,6 +118,7 @@ class BingCookiePath(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+
 class BingAuths(BaseModel):
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
