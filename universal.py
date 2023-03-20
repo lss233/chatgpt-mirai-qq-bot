@@ -3,6 +3,7 @@ from typing import Callable
 
 import openai
 from graia.ariadne.message.chain import MessageChain
+from httpx import HTTPStatusError, ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
@@ -135,7 +136,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
             await respond("暂不支持此操作，抱歉！")
         except ConcurrentMessageException as e:  # Chatbot 账号同时收到多条消息
             await respond(config.response.error_request_concurrent_error)
-        except BotRatelimitException as e:  # Chatbot 账号限流
+        except (BotRatelimitException, HTTPStatusError) as e:  # Chatbot 账号限流
             await respond(config.response.error_request_too_many.format(exc=e))
         except NoAvailableBotException as e:  # 预设不存在
             await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
@@ -149,7 +150,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                 f"* bing-p - 微软 New Bing (精确)\n")
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (RequestException, SSLError, ProxyError, MaxRetryError) as e:  # 网络异常
+        except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout) as e:  # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
         except Exception as e:  # 未处理的异常
             logger.exception(e)
