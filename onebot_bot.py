@@ -18,7 +18,6 @@ from middlewares.ratelimit import manager as ratelimit_manager
 
 bot = CQHttp()
 
-
 botManager.login()
 
 
@@ -37,6 +36,7 @@ class MentionMe:
             if member_info.get("nickname") and chain.startswith(member_info.get("nickname")):
                 return chain.removeprefix(" ")
         raise ExecutionStop
+
 
 # TODO: use MessageSegment
 # https://github.com/nonebot/aiocqhttp/blob/master/docs/common-topics.md
@@ -192,6 +192,7 @@ async def _(event: Event):
     return await bot.send(event,
                           f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
+
 @bot.on_message()
 async def _(event: Event):
     pattern = ".查询API余额"
@@ -224,5 +225,11 @@ async def _(event: Event):
         await bot.call_action("send_group_forward_msg", group_id=event.group_id, messages=nodes)
     else:
         await bot.call_action("send_private_forward_msg", user_id=event.user_id, messages=nodes)
+
+
+@bot.on_startup
+async def startup():
+    await botManager.login()
+
 
 bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
