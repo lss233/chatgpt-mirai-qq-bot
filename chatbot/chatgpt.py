@@ -62,7 +62,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         self.bot.conversation_id = conversation_id
         self.bot.parent_id = parent_id
         if self.mode == 'proxy' or self.mode == 'browserless':
-            async for r in await self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
+            async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
                 yield r
             self.update_accessed_at()
         else:

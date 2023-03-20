@@ -123,7 +123,7 @@ class BotManager:
                     bot = await self.__login_openai_apikey(account)
                     self.bots["openai-api"].append(bot)
                 elif account.mode == "proxy" or account.mode == "browserless":
-                    bot = self.__login_V1(account)
+                    bot = await self.__login_V1(account)
                     self.bots["chatgpt-web"].append(bot)
                 elif account.mode == "browser":
                     bot = self.__login_browser(account)
@@ -208,7 +208,7 @@ class BotManager:
         cache = self.cache_db.get(q.account == account_sha)
         return cache['cache'] if cache is not None else dict()
 
-    def __login_V1(self, account: OpenAIAuthBase) -> ChatGPTBrowserChatbot:
+    async def __login_V1(self, account: OpenAIAuthBase) -> ChatGPTBrowserChatbot:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = dict()
@@ -220,9 +220,9 @@ class BotManager:
             config['model'] = 'gpt-4'
 
         # 我承认这部分代码有点蠢
-        def __V1_check_auth() -> bool:
+        async def __V1_check_auth() -> bool:
             try:
-                bot.get_conversations(0, 1)
+                await bot.get_conversations(0, 1)
                 return True
             except (V1Error, KeyError) as e:
                 return False
@@ -234,7 +234,7 @@ class BotManager:
             logger.info("尝试使用 access_token 登录中...")
             config['access_token'] = cached_account.get('access_token')
             bot = V1Chatbot(config=config)
-            if __V1_check_auth():
+            if await __V1_check_auth():
                 return ChatGPTBrowserChatbot(bot, account.mode)
 
         if cached_account.get('session_token'):
@@ -246,7 +246,7 @@ class BotManager:
                 "session_token": config['session_token'],
                 "access_token": get_access_token(),
             })
-            if __V1_check_auth():
+            if await __V1_check_auth():
                 return ChatGPTBrowserChatbot(bot, account.mode)
 
         if cached_account.get('password'):
@@ -260,7 +260,7 @@ class BotManager:
                 "session_token": bot.config.get('session_token'),
                 "access_token": get_access_token()
             })
-            if __V1_check_auth():
+            if await __V1_check_auth():
                 return ChatGPTBrowserChatbot(bot, account.mode)
         # Invalidate cache
         self.__save_login_cache(account=account, cache={})

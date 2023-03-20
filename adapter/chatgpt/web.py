@@ -49,20 +49,8 @@ class ChatGPTWebAdapter(BotAdapter):
         self.parent_id = None
         self.bot = botManager.pick('chatgpt-web')
 
-    def ask_sync(self, sync_q, prompt):
-        try:
-            for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
-                sync_q.put(resp)
-            sync_q.put(None)
-        except Exception as e:
-            sync_q.put(e)
-        sync_q.join()
-
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         try:
-            queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
-            loop = asyncio.get_running_loop()
-            future = loop.run_in_executor(None, self.ask_sync, queue.sync_q, prompt)
             last_response = None
             async for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
                 last_response = resp
@@ -82,10 +70,6 @@ class ChatGPTWebAdapter(BotAdapter):
                 if self.conversation_id == resp["conversation_id"]:
                     self.parent_id = resp["parent_id"]
                 yield resp["message"]
-
-            await future
-            queue.close()
-            await queue.wait_closed()
             if last_response:
                 logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")
         except AttributeError as e:
