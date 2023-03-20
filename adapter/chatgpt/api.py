@@ -45,7 +45,7 @@ class ChatGPTAPIAdapter(BotAdapter):
 
     async def rollback(self):
         if len(self.bot.conversation[self.session_id]) > 0:
-            self.bot.rollback(convo_id=self.session_id)
+            self.bot.rollback(convo_id=self.session_id, n=2)
             return True
         else:
             return False
