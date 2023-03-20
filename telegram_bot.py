@@ -34,7 +34,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         response,
         f"{type}-{update.message.chat.id}",
         update.message.text,
-        is_manager=update.message.sender_chat.id == config.telegram.manager_chat
+        is_manager=update.message.from_user.id == config.telegram.manager_chat
     )
 
 
