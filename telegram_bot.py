@@ -39,8 +39,8 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # if not update.message.sender_chat.id == config.mirai.manager_qq:
-    #     return await update.message.reply_text("您没有权限执行这个操作")
+    if not update.message.from_user.id == config.telegram.manager_chat:
+        return await update.message.reply_text("您没有权限执行这个操作")
 
     tasklist = []
     bots = botManager.bots.get("openai-api", [])
@@ -56,6 +56,9 @@ async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
         answer = answer + '* `' + account.api_key[:6] + "**" + account.api_key[-3:] + '`'
         answer = answer + f' - ' + f'本月已用: `{round(total_usage, 2)}$`, 可用：`{round(total_available, 2)}$`, 绑卡：{has_payment_method}'
         answer = answer + '\n'
+    if answer == '':
+        await msg.edit_text("没有查询到任何 API")
+        return
     await msg.edit_text(answer)
 
 

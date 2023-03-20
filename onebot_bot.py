@@ -217,6 +217,9 @@ async def _(event: Event):
                           f' - 绑卡：{has_payment_method}'
         node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
         nodes.append(node)
+    if len(nodes) == 0:
+        await bot.send(event, "没有查询到任何 API！")
+        return
     if event.group_id:
         await bot.call_action("send_group_forward_msg", group_id=event.group_id, messages=nodes)
     else:

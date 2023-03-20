@@ -235,6 +235,9 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
             nodes.append(node)
 
         await app.recall_message(msg)
+        if len(nodes) == 0:
+            await app.send_message(event, "没有查询到任何 API")
+            return
         await app.send_message(event, MessageChain(Forward(nodes)))
     finally:
         raise ExecutionStop()
