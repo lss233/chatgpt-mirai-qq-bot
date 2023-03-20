@@ -291,7 +291,7 @@ class BotManager:
                 f"{openai.api_base}/dashboard/billing/usage?start_date={start_date}&end_date={end_date}",
                 proxy=account.proxy)
             resp = await resp.json()
-            total_usage = resp.get("total_usage")
+            total_usage = resp.get("total_usage") / 100
 
         return grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd
 

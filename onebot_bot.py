@@ -210,8 +210,8 @@ async def _(event: Event):
         if has_payment_method:
             total_available = total_available + hard_limit_usd - total_usage
         answer = '' + account.api_key[:6] + "**" + account.api_key[-3:] + '\n'
-        answer = answer + f' - 本月已用: `{round(total_usage, 2)}$`\n' \
-                          f' - 可用：`{round(total_available, 2)}$`\n' \
+        answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
+                          f' - 可用：{round(total_available, 2)}$\n' \
                           f' - 绑卡：{has_payment_method}'
         node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
         nodes.append(node)
