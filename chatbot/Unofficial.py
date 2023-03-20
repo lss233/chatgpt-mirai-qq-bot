@@ -1,12 +1,17 @@
 import json
 import logging
 import re
+from typing import Optional
+
+import asyncio
 import uuid
 from time import sleep
 
-import tls_client
 import undetected_chromedriver as uc
+from httpx import AsyncClient
+from loguru import logger
 from requests.exceptions import HTTPError
+from selenium.common import UnableToSetCookieException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,42 +27,24 @@ class Chrome(uc.Chrome):
         self.quit()
 
 
-class Chatbot:
+class AsyncChatbot:
     def __init__(
-        self,
-        config,
-        conversation_id=None,
-        parent_id=None,
-        no_refresh=False,
+            self,
+            config,
+            conversation_id=None,
+            parent_id=None,
+            no_refresh=False,
     ) -> None:
         self.config = config
-        self.session = tls_client.Session(
-            client_identifier="chrome_108",
-        )
-        if "proxy" in config:
-            if type(config["proxy"]) != str:
-                raise Exception("Proxy must be a string!")
-            proxies = {
-                "http": config["proxy"],
-                "https": config["proxy"],
-            }
-            self.session.proxies.update(proxies)
-        if "verbose" in config:
-            if type(config["verbose"]) != bool:
-                raise Exception("Verbose must be a boolean!")
-            self.verbose = config["verbose"]
-        else:
-            self.verbose = False
+
+        self.session = AsyncClient(proxies=config.get("proxy", None))
         self.conversation_id = conversation_id
         self.parent_id = parent_id
         self.conversation_mapping = {}
         self.conversation_id_prev_queue = []
         self.parent_id_prev_queue = []
         self.isMicrosoftLogin = False
-        # stdout colors
-        self.GREEN = "\033[92m"
-        self.WARNING = "\033[93m"
-        self.ENDCOLOR = "\033[0m"
+
         if "email" in config and "password" in config:
             if type(config["email"]) != str:
                 raise Exception("Email must be a string!")
@@ -65,7 +52,7 @@ class Chatbot:
                 raise Exception("Password must be a string!")
             self.email = config["email"]
             self.password = config["password"]
-            if "isMicrosoftLogin" in config and config["isMicrosoftLogin"] == True:
+            if "isMicrosoftLogin" in config and config["isMicrosoftLogin"] is True:
                 self.isMicrosoftLogin = True
                 self.__microsoft_login()
             else:
@@ -84,52 +71,49 @@ class Chatbot:
             self.__get_cf_cookies()
         else:
             raise Exception("Invalid config!")
-        self.__retry_refresh()
+        # self.__retry_refresh()
 
-    def __retry_refresh(self):
+    async def __retry_refresh(self):
         retries = 5
         refresh = True
         while refresh:
             try:
-                self.__refresh_session()
+                await self.__refresh_session()
                 refresh = False
             except Exception as exc:
                 if retries == 0:
                     raise exc
                 retries -= 1
 
-    def ask(
-        self,
-        prompt,
-        conversation_id=None,
-        parent_id=None,
-        gen_title=False,
-        session_token=None,
+    async def ask(
+            self,
+            prompt: str,
+            conversation_id: Optional[str] = None,
+            parent_id: Optional[str] = None,
+            gen_title: bool = False,
+            session_token: Optional[str] = None,
+            timeout: int = 3600
     ):
         """
         Ask a question to the chatbot
-        :param prompt: String
-        :param conversation_id: UUID
-        :param parent_id: UUID
-        :param gen_title: Boolean
-        :param session_token: String
         """
         if session_token:
+            self.session.cookies.delete("__Secure-next-auth.session-token")
             self.session.cookies.set(
                 "__Secure-next-auth.session-token",
                 session_token,
             )
             self.session_token = session_token
             self.config["session_token"] = session_token
-        self.__retry_refresh()
-        self.__map_conversations()
-        if conversation_id == None:
+        await self.__retry_refresh()
+        # await self.__map_conversations()
+        if conversation_id is None:
             conversation_id = self.conversation_id
-        if parent_id == None:
+        if parent_id is None:
             parent_id = (
                 self.parent_id
                 if conversation_id == self.conversation_id
-                else self.conversation_mapping[conversation_id]
+                else await self.get_msg_history(conversation_id)
             )
         data = {
             "action": "next",
@@ -151,14 +135,14 @@ class Chatbot:
             data["conversation_id"],
         )  # for rollback
         self.parent_id_prev_queue.append(data["parent_message_id"])
-        response = self.session.post(
+        response = await self.session.post(
             url=BASE_URL + "backend-api/conversation",
-            data=json.dumps(data),
-            timeout_seconds=180,
+            json=data,
+            timeout=timeout,
         )
         if response.status_code != 200:
             print(response.text)
-            self.__refresh_session()
+            await self.__refresh_session()
             raise HTTPError(
                 f"Wrong response code: {response.status_code}! Refreshing session...",
             )
@@ -199,84 +183,83 @@ class Chatbot:
             print(response.text)
             raise Exception("Response code error: ", response.status_code)
 
-    def get_conversations(self, offset=0, limit=20):
+    async def get_conversations(self, offset=0, limit=20):
         """
         Get conversations
         :param offset: Integer
         :param limit: Integer
         """
         url = BASE_URL + f"backend-api/conversations?offset={offset}&limit={limit}"
-        response = self.session.get(url)
+        response = await self.session.get(url)
         self.__check_response(response)
-        data = json.loads(response.text)
-        return data["items"]
+        return response.json()["items"]
 
-    def get_msg_history(self, id):
+    async def get_msg_history(self, id):
         """
         Get message history
         :param id: UUID of conversation
         """
         url = BASE_URL + f"backend-api/conversation/{id}"
-        response = self.session.get(url)
+        response = await self.session.get(url)
         self.__check_response(response)
-        data = json.loads(response.text)
-        return data
+        print(response.text)
+        return response.json()
 
-    def __gen_title(self, id, message_id):
+    async def __gen_title(self, id, message_id, timeout=3600):
         """
         Generate title for conversation
         """
         url = BASE_URL + f"backend-api/conversation/gen_title/{id}"
-        response = self.session.post(
+        response = await self.session.post(
             url,
-            data=json.dumps(
-                {
+            json={
                     "message_id": message_id,
                     "model": "text-davinci-002-render"
                     if self.config.get("paid") is not True
                     else "text-davinci-002-render-paid",
                 },
-            ),
+            timeout=timeout
         )
         self.__check_response(response)
-        data = json.loads(response.text)
-        return data
+        return response.json()
 
-    def change_title(self, id, title):
+    async def change_title(self, id, title):
         """
         Change title of conversation
         :param id: UUID of conversation
         :param title: String
         """
         url = BASE_URL + f"backend-api/conversation/{id}"
-        response = self.session.patch(url, data=f'{{"title": "{title}"}}')
+        response = await self.session.patch(url, json={"title": title})
         self.__check_response(response)
 
-    def delete_conversation(self, id):
+    async def delete_conversation(self, id):
         """
         Delete conversation
         :param id: UUID of conversation
         """
         url = BASE_URL + f"backend-api/conversation/{id}"
-        response = self.session.patch(url, data='{"is_visible": false}')
+        response = await self.session.patch(url, json={"is_visible": False})
         self.__check_response(response)
 
-    def clear_conversations(self):
+    async def clear_conversations(self):
         """
         Delete all conversations
         """
         url = BASE_URL + "backend-api/conversations"
-        response = self.session.patch(url, data='{"is_visible": false}')
+        response = await self.session.patch(url, json={"is_visible": False})
         self.__check_response(response)
 
-    def __map_conversations(self):
-        conversations = self.get_conversations()
+    async def __map_conversations(self):
+        conversations = await self.get_conversations()
         histories = [self.get_msg_history(x["id"]) for x in conversations]
-        for x, y in zip(conversations, histories):
+
+        for x, y in zip(conversations, await asyncio.gather(*histories)):
             self.conversation_mapping[x["id"]] = y["current_node"]
 
-    def __refresh_session(self, session_token=None):
+    async def __refresh_session(self, session_token=None, timeout=3600):
         if session_token:
+            self.session.cookies.delete("__Secure-next-auth.session-token")
             self.session.cookies.set(
                 "__Secure-next-auth.session-token",
                 session_token,
@@ -284,19 +267,19 @@ class Chatbot:
             self.session_token = session_token
             self.config["session_token"] = session_token
         url = BASE_URL + "api/auth/session"
-        response = self.session.get(url, timeout_seconds=180)
+        response = await self.session.get(url, timeout=timeout)
         if response.status_code == 403:
             self.__get_cf_cookies()
             raise Exception("Clearance refreshing...")
         try:
-            if "error" in response.json():
+            if "detail" in response.json():
                 raise Exception(
-                    f"Failed to refresh session! Error: {response.json()['error']}",
+                    f"Failed to refresh session! Error: {response.json()['detail']}",
                 )
             elif (
-                response.status_code != 200
-                or response.json() == {}
-                or "accessToken" not in response.json()
+                    response.status_code != 200
+                    or response.json() == {}
+                    or "accessToken" not in response.json()
             ):
                 raise Exception(
                     f"Response code: {response.status_code} \n Response: {response.text}",
@@ -307,8 +290,9 @@ class Chatbot:
                         "Authorization": "Bearer " + response.json()["accessToken"],
                     },
                 )
-            self.session_token = self.session.cookies._find(
+            self.session_token = self.session.cookies.get(
                 "__Secure-next-auth.session-token",
+                domain=".chat.openai.com"
             )
         except Exception:
             print("Failed to refresh session!")
@@ -344,14 +328,14 @@ class Chatbot:
             self.puid_cookie = None
             self.user_agent = None
             options = self.__get_ChromeOptions()
-            print("Spawning browser...")
+            logger.info("启动浏览器登录中...")
             driver = uc.Chrome(
                 enable_cdp_events=True,
                 options=options,
                 driver_executable_path=self.config.get("driver_exec_path"),
                 browser_executable_path=self.config.get("browser_exec_path"),
             )
-            print("Browser spawned.")
+            logger.info("浏览器启动成功")
             driver.add_cdp_listener(
                 "Network.responseReceivedExtraInfo",
                 lambda msg: self.__detect_cookies(msg),
@@ -368,15 +352,17 @@ class Chatbot:
                 user_agent=self.user_agent,
             )
             # Wait for the login button to appear
+            logger.info("正在寻找 Log in 按钮")
             WebDriverWait(driver, 120).until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, "//button[contains(text(), 'Log in')]"),
+                    (By.XPATH, "//button/div[contains(text(), 'Log in')]"),
                 ),
             )
             # Click the login button
+            logger.info("正在点击 Log in 按钮")
             driver.find_element(
                 by=By.XPATH,
-                value="//button[contains(text(), 'Log in')]",
+                value="//button/div[contains(text(), 'Log in')]",
             ).click()
             # Wait for the Login with Microsoft button to be clickable
             WebDriverWait(driver, 60).until(
@@ -384,6 +370,7 @@ class Chatbot:
                     (By.XPATH, "//button[@data-provider='windowslive']"),
                 ),
             )
+            logger.info("正在点击通过 Microsoft 登录按钮")
             # Click the Login with Microsoft button
             driver.find_element(
                 by=By.XPATH,
@@ -396,6 +383,7 @@ class Chatbot:
                 ),
             )
             # Enter the email
+            logger.info("正在输入邮箱")
             driver.find_element(
                 by=By.XPATH,
                 value="//input[@type='email']",
@@ -418,6 +406,7 @@ class Chatbot:
                 ),
             )
             # Enter the password
+            logger.info("正在输入密码")
             driver.find_element(
                 by=By.XPATH,
                 value="//input[@type='password']",
@@ -429,6 +418,7 @@ class Chatbot:
                 ),
             )
             # Click the Sign in button
+            logger.info("正在点击提交")
             driver.find_element(
                 by=By.XPATH,
                 value="//input[@type='submit']",
@@ -450,9 +440,11 @@ class Chatbot:
                     (By.XPATH, "//textarea"),
                 ),
             )
+            logger.success("登录成功")
             while not self.session_cookie_found:
+                logger.info("正在等待 Session Token")
                 sleep(5)
-            print(self.GREEN + "Login successful." + self.ENDCOLOR)
+
         finally:
             # Close the browser
             if driver is not None:
@@ -476,14 +468,14 @@ class Chatbot:
             self.puid_cookie = None
             self.user_agent = None
             options = self.__get_ChromeOptions()
-            print("Spawning browser...")
+            logger.info("启动浏览器登录中...")
             driver = uc.Chrome(
                 enable_cdp_events=True,
                 options=options,
                 driver_executable_path=self.config.get("driver_exec_path"),
                 browser_executable_path=self.config.get("browser_exec_path"),
             )
-            print("Browser spawned.")
+            logger.info("浏览器启动成功")
             driver.add_cdp_listener(
                 "Network.responseReceivedExtraInfo",
                 lambda msg: self.__detect_cookies(msg),
@@ -493,22 +485,19 @@ class Chatbot:
                 lambda msg: self.__detect_user_agent(msg),
             )
             driver.get(BASE_URL)
-            while not self.agent_found or not self.cf_cookie_found:
-                sleep(5)
-            self.__refresh_headers(
-                cf_clearance=self.cf_clearance,
-                user_agent=self.user_agent,
-            )
+
             # Wait for the login button to appear
+            logger.info("正在寻找 Log in 按钮")
             WebDriverWait(driver, 120).until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, "//button[contains(text(), 'Log in')]"),
+                    (By.XPATH, "//button/div[contains(text(), 'Log in')]"),
                 ),
             )
             # Click the login button
+            logger.info("正在点击 Log in 按钮")
             driver.find_element(
                 by=By.XPATH,
-                value="//button[contains(text(), 'Log in')]",
+                value="//button/div[contains(text(), 'Log in')]",
             ).click()
             # Wait for the email input field to appear
             WebDriverWait(driver, 60).until(
@@ -517,6 +506,7 @@ class Chatbot:
                 ),
             )
             # Enter the email
+            logger.info("正在输入邮箱")
             driver.find_element(by=By.ID, value="username").send_keys(
                 self.config["email"],
             )
@@ -538,6 +528,7 @@ class Chatbot:
                 ),
             )
             # Enter the password
+            logger.info("正在输入密码")
             driver.find_element(by=By.ID, value="password").send_keys(
                 self.config["password"],
             )
@@ -558,9 +549,16 @@ class Chatbot:
                     (By.XPATH, "//textarea"),
                 ),
             )
+            logger.info("登录成功")
             while not self.session_cookie_found:
+                logger.info("正在等待 Session Token")
                 sleep(5)
-            print(self.GREEN + "Login successful." + self.ENDCOLOR)
+            while not self.agent_found or not self.cf_cookie_found:
+                sleep(5)
+            self.__refresh_headers(
+                cf_clearance=self.cf_clearance,
+                user_agent=self.user_agent,
+            )
         finally:
             if driver is not None:
                 # Close the browser
@@ -595,14 +593,15 @@ class Chatbot:
             self.puid_cookie = None
             self.user_agent = None
             options = self.__get_ChromeOptions()
-            print("Spawning browser...")
+            logger.info("获取 cf_clearance 中，正在启动浏览器……")
             driver = uc.Chrome(
                 enable_cdp_events=True,
                 options=options,
                 driver_executable_path=self.config.get("driver_exec_path"),
                 browser_executable_path=self.config.get("browser_exec_path"),
             )
-            print("Browser spawned.")
+
+            logger.info("浏览器已启动，加载页面中……")
             driver.add_cdp_listener(
                 "Network.responseReceivedExtraInfo",
                 lambda msg: self.__detect_cookies(msg),
@@ -611,12 +610,27 @@ class Chatbot:
                 "Network.requestWillBeSentExtraInfo",
                 lambda msg: self.__detect_user_agent(msg),
             )
-            driver.get("https://chat.openai.com/chat")
-            while (
-                not self.agent_found
-                or not self.cf_cookie_found
-            ):
-                sleep(5)
+            driver.get("https://chat.openai.com/")
+
+            for cookie in self.session.cookies.jar:
+                try:
+                    if not cookie.domain:
+                        cookie.domain = 'chat.openai.com'
+                    driver.add_cookie({"name": cookie.name, "value": cookie.value, "domain": cookie.domain})
+                except: ...
+            driver.get("https://chat.openai.com/api/auth/session")
+
+            for cookie in driver.get_cookies():
+                if cookie['name'] == 'cf_clearance':
+                    self.cf_clearance = cookie['value']
+                    self.cf_cookie_found = True
+                self.session.cookies.delete(cookie['name'])
+                self.session.cookies.set(
+                    name=cookie['name'],
+                    value=cookie['value'],
+                    domain=cookie['domain'],
+                    path=cookie['path']
+                )
         finally:
             # Close the browser
             if driver is not None:
@@ -645,17 +659,10 @@ class Chatbot:
                         message["params"]["headers"]["set-cookie"],
                     )
                     if cf_clearance_cookie and not self.cf_cookie_found:
-                        print("Found Cloudflare Cookie!")
                         # remove the semicolon and 'cf_clearance=' from the string
                         raw_cf_cookie = cf_clearance_cookie.group(0)
                         self.cf_clearance = raw_cf_cookie.split("=")[1][:-1]
-                        if self.verbose:
-                            print(
-                                self.GREEN
-                                + "Cloudflare Cookie: "
-                                + self.ENDCOLOR
-                                + self.cf_clearance,
-                            )
+                        logger.info("识别到 cf_clearance.")
                         self.cf_cookie_found = True
                     if puid_cookie and not self.puid_cookie_found:
                         raw_puid_cookie = puid_cookie.group(0)
@@ -664,16 +671,10 @@ class Chatbot:
                             "_puid",
                             self.puid_cookie,
                         )
-                        if self.verbose:
-                            print(
-                                self.GREEN
-                                + "puid Cookie: "
-                                + self.ENDCOLOR
-                                + self.puid_cookie,
-                            )
+                        logger.info("识别到 puid.")
                         self.puid_cookie_found = True
                     if session_cookie and not self.session_cookie_found:
-                        print("Found Session Token!")
+                        logger.info("识别到 Session Token.")
                         # remove the semicolon and '__Secure-next-auth.session-token=' from the string
                         raw_session_cookie = session_cookie.group(0)
                         self.session_token = raw_session_cookie.split("=")[1][:-1]
@@ -681,15 +682,12 @@ class Chatbot:
                             "__Secure-next-auth.session-token",
                             self.session_token,
                         )
-                        if self.verbose:
-                            print(
-                                self.GREEN
-                                + "Session Token: "
-                                + self.ENDCOLOR
-                                + self.session_token,
-                            )
                         self.session_cookie_found = True
-
+                    for cookie in message["params"]["headers"]["set-cookie"].split('\n'):
+                        content, _ = cookie.split(';', 1)
+                        key, value = content.split('=', 1)
+                        self.session.cookies.delete(key)
+                        self.session.cookies.set(key, value, domain='.chat.openai.com')
     def __detect_user_agent(self, message):
         if "params" in message:
             if "headers" in message["params"]:
@@ -704,16 +702,17 @@ class Chatbot:
         )
 
     def __refresh_headers(self, cf_clearance, user_agent):
-        del self.session.cookies["cf_clearance"]
-        del self.session.cookies["_puid"]
         self.session.headers.clear()
+        if "cf_clearance" in self.session.cookies:
+            self.session.cookies.delete("cf_clearance")
         self.session.cookies.set("cf_clearance", cf_clearance)
         if self.puid_cookie_found:
+            if "_puid" in self.session.cookies:
+                self.session.cookies.delete("_puid")
             self.session.cookies.set("_puid", self.puid_cookie)
         self.session.headers.update(
             {
                 "Accept": "text/event-stream",
-                "Authorization": "Bearer ",
                 "Content-Type": "application/json",
                 "User-Agent": user_agent,
                 "X-Openai-Assistant-App-Id": "",
@@ -732,124 +731,3 @@ class Chatbot:
         for i in range(num):
             self.conversation_id = self.conversation_id_prev_queue.pop()
             self.parent_id = self.parent_id_prev_queue.pop()
-
-
-def get_input(prompt):
-    # Display the prompt
-    print(prompt, end="")
-
-    # Initialize an empty list to store the input lines
-    lines = []
-
-    # Read lines of input until the user enters an empty line
-    while True:
-        line = input()
-        if line == "":
-            break
-        lines.append(line)
-
-    # Join the lines, separated by newlines, and store the result
-    user_input = "\n".join(lines)
-
-    # Return the input
-    return user_input
-
-
-from os import getenv
-from os.path import exists
-
-
-def configure():
-    config_files = ["config.json"]
-    xdg_config_home = getenv("XDG_CONFIG_HOME")
-    if xdg_config_home:
-        config_files.append(f"{xdg_config_home}/revChatGPT/config.json")
-    user_home = getenv("HOME")
-    if user_home:
-        config_files.append(f"{user_home}/.config/revChatGPT/config.json")
-
-    config_file = next((f for f in config_files if exists(f)), None)
-    if config_file:
-        with open(config_file, encoding="utf-8") as f:
-            config = json.load(f)
-    else:
-        print("No config file found.")
-        raise Exception("No config file found.")
-    return config
-
-
-def chatGPT_main(config):
-    print("Logging in...")
-    chatbot = Chatbot(config)
-    while True:
-        prompt = get_input("\nYou:\n")
-        if prompt.startswith("!"):
-            if prompt == "!help":
-                print(
-                    """
-                !help - Show this message
-                !reset - Forget the current conversation
-                !refresh - Refresh the session authentication
-                !config - Show the current configuration
-                !rollback x - Rollback the conversation (x being the number of messages to rollback)
-                !exit - Exit this program
-                """,
-                )
-                continue
-            elif prompt == "!reset":
-                chatbot.reset_chat()
-                print("Chat session successfully reset.")
-                continue
-            elif prompt == "!refresh":
-                chatbot.__refresh_session()
-                print("Session successfully refreshed.\n")
-                continue
-            elif prompt == "!config":
-                print(json.dumps(chatbot.config, indent=4))
-                continue
-            elif prompt.startswith("!rollback"):
-                # Default to 1 rollback if no number is specified
-                try:
-                    rollback = int(prompt.split(" ")[1])
-                except IndexError:
-                    rollback = 1
-                chatbot.rollback_conversation(rollback)
-                print(f"Rolled back {rollback} messages.")
-                continue
-            elif prompt.startswith("!setconversation"):
-                try:
-                    chatbot.config["conversation"] = prompt.split(" ")[1]
-                    print("Conversation has been changed")
-                except IndexError:
-                    print("Please include conversation UUID in command")
-                continue
-            elif prompt == "!exit":
-                break
-        try:
-            print("Chatbot: ")
-            message = chatbot.ask(
-                prompt,
-                conversation_id=chatbot.config.get("conversation"),
-                parent_id=chatbot.config.get("parent_id"),
-            )
-            print(message["message"])
-        except Exception as exc:
-            print("Something went wrong!")
-            print(exc)
-            continue
-
-
-def main():
-    print(
-        """
-        ChatGPT - A command-line interface to OpenAI's ChatGPT (https://chat.openai.com/chat)
-        Repo: github.com/acheong08/ChatGPT
-        """,
-    )
-    print("Type '!help' to show a full list of commands")
-    print("Press enter twice to submit your question.\n")
-    chatGPT_main(configure())
-
-
-if __name__ == "__main__":
-    main()
