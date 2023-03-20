@@ -21,7 +21,7 @@ from renderer.renderer import MarkdownImageRenderer, FullTextRenderer
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
-async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported")):
+async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported"), is_manager: bool = False):
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
@@ -104,6 +104,17 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                 else:
                     conversation_context.renderer = FullTextRenderer()
                     await respond(f"已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
+                return
+            elif switch_model_search := re.search(config.trigger.switch_model, prompt):
+                model_name = switch_model_search.group(1).strip()
+                if model_name in conversation_context.supported_models:
+                    if not (is_manager or model_name in config.trigger.allowed_models):
+                        await respond(f"不好意思，只有管理员才能切换到 {model_name} 模型！")
+                    else:
+                        await conversation_context.switch_model(model_name)
+                        await respond(f"已切换至 {model_name} 模型，让我们聊天吧！")
+                else:
+                    await respond(f"当前的 AI 不支持切换至 {model_name} 模型，目前仅支持：{conversation_context.supported_models}！")
                 return
 
             # 加载预设

@@ -84,7 +84,13 @@ async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
             if event.source.id < 0:
                 await response_as_image(target, source, msg)
 
-    await handle_message(response, f"friend-{target.id}", chain.display, chain)
+    await handle_message(
+        response,
+        f"friend-{target.id}",
+        chain.display,
+        chain,
+        is_manager=target.id == config.mirai.manager_qq
+    )
 
 
 GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
@@ -93,7 +99,7 @@ GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention 
 
 
 @app.broadcast.receiver("GroupMessage", priority=19)
-async def group_message_listener(target: Group, source: Source, chain: GroupTrigger):
+async def group_message_listener(target: Group, source: Source, chain: GroupTrigger, member: Member):
     if chain.display.startswith("."):
         return
 
@@ -109,7 +115,13 @@ async def group_message_listener(target: Group, source: Source, chain: GroupTrig
             if event.source.id < 0:
                 await response_as_image(target, source, msg)
 
-    await handle_message(response, f"group-{target.id}", chain.display, chain)
+    await handle_message(
+        response,
+        f"group-{target.id}",
+        chain.display,
+        chain,
+        is_manager=member.id == config.mirai.manager_qq
+    )
 
 
 @app.broadcast.receiver("NewFriendRequestEvent")

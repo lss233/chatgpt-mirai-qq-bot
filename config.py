@@ -41,6 +41,8 @@ class TelegramBot(BaseModel):
     """Bot 大爹给的 token"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
+    manager_chat: Optional[int] = None
+    """管理员的 chat id"""
 
 
 class OpenAIGPT3Params(BaseModel):
@@ -77,6 +79,8 @@ class OpenAIAuthBase(BaseModel):
     """使用 ChatGPT Plus"""
     gpt4: bool = False
     """使用 GPT-4"""
+    model: Optional[str] = None
+    """使用的默认模型，此选项优先级最高"""
     verbose: bool = False
     """启用详尽日志模式"""
     title_pattern: str = ""
@@ -161,6 +165,8 @@ class Trigger(BaseModel):
     """回滚会话的命令"""
     prefix_image: List[str] = ["画", "看"]
     """图片创建前缀"""
+    switch_model: str = r"切换模型 (.+)"
+    """切换当前上下文的模型"""
     switch_command: str = r"切换AI (.+)"
     """切换AI的命令"""
     image_only_command: List[str] = ["图片模式"]
@@ -169,7 +175,13 @@ class Trigger(BaseModel):
     """切换至文本回复模式"""
     ignore_regex: List[str] = []
     """忽略满足条件的正则表达式"""
-
+    allowed_models: List[str] = [
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-0301",
+        "text-davinci-002-render-sha",
+        "text-davinci-002-render-paid"
+    ]
+    """允许普通用户切换的模型列表"""
 
 class Response(BaseModel):
     default_ai: Union[str, None] = None

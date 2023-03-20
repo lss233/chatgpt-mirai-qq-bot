@@ -42,6 +42,18 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.bot.conversation[self.session_id] = [
             {"role": "system", "content": self.bot.system_prompt}
         ]
+        self.current_model = "gpt-3.5-turbo"
+        self.supported_models = [
+            "gpt-3.5-turbo",
+            "gpt-3.5-turbo-0301",
+            "gpt-4",
+            "gpt-4-0314",
+            "gpt-4-32k",
+            "gpt-4-32k-0314",
+        ]
+
+    async def switch_model(self, model_name):
+        self.current_model = model_name
 
     async def rollback(self):
         if len(self.bot.conversation[self.session_id]) > 0:

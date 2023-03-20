@@ -431,6 +431,12 @@ reset_command = [ "重置会话",]
 # 回滚会话的命令
 rollback_command = [ "回滚会话",]
 
+# 切换模型的命令
+switch_model = "切换模型 (.+)"
+
+# 允许普通用户切换的模型
+allowed_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "text-davinci-002-render-sha", "text-davinci-002-render-paid"]
+
 [response]
 # 默认使用的 AI 类型，不填写时自动推测
 # 目前支持的类型：
@@ -583,6 +589,8 @@ bot_token = "你的 Bot token"
 # 如果部署在国内，就填这个设置代理
 # 不填的话就会读取系统的代理设置
 proxy = "http://localhost:1080"
+# 管理员的 chat id
+manager_chat = 1234567890
 ```
 就可以使用 Telegram 机器人和 ChatGPT 聊天！
 

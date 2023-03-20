@@ -95,7 +95,13 @@ async def _(event: Event):
         await bot.send(event, resp)
 
     try:
-        await handle_message(response, f"friend-{event.user_id}", msg.display, chain)
+        await handle_message(
+            response,
+            f"friend-{event.user_id}",
+            msg.display,
+            chain,
+            is_manager=event.user_id == config.onebot.manager_qq
+        )
     except Exception as e:
         print(e)
 
@@ -123,7 +129,12 @@ async def _(event: Event):
             resp = MessageSegment.reply(event.message_id) + resp
         await bot.send(event, resp)
 
-    await handle_message(response, f"group-{event.user_id}", chain.display)
+    await handle_message(
+        response,
+        f"group-{event.user_id}",
+        chain.display,
+        is_manager=event.user_id == config.onebot.manager_qq
+    )
 
 
 @bot.on_message()

@@ -1,4 +1,5 @@
 import io
+import re
 from typing import List, Dict
 
 from EdgeGPT import ConversationStyle
@@ -29,6 +30,13 @@ class ConversationContext:
     """OpenAI API适配器，提供聊天之外的功能"""
     preset: str = None
 
+    @property
+    def current_model(self):
+        return self.adapter.current_model
+
+    @property
+    def supported_models(self):
+        return self.adapter.supported_models
 
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
@@ -93,6 +101,9 @@ class ConversationContext:
                 reset=config.trigger.reset_command)
         else:
             yield resp
+
+    async def switch_model(self, model_name):
+        return await self.adapter.switch_model(model_name)
 
     async def load_preset(self, keyword: str):
         if keyword not in config.presets.keywords:

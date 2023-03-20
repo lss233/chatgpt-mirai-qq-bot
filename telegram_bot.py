@@ -30,7 +30,12 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         elif isinstance(msg, Image):
             return await update.message.reply_photo(photo=await msg.get_bytes())
 
-    await handle_message(response, f"{type}-{update.message.chat.id}", update.message.text)
+    await handle_message(
+        response,
+        f"{type}-{update.message.chat.id}",
+        update.message.text,
+        is_manager=update.message.sender_chat.id == config.telegram.manager_chat
+    )
 
 
 async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):

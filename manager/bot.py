@@ -218,13 +218,15 @@ class BotManager:
             config['paid'] = True
         if cached_account.get('gpt4'):
             config['model'] = 'gpt-4'
+        if cached_account.get('model'):  # Ready for backward-compatibility & forward-compatibility
+            config['model'] = cached_account.get('model')
 
         # 我承认这部分代码有点蠢
         async def __V1_check_auth() -> bool:
             try:
                 await bot.get_conversations(0, 1)
                 return True
-            except (V1Error, KeyError) as e:
+            except (V1Error, KeyError):
                 return False
 
         def get_access_token():
@@ -286,7 +288,8 @@ class BotManager:
             start_date = current_month.strftime('%Y-%m-%d')
             end_date = next_month.strftime('%Y-%m-%d')
             resp = await session.get(
-                f"{openai.api_base}/dashboard/billing/usage?start_date={start_date}&end_date={end_date}", proxy=account.proxy)
+                f"{openai.api_base}/dashboard/billing/usage?start_date={start_date}&end_date={end_date}",
+                proxy=account.proxy)
             resp = await resp.json()
             total_usage = resp.get("total_usage")
 
@@ -298,7 +301,8 @@ class BotManager:
             openai.proxy = proxy
         logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
 
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(account)
+        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(
+            account)
 
         total_available = grant_available
 

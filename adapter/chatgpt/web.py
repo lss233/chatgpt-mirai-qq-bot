@@ -33,6 +33,25 @@ class ChatGPTWebAdapter(BotAdapter):
         self.conversation_id = None
         self.parent_id = None
         super().__init__()
+        self.current_model = self.bot.account.model or (
+            'text-davinci-002-render-paid'
+            if self.bot.account.paid else
+            'text-davinci-002-render-sha'
+        )
+        self.supported_models = ['text-davinci-002-render-sha']
+        if self.bot.account.paid:
+            self.supported_models.append('text-davinci-002-render-paid')
+            self.supported_models.append('gpt-4')
+
+    async def switch_model(self, model_name):
+        if self.bot.account.auto_remove_old_conversations:
+            if self.conversation_id is not None:
+                await self.bot.delete_conversation(self.conversation_id)
+        self.conversation_id = None
+        self.parent_id = None
+        # self.current_model = model_name
+        raise Exception("此 AI 暂不支持切换模型的操作！")
+
 
     async def rollback(self):
         if len(self.parent_id_prev_queue) > 0:
