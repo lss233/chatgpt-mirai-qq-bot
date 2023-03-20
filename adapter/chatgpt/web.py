@@ -107,7 +107,7 @@ class ChatGPTWebAdapter(BotAdapter):
             raise e
 
     async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role == 'chatgpt':
+        if role.endswith('bot') or role in ['assistant', 'chatgpt']:
             logger.debug(f"[预设] 响应：{text}")
             yield text
         else:
