@@ -16,8 +16,10 @@ from exceptions import NoAvailableBotException, APIKeyNoFundsError
 import itertools
 from typing import Union, List, Dict
 import os
-from revChatGPT.V1 import Chatbot as V1Chatbot, Error as V1Error
-from chatbot.Unofficial import Chatbot as BrowserChatbot
+from revChatGPT.V1 import AsyncChatbot as V1Chatbot
+from revChatGPT.typing import Error as V1Error
+
+from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from loguru import logger
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath
 import OpenAIAuth

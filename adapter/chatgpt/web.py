@@ -9,7 +9,7 @@ from adapter.botservice import BotAdapter
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 
 from constants import config, botManager
-from revChatGPT.V1 import Error as V1Error
+from revChatGPT.typing import Error as V1Error
 
 from exceptions import BotRatelimitException, ConcurrentMessageException
 
@@ -44,7 +44,7 @@ class ChatGPTWebAdapter(BotAdapter):
     async def on_reset(self):
         if self.bot.account.auto_remove_old_conversations:
             if self.conversation_id is not None:
-                self.bot.delete_conversation(self.conversation_id)
+                await self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
         self.bot = botManager.pick('chatgpt-web')
@@ -64,15 +64,7 @@ class ChatGPTWebAdapter(BotAdapter):
             loop = asyncio.get_running_loop()
             future = loop.run_in_executor(None, self.ask_sync, queue.sync_q, prompt)
             last_response = None
-            while not queue.async_q.closed:
-                resp = await queue.async_q.get()
-                queue.async_q.task_done()
-                if isinstance(resp, Exception):
-                    # 出现了错误
-                    raise resp
-                elif resp is None:
-                    # 发完了
-                    break
+            async for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
                 last_response = resp
                 if self.conversation_id:
                     self.conversation_id_prev_queue.append(self.conversation_id)
@@ -83,8 +75,8 @@ class ChatGPTWebAdapter(BotAdapter):
                 if not self.conversation_id:
                     self.conversation_id = resp["conversation_id"]
                     if self.bot.account.title_pattern:
-                        self.bot.rename_conversation(self.conversation_id, self.bot.account.title_pattern
-                                                     .format(session_id=self.session_id))
+                        await self.bot.rename_conversation(self.conversation_id, self.bot.account.title_pattern
+                                                           .format(session_id=self.session_id))
 
                 # 确保是当前的会话，才更新 parent_id
                 if self.conversation_id == resp["conversation_id"]:
