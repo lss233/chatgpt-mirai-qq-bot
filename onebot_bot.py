@@ -18,9 +18,6 @@ from middlewares.ratelimit import manager as ratelimit_manager
 
 bot = CQHttp()
 
-botManager.login()
-
-
 class MentionMe:
     """At 账号或者提到账号群昵称"""
 
@@ -148,7 +145,7 @@ async def _(event: Event):
     await bot.send(event, "配置文件重新载入完毕！")
     await bot.send(event, "重新登录账号中，详情请看控制台日志……")
     constants.botManager = BotManager(config)
-    botManager.login()
+    await botManager.login()
     await bot.send(event, "登录结束")
 
 
