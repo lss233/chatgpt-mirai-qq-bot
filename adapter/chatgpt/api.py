@@ -54,6 +54,7 @@ class ChatGPTAPIAdapter(BotAdapter):
 
     async def switch_model(self, model_name):
         self.current_model = model_name
+        self.bot.engine = self.current_model
 
     async def rollback(self):
         if len(self.bot.conversation[self.session_id]) > 0:
