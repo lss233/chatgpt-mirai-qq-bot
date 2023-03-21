@@ -150,10 +150,10 @@ class BufferedContentRenderer(Renderer):
         self.last_arrived = current_time
         rendered = self.hold
         self.hold = []
-        return rendered
+        return MessageChain(rendered)
 
     async def result(self) -> Optional[Any]:
-        return self.hold
+        return MessageChain(self.hold) + await self.parent.result()
 
 
 class MixedContentMessageChainRenderer(Renderer):

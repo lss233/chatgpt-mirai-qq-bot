@@ -47,6 +47,8 @@ class ConversationContext:
             self.renderer = FullTextRenderer()
         elif config.response.mode == "force-image" or config.text_to_image.default or config.text_to_image.always:
             self.renderer = MarkdownImageRenderer()
+        else:
+            self.renderer = MixedContentMessageChainRenderer(BufferedContentRenderer(MultipleSegmentRenderer()))
 
         if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter(self.session_id)
