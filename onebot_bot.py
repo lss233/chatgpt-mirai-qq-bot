@@ -76,26 +76,26 @@ def transform_message_chain(text: str) -> MessageChain:
 def transform_from_message_chain(chain: MessageChain):
     result = ''
     for elem in chain:
-        if elem is Image:
+        if isinstance(elem, Image):
             result = result + MessageSegment.image(f"base64://{elem.base64}")
-        elif elem is Plain:
+        elif isinstance(elem, Plain):
             result = result + MessageSegment.text(str(elem))
     return result
 
 
 def response(event):
     async def respond(resp):
-        if isinstance(resp, MessageChain):
-            return await bot.send(event, transform_from_message_chain(resp))
-        if isinstance(resp, Image):
-            return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
-        if config.response.quote:
-            resp = MessageSegment.reply(event.message_id) + resp
         try:
-            await bot.send(event, resp)
+            if isinstance(resp, MessageChain):
+                return await bot.send(event, transform_from_message_chain(resp))
+            if isinstance(resp, Image):
+                return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
+            if config.response.quote:
+                resp = MessageSegment.reply(event.message_id) + resp
+                await bot.send(event, resp)
         except Exception as e:
             logger.exception(e)
-            logger.warning("图片发送失败，尝试通过转发发送")
+            logger.warning("原始消息发送失败，尝试通过转发发送")
             await bot.call_action("send_private_forward_msg", group_id=event.group_id, messages=[
                 MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
             ])
