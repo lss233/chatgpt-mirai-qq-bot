@@ -4,7 +4,8 @@ import sys
 
 import asyncio
 import openai
-from graia.ariadne.message.element import Image
+from graia.ariadne.message.chain import MessageChain
+from graia.ariadne.message.element import Image, Plain
 from loguru import logger
 from telegram.request import HTTPXRequest
 
@@ -25,6 +26,12 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
 
     async def response(msg):
+        if isinstance(msg, MessageChain):
+            for elem in msg:
+                if isinstance(elem, Plain):
+                    return await update.message.reply_text(str(elem))
+                elif isinstance(elem, Image):
+                    return await update.message.reply_photo(photo=await elem.get_bytes())
         if isinstance(msg, str):
             return await update.message.reply_text(msg)
         elif isinstance(msg, Image):

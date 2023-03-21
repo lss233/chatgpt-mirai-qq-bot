@@ -15,7 +15,7 @@ from adapter.ms.bing import BingAdapter
 from adapter.openai.api import OpenAIAPIAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException
-from renderer.renderer import Renderer, FullTextRenderer, MarkdownImageRenderer
+from renderer.renderer import Renderer, FullTextRenderer, MarkdownImageRenderer, MixedContentMessageChainRenderer, MultipleSegmentRenderer, BufferedContentRenderer
 
 handlers = dict()
 
@@ -41,10 +41,13 @@ class ConversationContext:
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
-        if config.text_to_image.default or config.text_to_image.always:
-            self.renderer = MarkdownImageRenderer()
-        else:
+        if config.response.mode == "mixed":
+            self.renderer = MixedContentMessageChainRenderer(BufferedContentRenderer(MultipleSegmentRenderer()))
+        elif config.response.mode == "force-text":
             self.renderer = FullTextRenderer()
+        elif config.response.mode == "force-image" or config.text_to_image.default or config.text_to_image.always:
+            self.renderer = MarkdownImageRenderer()
+
         if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter(self.session_id)
         elif _type == 'chatgpt-api':

@@ -65,7 +65,7 @@ class MiddlewareBaiduCloud(Middleware):
                     return await action(session_id, prompt, rendered, respond)
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.post(baidu_url, headers=headers, data={'text': rendered}) as response:
+                    async with session.post(baidu_url, headers=headers, data={'text': str(rendered)}) as response:
                         response.raise_for_status()
                         response_dict = await response.json()
 

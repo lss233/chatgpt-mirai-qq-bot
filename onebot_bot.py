@@ -9,6 +9,7 @@ from graia.ariadne.message.element import Image, At, Plain
 from aiocqhttp import CQHttp, Event, MessageSegment
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
+from loguru import logger
 
 import constants
 from constants import config, botManager
@@ -17,6 +18,7 @@ from universal import handle_message
 from middlewares.ratelimit import manager as ratelimit_manager
 
 bot = CQHttp()
+
 
 class MentionMe:
     """At 账号或者提到账号群昵称"""
@@ -71,6 +73,36 @@ def transform_message_chain(text: str) -> MessageChain:
     return message_chain
 
 
+def transform_from_message_chain(chain: MessageChain):
+    result = ''
+    for elem in chain:
+        if elem is Image:
+            result = result + MessageSegment.image(f"base64://{elem.base64}")
+        elif elem is Plain:
+            result = result + MessageSegment.text(str(elem))
+    return result
+
+
+def response(event):
+    async def respond(resp):
+        if isinstance(resp, MessageChain):
+            return await bot.send(event, transform_from_message_chain(resp))
+        if isinstance(resp, Image):
+            return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
+        if config.response.quote:
+            resp = MessageSegment.reply(event.message_id) + resp
+        try:
+            await bot.send(event, resp)
+        except Exception as e:
+            logger.exception(e)
+            logger.warning("图片发送失败，尝试通过转发发送")
+            await bot.call_action("send_private_forward_msg", group_id=event.group_id, messages=[
+                MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
+            ])
+
+    return respond
+
+
 FriendTrigger = DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)
 
 
@@ -84,16 +116,9 @@ async def _(event: Event):
     except:
         return
 
-    async def response(resp):
-        if isinstance(resp, Image):
-            return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
-        if config.response.quote:
-            resp = MessageSegment.reply(event.message_id) + resp
-        await bot.send(event, resp)
-
     try:
         await handle_message(
-            response,
+            response(event),
             f"friend-{event.user_id}",
             msg.display,
             chain,
@@ -119,15 +144,8 @@ async def _(event: Event):
     except:
         return
 
-    async def response(resp):
-        if isinstance(resp, Image):
-            return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
-        if config.response.quote:
-            resp = MessageSegment.reply(event.message_id) + resp
-        await bot.send(event, resp)
-
     await handle_message(
-        response,
+        response(event),
         f"group-{event.group_id}",
         chain.display,
         is_manager=event.user_id == config.onebot.manager_qq

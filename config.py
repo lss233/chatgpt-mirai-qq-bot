@@ -183,7 +183,14 @@ class Trigger(BaseModel):
     ]
     """允许普通用户切换的模型列表"""
 
+
 class Response(BaseModel):
+    mode: str = "mixed"
+    """响应模式，支持：mixed - 图文混合, force-text  - 仅文字, force-image - 仅图片"""
+
+    buffer_delay: float = 10
+    """设置响应缓存时长（秒），机器人会提前返回部分文本"""
+
     default_ai: Union[str, None] = None
     """默认使用的 AI 类型，不填写时自动推测"""
 
