@@ -362,6 +362,10 @@ auto_remove_old_conversations = true
 # === Bing 设置部分开始
 # 如果你没有 Bing 账号，可以直接删除这部分
 [bing]
+# 在 Bing 的回复后加上猜你想问
+show_suggestions = true
+# 在 Bing 的回复前加上引用资料
+show_references = true
 
 # 第 1 个 Bing 账号
 # 理论上，你可以添加无限多个 Bing 账号。  
