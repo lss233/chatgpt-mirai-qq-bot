@@ -1,3 +1,4 @@
+import asyncio
 import pathlib
 from io import BytesIO
 from io import StringIO
@@ -299,6 +300,7 @@ async def get_qr_data(text):
         try:
             async with session.post('https://pastebin.mozilla.org/api/',
                                     data=payload) as resp:
+                resp.raise_for_status()
                 url = await resp.text()
         except Exception as e:
             url = "上传失败：" + str(e)
@@ -335,21 +337,17 @@ async def text_to_image(text):
             temp_jpg_filename = temp_jpg_file.name
             temp_jpg_file.close()
 
-        temp_html_file = NamedTemporaryFile(mode='w', suffix='.html', encoding='utf-8')
-        temp_html_filename = temp_html_file.name
         imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
         with StringIO(html) as input_file:
             ok = False
             try:
-                temp_html_file.write(html)
                 # 调用imgkit将html转为图片
-                ok = imgkit.from_file(filename=input_file, config=imgkit_config, options={
+                ok = await asyncio.get_event_loop().run_in_executor(None, imgkit.from_file, input_file, temp_jpg_filename, {
                     "enable-local-file-access": "",
                     "allow": asset_folder,
                     "width": config.text_to_image.width,  # 图片宽度
-                    "javascript-delay": "1000"
-                },
-                                      output_path=temp_jpg_filename)
+                    "javascript-delay": "1200"
+                }, None, None, None, imgkit_config)
                 # 调用PIL将图片读取为 JPEG，RGB 格式
                 image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
                 ok = True
@@ -362,8 +360,8 @@ async def text_to_image(text):
     except Exception as e:
         logger.exception(e)
         logger.error("Markdown 渲染失败，使用备用模式")
-    if not ok:
-        image = text_to_image_raw(text)
+    if not ok or not image:
+        image = await asyncio.get_event_loop().run_in_executor(None, text_to_image_raw, text)
 
     return image
 
