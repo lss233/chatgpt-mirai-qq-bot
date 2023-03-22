@@ -144,7 +144,7 @@ class BufferedContentRenderer(Renderer):
             return None
         current_time = time.time()
         time_delta = current_time - self.last_arrived
-        self.hold.append(Plain(rendered))
+        self.hold.append(Plain(rendered + '\n'))
         if time_delta < config.response.buffer_delay:
             return None
         self.last_arrived = current_time
@@ -188,12 +188,19 @@ class MixedContentMessageChainRenderer(Renderer):
                 rich_blocks = rich_blocks + str(rendered) + '\n'
             else:
                 if rich_blocks:
-                    holds.append(await to_image(rich_blocks))
+                    holds.append(await to_image(rich_blocks.strip()))
                     rich_blocks = ''
                 holds.append(rendered)
         if rich_blocks:
             holds.append(await to_image(rich_blocks))
-        return MessageChain(holds)
+        final = []
+        for index, elem in enumerate(holds):
+            if index > 1 and \
+                    (isinstance(elem, Image) and not str(holds[index - 1]).endswith('\n'))\
+                    or (isinstance(holds[index - 1], Image) and not str(elem).startswith('\n')):
+                final.append(Plain('\n'))
+            final.append(elem)
+        return MessageChain(final)
 
     async def render(self, msg: str) -> Optional[MessageChain]:
         return await self.parse(await self.parent.render(msg))
