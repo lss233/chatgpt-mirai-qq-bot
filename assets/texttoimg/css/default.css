@@ -332,7 +332,8 @@ sup {
 code {
     white-space: pre-wrap;
     word-break: break-all;
-    display: block
+    display: inline-block;
+    font-family: "Roboto Light", "Ubuntu Light", "Ubuntu", "Courier New", monospace, monospace;
 }
 
 * {
