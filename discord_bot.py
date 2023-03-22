@@ -3,8 +3,8 @@ import sys
 import discord
 from discord.ext import commands
 
-import openai
-from graia.ariadne.message.element import Image
+from graia.ariadne.message.chain import MessageChain
+from graia.ariadne.message.element import Image, Plain
 from loguru import logger
 
 from universal import handle_message
@@ -18,7 +18,6 @@ intents.typing = False
 intents.presences = False
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-botManager.login()
 
 async def on_message_event(message: discord.Message) -> None:
     if message.author == bot.user:
@@ -39,11 +38,17 @@ async def on_message_event(message: discord.Message) -> None:
         return
     
     async def response(msg):
+        if isinstance(msg, MessageChain):
+            for elem in msg:
+                if isinstance(elem, Plain):
+                    return await message.channel.send(str(elem))
+                elif isinstance(elem, Image):
+                    return await message.channel.send(file=discord.File(await elem.get_bytes()))
         if isinstance(msg, str):
-            await message.channel.send(msg)
+            return await message.channel.send(msg)
         elif isinstance(msg, Image):
             file = discord.File(await msg.get_bytes(), filename='image.png')
-            await message.channel.send(file=file)
+            return await message.channel.send(file=file)
 
     await handle_message(response, f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}", message.content.replace(f"<@{bot_id}>", "").strip(), is_manager=False)
 

@@ -1,3 +1,4 @@
+# only for telegram and discord bot deploy
 replicas: 1
 imageTag: browser-version-dev
 imageTagMiraihttp: latest
