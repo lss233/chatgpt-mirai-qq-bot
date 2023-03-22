@@ -19,20 +19,30 @@ class BardAdapter(BotAdapter):
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': '',
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-        } 
-
+        }
+        self.get_at_token()
+    
+    def get_at_token(self):
+        response = requests.get(
+            "https://bard.google.com/",
+            timeout=30,
+            headers=self.headers,
+        )
+        self.at = response.text.split('"SNlM0e":"')[1].split('","')[0]
 
     async def rollback(self):
         raise BotOperationNotSupportedException()
 
     async def on_reset(self):
         self.session_id = ""
+        self.get_at_token()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         try:           
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
             content = quote(prompt)
-            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at=AGLd_IRhS9xAFjj55MV2uEqs5MkX%3A1679450282221&"
+            at = quote(self.at)
+            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={at}&"
             response = requests.post(
                 url,
                 timeout=30,
@@ -46,15 +56,16 @@ class BardAdapter(BotAdapter):
             res = response.text.split("\n")
             for lines in res:
                 if "wrb.fr" in lines:
-                    data = json.loads(lines)
-                    result = json.loads(data[0][2])[0][0]
+                    data = json.loads(json.loads(lines)[0][2])
+                    result = data[0][0]
+                    self.session_id = data[1][0]
                     # 有些response这里可以完整打印,返回handle之后会解析有点问题, 喵喵喵
-                    logger.info(f"bard: {result}")
+                    logger.info(f"bard: {result} -- {self.session_id}")
             yield result 
         except Exception as e:
             logger.exception(e)
             yield "出现了些错误"
-            # await self.on_reset()
+            await self.on_reset()
             return
 
     async def preset_ask(self, role: str, text: str):
