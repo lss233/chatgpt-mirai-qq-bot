@@ -24,6 +24,11 @@ class MiddlewareTimeout(Middleware):
         self.request_task[session_id] = coro_task
         try:
             await asyncio.wait_for(coro_task, config.response.max_timeout)
+            if session_id in self.timeout_task and not (
+                    self.timeout_task[session_id].cancel() or self.timeout_task[session_id].done()
+            ):
+                self.timeout_task[session_id].cancel()
+                del self.timeout_task[session_id]
         except asyncio.TimeoutError:
             await respond(config.response.cancel_wait_too_long)
 
