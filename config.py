@@ -124,6 +124,10 @@ class BingCookiePath(BaseModel):
 
 
 class BingAuths(BaseModel):
+    show_suggestions: bool = True
+    """在 Bing 的回复后加上猜你想问"""
+    show_references: bool = True
+    """在 Bing 的回复前加上引用资料"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 

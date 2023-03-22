@@ -1,6 +1,7 @@
 import asyncio
 from typing import Generator
 
+from constants import config
 from adapter.botservice import BotAdapter
 from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle
 
@@ -46,20 +47,25 @@ class BingAdapter(BotAdapter):
                                                              conversation_style=self.conversation_style):
                 if not final:
                     response = re.sub(r"\[\^\d+\^\]", "", response)
-                    yield remaining_conversations + response
-                    parsed_content = response
+                    if config.bing.show_references:
+                        response = re.sub(r"\[(\d+)\]: ", r"\1: ", response)
+                    else:
+                        response = re.sub(r"(\[\d+\]\: .+)+", "", response)
+                    parsed_content = remaining_conversations + response
+
                 else:
                     if len(response["item"].get('messages', [])) > 1:
                         suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
-                        if len(suggestions) > 0:
+                        if len(suggestions) > 0 and config.bing.show_suggestions:
                             parsed_content = parsed_content + '\n猜你想问：  \n'
                             for suggestion in suggestions:
                                 parsed_content = parsed_content + f"* {suggestion.get('text')}  \n"
-                    if parsed_content == '':
+                    if parsed_content == remaining_conversations:  # No content
                         yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
                         await self.on_reset()
                         return
-                    yield remaining_conversations + parsed_content
+
+                yield parsed_content
         except Exception as e:
             logger.exception(e)
             yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
