@@ -212,11 +212,11 @@ browserless_endpoint = "https://bypass.duti.tech/api/"
 # 如果你不了解，可以保持默认
 [openai.gpt3_params]
 temperature = 0.5
-max_tokens = 3000
+max_tokens = 4000
 top_p = 1.0
 presence_penalty = 0.0
 frequency_penalty = 0.0
-
+min_tokens = 1000
 # 以下是 OpenAI 账号设置
 
 # 你可以用多种不同的方式登录 OpenAI

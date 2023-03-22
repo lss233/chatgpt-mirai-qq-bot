@@ -51,6 +51,7 @@ class OpenAIGPT3Params(BaseModel):
     top_p: float = 1.0
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
+    min_tokens: int = 1000
 
 
 class OpenAIAuths(BaseModel):

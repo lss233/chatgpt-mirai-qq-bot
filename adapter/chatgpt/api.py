@@ -85,6 +85,10 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
             ]
+        while self.bot.max_tokens - self.bot.get_token_count(self.session_id) < config.openai.gpt3_params.min_tokens and \
+                len(self.bot.conversation[self.session_id]) > 1:
+            self.bot.conversation[self.session_id].pop(1)
+
         os.environ['API_URL'] = config.openai.api_endpoint + '/chat/completions'
         full_response = ''
         queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
