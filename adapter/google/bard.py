@@ -5,17 +5,9 @@ from adapter.botservice import BotAdapter
 from constants import botManager, config
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
-import re
+import json
 import requests
 from urllib.parse import quote
-
-HEADERS = {
-   "Cookie": config.bard.accounts[0].cookie_content,
-   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/2.0.4515.159 Safari/537.36',
-   'Accept-Encoding': 'gzip, deflate, br',
-   'Connection': '',
-   'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-}
 
 class BardAdapter(BotAdapter):
     cookieData = None
@@ -40,6 +32,13 @@ class BardAdapter(BotAdapter):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
         try:
+            HEADERS = {
+                "Cookie": config.bard.accounts[0].cookie_content,
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/2.0.4515.159 Safari/537.36',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': '',
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            }           
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
             content = quote(prompt)
             raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at=AGLd_IRhS9xAFjj55MV2uEqs5MkX%3A1679450282221&"
@@ -49,12 +48,17 @@ class BardAdapter(BotAdapter):
                 headers=HEADERS,
                 data=raw_data,
            )
-            logger.info(response.text)
             if response.status_code != 200:
                 print(f"Status code: {response.status_code}")
                 print(response.text)
                 raise Exception("Authentication failed")
-            yield True, response.text          
+            res = response.text.split("\n")
+            for lines in res:
+                if "wrb.fr" in lines:
+                    data = json.loads(lines)
+                    result = json.loads(data[0][2])[0][0]
+                    logger.info(f"bard: {result}")
+            yield True, result      
         except Exception as e:
             logger.exception(e)
             yield "出现了些错误"
