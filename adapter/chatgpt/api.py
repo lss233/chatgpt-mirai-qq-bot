@@ -105,6 +105,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         queue.close()
         await queue.wait_closed()
         logger.debug("[ChatGPT-API] 响应：" + full_response)
+        logger.debug("使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role in ['assistant', 'chatgpt']:
