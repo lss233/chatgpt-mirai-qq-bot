@@ -44,6 +44,9 @@ class TelegramBot(BaseModel):
     manager_chat: Optional[int] = None
     """管理员的 chat id"""
 
+class DiscordBot(BaseModel):
+    bot_token: str
+    """Discord Bot 的 token"""
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -294,6 +297,7 @@ class Config(BaseModel):
     onebot: Optional[Onebot] = None
     mirai: Optional[Mirai] = None
     telegram: Optional[TelegramBot] = None
+    discord: Optional[DiscordBot] = None
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     text_to_image: TextToImage = TextToImage()

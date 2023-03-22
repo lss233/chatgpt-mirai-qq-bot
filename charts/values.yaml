@@ -1,0 +1,21 @@
+replicas: 1
+imageTag: browser-version-dev
+imageTagMiraihttp: latest
+nodeSelector: {}
+chatgptbot:
+  paid: true
+  access_token: xxx
+  accept_group_invite: false
+  accept_friend_request: false
+  puid: user-mEoWsYm2QCYboclXTAPT4io1:1679075814-gNQP1HuXNdHDhFOdfumg1WfffSOcIQ2nxHZfnAM%2FHwg%3D
+bing:
+  cookie_content: xxx
+bard:
+  cookie_content: xxx
+telegram:
+  bot_token: xxx
+discord:
+  bot_token: xxx
+
+
+
