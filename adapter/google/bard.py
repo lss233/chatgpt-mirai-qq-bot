@@ -5,7 +5,7 @@ from adapter.botservice import BotAdapter
 from constants import botManager
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
-import json
+import json, re
 import requests
 from urllib.parse import quote
 
@@ -28,7 +28,7 @@ class BardAdapter(BotAdapter):
             timeout=30,
             headers=self.headers,
         )
-        self.at = response.text.split('"SNlM0e":"')[1].split('","')[0]
+        self.at = quote(response.text.split('"SNlM0e":"')[1].split('","')[0])
 
     async def rollback(self):
         raise BotOperationNotSupportedException()
@@ -41,8 +41,7 @@ class BardAdapter(BotAdapter):
         try:           
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
             content = quote(prompt)
-            at = quote(self.at)
-            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={at}&"
+            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={self.at}&"
             response = requests.post(
                 url,
                 timeout=30,
@@ -58,10 +57,14 @@ class BardAdapter(BotAdapter):
                 if "wrb.fr" in lines:
                     data = json.loads(json.loads(lines)[0][2])
                     result = data[0][0]
-                    self.session_id = data[1][0]
-                    # 有些response这里可以完整打印,返回handle之后会解析有点问题, 喵喵喵
-                    logger.info(f"bard: {result} -- {self.session_id}")
-            yield result 
+                    self.session_id = data[1][0]                   
+                    result = re.sub(r'[^A-Za-z0-9 ,.]+', '', result) # I don't know why, but it works    
+                    chunks = [result[i:i+1999] for i in range(0, len(result), 1999)]
+                    for chunk in chunks:
+                        logger.info(f"bard: {chunk} -- {self.session_id}")
+                        yield chunk
+                    break
+
         except Exception as e:
             logger.exception(e)
             yield "出现了些错误"
