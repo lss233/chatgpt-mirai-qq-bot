@@ -63,7 +63,10 @@ class MultipleSegmentRenderer(Renderer):
     uncommitted_msg: str = ''
 
     async def render(self, msg: str) -> Optional[str]:
-        self.uncommitted_msg = msg.removeprefix(self.last_commit)
+        try:
+            self.uncommitted_msg = msg.removeprefix(self.last_commit)
+        except:
+            self.uncommitted_msg = str(msg[1])
         segments = self.uncommitted_msg.strip().split("\n")
         # Skip empty message
         if self.uncommitted_msg.strip() == '':

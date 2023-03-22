@@ -58,7 +58,7 @@ class BardAdapter(BotAdapter):
                     data = json.loads(lines)
                     result = json.loads(data[0][2])[0][0]
                     logger.info(f"bard: {result}")
-            yield True, result      
+            yield True, str(result)      
         except Exception as e:
             logger.exception(e)
             yield "出现了些错误"
