@@ -152,7 +152,7 @@ async def start_background():
 
     else:
         logger.info("[提示] 当前为正向 ws + http 模式，请确保你的 mirai api http 设置了正确的 ws 和 http 配置")
-        logger.info("[提示] 配置不正确或 Miria 未登录 QQ 都会导致 【Websocket reconnecting...】 提示的出现。")
+        logger.info("[提示] 配置不正确或 Mirai 未登录 QQ 都会导致 【Websocket reconnecting...】 提示的出现。")
 
 
 cmd = Commander(app.broadcast)
