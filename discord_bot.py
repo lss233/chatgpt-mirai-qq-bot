@@ -11,7 +11,7 @@ from universal import handle_message
 
 sys.path.append(os.getcwd())
 
-from constants import botManager, config
+from constants import config
 
 intents = discord.Intents.default()
 intents.typing = False

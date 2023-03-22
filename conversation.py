@@ -12,6 +12,7 @@ from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.ms.bing import BingAdapter
+from adapter.google.bard import BardAdapter
 from adapter.openai.api import OpenAIAPIAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException
@@ -62,6 +63,8 @@ class ConversationContext:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.balanced)
         elif _type == 'bing-p':
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
+        elif _type == 'bard':
+            self.adapter = BardAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
