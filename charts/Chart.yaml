@@ -1,5 +1,0 @@
-apiVersion: v2
-appVersion: "1.0"
-description: chatgpt-bot
-name: chatgpt-bot
-version: v1
