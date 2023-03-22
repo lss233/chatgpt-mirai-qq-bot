@@ -54,9 +54,9 @@ class BingAdapter(BotAdapter):
                     parsed_content = remaining_conversations + response
 
                 else:
-                    if len(response["item"].get('messages', [])) > 1:
+                    if len(response["item"].get('messages', [])) > 1 and config.bing.show_suggestions:
                         suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
-                        if len(suggestions) > 0 and config.bing.show_suggestions:
+                        if len(suggestions) > 0:
                             parsed_content = parsed_content + '\n猜你想问：  \n'
                             for suggestion in suggestions:
                                 parsed_content = parsed_content + f"* {suggestion.get('text')}  \n"
