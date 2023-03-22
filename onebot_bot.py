@@ -92,11 +92,11 @@ def response(event):
                 return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
             if config.response.quote:
                 resp = MessageSegment.reply(event.message_id) + resp
-                await bot.send(event, resp)
+                return await bot.send(event, resp)
         except Exception as e:
             logger.exception(e)
             logger.warning("原始消息发送失败，尝试通过转发发送")
-            await bot.call_action("send_private_forward_msg", group_id=event.group_id, messages=[
+            return await bot.call_action("send_private_forward_msg", group_id=event.group_id, messages=[
                 MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
             ])
 
