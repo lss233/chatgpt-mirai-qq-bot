@@ -88,6 +88,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         while self.bot.max_tokens - self.bot.get_token_count(self.session_id) < config.openai.gpt3_params.min_tokens and \
                 len(self.bot.conversation[self.session_id]) > 1:
             self.bot.conversation[self.session_id].pop(1)
+            logger.debug("清理 token，历史记录遗忘后使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
 
         os.environ['API_URL'] = config.openai.api_endpoint + '/chat/completions'
         full_response = ''
