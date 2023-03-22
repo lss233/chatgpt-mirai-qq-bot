@@ -42,12 +42,12 @@ class ConversationContext:
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
-        if config.response.mode == "mixed":
-            self.renderer = MixedContentMessageChainRenderer(BufferedContentRenderer(MultipleSegmentRenderer()))
-        elif config.response.mode == "force-text":
-            self.renderer = FullTextRenderer()
-        elif config.response.mode == "force-image" or config.text_to_image.default or config.text_to_image.always:
+        if config.response.mode == "image" or config.text_to_image.default or config.text_to_image.always:
             self.renderer = MarkdownImageRenderer()
+        elif config.response.mode == "mixed":
+            self.renderer = MixedContentMessageChainRenderer(BufferedContentRenderer(MultipleSegmentRenderer()))
+        elif config.response.mode == "text":
+            self.renderer = FullTextRenderer()
         else:
             self.renderer = MixedContentMessageChainRenderer(BufferedContentRenderer(MultipleSegmentRenderer()))
 

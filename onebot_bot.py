@@ -83,7 +83,7 @@ def transform_from_message_chain(chain: MessageChain):
     return result
 
 
-def response(event):
+def response(event, is_group: bool):
     async def respond(resp):
         try:
             if isinstance(resp, MessageChain):
@@ -92,11 +92,11 @@ def response(event):
                 return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
             if config.response.quote:
                 resp = MessageSegment.reply(event.message_id) + resp
-                await bot.send(event, resp)
+                return await bot.send(event, resp)
         except Exception as e:
             logger.exception(e)
             logger.warning("原始消息发送失败，尝试通过转发发送")
-            await bot.call_action("send_private_forward_msg", group_id=event.group_id, messages=[
+            return await bot.call_action("send_group_forward_msg" if is_group else "send_private_forward_msg", group_id=event.group_id, messages=[
                 MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
             ])
 
@@ -118,7 +118,7 @@ async def _(event: Event):
 
     try:
         await handle_message(
-            response(event),
+            response(event, False),
             f"friend-{event.user_id}",
             msg.display,
             chain,
@@ -145,7 +145,7 @@ async def _(event: Event):
         return
 
     await handle_message(
-        response(event),
+        response(event, True),
         f"group-{event.group_id}",
         chain.display,
         is_manager=event.user_id == config.onebot.manager_qq

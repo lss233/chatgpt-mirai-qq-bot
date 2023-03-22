@@ -78,11 +78,11 @@ async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
             return await app.send_message(target, msg, quote=source if config.response.quote else False)
 
         if config.text_to_image.always:
-            await response_as_image(target, source, msg)
+            return await response_as_image(target, source, msg)
         else:
             event = await response_as_text(target, source, msg)
             if event.source.id < 0:
-                await response_as_image(target, source, msg)
+                return await response_as_image(target, source, msg)
 
     await handle_message(
         response,
@@ -109,11 +109,11 @@ async def group_message_listener(target: Group, source: Source, chain: GroupTrig
             return await app.send_message(target, msg, quote=source if config.response.quote else False)
 
         if config.text_to_image.always:
-            await response_as_image(target, source, msg)
+            return await response_as_image(target, source, msg)
         else:
             event = await response_as_text(target, source, msg)
             if event.source.id < 0:
-                await response_as_image(target, source, msg)
+                return await response_as_image(target, source, msg)
 
     await handle_message(
         response,

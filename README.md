@@ -212,11 +212,11 @@ browserless_endpoint = "https://bypass.duti.tech/api/"
 # 如果你不了解，可以保持默认
 [openai.gpt3_params]
 temperature = 0.5
-max_tokens = 3000
+max_tokens = 4000
 top_p = 1.0
 presence_penalty = 0.0
 frequency_penalty = 0.0
-
+min_tokens = 1000
 # 以下是 OpenAI 账号设置
 
 # 你可以用多种不同的方式登录 OpenAI
@@ -377,9 +377,6 @@ cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  Microso
 # 是否强制开启，设置后所有的消息强制以图片发送，减小风控概率  
 always = true
 
-# 是否默认开启，设置后所有的消息默认以图片发送，减小风控概率  
-default = true
-
 # 字体大小
 font_size = 30
 
@@ -438,6 +435,16 @@ switch_model = "切换模型 (.+)"
 allowed_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "text-davinci-002-render-sha", "text-davinci-002-render-paid"]
 
 [response]
+# 默认的响应模式，支持：
+# mixed - 图文混合 （实验性）
+# text  - 文字模式
+# image - 图片模式
+mode = "mixed"
+
+# 分段发送延迟，消息会等待一段时间再发送，避免刷屏
+# 该功能目前仅在 mixed 模式有效
+buffer_delay = 15
+
 # 默认使用的 AI 类型，不填写时自动推测
 # 目前支持的类型：
 # chatgpt-web: 网页版 ChatGPT

@@ -85,6 +85,11 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
             ]
+        while self.bot.max_tokens - self.bot.get_token_count(self.session_id) < config.openai.gpt3_params.min_tokens and \
+                len(self.bot.conversation[self.session_id]) > 1:
+            self.bot.conversation[self.session_id].pop(1)
+            logger.debug("清理 token，历史记录遗忘后使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
+
         os.environ['API_URL'] = config.openai.api_endpoint + '/chat/completions'
         full_response = ''
         queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
@@ -105,6 +110,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         queue.close()
         await queue.wait_closed()
         logger.debug("[ChatGPT-API] 响应：" + full_response)
+        logger.debug("使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role in ['assistant', 'chatgpt']:

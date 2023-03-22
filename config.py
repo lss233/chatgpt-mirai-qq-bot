@@ -54,6 +54,7 @@ class OpenAIGPT3Params(BaseModel):
     top_p: float = 1.0
     presence_penalty: float = 0.0
     frequency_penalty: float = 0.0
+    min_tokens: int = 1000
 
 
 class OpenAIAuths(BaseModel):
@@ -132,6 +133,10 @@ class BardCookiePath(BaseModel):
     """可选的代理地址，留空则检测系统代理"""
 
 class BingAuths(BaseModel):
+    show_suggestions: bool = True
+    """在 Bing 的回复后加上猜你想问"""
+    show_references: bool = True
+    """在 Bing 的回复前加上引用资料"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 
@@ -146,7 +151,7 @@ class TextToImage(BaseModel):
     """默认开启，设置后新会话默认以图片模式发送"""
     font_size: int = 30
     """字号"""
-    width: int = 700
+    width: int = 1000
     """生成图片宽度"""
     font_path: str = "fonts/sarasa-mono-sc-regular.ttf"
     """字体路径"""
@@ -197,9 +202,9 @@ class Trigger(BaseModel):
 
 class Response(BaseModel):
     mode: str = "mixed"
-    """响应模式，支持：mixed - 图文混合, force-text  - 仅文字, force-image - 仅图片"""
+    """响应模式，支持：mixed - 图文混合, for.ce-text  - 仅文字, force-image - 仅图片"""
 
-    buffer_delay: float = 10
+    buffer_delay: float = 15
     """设置响应缓存时长（秒），机器人会提前返回部分文本"""
 
     default_ai: Union[str, None] = None
