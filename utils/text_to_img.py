@@ -346,7 +346,6 @@ async def text_to_image(text):
                     "enable-local-file-access": "",
                     "allow": asset_folder,
                     "width": config.text_to_image.width,  # 图片宽度
-                    "javascript-delay": "1200"
                 }, None, None, None, imgkit_config)
                 # 调用PIL将图片读取为 JPEG，RGB 格式
                 image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')

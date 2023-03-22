@@ -8,18 +8,17 @@
 
     <link href="{path_texttoimg}/css/default.css" rel="stylesheet" />
     <link href="{path_texttoimg}/css/github-md.css" rel="stylesheet" >
+    <link href="{path_texttoimg}/js/katex/katex.min.css" rel="stylesheet" >
     <script src="{path_texttoimg}/js/highlight.js"></script>
-    <script src="{path_texttoimg}/js/MathJax.js"></script>
+    <script src="{path_texttoimg}/js/polyfills.js"></script>
+    <script src="{path_texttoimg}/js/katex/katex.min.js"></script>
+    <script src="{path_texttoimg}/js/katex/contrib/auto-render.min.js"></script>
+    <script defer src="{path_texttoimg}/js/katex/contrib/mathtex-script-type.min.js"></script>
+    <script defer src="{path_texttoimg}/js/katex/contrib/mhchem.min.js"></script>
     <script src="{path_texttoimg}/js/twemoji.min.js"></script>
     <style>
-        #MathJax_Message {
-            display: none;
-        }
         .content {
             min-height: 60px;
-        }
-        .MathJax {
-            font-size: 25px !important;
         }
         html {
             font-size: {font_size_texttoimg}px;
@@ -47,11 +46,6 @@
             folder: '/emoji/png',
             ext: '.png'
         });
-        MathJax.Hub.Config({
-              config: ["MMLorHTML.js"],
-              jax: ["input/TeX", "output/HTML-CSS", "output/NativeMML"],
-              extensions: []
-            });
         hljs.initHighlighting();
         var codes = document.querySelectorAll('code')
         for (var i = 0; i < codes.length; i++) {
@@ -65,6 +59,23 @@
 
             }
         }
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: "\\(", right: "\\)", display: false},
+              {left: "\\begin{equation}", right: "\\end{equation}", display: true},
+              {left: "\\begin{align}", right: "\\end{align}", display: true},
+              {left: "\\begin{alignat}", right: "\\end{alignat}", display: true},
+              {left: "\\begin{gather}", right: "\\end{gather}", display: true},
+              {left: "\\begin{CD}", right: "\\end{CD}", display: true},
+              {left: "\\[", right: "\\]", display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
     </script>
 </body>
 
