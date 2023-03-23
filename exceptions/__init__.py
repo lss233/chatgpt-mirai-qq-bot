@@ -13,6 +13,9 @@ class NoAvailableBotException(Exception): ...
 class BotOperationNotSupportedException(Exception): ...
 
 
+class CommandRefusedException(Exception): ...
+
+
 class BotRatelimitException(Exception):
     estimated_at: str
 

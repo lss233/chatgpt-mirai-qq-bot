@@ -26,7 +26,12 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
 
     bot_username = (await context.bot.get_me()).username
-    if not bot_username in update.message.text and (update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username):
+
+    if type == 'group' and (
+            bot_username not in update.message.text and (
+                update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)
+    ):
+        logger.debug(f"忽略消息（未满足匹配规则）: {update.message.text} ")
         return
 
     async def response(msg):
@@ -71,6 +76,7 @@ async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.edit_text("没有查询到任何 API")
         return
     await msg.edit_text(answer)
+
 
 async def main() -> None:
     """Set up the application and a custom webserver."""
