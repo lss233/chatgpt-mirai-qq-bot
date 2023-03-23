@@ -2,6 +2,8 @@ from graia.ariadne.message.element import Image
 
 import re
 
+from loguru import logger
+
 from constants import config
 from utils.text_to_img import to_image
 
@@ -65,6 +67,7 @@ class MultipleSegmentRenderer(Renderer):
     async def render(self, msg: str) -> Optional[str]:
         self.uncommitted_msg = msg.removeprefix(self.last_commit)
         segments = self.uncommitted_msg.strip().split("\n")
+        # logger.debug("收到 uncommited_msg:" + str(self.uncommitted_msg))
         # Skip empty message
         if self.uncommitted_msg.strip() == '':
             self.last_commit = msg
@@ -109,6 +112,7 @@ class MultipleSegmentRenderer(Renderer):
         # Direct segments
         elif self.uncommitted_msg[-1] == '\n':
             self.last_commit = msg
+            # logger.debug("直接发送消息：" + '\n'.join(segments).strip())
             return '\n'.join(segments).strip()
         return None
 
@@ -142,18 +146,30 @@ class BufferedContentRenderer(Renderer):
         rendered = await self.parent.render(msg)
         if not rendered:
             return None
+        # logger.debug("上一级渲染结果：" + str(rendered))
         current_time = time.time()
         time_delta = current_time - self.last_arrived
         self.hold.append(Plain(rendered + '\n'))
         if time_delta < config.response.buffer_delay:
             return None
-        self.last_arrived = current_time
-        rendered = self.hold
-        self.hold = []
-        return MessageChain(rendered)
+        if self.hold:
+            self.last_arrived = current_time
+            rendered = MessageChain(self.hold)
+            self.hold = []
+            # logger.debug("缓冲时间已到，输出渲染文本：" + str(rendered))
+            return rendered
+        return None
 
     async def result(self) -> Optional[Any]:
-        return MessageChain(self.hold) + await self.parent.result()
+        result = MessageChain([])
+        if self.hold:
+            result = result + MessageChain(self.hold)
+        if parent := await self.parent.result():
+            result = result + parent
+        if len(result) > 0:
+            # fg("输出剩余内容：" + result)
+            return result
+        return None
 
 
 class MixedContentMessageChainRenderer(Renderer):
@@ -169,7 +185,7 @@ class MixedContentMessageChainRenderer(Renderer):
 
     def is_rich_content(self, input_str: str):
         # Regular expressions to search for Markdown or LaTeX patterns
-        markdown_pattern = r"(\*\*|__|\*|_|\[|\]|\(|\)|#|\+|\-|`|~|>|!)\w*(\*\*|__|\*|_|\[|\]|\(|\)|#|\+|\-|`|~|>|!)"
+        markdown_pattern = r"(\*\*|__|\*|_|\[|\]|\(|\)|#|\+|\-|`|~|>|!)\w*(\*\*|__|\*|_|\[|\]\(|\(|\)|#|\+|\-|`|~|>|!)"
         latex_pattern = r"\$(.*?)\$"
 
         # Search for Markdown or LaTeX patterns in the input string
@@ -183,24 +199,29 @@ class MixedContentMessageChainRenderer(Renderer):
             return None
         holds = []
         rich_blocks = ''
+        plain_blocks = ''
+        # 合并同类项
         for rendered in groups:
+            if not str(rendered).strip():
+                continue
             if self.is_rich_content(str(rendered)):
+                if plain_blocks.strip():
+                    holds.append(Plain(plain_blocks.strip()))
+                    plain_blocks = ''
                 rich_blocks = rich_blocks + str(rendered) + '\n'
             else:
-                if rich_blocks:
+                if rich_blocks.strip():
                     holds.append(await to_image(rich_blocks.strip()))
                     rich_blocks = ''
-                holds.append(rendered)
-        if rich_blocks:
+                plain_blocks = plain_blocks + str(rendered)
+        # 判断最后一项，把剩余的东西丢进去
+        if rich_blocks.strip():
             holds.append(await to_image(rich_blocks))
-        final = []
-        for index, elem in enumerate(holds):
-            if index > 1 and \
-                    (isinstance(elem, Image) and not str(holds[index - 1]).endswith('\n'))\
-                    or (isinstance(holds[index - 1], Image) and not str(elem).startswith('\n')):
-                final.append(Plain('\n'))
-            final.append(elem)
-        return MessageChain(final)
+        if plain_blocks.strip():
+            holds.append(Plain(plain_blocks))
+        if holds:
+            return MessageChain(holds)
+        return None
 
     async def render(self, msg: str) -> Optional[MessageChain]:
         return await self.parse(await self.parent.render(msg))
