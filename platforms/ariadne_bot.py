@@ -22,7 +22,7 @@ from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.broadcast.exceptions import ExecutionStop
 from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
 from graia.ariadne.message.commander import Commander
-from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward
+from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward, DisplayStrategy
 
 from loguru import logger
 
@@ -86,6 +86,11 @@ def response(target: Union[Friend, Group], source: Source):
                 quote=source if config.response.quote else False
             )
         if event.source.id < 0:
+            forward_display_strategy = DisplayStrategy()
+            forward_display_strategy.title = "该消息被Tencent风控，请点击查看"
+            forward_display_strategy.brief = "该消息被Tencent风控，请点击查看"
+            forward_display_strategy.preview = ["该消息被Tencent风控，请点击查看"]
+            forward_display_strategy.summary = "该消息被Tencent风控，请点击查看"
             return await app.send_message(
                 target,
                 MessageChain(
@@ -93,10 +98,12 @@ def response(target: Union[Friend, Group], source: Source):
                         [
                             ForwardNode(
                                 target=config.mirai.qq,
+                                name="ChatGPT",
                                 message=msg,
                                 time=datetime.datetime.now()
                             )
-                        ]
+                        ],
+                        display=forward_display_strategy
                     )
                 )
             )
@@ -255,6 +262,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
                               f' - 绑卡：{has_payment_method}'
             node = ForwardNode(
                 target=config.mirai.qq,
+                name="ChatGPT",
                 message=MessageChain(Plain(answer)),
                 time=datetime.datetime.now()
             )
