@@ -121,7 +121,8 @@ async def _(event: Event):
             f"friend-{event.user_id}",
             msg.display,
             chain,
-            is_manager=event.user_id == config.onebot.manager_qq
+            is_manager=event.user_id == config.onebot.manager_qq,
+            nickname=event.sender.get("nickname", "好友")
         )
     except Exception as e:
         print(e)
@@ -147,7 +148,8 @@ async def _(event: Event):
         response(event, True),
         f"group-{event.group_id}",
         chain.display,
-        is_manager=event.user_id == config.onebot.manager_qq
+        is_manager=event.user_id == config.onebot.manager_qq,
+        nickname=event.sender.get("nickname", "群友")
     )
 
 

@@ -1,5 +1,6 @@
 import io
 import re
+from datetime import datetime
 from typing import List, Dict, Optional
 
 from EdgeGPT import ConversationStyle
@@ -40,6 +41,9 @@ class ConversationContext:
     openai_api: OpenAIAPIAdapter = None
     """OpenAI API适配器，提供聊天之外的功能"""
     preset: str = None
+
+    preset_decoration_format: Optional[str] = "{prompt}"
+    """预设装饰文本"""
 
     @property
     def current_model(self):
@@ -123,6 +127,12 @@ class ConversationContext:
                 yield GraiaImage(data_bytes=image_data)
                 return
 
+        if self.preset_decoration_format:
+            prompt = self.preset_decoration_format\
+                .replace("{prompt}", prompt)\
+                .replace("{nickname}", name)\
+                .replace("{date}", datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
         async with self.renderer:
             async for item in self.adapter.ask(prompt):
                 yield await self.renderer.render(item)
@@ -140,13 +150,14 @@ class ConversationContext:
         return await self.adapter.switch_model(model_name)
 
     async def load_preset(self, keyword: str):
+        self.preset_decoration_format = None
         if keyword not in config.presets.keywords:
             if not keyword == 'default':
                 raise PresetNotFoundException(keyword)
         else:
             presets = config.load_preset(keyword)
             for text in presets:
-                if text.startswith('#'):
+                if text.strip() and text.startswith('#'):
                     continue
                 else:
                     # 判断格式是否为 role: 文本
@@ -154,6 +165,11 @@ class ConversationContext:
                         role, text = text.split(':', 1)
                     else:
                         role = 'system'
+
+                    if role == 'user_send':
+                        self.preset_decoration_format = text
+                        continue
+
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
                         yield item
         self.preset = keyword

@@ -61,7 +61,8 @@ async def on_message_event(message: discord.Message) -> None:
 
     await handle_message(response,
                          f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}",
-                         message.content.replace(f"<@{bot_id}>", "").strip(), is_manager=False)
+                         message.content.replace(f"<@{bot_id}>", "").strip(), is_manager=False,
+                         nickname=message.author.name)
 
 
 @bot.event
