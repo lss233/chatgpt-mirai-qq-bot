@@ -133,6 +133,9 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                 task = conversation_context.ask(prompt=prompt, chain=chain)
             async for rendered in task:
                 if rendered:
+                    if str(rendered).strip() == '':
+                        logger.warning("检测到内容为空的输出，已忽略")
+                        continue
                     action = lambda session_id, prompt, rendered, respond: respond(rendered)
                     for m in middlewares:
                         action = wrap_respond(action, m)
