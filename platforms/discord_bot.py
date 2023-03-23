@@ -10,6 +10,7 @@ from graia.ariadne.message.element import Image, Plain
 from loguru import logger
 
 from universal import handle_message
+from io import BytesIO
 
 sys.path.append(os.getcwd())
 
@@ -48,16 +49,15 @@ async def on_message_event(message: discord.Message) -> None:
                     for chunk in chunks:
                         await message.channel.send(chunk)
                     return
-                elif isinstance(elem, Image) and elem.get_bytes():
-                    return await message.channel.send(file=discord.File(elem.get_bytes()))
+                elif isinstance(elem, Image):
+                    return await message.channel.send(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
         if isinstance(msg, str):
             chunks = [str(msg)[i:i + 1500] for i in range(0, len(str(msg)), 1500)]
             for chunk in chunks:
                 await message.channel.send(chunk)
             return
         elif isinstance(msg, Image):
-            file = discord.File(await msg.get_bytes(), filename='image.png')
-            return await message.channel.send(file=file)
+            return await message.channel.send(file=discord.File(BytesIO(await msg.get_bytes()), filename='image.png'))
 
     await handle_message(response,
                          f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}",

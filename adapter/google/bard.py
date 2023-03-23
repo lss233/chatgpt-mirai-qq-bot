@@ -53,7 +53,7 @@ class BardAdapter(BotAdapter):
             await self.get_at_token()
         try:
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
-            content = quote(prompt)
+            content = quote(prompt.replace('"',"'"))
             raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.bard_session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={self.at}&"
             response = await self.client.post(
                 url,
