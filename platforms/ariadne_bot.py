@@ -1,3 +1,5 @@
+import datetime
+
 import asyncio
 import time
 from universal import handle_message
@@ -29,6 +31,7 @@ from utils.text_to_img import to_image
 from manager.bot import BotManager
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
+import datetime
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 if config.mirai.reverse_ws_port:
@@ -88,7 +91,11 @@ def response(target: Union[Friend, Group], source: Source):
                 MessageChain(
                     Forward(
                         [
-                            ForwardNode(target=config.mirai.qq, message=msg)
+                            ForwardNode(
+                                target=config.mirai.qq,
+                                message=msg,
+                                time=datetime.datetime.now()
+                            )
                         ]
                     )
                 )
@@ -246,7 +253,11 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
             answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
                               f' - 可用：{round(total_available, 2)}$\n' \
                               f' - 绑卡：{has_payment_method}'
-            node = ForwardNode(target=config.mirai.qq, message=MessageChain(Plain(answer)))
+            node = ForwardNode(
+                target=config.mirai.qq,
+                message=MessageChain(Plain(answer)),
+                time=datetime.datetime.now()
+            )
             nodes.append(node)
 
         await app.recall_message(msg)
