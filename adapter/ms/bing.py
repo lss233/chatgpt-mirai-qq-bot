@@ -21,6 +21,7 @@ class BingAdapter(BotAdapter):
     """实例"""
 
     def __init__(self, session_id: str = "unknown", conversation_style: ConversationStyle = ConversationStyle.creative):
+        super().__init__(session_id)
         self.session_id = session_id
         self.conversation_style = conversation_style
         account = botManager.pick('bing-cookie')

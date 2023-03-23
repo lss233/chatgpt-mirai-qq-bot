@@ -7,8 +7,10 @@ import json
 import requests
 from urllib.parse import quote
 
+
 class BardAdapter(BotAdapter):
     def __init__(self, session_id: str = ""):
+        super().__init__(session_id)
         self.session_id = session_id
         self.account = botManager.pick('bard-cookie')
         self.headers = {
@@ -19,7 +21,7 @@ class BardAdapter(BotAdapter):
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
         }
         self.get_at_token()
-    
+
     def get_at_token(self):
         response = requests.get(
             "https://bard.google.com/",
@@ -36,7 +38,7 @@ class BardAdapter(BotAdapter):
         self.get_at_token()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        try:           
+        try:
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
             content = quote(prompt)
             raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={self.at}&"
@@ -55,7 +57,7 @@ class BardAdapter(BotAdapter):
                 if "wrb.fr" in lines:
                     data = json.loads(json.loads(lines)[0][2])
                     result = data[0][0]
-                    self.session_id = data[1][0]                   
+                    self.session_id = data[1][0]
                     # result = re.sub(r'[^A-Za-z0-9 ,.]+', '', result) 
                     logger.info(f"bard: {result} -- {self.session_id}")
                     yield result
