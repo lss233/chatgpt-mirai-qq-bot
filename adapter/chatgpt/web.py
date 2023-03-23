@@ -108,6 +108,10 @@ class ChatGPTWebAdapter(BotAdapter):
             if e.code == 6:
                 raise ConcurrentMessageException()
             raise e
+        except Exception as e:
+            if "Only one message at a time" in str(e):
+                raise ConcurrentMessageException()
+            raise e
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role in ['assistant', 'chatgpt']:
