@@ -41,14 +41,17 @@ async def on_message_event(message: discord.Message) -> None:
         if isinstance(msg, MessageChain):
             for elem in msg:
                 if isinstance(elem, Plain) and str(elem):
-                    chunks = [str(elem)[i:i+1999] for i in range(0, len(str(elem)), 1999)]
+                    chunks = [str(elem)[i:i+1500] for i in range(0, len(str(elem)), 1500)]
                     for chunk in chunks:
-                        message.channel.send(chunk)
+                        await message.channel.send(chunk)
                     return 
                 elif isinstance(elem, Image) and elem.get_bytes():
                     return await message.channel.send(file=discord.File(elem.get_bytes()))
         if isinstance(msg, str):
-            return await message.channel.send(msg)
+            chunks = [str(msg)[i:i+1500] for i in range(0, len(str(msg)), 1500)]
+            for chunk in chunks:
+                await message.channel.send(chunk)
+            return 
         elif isinstance(msg, Image):
             file = discord.File(await msg.get_bytes(), filename='image.png')
             return await message.channel.send(file=file)
