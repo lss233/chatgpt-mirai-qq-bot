@@ -65,9 +65,10 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
     async def respond(msg: str):
         if not msg:
             return
-        await _respond(msg)
+        ret = await _respond(msg)
         for m in middlewares:
             await m.on_respond(session_id, message, msg)
+        return ret
 
     async def request(_session_id, prompt: str, conversation_context, _respond):
         try:

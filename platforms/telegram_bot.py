@@ -78,7 +78,7 @@ async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await msg.edit_text(answer)
 
 
-async def main() -> None:
+async def bootstrap() -> None:
     """Set up the application and a custom webserver."""
     app = ApplicationBuilder() \
         .proxy_url(config.telegram.proxy or openai.proxy) \
@@ -96,7 +96,7 @@ async def main() -> None:
     await app.updater.start_polling(drop_pending_updates=True)
 
 
-# asyncio.run(main())
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
-loop.run_forever()
+def main():
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(bootstrap())
+    loop.run_forever()

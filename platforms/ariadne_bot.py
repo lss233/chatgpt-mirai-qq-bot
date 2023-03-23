@@ -242,4 +242,5 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
     finally:
         raise ExecutionStop()
 
-app.launch_blocking()
+def main():
+    app.launch_blocking()

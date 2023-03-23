@@ -158,6 +158,10 @@ class ConversationContext:
                         yield item
         self.preset = keyword
 
+    def delete_message(self, respond_msg):
+        # TODO: adapt to all platforms
+        pass
+
 
 class ConversationHandler:
     """

@@ -1,4 +1,3 @@
-# bot.py
 import re
 import time
 from typing import Union, Optional
@@ -246,5 +245,5 @@ async def _(event: Event):
 async def startup():
     await botManager.login()
 
-
-bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
+def main():
+    bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
