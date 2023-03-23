@@ -87,9 +87,9 @@ def response(event, is_group: bool):
     async def respond(resp):
         try:
             if isinstance(resp, MessageChain):
-                return await bot.send(event, transform_from_message_chain(resp))
-            if isinstance(resp, Image):
-                return await bot.send(event, MessageSegment.image(f"base64://{resp.base64}"))
+                resp = transform_from_message_chain(resp)
+            elif isinstance(resp, Image):
+                resp = MessageSegment.image(f"base64://{resp.base64}")
             if config.response.quote:
                 resp = MessageSegment.reply(event.message_id) + resp
                 return await bot.send(event, resp)
