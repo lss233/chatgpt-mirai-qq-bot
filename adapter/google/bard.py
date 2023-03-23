@@ -1,11 +1,9 @@
-import asyncio
 from typing import Generator
-
 from adapter.botservice import BotAdapter
 from constants import botManager
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
-import json, re
+import json
 import requests
 from urllib.parse import quote
 
@@ -47,7 +45,7 @@ class BardAdapter(BotAdapter):
                 timeout=30,
                 headers=self.headers,
                 data=raw_data,
-           )
+            )
             if response.status_code != 200:
                 print(f"Status code: {response.status_code}")
                 print(response.text)
@@ -58,11 +56,9 @@ class BardAdapter(BotAdapter):
                     data = json.loads(json.loads(lines)[0][2])
                     result = data[0][0]
                     self.session_id = data[1][0]                   
-                    result = re.sub(r'[^A-Za-z0-9 ,.]+', '', result) # I don't know why, but it works    
-                    chunks = [result[i:i+1999] for i in range(0, len(result), 1999)]
-                    for chunk in chunks:
-                        logger.info(f"bard: {chunk} -- {self.session_id}")
-                        yield chunk
+                    # result = re.sub(r'[^A-Za-z0-9 ,.]+', '', result) 
+                    logger.info(f"bard: {result} -- {self.session_id}")
+                    yield result
                     break
 
         except Exception as e:
