@@ -5,3 +5,4 @@ python3.11/
 .idea/
 data/*.json
 .chatgpt_cache.json
+Dockerfile.dev

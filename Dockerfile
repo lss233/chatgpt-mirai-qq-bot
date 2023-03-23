@@ -1,8 +1,5 @@
 FROM python:3.11.2-slim-bullseye
 
-RUN mkdir -p /app
-WORKDIR /app
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
@@ -17,6 +14,9 @@ RUN apt-get update && \
     apt-get clean && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /app
+WORKDIR /app
 
 COPY requirements.txt /app
 RUN pip install -r requirements.txt

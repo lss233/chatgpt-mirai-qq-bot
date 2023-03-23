@@ -20,7 +20,7 @@ from revChatGPT.typing import Error as V1Error
 
 from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from loguru import logger
-from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath
+from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
@@ -36,7 +36,8 @@ class BotManager:
     bots: Dict[str, List] = {
         "chatgpt-web": [],
         "openai-api": [],
-        "bing-cookie": []
+        "bing-cookie": [],
+        "bard-cookie": []
     }
     """Bot list"""
 
@@ -46,12 +47,16 @@ class BotManager:
     bing: List[BingCookiePath]
     """Bing Account Infos"""
 
+    bard: List[BardCookiePath]
+    """Bard Account Infos"""
+
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
         self.config = config
         self.openai = config.openai.accounts if config.openai else []
         self.bing = config.bing.accounts if config.bing else []
+        self.bard = config.bard.accounts if config.bard else []
         try:
             os.mkdir('data')
             logger.warning(
@@ -64,11 +69,14 @@ class BotManager:
         self.bots = {
             "chatgpt-web": [],
             "openai-api": [],
-            "bing-cookie": []
+            "bing-cookie": [],
+            "bard-cookie": []
         }
         self.__setup_system_proxy()
         if len(self.bing) > 0:
             self.login_bing()
+        if len(self.bard) > 0:
+            self.login_bard()
         if len(self.openai) > 0:
             if self.config.openai.browserless_endpoint:
                 V1.BASE_URL = self.config.openai.browserless_endpoint
@@ -95,6 +103,8 @@ class BotManager:
                 self.config.response.default_ai = 'chatgpt-api'
             elif len(self.bots['bing-cookie']) > 0:
                 self.config.response.default_ai = 'bing'
+            elif len(self.bots['bard-cookie']) > 0:
+                self.config.response.default_ai = 'bard'
             else:
                 self.config.response.default_ai = 'chatgpt-web'
 
@@ -112,6 +122,21 @@ class BotManager:
         if len(self.bots) < 1:
             logger.error("所有 Bing 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
+    
+    def login_bard(self):
+        for i, account in enumerate(self.bard):
+            logger.info("正在解析第 {i} 个 Bard 账号", i=i + 1)
+            if proxy := self.__check_proxy(account.proxy):
+                account.proxy = proxy
+            try:
+                self.bots["bard-cookie"].append(account)
+                logger.success("解析成功！", i=i + 1)
+            except Exception as e:
+                logger.error("解析失败：")
+                logger.exception(e)
+        if len(self.bots) < 1:
+            logger.error("所有 Bard 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['bard-cookie'])}/{len(self.bing)} 个 Bard 账号！")
 
     async def login_openai(self):
         counter = 0

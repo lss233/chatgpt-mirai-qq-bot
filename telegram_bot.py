@@ -25,6 +25,10 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if type is None:
         return
 
+    bot_username = (await context.bot.get_me()).username
+    if not bot_username in update.message.text and (update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username):
+        return
+
     async def response(msg):
         if isinstance(msg, MessageChain):
             for elem in msg:
@@ -40,7 +44,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await handle_message(
         response,
         f"{type}-{update.message.chat.id}",
-        update.message.text,
+        update.message.text.replace(f"@{bot_username}", '').strip(),
         is_manager=update.message.from_user.id == config.telegram.manager_chat
     )
 
@@ -67,7 +71,6 @@ async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.edit_text("没有查询到任何 API")
         return
     await msg.edit_text(answer)
-
 
 async def main() -> None:
     """Set up the application and a custom webserver."""
