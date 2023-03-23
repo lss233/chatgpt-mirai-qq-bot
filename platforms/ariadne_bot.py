@@ -86,12 +86,7 @@ def response(target: Union[Friend, Group], source: Source):
                 quote=source if config.response.quote else False
             )
         if event.source.id < 0:
-            forward_display_strategy = DisplayStrategy()
-            forward_display_strategy.title = "该消息被Tencent风控，请点击查看"
-            forward_display_strategy.brief = "该消息被Tencent风控，请点击查看"
-            forward_display_strategy.preview = ["该消息被Tencent风控，请点击查看"]
-            forward_display_strategy.summary = "该消息被Tencent风控，请点击查看"
-            return await app.send_message(
+            event = await app.send_message(
                 target,
                 MessageChain(
                     Forward(
@@ -102,13 +97,22 @@ def response(target: Union[Friend, Group], source: Source):
                                 message=msg,
                                 time=datetime.datetime.now()
                             )
-                        ],
-                        display=forward_display_strategy
+                        ]
                     )
                 )
             )
-        else:
-            return event
+        if event.source.id < 0:
+            await app.send_message(
+                target,
+                "消息发送失败，被TX吞了，尝试转成图片再试一次。",
+                quote=source if config.response.quote else False
+            )
+            event = await app.send_message(
+                target,
+                await to_image(str(msg)),
+                quote=source if config.response.quote else False
+            )
+        return event
     return respond
 
 
