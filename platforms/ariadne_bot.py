@@ -53,12 +53,49 @@ else:
 
 
 async def response_as_image(target: Union[Friend, Group], source: Source, response):
-    return await app.send_message(target, await to_image(response),
-                                  quote=source if config.response.quote else False)
+    return
 
 
 async def response_as_text(target: Union[Friend, Group], source: Source, response):
     return await app.send_message(target, response, quote=source if config.response.quote else False)
+
+
+def response(target: Union[Friend, Group], source: Source):
+    async def respond(msg: AriadneBaseModel):
+        # 如果是非字符串
+        if isinstance(msg, Image) or isinstance(msg, MessageChain):
+            event = await app.send_message(
+                target,
+                msg,
+                quote=source if config.response.quote else False
+            )
+
+        elif config.text_to_image.always:
+            event = await app.send_message(
+                target,
+                await to_image(str(msg)),
+                quote=source if config.response.quote else False
+            )
+        else:
+            event = await app.send_message(
+                target,
+                str(msg),
+                quote=source if config.response.quote else False
+            )
+        if event.source.id < 0:
+            return await app.send_message(
+                target,
+                MessageChain(
+                    Forward(
+                        [
+                            ForwardNode(target=config.mirai.qq, message=msg)
+                        ]
+                    )
+                )
+            )
+        else:
+            return event
+    return respond
 
 
 FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
@@ -72,20 +109,8 @@ async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
     if chain.display.startswith("."):
         return
 
-    async def response(msg: AriadneBaseModel):
-        # 如果是非字符串
-        if isinstance(msg, Image) or isinstance(msg, MessageChain):
-            return await app.send_message(target, msg, quote=source if config.response.quote else False)
-
-        if config.text_to_image.always:
-            return await response_as_image(target, source, msg)
-        else:
-            event = await response_as_text(target, source, msg)
-            if event.source.id < 0:
-                return await response_as_image(target, source, msg)
-
     await handle_message(
-        response,
+        response(target, source),
         f"friend-{target.id}",
         chain.display,
         chain,
@@ -104,20 +129,8 @@ async def group_message_listener(target: Group, source: Source, chain: GroupTrig
     if chain.display.startswith("."):
         return
 
-    async def response(msg: AriadneBaseModel):
-        # 如果是非字符串
-        if isinstance(msg, Image) or isinstance(msg, MessageChain):
-            return await app.send_message(target, msg, quote=source if config.response.quote else False)
-
-        if config.text_to_image.always:
-            return await response_as_image(target, source, msg)
-        else:
-            event = await response_as_text(target, source, msg)
-            if event.source.id < 0:
-                return await response_as_image(target, source, msg)
-
     await handle_message(
-        response,
+        response(target, source),
         f"group-{target.id}",
         chain.display,
         chain,
@@ -243,6 +256,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         await app.send_message(event, MessageChain(Forward(nodes)))
     finally:
         raise ExecutionStop()
+
 
 def main():
     app.launch_blocking()
