@@ -73,9 +73,16 @@ class BardAdapter(BotAdapter):
                     data = json.loads(json.loads(lines)[0][2])
                     result = data[0][0]
                     self.bard_session_id = data[1][0]
-                    self.r = data[1][1] # 用于下一次请求
-                    self.rc = data[4][1][0] # 用于下一次请求, 似乎跟上下文有关
-                    logger.debug(f"[Bard] {self.bard_session_id} - {result}")
+                    self.r = data[1][1] # 用于下一次请求, 这个位置是固定的
+                    # self.rc = data[4][1][0]
+                    for check in data:
+                        if not check:
+                            continue
+                        for element in [element for row in check for element in row]:
+                            if "rc_" in element:
+                                self.rc = element
+                                break
+                    logger.debug(f"[Bard] {self.bard_session_id} - {self.r} - {self.rc} - {result}")
                     yield result
                     break
 
