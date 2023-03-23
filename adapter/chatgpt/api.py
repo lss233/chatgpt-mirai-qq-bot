@@ -39,9 +39,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.conversation_id = None
         self.parent_id = None
         super().__init__()
-        self.bot.conversation[self.session_id] = [
-            {"role": "system", "content": self.bot.system_prompt}
-        ]
+        self.bot.conversation[self.session_id] = []
         self.current_model = "gpt-3.5-turbo"
         self.supported_models = [
             "gpt-3.5-turbo",
@@ -67,9 +65,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.api_info = botManager.pick('openai-api')
         self.bot.api_key = self.api_info.api_key
         self.bot.proxy = self.api_info.proxy
-        self.bot.conversation[self.session_id] = [
-            {"role": "system", "content": self.bot.system_prompt}
-        ]
+        self.bot.conversation[self.session_id] = []
 
     def ask_sync(self, sync_q, prompt):
         try:

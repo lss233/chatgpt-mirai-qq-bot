@@ -20,7 +20,7 @@ from middlewares.timeout import MiddlewareTimeout
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
-async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported"), is_manager: bool = False):
+async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported"), is_manager: bool = False, nickname: str = '某人'):
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
@@ -133,7 +133,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
 
             # 没有任务那就聊天吧！
             if not task:
-                task = conversation_context.ask(prompt=prompt, chain=chain)
+                task = conversation_context.ask(prompt=prompt, chain=chain, name=nickname)
             async for rendered in task:
                 if rendered:
                     if str(rendered).strip() == '':
