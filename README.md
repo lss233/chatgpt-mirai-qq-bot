@@ -8,21 +8,6 @@
 [![Docker Image Size](https://badgen.net/docker/size/lss233/chatgpt-mirai-qq-bot/browser-version/amd64?icon=docker&label=image%20size)](https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/)
 
 
-> **2023/3/15**  
-> 近期 browserless 模式封号严重      
-> 非 plus 用户建议还是玩 API 吧      
-
-
-> **2023/3/13**  
-> Mirai 用户现在可以通过安装 fix-protocol-version 插件并使用 MACOS 协议成功登录 QQ    
-> 一键部署脚本和 Windows 快速部署包已将此插件进行打包。    
-
- 
-> **2023/3/11**  
-> 由于近期 Mirai 登录异常,我们支持了 OneBot 协议 (go-cqhttp) 和 Telegram Bot 协议   
-> 大家可以用支持这些协议的程序继续和 ChatGPT 聊天  
-> 配置方法见下  
-
 > **2023/2/10**  
 > 本项目分为 ChatGPT 版和 GPT-3 版两种模式。  
 >  ChatGPT 版代表版本号为 v2.x 的版本； GPT-3 版代表版本号为 v1.6 的版本  
@@ -45,16 +30,27 @@
 * [x] 群聊回复引用
 * [x] 关键词触发回复
 * [x] 正向代理
-* [x] 多种方式登录 OpenAI
 * [x] 多账号支持
-* [x] 支持 ChatGPT Plus
-* [x] 支持 ChatGPT API
-* [x] 支持 Bing 聊天
 * [x] 支持接入百度云内容审核（主要是防封）
 * [x] 指定用户/群组额度限制 
 * [x] 预设人格初始化
 * [x] 支持 Mirai、 go-cqhttp、 Telegram Bot
+* [x] 支持 ChatGPT 网页版
+* [x] 支持 ChatGPT Plus
+* [x] 支持 ChatGPT API
+* [x] 支持 Bing 聊天
+* [x] 支持 Google bard
 
+**平台兼容情况**  
+
+不仅仅是 Mirai， 我们支持多种平台。  
+
+| 平台       | 群聊回复 | 私聊回复 | 条件触发 | 管理员指令 | 绘图   |
+| -------- | ---- | ---- | ---- | ----- | ---- |
+| Mirai    | 支持   | 支持   | 支持   | 支持    | 支持   |
+| OneBot   | 支持   | 支持   | 支持   | 支持    | 支持   |
+| Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持   |
+| Discord  | 支持   | 支持   | 部分支持 | 不支持   | 部分支持 |
 
 * [交流群（Discord）](https://discord.gg/hYSmQDJrHq)会发布最新的项目动态、问题答疑和交流 [（QQ 群 已满）](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 。  
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
