@@ -293,7 +293,7 @@ class BotManager:
         raise Exception("All login method failed")
 
     async def check_api_info(self, account):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(conn_timeout=30, read_timeout=30) as session:
             session.headers.add("Authorization", f"Bearer {account.api_key}")
 
             resp = await session.get(f"{openai.api_base}/dashboard/billing/credit_grants", proxy=account.proxy)
