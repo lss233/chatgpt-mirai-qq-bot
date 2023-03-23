@@ -1,3 +1,4 @@
+import ctypes
 from typing import Generator
 from adapter.botservice import BotAdapter
 from constants import botManager
@@ -7,12 +8,16 @@ import json
 import requests
 from urllib.parse import quote
 
+hashu = lambda word: ctypes.c_uint64(hash(word)).value
+
 
 class BardAdapter(BotAdapter):
     def __init__(self, session_id: str = ""):
         super().__init__(session_id)
+        self.at = None
         self.session_id = session_id
         self.account = botManager.pick('bard-cookie')
+        self.hashed_user_id = "user-" + hashu(self.session_id).to_bytes(8, "big").hex()
         self.headers = {
             "Cookie": self.account.cookie_content,
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/2.0.4515.159 Safari/537.36',
@@ -41,7 +46,7 @@ class BardAdapter(BotAdapter):
         try:
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
             content = quote(prompt)
-            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={self.at}&"
+            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.hashed_user_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={self.at}&"
             response = requests.post(
                 url,
                 timeout=30,

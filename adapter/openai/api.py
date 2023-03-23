@@ -24,7 +24,7 @@ class OpenAIAPIAdapter(BotAdapter):
 
     def __init__(self, session_id: str = "unknown"):
         self.session_id = session_id
-        self.hashed_user_id = "user-" + hashu("session_id").to_bytes(8, "big").hex()
+        self.hashed_user_id = "user-" + hashu(self.session_id).to_bytes(8, "big").hex()
         self.api_info = botManager.pick('openai-api')
         openai.proxy = self.api_info.proxy
         super().__init__()
