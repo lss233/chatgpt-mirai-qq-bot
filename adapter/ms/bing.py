@@ -74,7 +74,3 @@ class BingAdapter(BotAdapter):
             yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
             await self.on_reset()
             return
-
-    async def preset_ask(self, role: str, text: str):
-        # 不会给 Bing 提供预设
-        yield None

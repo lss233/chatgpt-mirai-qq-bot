@@ -82,14 +82,6 @@ class BardAdapter(BotAdapter):
             await self.on_reset()
             return
 
-    async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role in ['assistant', 'bard']:
-            logger.debug(f"[预设] 响应：{text}")
-            yield text
-        else:
-            logger.debug(f"[预设] 发送：{text}")
-            item = None
-            async for item in self.ask(text): ...
-            if item:
-                logger.debug(f"[预设] Chatbot 回应：{item}")
-            pass  # 不发送 AI 的回应，免得串台
+    def use_default_preset_ask(self) -> bool:
+        """使用默认预设逻辑"""
+        return True

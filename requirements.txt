@@ -30,3 +30,4 @@ tls-client
 undetected_chromedriver
 python-dateutil
 discord.py
+poe-api~=0.1.4
