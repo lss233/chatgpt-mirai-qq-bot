@@ -24,11 +24,13 @@ intents.presences = False
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 # 这个函数放在这里, lss233 肯定会骂我的 (by copilot)
-def synthesize_speech(text: str, output_file: str):
+def synthesize_speech(text: str, output_file: str, voice: str = "en-SG-WayneNeural"): # Singapore English, Wayne
     account = config.azure.tts_accounts[0] if config.azure else []
     if account.speech_key:
         speech_key, service_region = account.speech_key, account.speech_service_region
         speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+        # https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/text-to-speech
+        speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_SynthVoice, voice)
         audio_config = speechsdk.audio.AudioOutputConfig(filename=output_file)
 
         synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
