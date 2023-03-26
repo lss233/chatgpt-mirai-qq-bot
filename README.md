@@ -41,6 +41,7 @@
 * [x] 支持 Bing 聊天
 * [x] 支持 Google bard
 * [x] 支持 文心一言 网页版
+* [x] 支持 ChatGLM-6B 本地版
 
 **平台兼容情况**  
 
@@ -819,6 +820,15 @@ title_pattern="qq-{session_id}"
 ### 文心一言 账号 Cookie 获取方法
 
 请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
+
+### ChatGLM-6B 本地搭建方法
+```bash
+git clone https://github.com/THUDM/ChatGLM-6B.git
+cd ChatGLM-6B
+pip install -r requirements.txt
+pip install fastapi uvicorn
+python api.py
+```
 
 
 ## 🦊 加载预设

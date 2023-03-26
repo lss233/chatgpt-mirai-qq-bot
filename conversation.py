@@ -16,6 +16,7 @@ from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.ms.bing import BingAdapter
 from adapter.google.bard import BardAdapter
 from adapter.openai.api import OpenAIAPIAdapter
+from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
     CommandRefusedException
@@ -75,6 +76,8 @@ class ConversationContext:
             self.adapter = BardAdapter(self.session_id)
         elif _type == 'yiyan':
             self.adapter = YiyanAdapter(self.session_id)
+        elif _type == 'chatglm-6b':
+            self.adapter = ChatGLM6BAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
