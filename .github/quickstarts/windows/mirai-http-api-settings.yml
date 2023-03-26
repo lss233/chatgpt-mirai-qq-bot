@@ -1,0 +1,20 @@
+adapters:
+ - reverse-ws
+
+enableVerify: true
+verifyKey: 1234567890
+
+debug: false
+
+singleMode: false
+
+cacheSize: 4096
+
+adapterSettings:
+  reverse-ws:
+    ## 远端 websocket server 地址配置
+    destinations:
+    - host: localhost
+      port: 8554
+      path: /
+      protocol: ws
