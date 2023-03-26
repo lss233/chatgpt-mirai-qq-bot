@@ -6,9 +6,10 @@ from typing import List, Dict, Optional
 from EdgeGPT import ConversationStyle
 from PIL import Image
 from graia.amnesia.message import MessageChain
-from graia.ariadne.message.element import Image as GraiaImage
+from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
 
+from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
@@ -59,20 +60,22 @@ class ConversationContext:
 
         self.switch_renderer()
 
-        if _type == 'chatgpt-web':  # chatgpt-web
+        if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter(self.session_id)
-        elif _type == 'chatgpt-api':  # chatgpt-api
+        elif _type == 'chatgpt-api':
             self.adapter = ChatGPTAPIAdapter(self.session_id)
-        elif _type == 'bing':  # bing
+        elif _type == 'bing':
             self.adapter = BingAdapter(self.session_id)
-        elif _type == 'bing-c':  # bing-c
+        elif _type == 'bing-c':
             self.adapter = BingAdapter(self.session_id, ConversationStyle.creative)
-        elif _type == 'bing-b':  # bing-b
+        elif _type == 'bing-b':
             self.adapter = BingAdapter(self.session_id, ConversationStyle.balanced)
-        elif _type == 'bing-p':  # bing-p
+        elif _type == 'bing-p':
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
         elif _type == 'bard':
             self.adapter = BardAdapter(self.session_id)
+        elif _type == 'yiyan':
+            self.adapter = YiyanAdapter(self.session_id)
         elif _type == 'chatglm-6b':
             self.adapter = ChatGLM6BAdapter(self.session_id)
         else:
@@ -115,7 +118,7 @@ class ConversationContext:
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
-            if prompt.startswith(prefix):
+            if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
                 if not self.openai_api:
                     yield "没有 OpenAI API-key，无法使用画图功能！"
                 prompt = prompt.removeprefix(prefix)
@@ -138,7 +141,10 @@ class ConversationContext:
 
         async with self.renderer:
             async for item in self.adapter.ask(prompt):
-                yield await self.renderer.render(item)
+                if isinstance(item, Element):
+                    yield item
+                else:
+                    yield await self.renderer.render(item)
             yield await self.renderer.result()
 
     async def rollback(self):

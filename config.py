@@ -132,6 +132,14 @@ class BardCookiePath(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+class TTSAccounts(BaseModel):
+    speech_key: str
+    """TTS KEY"""
+    speech_service_region: str
+    """TTS 地区"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
 class BingAuths(BaseModel):
     show_suggestions: bool = True
     """在 Bing 的回复后加上猜你想问"""
@@ -142,7 +150,21 @@ class BingAuths(BaseModel):
 
 class BardAuths(BaseModel):
     accounts: List[BardCookiePath] = []
-    """Bing 的账号列表"""
+    """Bard 的账号列表"""
+
+class AzureAuths(BaseModel):
+    tts_accounts: List[TTSAccounts] = []
+    """Azure 的账号列表"""
+
+class YiyanCookiePath(BaseModel):
+    cookie_content: str
+    """"文心一言网站的 Cookie 内容"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
+class YiyanAuths(BaseModel):
+    accounts: List[YiyanCookiePath] = []
+    """文心一言的账号列表"""
 
 class TextToImage(BaseModel):
     always: bool = False
@@ -316,6 +338,8 @@ class Config(BaseModel):
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
+    azure: AzureAuths = AzureAuths()
+    yiyan: YiyanAuths = YiyanAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()

@@ -14,7 +14,7 @@ pygments~=2.10.0
 imgkit~=1.2.2
 qrcode~=7.4.2
 openai~=0.26.5
-EdgeGPT==0.0.58.2
+EdgeGPT==0.1.10.1
 aiohttp~=3.8.3
 selenium~=4.8.0
 OpenAIAuth~=0.3.2
@@ -30,3 +30,4 @@ tls-client
 undetected_chromedriver
 python-dateutil
 discord.py
+azure-cognitiveservices-speech
