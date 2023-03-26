@@ -3,6 +3,7 @@ from typing import Callable
 
 import openai
 from graia.ariadne.message.chain import MessageChain
+from graia.ariadne.message.element import Plain
 from httpx import HTTPStatusError, ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
@@ -16,6 +17,8 @@ from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
+import azure.cognitiveservices.speech as speechsdk
+import datetime
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
@@ -61,6 +64,23 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
             await m.handle_respond(session_id, message, rendered, respond, n)
 
         return call
+    
+    def synthesize_speech(text: str, output_file: str, voice: str = "en-SG-WayneNeural"): # Singapore English, Wayne
+        account = config.azure.tts_accounts[0] if config.azure else []
+        if account.speech_key:
+            speech_key, service_region = account.speech_key, account.speech_service_region
+            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+            # https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
+            speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_SynthVoice, voice)
+            audio_config = speechsdk.audio.AudioOutputConfig(filename=output_file)
+            synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+            result = synthesizer.speak_text_async(text).get()
+        else:
+            return False
+        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+            return True
+        else:
+            return False
 
     async def respond(msg: str):
         if not msg:
@@ -68,6 +88,17 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
         ret = await _respond(msg)
         for m in middlewares:
             await m.on_respond(session_id, message, msg)
+        cs = await ConversationHandler.get_handler(session_id)
+        if cs and cs.current_conversation.conversation_voice and isinstance(msg, str):
+            ts = datetime.datetime.now().timestamp()
+            if synthesize_speech(msg, f"output-{ ts }.wav", cs.current_conversation.conversation_voice):
+                await _respond(open(f"output-{ ts }.wav", "rb"))
+        if cs and cs.current_conversation.conversation_voice and isinstance(msg, MessageChain):
+            for elem in msg:
+                if isinstance(elem, Plain) and str(elem):
+                    ts = datetime.datetime.now().timestamp()
+                    if synthesize_speech(str(elem), f"output-{ ts }.wav", cs.current_conversation.conversation_voice):
+                        await _respond(open(f"output-{ ts }.wav", "rb"))
         return ret
 
     async def request(_session_id, prompt: str, conversation_context, _respond):
@@ -92,6 +123,11 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
             # 回滚会话
             elif prompt in config.trigger.rollback_command:
                 task = conversation_context.rollback()
+
+            elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
+                conversation_context.conversation_voice = voice_type_search.group(1).strip()
+                await respond(f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
+                return
 
             elif prompt in config.trigger.mixed_only_command:
                 conversation_context.switch_renderer("mixed")

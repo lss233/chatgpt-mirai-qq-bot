@@ -570,6 +570,24 @@ warning_msg = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条�
 
 # 超额消息
 exceed = "已达到额度限制，请等待下一小时继续和我对话。"
+
+[azure]
+[[azure.tts_accounts]]
+speech_key = 'xxx'
+speech_service_region = 'xxx'
+
+[text_to_speech]
+always = false
+# https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
+default = "en-SG-WayneNeural"
+
+[bard]
+[[bard.accounts]]
+cookie_content = "xxx"
+
+[discord]
+bot_token = "xxx"
+
 ```
 
 ### 对接至机器人平台  
