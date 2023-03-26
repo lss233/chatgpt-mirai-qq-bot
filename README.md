@@ -818,7 +818,8 @@ title_pattern="qq-{session_id}"
 
 ### 文心一言 账号 Cookie 获取方法
 
-和 Bing Cookie 的获取方法一样，唯一的区别是打开的网页为： `https://yiyan.baidu.com/welcome`
+请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
+
 
 ## 🦊 加载预设
 
