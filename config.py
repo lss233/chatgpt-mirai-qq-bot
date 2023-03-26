@@ -144,6 +144,16 @@ class BardAuths(BaseModel):
     accounts: List[BardCookiePath] = []
     """Bing 的账号列表"""
 
+class YiyanCookiePath(BaseModel):
+    cookie_content: str
+    """"文心一言网站的 Cookie 内容"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
+class YiyanAuths(BaseModel):
+    accounts: List[YiyanCookiePath] = []
+    """文心一言的账号列表"""
+
 class TextToImage(BaseModel):
     always: bool = False
     """强制开启，设置后所有的会话强制以图片发送"""
@@ -316,6 +326,7 @@ class Config(BaseModel):
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
+    yiyan: YiyanAuths = YiyanAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()

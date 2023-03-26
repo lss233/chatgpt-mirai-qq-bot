@@ -9,6 +9,7 @@ from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
 
+from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
@@ -72,6 +73,8 @@ class ConversationContext:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
         elif _type == 'bard':
             self.adapter = BardAdapter(self.session_id)
+        elif _type == 'yiyan':
+            self.adapter = YiyanAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
