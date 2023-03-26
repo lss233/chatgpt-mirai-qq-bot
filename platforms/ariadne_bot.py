@@ -104,12 +104,26 @@ def response(target: Union[Friend, Group], source: Source):
         if event.source.id < 0:
             await app.send_message(
                 target,
-                "消息发送失败，被TX吞了，尝试转成图片再试一次。",
+                "消息发送失败，被TX吞了，尝试转成图片再试一次，请稍等",
                 quote=source if config.response.quote else False
             )
+            new_elems = []
+            for elem in msg:
+                if not new_elems:
+                    new_elems.append(elem)
+                elif isinstance(new_elems[-1], Plain) and isinstance(elem, Plain):
+                    new_elems[-1].text = new_elems[-1].text + '\n' + elem.text
+                else:
+                    new_elems.append(elem)
+            rendered_elems = []
+            for elem in new_elems:
+                if isinstance(elem, Plain):
+                    rendered_elems.append(await to_image(elem))
+                else:
+                    rendered_elems.append(elem)
             event = await app.send_message(
                 target,
-                await to_image(str(msg)),
+                MessageChain(rendered_elems),
                 quote=source if config.response.quote else False
             )
         return event
