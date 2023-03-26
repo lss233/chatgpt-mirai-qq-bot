@@ -183,6 +183,10 @@ class TextToImage(BaseModel):
     """纵坐标"""
     wkhtmltoimage: Union[str, None] = None
 
+class TextToSpeech(BaseModel):
+    always: bool = False
+    """设置后所有的会话都会转语音再发一次"""
+    default: str = "zh-CN-XiaoyanNeural"
 
 class Trigger(BaseModel):
     prefix: List[str] = [""]
@@ -341,6 +345,7 @@ class Config(BaseModel):
     azure: AzureAuths = AzureAuths()
     yiyan: YiyanAuths = YiyanAuths()
     text_to_image: TextToImage = TextToImage()
+    text_to_speech: TextToSpeech = TextToSpeech()
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
