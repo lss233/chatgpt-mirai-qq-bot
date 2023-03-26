@@ -175,7 +175,7 @@ class ConversationContext:
                         self.preset_decoration_format = text
                         continue
 
-                    voice_account = config.azure.tts_accounts[0] if config.azure else []
+                    voice_account = config.azure.tts_accounts[0] if config.azure.tts_accounts else []
                     if role == 'voice' and voice_account and voice_account.speech_key:
                         self.conversation_voice = text.strip()
                         logger.debug(f"Set conversation voice to {self.conversation_voice}")
