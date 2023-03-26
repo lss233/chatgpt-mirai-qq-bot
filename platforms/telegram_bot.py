@@ -8,7 +8,7 @@ from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain
 from loguru import logger
 from telegram.request import HTTPXRequest
-
+from io import BytesIO, IOBase
 from universal import handle_message
 
 sys.path.append(os.getcwd())
@@ -38,13 +38,21 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         if isinstance(msg, MessageChain):
             for elem in msg:
                 if isinstance(elem, Plain):
-                    return await update.message.reply_text(str(elem))
-                elif isinstance(elem, Image):
-                    return await update.message.reply_photo(photo=await elem.get_bytes())
+                    await update.message.reply_text(str(elem))
+                if isinstance(elem, Image):
+                    await update.message.reply_photo(photo=await elem.get_bytes())
+                if isinstance(elem, IOBase):
+                    await update.message.reply_audio(audio=elem.read())
+                    elem.close()
+            return
         if isinstance(msg, str):
             return await update.message.reply_text(msg)
-        elif isinstance(msg, Image):
+        if isinstance(msg, Image):
             return await update.message.reply_photo(photo=await msg.get_bytes())
+        if isinstance(msg, IOBase):
+            await update.message.reply_audio(audio=msg.read())
+            msg.close()
+            return
 
     await handle_message(
         response,
