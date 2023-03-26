@@ -124,6 +124,11 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
             elif prompt in config.trigger.rollback_command:
                 task = conversation_context.rollback()
 
+            elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
+                conversation_context.conversation_voice = voice_type_search.group(1).strip()
+                await respond(f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
+                return
+
             elif prompt in config.trigger.mixed_only_command:
                 conversation_context.switch_renderer("mixed")
                 await respond(f"已切换至图文混合模式，接下来我的回复将会以图文混合的方式呈现！")

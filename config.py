@@ -211,6 +211,8 @@ class Trigger(BaseModel):
     """切换当前上下文的模型"""
     switch_command: str = r"切换AI (.+)"
     """切换AI的命令"""
+    switch_voice: str = r"切换语音 (.+)"
+    """切换tts语音音色的命令"""
     mixed_only_command: List[str] = ["图文混合模式"]
     """切换至图文混合模式"""
     image_only_command: List[str] = ["图片模式"]
