@@ -1,3 +1,4 @@
+import random
 from typing import Callable, Dict, Optional
 
 import asyncio
@@ -54,8 +55,21 @@ class MiddlewareTimeout(Middleware):
     async def create_timeout_task(self, respond, session_id):
         logger.debug("[Timeout] 开始计时……")
         await asyncio.sleep(config.response.timeout)
-        respond_msg = await respond(config.response.timeout_format)
+
+        try:
+            f = open(
+                '/path/to/your/file.txt') #使用绝对路径确保始终从预期位置打开文件
+            lines = f.readlines()
+            random_line = random.choice(lines)
+            respond_msg = await respond(random_line)
+        except FileNotFoundError:
+            respond_msg = await respond(config.response.timeout_format)
+        finally:
+            if 'f' in locals():
+                f.close()  # 确保文件关闭
+
         logger.debug("[Timeout] 等待过久，发送提示")
         await asyncio.sleep(90)
-        if ctx := self.ctx[session_id]:
+
+        if ctx := self.ctx.get(session_id):
             await ctx.delete_message(respond_msg)
