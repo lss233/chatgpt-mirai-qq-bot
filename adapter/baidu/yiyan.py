@@ -35,7 +35,7 @@ class YiyanAdapter(BotAdapter):
         # self.client = httpx.AsyncClient(proxies=self.account.proxy)
         self.client.headers['Cookie'] = self.account.cookie_content
         self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
-        self.conversation_id = ''
+        self.conversation_id = None
         self.parent_chat_id = ''
 
     async def delete_conversation(self, session_id):
@@ -55,7 +55,7 @@ class YiyanAdapter(BotAdapter):
     async def on_reset(self):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.conversation_id = ""
+        self.conversation_id = None
         self.parent_chat_id = 0
 
     async def new_conversation(self, prompt: str):
@@ -99,6 +99,7 @@ class YiyanAdapter(BotAdapter):
         self.__check_response(req.json())
 
         chat_id = req.json()["data"]["botChat"]["id"]
+        self.parent_chat_id = chat_id
         chat_parent_id = req.json()["data"]["botChat"]["parent"]
 
         sentence_id = 0
@@ -121,20 +122,22 @@ class YiyanAdapter(BotAdapter):
             req.raise_for_status()
             self.__check_response(req.json())
 
-            await asyncio.sleep(1)
+            sentence_id = req.json()["data"]["sent_id"]
 
-            if sentence_id != req.json()["data"]["sent_id"]:
-                content = req.json()["data"]["content"]
+            content = req.json()["data"]["content"]
+
+            if content:
                 content = parse_image(content)
                 full_response = full_response + content
-                sentence_id = req.json()["data"]["sent_id"]
+
+            logger.debug(f"[Yiyan] {self.conversation_id} - {full_response}")
+
             yield full_response
+
+            await asyncio.sleep(1)
 
             if req.json()["data"]["is_end"] != 0 or req.json()["data"]["stop"] != 0:
                 break
-        logger.debug(f"[Yiyan] {self.conversation_id} - {full_response}")
-
-        self.parent_chat_id = chat_id
 
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role in ['assistant', 'yiyan']:
