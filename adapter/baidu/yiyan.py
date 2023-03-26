@@ -2,7 +2,7 @@ import asyncio
 import ctypes
 import time
 from typing import Generator
-
+from graia.ariadne.message.element import Image
 from adapter.botservice import BotAdapter
 from config import YiyanCookiePath
 from constants import botManager
@@ -11,17 +11,19 @@ from loguru import logger
 import httpx
 import re
 
+
 def get_ts():
     return int(time.time() * 1000)
 
-def parse_image(html):
+
+def extract_image(html):
     pattern = r'<img src="(.*?)" /><br>'
     match = re.search(pattern, html)
     if match:
-        markdown = f'![image]({match.group(1)})  \n'
-        return markdown
+        return match.group(1), re.sub(pattern, '', html)
     else:
-        return html
+        return None, html
+
 
 class YiyanAdapter(BotAdapter):
     account: YiyanCookiePath
@@ -129,8 +131,10 @@ class YiyanAdapter(BotAdapter):
             content = req.json()["data"]["content"]
 
             if content:
-                content = parse_image(content)
-                full_response = full_response + content
+                url, content = extract_image(content)
+                if url:
+                    yield Image(url=url)
+                full_response = full_response + content.replace('<br>', '\n')
 
             logger.debug(f"[Yiyan] {self.conversation_id} - {full_response}")
 
@@ -160,5 +164,3 @@ class YiyanAdapter(BotAdapter):
     async def get_sign(self):
         req = await self.client.get("https://chatgpt-proxy.lss233.com/yiyan-api/acs")
         return req.json()['acs']
-
-
