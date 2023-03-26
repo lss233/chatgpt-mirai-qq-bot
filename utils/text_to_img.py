@@ -295,7 +295,6 @@ def md_to_html(text):
 
 async def get_qr_data(text):
     """将 Markdown 文本保存到 Mozilla Pastebin，并获得 URL"""
-    return "data:image/jpeg;base64,"
     async with aiohttp.ClientSession() as session:
         payload = {'expires': '86400', 'format': 'url', 'lexer': '_markdown', 'content': text}
         try:
