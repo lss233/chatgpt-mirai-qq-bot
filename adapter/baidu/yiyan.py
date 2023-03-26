@@ -32,7 +32,7 @@ class YiyanAdapter(BotAdapter):
         self.session_id = session_id
         self.account = botManager.pick('yiyan-cookie')
         self.client = httpx.AsyncClient()
-        # self.client = httpx.AsyncClient(proxies=self.account.proxy)
+        self.client = httpx.AsyncClient(proxies=self.account.proxy)
         self.client.headers['Cookie'] = self.account.cookie_content
         self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
         self.conversation_id = None
@@ -55,6 +55,8 @@ class YiyanAdapter(BotAdapter):
     async def on_reset(self):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
+        self.client.headers['Cookie'] = self.account.cookie_content
+        self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
         self.conversation_id = None
         self.parent_chat_id = 0
 
