@@ -162,11 +162,14 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
         except BotTypeNotFoundException as e:  # 预设不存在
             await respond(
                 f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n"
-                f"* chatgpt-web - ChatGPT 网页版\n"
-                f"* chatgpt-api - ChatGPT API版\n"
+                f"* chatgpt-web - OpenAI ChatGPT 网页版\n"
+                f"* chatgpt-api - OpenAI ChatGPT API版\n"
                 f"* bing-c - 微软 New Bing (创造力)\n"
                 f"* bing-b - 微软 New Bing (平衡)\n"
-                f"* bing-p - 微软 New Bing (精确)\n")
+                f"* bing-p - 微软 New Bing (精确)\n"
+                f"* bard   - Google Bard\n"
+                f"* yiyan  - 百度 文心一言\n"
+            )
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
         except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout) as e:  # 网络异常
