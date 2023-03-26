@@ -27,7 +27,7 @@ class ChatGLM6BAdapter(BotAdapter):
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         response = await self.client.post(
-            "http://127.0.0.1:7861",  # 本地chatglm的ip和端口
+            "http://127.0.0.1:8000",  # 本地chatglm的ip和端口
             timeout=120,
             headers={"Content-Type": "application/json"}, 
             json={"prompt": prompt, "history": self.conversation_history}
