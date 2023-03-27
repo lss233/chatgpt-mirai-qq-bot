@@ -193,6 +193,12 @@ reverse_ws_port = 8554
 # 使用此模式时需注释上面的反向连接模式
 # http_url = "http://localhost:8080"
 # ws_url = "http://localhost:8080"
+
+# Discord 设置，开启后可以支持 Discord 机器人
+# [discord]
+# bot_token = "xxx"
+
+
 # ==== OpenAI 部分开始
 [openai]
 # OpenAI 相关设置
@@ -405,11 +411,37 @@ cookie_content = 'PSTM=XXXXXXXX; BIDUPSID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;  ...�
 # 理论上，你可以添加无限多个 ChatGLM 账号。  
 # 多账号的配置方法和 OpenAI 的一样。
 [[chatglm.accounts]]
-# 本地ChatGLM的IP和端口，搭建方法见 README
+# ChatGLM 的接口地址，搭建方法见 README
 api_endpoint = "http://127.0.0.1:8000"
-# 最大对话轮数
-# max_turns=10
+# 最大记忆的对话轮数
+max_turns=10
+# 请求超时时间（单位：秒）
+timeout=360
 # === ChatGLM 设置部分结束
+
+# == Bard 设置部分开始
+[bard]
+[[bard.accounts]]
+# Google Bard 页面的 Cookie，获取方法与 文心一言类似
+cookie_content = "xxx"
+
+# == Azure 账号设置
+# 设置后可以使用 Azure 的语音转文字功能
+[azure]
+tts_speech_key = 'xxx'
+tts_speech_service_region = 'xxx'
+
+
+[text_to_speech]
+# 语音转文字
+# 目前仅支持 Azure 引擎
+always = false
+# 默认音色
+# 可参考 Azure：
+# https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
+
+default = "en-SG-WayneNeural"
+
 
 
 [text_to_image]
@@ -596,24 +628,6 @@ warning_msg = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条�
 
 # 超额消息
 exceed = "已达到额度限制，请等待下一小时继续和我对话。"
-
-[azure]
-[[azure.tts_accounts]]
-speech_key = 'xxx'
-speech_service_region = 'xxx'
-
-[text_to_speech]
-always = false
-# https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
-default = "en-SG-WayneNeural"
-
-[bard]
-[[bard.accounts]]
-cookie_content = "xxx"
-
-[discord]
-bot_token = "xxx"
-
 ```
 
 ### 对接至机器人平台  
