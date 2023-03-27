@@ -174,5 +174,5 @@ class YiyanAdapter(BotAdapter):
         image.raise_for_status()
         from_format = BytesIO(image.content)
         to_format = BytesIO()
-        Image.open(from_format).save(to_format, format='jpg')
+        Image.open(from_format).save(to_format, format='png')
         return to_format.getvalue()
