@@ -31,4 +31,4 @@ undetected_chromedriver
 python-dateutil
 discord.py
 azure-cognitiveservices-speech
-poe-api~=0.1.4
+poe-api~=0.2.0

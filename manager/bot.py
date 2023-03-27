@@ -115,7 +115,7 @@ class BotManager:
         # 自动推测默认 AI
         if not self.config.response.default_ai:
             if len(self.bots['poe-web']) > 0:
-                self.config.response.default_ai = 'poe-web'
+                self.config.response.default_ai = 'poe-chatgpt'
             elif len(self.bots['chatgpt-web']) > 0:
                 self.config.response.default_ai = 'chatgpt-web'
             elif len(self.bots['openai-api']) > 0:
@@ -169,14 +169,17 @@ class BotManager:
                 return False
         try:
             for i, account in enumerate(self.poe):
+                logger.info("正在解析第 {i} 个 poe web 账号", i=i + 1)
                 bot = PoeClient(token=account.p_b)
                 if poe_check_auth(bot):
                     self.bots["poe-web"].append(bot)
+                    logger.success("解析成功！", i=i + 1)
         except Exception as e:
             logger.error("解析失败：")
             logger.exception(e)
         if len(self.bots["poe-web"]) < 1:
             logger.error("所有 Poe 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['poe-web'])}/{len(self.bing)} 个 poe web 账号！")
 
     def login_yiyan(self):
         for i, account in enumerate(self.yiyan):

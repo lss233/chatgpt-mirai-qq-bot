@@ -37,20 +37,20 @@ class PoeAdapter(BotAdapter):
     async def ask(self, msg: str) -> Generator[str, None, None]:
         """向 AI 发送消息"""
         final_resp = None
-        for final_resp in self.poe_bot.send_message(chatbot=self.poe_bot.name, message=msg):
+        for final_resp in self.poe_client.send_message(chatbot=self.poe_bot.value, message=msg):
             pass
         if final_resp is None:
             raise Exception("OpenAI 在返回结果时出现了错误")
         resp = final_resp["text"]
-        return resp
+        yield resp
 
     async def rollback(self):
         """回滚对话"""
-        self.poe_client.purge_conversation(self.poe_bot.name, 2)
+        self.poe_client.purge_conversation(self.poe_bot.value, 2)
 
     async def on_reset(self):
         """当会话被重置时，此函数被调用"""
-        self.poe_client.send_chat_break(self.poe_bot.name)
+        self.poe_client.send_chat_break(self.poe_bot.value)
 
     def use_default_preset_ask(self) -> bool:
         """使用默认预设逻辑"""
