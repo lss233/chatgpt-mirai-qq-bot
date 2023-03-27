@@ -66,7 +66,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
         return call
     
     def synthesize_speech(text: str, output_file: str, voice: str = "en-SG-WayneNeural"): # Singapore English, Wayne
-        account = config.azure.tts_accounts[0] if config.azure else []
+        account = config.azure.tts_accounts[0] if config.azure.tts_accounts else []
         if account.speech_key:
             speech_key, service_region = account.speech_key, account.speech_service_region
             speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
@@ -125,8 +125,11 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                 task = conversation_context.rollback()
 
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
-                conversation_context.conversation_voice = voice_type_search.group(1).strip()
-                await respond(f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
+                if config.azure.tts_accounts:
+                    conversation_context.conversation_voice = voice_type_search.group(1).strip()
+                    await respond(f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
+                else:
+                    await respond(f"未配置 Azure TTS 账户，无法切换语音！")
                 return
 
             elif prompt in config.trigger.mixed_only_command:

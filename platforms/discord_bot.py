@@ -11,7 +11,6 @@ from loguru import logger
 
 from universal import handle_message
 from io import BytesIO, IOBase
-import azure.cognitiveservices.speech as speechsdk
 
 sys.path.append(os.getcwd())
 
@@ -48,14 +47,12 @@ async def on_message_event(message: discord.Message) -> None:
                     chunks = [str(elem)[i:i + 1500] for i in range(0, len(str(elem)), 1500)]
                     for chunk in chunks:
                         await message.reply(chunk)
-                    return
                 if isinstance(elem, Image):
-                    return await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
+                    await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
                 if isinstance(elem, IOBase):
                     await message.reply(file=discord.File(elem.name, filename="voice.wav"))
                     elem.close()
-                    return
-
+            return
         if isinstance(msg, str):
             chunks = [str(msg)[i:i + 1500] for i in range(0, len(str(msg)), 1500)]
             for chunk in chunks:
