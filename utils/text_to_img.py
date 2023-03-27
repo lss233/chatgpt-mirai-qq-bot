@@ -367,7 +367,7 @@ async def text_to_image(text):
 
 
 async def to_image(text) -> GraiaImage:
-    img = await text_to_image(text=text)
+    img = await text_to_image(text=str(text))
     b = BytesIO()
     img.save(b, format="png")
     return GraiaImage(data_bytes=b.getvalue())
