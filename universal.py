@@ -76,7 +76,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
 
             # 不带前缀 - 正常初始化会话
             if bot_type_search := re.search(config.trigger.switch_command, prompt):
-                if not is_manager:
+                if not (config.trigger.allow_switching_ai or is_manager):
                     await respond(f"不好意思，只有管理员才能切换AI！")
                     return
                 conversation_handler.current_conversation = await conversation_handler.create(

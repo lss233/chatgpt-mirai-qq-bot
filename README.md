@@ -467,6 +467,9 @@ switch_model = "切换模型 (.+)"
 # 允许普通用户切换的模型
 allowed_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "text-davinci-002-render-sha", "text-davinci-002-render-paid"]
 
+# 允许普通用户切换AI
+allow_switching_ai = true
+
 [response]
 # 默认的响应模式，支持：
 # mixed - 图文混合 （实验性）
