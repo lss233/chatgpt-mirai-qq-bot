@@ -54,8 +54,17 @@ class MiddlewareTimeout(Middleware):
     async def create_timeout_task(self, respond, session_id):
         logger.debug("[Timeout] 开始计时……")
         await asyncio.sleep(config.response.timeout)
-        respond_msg = await respond(config.response.timeout_format)
+
+        try:
+            with open(config.response.timeout_path) as f:
+                lines = f.readlines()
+                random_line = random.choice(lines)
+                respond_msg = await respond(random_line)
+        except FileNotFoundError:
+            respond_msg = await respond(config.response.timeout_format)
+
         logger.debug("[Timeout] 等待过久，发送提示")
         await asyncio.sleep(90)
-        if ctx := self.ctx[session_id]:
+
+        if ctx := self.ctx.get(session_id):
             await ctx.delete_message(respond_msg)

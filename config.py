@@ -6,7 +6,7 @@ from loguru import logger
 import os
 import sys
 import toml
-
+from pathlib import Path
 
 class Onebot(BaseModel):
     qq: int
@@ -273,6 +273,9 @@ class Response(BaseModel):
 
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
+
+    timeout_path: Path = Path("/path/to/your/file.txt")
+    """发送txt文本随机的一行作为响应时间过长时要发送的提醒的内容"""
 
     max_timeout: float = 600.0
     """最长等待时间，超过此时间取消回应"""
