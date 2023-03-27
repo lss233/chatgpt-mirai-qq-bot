@@ -44,9 +44,11 @@ class TelegramBot(BaseModel):
     manager_chat: Optional[int] = None
     """管理员的 chat id"""
 
+
 class DiscordBot(BaseModel):
     bot_token: str
     """Discord Bot 的 token"""
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -152,6 +154,7 @@ class TTSAccounts(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+
 class BingAuths(BaseModel):
     show_suggestions: bool = True
     """在 Bing 的回复后加上猜你想问"""
@@ -184,15 +187,18 @@ class YiyanAuths(BaseModel):
     accounts: List[YiyanCookiePath] = []
     """文心一言的账号列表"""
 
+
 class ChatGLMAPI(BaseModel):
     api_endpoint: str
     """自定义 ChatGLM API 的接入点"""
-    max_turns: Optional[int] = None
+    max_turns: int = 10
     """最大对话轮数"""
+
 
 class ChatGLMAuths(BaseModel):
     accounts: List[ChatGLMAPI] = []
     """ChatGLM的账号列表"""
+
 
 class TextToImage(BaseModel):
     always: bool = False
@@ -211,10 +217,12 @@ class TextToImage(BaseModel):
     """纵坐标"""
     wkhtmltoimage: Union[str, None] = None
 
+
 class TextToSpeech(BaseModel):
     always: bool = False
     """设置后所有的会话都会转语音再发一次"""
     default: str = "zh-CN-XiaoyanNeural"
+
 
 class Trigger(BaseModel):
     prefix: List[str] = [""]
@@ -467,7 +475,7 @@ class Config(BaseModel):
             exit(-1)
 
     @staticmethod
-    def save_config(config: Config) -> Config:
+    def save_config(config: Config):
         try:
             with open("config.cfg", "wb") as f:
                 parsed_str = toml.dumps(config.dict()).encode(sys.getdefaultencoding())

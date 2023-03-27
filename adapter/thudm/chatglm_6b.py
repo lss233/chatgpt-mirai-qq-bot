@@ -11,7 +11,6 @@ class ChatGLM6BAdapter(BotAdapter):
         super().__init__(session_id)
         self.session_id = session_id
         self.account = botManager.pick('chatglm-api')
-        self.max_turns = self.account.max_turns if self.account.max_turns else 10
         self.conversation_history = []
         self.client = httpx.AsyncClient()
 
@@ -36,7 +35,7 @@ class ChatGLM6BAdapter(BotAdapter):
         )
         response.raise_for_status()
         ret = response.json()
-        self.conversation_history = ret['history'][- self.max_turns:]
+        self.conversation_history = ret['history'][- self.account.max_turns:]
         yield ret['response']
         return
 
