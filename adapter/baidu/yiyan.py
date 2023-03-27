@@ -57,11 +57,11 @@ class YiyanAdapter(BotAdapter):
     async def on_reset(self):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-
+        self.__setup_headers()
         self.conversation_id = None
         self.parent_chat_id = 0
 
-    async def __setup_headers(self):
+    def __setup_headers(self):
         self.client.headers['Cookie'] = self.account.cookie_content
         self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
         self.client.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
