@@ -12,7 +12,8 @@ ECHO !!
 ECHO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ECHO 当前的安装路径为 %BASE_DIR%
 ECHO 提示：请注意安装路径中不要有空格，否则可能会导致安装失败
-pause 
+ECHO 提示：安装前先解压程序，不要在压缩包中直接运行
+pause
 
 cd "%BASE_DIR%\mirai"
 @REM mcl-installer.exe
@@ -59,8 +60,11 @@ COPY config.example.cfg config.cfg
 notepad config.cfg
 cd "%BASE_DIR%"
 
+cls
+
 COPY "%BASE_DIR%\files\scripts\启动ChatGPT.cmd" .
 COPY "%BASE_DIR%\files\scripts\启动Mirai.cmd" .
-ECHO 接下来请先执行 启动Mirai.cmd 并登录机器人 QQ
-ECHO 然后执行 启动ChatGPT.cmd，然后就可以开始使用了！
+ECHO 接下来请先执行 【启动ChatGPT.cmd】，启动程序。
+ECHO 然后执行 【启动Mirai.cmd】 并登录机器人 QQ，然后就可以开始使用了！
+
 pause
