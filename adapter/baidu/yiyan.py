@@ -1,8 +1,9 @@
+from io import BytesIO
+
 import asyncio
-import ctypes
 import time
 from typing import Generator
-from graia.ariadne.message.element import Image
+from graia.ariadne.message.element import Image as GraiaImage
 from adapter.botservice import BotAdapter
 from config import YiyanCookiePath
 from constants import botManager
@@ -10,6 +11,7 @@ from exceptions import BotOperationNotSupportedException
 from loguru import logger
 import httpx
 import re
+from PIL import Image
 
 
 def get_ts():
@@ -33,10 +35,8 @@ class YiyanAdapter(BotAdapter):
         super().__init__(session_id)
         self.session_id = session_id
         self.account = botManager.pick('yiyan-cookie')
-        self.client = httpx.AsyncClient()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.client.headers['Cookie'] = self.account.cookie_content
-        self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
+        self.__setup_headers()
         self.conversation_id = None
         self.parent_chat_id = ''
 
@@ -57,10 +57,14 @@ class YiyanAdapter(BotAdapter):
     async def on_reset(self):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.client.headers['Cookie'] = self.account.cookie_content
-        self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
+
         self.conversation_id = None
         self.parent_chat_id = 0
+
+    async def __setup_headers(self):
+        self.client.headers['Cookie'] = self.account.cookie_content
+        self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
+        self.client.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
 
     async def new_conversation(self, prompt: str):
         self.client.headers['Acs-Token'] = await self.get_sign()
@@ -133,7 +137,7 @@ class YiyanAdapter(BotAdapter):
             if content:
                 url, content = extract_image(content)
                 if url:
-                    yield Image(url=url)
+                    yield GraiaImage(data_bytes=await self.__download_image(url))
                 full_response = full_response + content.replace('<br>', '\n')
 
             logger.debug(f"[Yiyan] {self.conversation_id} - {full_response}")
@@ -164,3 +168,11 @@ class YiyanAdapter(BotAdapter):
     async def get_sign(self):
         req = await self.client.get("https://chatgpt-proxy.lss233.com/yiyan-api/acs")
         return req.json()['acs']
+
+    async def __download_image(self, url: str) -> bytes:
+        image = await self.client.get(url)
+        image.raise_for_status()
+        from_format = BytesIO(image.content)
+        to_format = BytesIO()
+        Image.open(from_format).save(to_format, format='jpg')
+        return to_format.getvalue()
