@@ -76,6 +76,9 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
 
             # 不带前缀 - 正常初始化会话
             if bot_type_search := re.search(config.trigger.switch_command, prompt):
+                if not is_manager:
+                    await respond(f"不好意思，只有管理员才能切换AI！")
+                    return
                 conversation_handler.current_conversation = await conversation_handler.create(
                     bot_type_search.group(1).strip())
                 await respond(f"已切换至 {bot_type_search.group(1).strip()} AI，现在开始和我聊天吧！")
@@ -169,7 +172,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                 f"* bing-p - 微软 New Bing (精确)\n"
                 f"* bard   - Google Bard\n"
                 f"* yiyan  - 百度 文心一言\n"
-                f"* chatglm-6b - 清华 ChatGLM-6B (本地)\n"
+                f"* chatglm-api - 清华 ChatGLM-6B (本地)\n"
             )
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")

@@ -389,6 +389,20 @@ cookie_content = 'PSTM=XXXXXXXX; BIDUPSID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;  ...�
 # proxy="http://127.0.0.1:1080"
 # === 文心一言 设置部分结束
 
+# === ChatGLM 设置部分开始
+# 如果你没有搭建本地 ChatGLM，可以直接删除这部分
+[chatglm]
+
+# 第 1 个 ChatGLM 账号
+# 理论上，你可以添加无限多个 ChatGLM 账号。  
+# 多账号的配置方法和 OpenAI 的一样。
+[[chatglm.accounts]]
+# 本地ChatGLM的IP和端口，搭建方法见 README
+api_endpoint = "http://127.0.0.1:8000"
+# 最大对话轮数
+# max_turns=10
+# === ChatGLM 设置部分结束
+
 
 [text_to_image]
 # 文字转图片
