@@ -20,7 +20,7 @@ from revChatGPT.typing import Error as V1Error
 
 from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from loguru import logger
-from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, PoeCookieAuth
+from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, PoeCookieAuth
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
@@ -59,6 +59,9 @@ class BotManager:
     yiyan: List[YiyanCookiePath]
     """Yiyan Account Infos"""
 
+    chatglm: List[ChatGLMAPI]
+    """chatglm Account Infos"""
+
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
@@ -68,6 +71,7 @@ class BotManager:
         self.bard = config.bard.accounts if config.bard else []
         self.poe = config.poe.accounts if config.poe else []
         self.yiyan = config.yiyan.accounts if config.yiyan else []
+        self.chatglm = config.chatglm.accounts if config.chatglm else []
         try:
             os.mkdir('data')
             logger.warning(
@@ -84,6 +88,7 @@ class BotManager:
             "bing-cookie": [],
             "bard-cookie": [],
             "yiyan-cookie": [],
+            "chatglm-api": [],
         }
         self.__setup_system_proxy()
         if len(self.bing) > 0:
@@ -104,6 +109,8 @@ class BotManager:
             await self.login_openai()
         if len(self.yiyan) > 0:
             self.login_yiyan()
+        if len(self.chatglm) > 0:
+            self.login_chatglm()
         count = sum(len(v) for v in self.bots.values())
         if count < 1:
             logger.error("没有登录成功的账号，程序无法启动！")
@@ -126,6 +133,8 @@ class BotManager:
                 self.config.response.default_ai = 'bard'
             elif len(self.bots['yiyan-cookie']) > 0:
                 self.config.response.default_ai = 'yiyan'
+            elif len(self.bots['chatglm-api']) > 0:
+                self.config.response.default_ai = 'chatglm-api'
             else:
                 self.config.response.default_ai = 'chatgpt-web'
 
@@ -195,6 +204,19 @@ class BotManager:
         if len(self.bots) < 1:
             logger.error("所有 文心一言 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['yiyan-cookie'])}/{len(self.yiyan)} 个 文心一言 账号！")
+
+    def login_chatglm(self):
+        for i, account in enumerate(self.chatglm):
+            logger.info("正在解析第 {i} 个 ChatGLM 账号", i=i + 1)
+            try:
+                self.bots["chatglm-api"].append(account)
+                logger.success("解析成功！", i=i + 1)
+            except Exception as e:
+                logger.error("解析失败：")
+                logger.exception(e)
+        if len(self.bots) < 1:
+            logger.error("所有 ChatGLM 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['chatglm-api'])}/{len(self.chatglm)} 个 ChatGLM 账号！")
 
     async def login_openai(self):
         counter = 0

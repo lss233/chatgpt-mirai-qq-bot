@@ -182,6 +182,15 @@ class YiyanAuths(BaseModel):
     accounts: List[YiyanCookiePath] = []
     """文心一言的账号列表"""
 
+class ChatGLMAPI(BaseModel):
+    api_endpoint: str
+    """自定义 ChatGLM API 的接入点"""
+    max_turns: Optional[int] = None
+    """最大对话轮数"""
+
+class ChatGLMAuths(BaseModel):
+    accounts: List[ChatGLMAPI] = []
+    """ChatGLM的账号列表"""
 
 class TextToImage(BaseModel):
     always: bool = False
@@ -245,6 +254,8 @@ class Trigger(BaseModel):
         "text-davinci-002-render-paid"
     ]
     """允许普通用户切换的模型列表"""
+    allow_switching_ai: bool = True
+    """允许普通用户切换AI"""
 
 
 class Response(BaseModel):
@@ -363,6 +374,7 @@ class Config(BaseModel):
     bard: BardAuths = BardAuths()
     azure: AzureAuths = AzureAuths()
     yiyan: YiyanAuths = YiyanAuths()
+    chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
     text_to_image: TextToImage = TextToImage()
     text_to_speech: TextToSpeech = TextToSpeech()
