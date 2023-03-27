@@ -48,7 +48,7 @@ class ConversationContext:
     preset_decoration_format: Optional[str] = "{prompt}"
     """预设装饰文本"""
 
-    conversation_voice: str = None
+    conversation_voice: Optional[str] = None
     """语音音色"""
 
     @property
@@ -63,6 +63,9 @@ class ConversationContext:
         self.session_id = session_id
 
         self.switch_renderer()
+
+        if config.text_to_speech.always:
+            self.conversation_voice = config.text_to_speech.default
 
         if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter(self.session_id)
@@ -240,8 +243,6 @@ class ConversationHandler:
         else:
             conversation = ConversationContext(_type, self.session_id)
             self.conversations[_type] = conversation
-            if config.text_to_speech.always:
-                conversation.conversation_voice = config.text_to_speech.default
             return conversation
 
     """切换对话上下文"""

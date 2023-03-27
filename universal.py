@@ -75,8 +75,11 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         ret = await _respond(msg)
         for m in middlewares:
             await m.on_respond(session_id, message, msg)
+
+        # TODO: 之后重构成 platforms 的 respond 只处理 MessageChain
         if isinstance(msg, str):
             msg = MessageChain([Plain(msg)])
+
         nonlocal conversation_context
         if not conversation_context:
             conversation_context = conversation_handler.current_conversation
@@ -125,7 +128,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                 task = conversation_context.rollback()
 
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
-                if config.azure.tts_accounts:
+                if config.azure.tts_speech_key:
                     conversation_context.conversation_voice = voice_type_search.group(1).strip()
                     await respond(
                         f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： "

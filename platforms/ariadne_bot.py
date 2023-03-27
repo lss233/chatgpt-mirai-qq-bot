@@ -2,6 +2,9 @@ import datetime
 
 import asyncio
 import time
+
+from graiax import silkcoder
+
 from universal import handle_message
 import constants
 from typing import Union
@@ -22,7 +25,7 @@ from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.broadcast.exceptions import ExecutionStop
 from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
 from graia.ariadne.message.commander import Commander
-from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward, DisplayStrategy
+from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward, DisplayStrategy, Voice
 
 from loguru import logger
 
@@ -65,6 +68,15 @@ async def response_as_text(target: Union[Friend, Group], source: Source, respons
 
 def response(target: Union[Friend, Group], source: Source):
     async def respond(msg: AriadneBaseModel):
+        # 音频编码
+        if isinstance(msg, Voice):
+            msg = Voice(
+                data_bytes=await silkcoder.async_encode(
+                    await msg.get_bytes(),
+                    audio_format='ogg',
+                    ios_adaptive=True
+                )
+            )
         # 如果是非字符串
         if not isinstance(msg, Plain) and not isinstance(msg, str):
             event = await app.send_message(
@@ -72,8 +84,8 @@ def response(target: Union[Friend, Group], source: Source):
                 msg,
                 quote=source if config.response.quote else False
             )
-
-        elif config.text_to_image.always:
+        # 如果开启了强制转图片
+        elif config.text_to_image.always and not isinstance(msg, Voice):
             event = await app.send_message(
                 target,
                 await to_image(str(msg)),
@@ -82,7 +94,7 @@ def response(target: Union[Friend, Group], source: Source):
         else:
             event = await app.send_message(
                 target,
-                str(msg),
+                msg,
                 quote=source if config.response.quote else False
             )
         if event.source.id < 0:
