@@ -40,7 +40,9 @@
 * [x] 支持 ChatGPT API
 * [x] 支持 Bing 聊天
 * [x] 支持 Google bard
+* [x] 支持 poe.com 网页版
 * [x] 支持 文心一言 网页版
+* [x] 支持 ChatGLM-6B 本地版
 
 **平台兼容情况**  
 
@@ -355,6 +357,13 @@ auto_remove_old_conversations = true
 
 # === OpenAI 账号部分结束
 
+# === Poe 账号部分开始
+# 如果你没有 Poe 账号，可以直接删除这部分
+[poe]
+[[poe.accounts]]
+# 登陆 poe.com 网站后，通过开发者工具查看Cookie获取
+p_b = "V4j***"
+# === Poe 账号部分结束
 
 # === Bing 设置部分开始
 # 如果你没有 Bing 账号，可以直接删除这部分
@@ -387,6 +396,20 @@ cookie_content = 'PSTM=XXXXXXXX; BIDUPSID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;  ...�
 # 如果你想用代理（可能有BUG）
 # proxy="http://127.0.0.1:1080"
 # === 文心一言 设置部分结束
+
+# === ChatGLM 设置部分开始
+# 如果你没有搭建本地 ChatGLM，可以直接删除这部分
+[chatglm]
+
+# 第 1 个 ChatGLM 账号
+# 理论上，你可以添加无限多个 ChatGLM 账号。  
+# 多账号的配置方法和 OpenAI 的一样。
+[[chatglm.accounts]]
+# 本地ChatGLM的IP和端口，搭建方法见 README
+api_endpoint = "http://127.0.0.1:8000"
+# 最大对话轮数
+# max_turns=10
+# === ChatGLM 设置部分结束
 
 
 [text_to_image]
@@ -451,6 +474,9 @@ switch_model = "切换模型 (.+)"
 
 # 允许普通用户切换的模型
 allowed_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "text-davinci-002-render-sha", "text-davinci-002-render-paid"]
+
+# 允许普通用户切换AI
+allow_switching_ai = true
 
 [response]
 # 默认的响应模式，支持：
@@ -834,9 +860,28 @@ title_pattern="qq-{session_id}"
 4. 找到 控制台（或 Console），输入 `document.cookie` 然后回车
 5. 复制接下来出现的一段文本，这就是你的 Cookie
 
+### Poe 账号 Cookie 获取方法
+
+你需要通过电脑浏览器来获得 Poe Cookie，如果你有别的手段能获得 cookie 的话也是可以的。  
+
+1. 确认能科学上网
+2. 打开 https://poe.com 并登陆
+3. 按下 F12，打开开发者工具（DevTools）
+4. 找到 `应用程序 - 存储` 或 `应用 - 存储` 或 `存储`， 查看Cookie下 https://poe.com 域名下的 "p-b" 
+5. 复制值即可
+
 ### 文心一言 账号 Cookie 获取方法
 
 请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
+
+### ChatGLM-6B 本地搭建方法
+```bash
+git clone https://github.com/THUDM/ChatGLM-6B.git
+cd ChatGLM-6B
+pip install -r requirements.txt
+pip install fastapi uvicorn
+python api.py
+```
 
 
 ## 🦊 加载预设

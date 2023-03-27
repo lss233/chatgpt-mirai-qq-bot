@@ -52,7 +52,6 @@ class ChatGPTWebAdapter(BotAdapter):
         # self.current_model = model_name
         raise Exception("此 AI 暂不支持切换模型的操作！")
 
-
     async def rollback(self):
         if len(self.parent_id_prev_queue) > 0:
             self.parent_id = self.parent_id_prev_queue.pop()
@@ -112,18 +111,6 @@ class ChatGPTWebAdapter(BotAdapter):
             if "Only one message at a time" in str(e):
                 raise ConcurrentMessageException()
             raise e
-
-    async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role in ['assistant', 'chatgpt']:
-            logger.debug(f"[预设] 响应：{text}")
-            yield text
-        else:
-            logger.debug(f"[预设] 发送：{text}")
-            item = None
-            async for item in self.ask(text): ...
-            if item:
-                logger.debug(f"[预设] Chatbot 回应：{item}")
-            pass  # 不发送 AI 的回应，免得串台
 
     def get_queue_info(self):
         return self.bot.queue

@@ -16,6 +16,8 @@ from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.ms.bing import BingAdapter
 from adapter.google.bard import BardAdapter
 from adapter.openai.api import OpenAIAPIAdapter
+from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
+from adapter.quora.poe import PoeBot, PoeAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
     CommandRefusedException
@@ -66,6 +68,8 @@ class ConversationContext:
             self.adapter = ChatGPTWebAdapter(self.session_id)
         elif _type == 'chatgpt-api':
             self.adapter = ChatGPTAPIAdapter(self.session_id)
+        elif PoeBot.parse(_type):
+            self.adapter = PoeAdapter(self.session_id, PoeBot.parse(_type))
         elif _type == 'bing':
             self.adapter = BingAdapter(self.session_id)
         elif _type == 'bing-c':
@@ -78,6 +82,8 @@ class ConversationContext:
             self.adapter = BardAdapter(self.session_id)
         elif _type == 'yiyan':
             self.adapter = YiyanAdapter(self.session_id)
+        elif _type == 'chatglm-api':
+            self.adapter = ChatGLM6BAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
