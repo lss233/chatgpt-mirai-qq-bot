@@ -193,6 +193,8 @@ class ChatGLMAPI(BaseModel):
     """自定义 ChatGLM API 的接入点"""
     max_turns: int = 10
     """最大对话轮数"""
+    timeout: 120
+    """请求超时时间（单位：秒）"""
 
 
 class ChatGLMAuths(BaseModel):

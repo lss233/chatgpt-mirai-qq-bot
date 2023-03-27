@@ -29,7 +29,7 @@ class ChatGLM6BAdapter(BotAdapter):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         response = await self.client.post(
             self.account.api_endpoint,
-            timeout=120,
+            timeout=self.account.timeout,
             headers={"Content-Type": "application/json"}, 
             json={"prompt": prompt, "history": self.conversation_history}
         )
