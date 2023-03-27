@@ -1,15 +1,17 @@
 from typing import Generator
 from adapter.botservice import BotAdapter
 import httpx
+from constants import botManager
 
 
 class ChatGLM6BAdapter(BotAdapter):
-    max_turns = 10
     """实例"""
 
     def __init__(self, session_id: str = "unknown"):
         super().__init__(session_id)
         self.session_id = session_id
+        self.account = botManager.pick('chatglm-api')
+        self.max_turns = self.account.max_turns if self.account.max_turns else 10
         self.conversation_history = []
         self.client = httpx.AsyncClient()
 
@@ -27,14 +29,12 @@ class ChatGLM6BAdapter(BotAdapter):
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         response = await self.client.post(
-            "http://127.0.0.1:8000",  # 本地chatglm的ip和端口
+            self.account.api_endpoint,
             timeout=120,
             headers={"Content-Type": "application/json"}, 
             json={"prompt": prompt, "history": self.conversation_history}
         )
-        if response.status_code != 200:
-            yield "出现了些错误!"
-            return
+        response.raise_for_status()
         ret = response.json()
         self.conversation_history = ret['history'][- self.max_turns:]
         yield ret['response']

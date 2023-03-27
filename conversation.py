@@ -76,7 +76,7 @@ class ConversationContext:
             self.adapter = BardAdapter(self.session_id)
         elif _type == 'yiyan':
             self.adapter = YiyanAdapter(self.session_id)
-        elif _type == 'chatglm-6b':
+        elif _type == 'chatglm-api':
             self.adapter = ChatGLM6BAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)

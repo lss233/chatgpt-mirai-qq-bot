@@ -166,6 +166,16 @@ class YiyanAuths(BaseModel):
     accounts: List[YiyanCookiePath] = []
     """文心一言的账号列表"""
 
+class ChatGLMAPI(BaseModel):
+    api_endpoint: str
+    """自定义 ChatGLM API 的接入点"""
+    max_turns: Optional[int] = None
+    """最大对话轮数"""
+
+class ChatGLMAuths(BaseModel):
+    accounts: List[ChatGLMAPI] = []
+    """ChatGLM的账号列表"""
+
 class TextToImage(BaseModel):
     always: bool = False
     """强制开启，设置后所有的会话强制以图片发送"""
@@ -340,6 +350,7 @@ class Config(BaseModel):
     bard: BardAuths = BardAuths()
     azure: AzureAuths = AzureAuths()
     yiyan: YiyanAuths = YiyanAuths()
+    chatglm: ChatGLMAuths = ChatGLMAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
