@@ -66,7 +66,7 @@ async def response_as_text(target: Union[Friend, Group], source: Source, respons
 def response(target: Union[Friend, Group], source: Source):
     async def respond(msg: AriadneBaseModel):
         # 如果是非字符串
-        if isinstance(msg, Image) or isinstance(msg, MessageChain):
+        if not isinstance(msg, Plain) and not isinstance(msg, str):
             event = await app.send_message(
                 target,
                 msg,

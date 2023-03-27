@@ -1,9 +1,11 @@
+import os
 import re
 from typing import Callable
 
 import openai
+from tempfile import NamedTemporaryFile
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain
+from graia.ariadne.message.element import Plain, Voice
 from httpx import HTTPStatusError, ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
@@ -17,13 +19,15 @@ from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
-import azure.cognitiveservices.speech as speechsdk
-import datetime
+
+from utils.azure_tts import synthesize_speech
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
-async def handle_message(_respond: Callable, session_id: str, message: str, chain: MessageChain = MessageChain("Unsupported"), is_manager: bool = False, nickname: str = '某人'):
+async def handle_message(_respond: Callable, session_id: str, message: str,
+                         chain: MessageChain = MessageChain("Unsupported"), is_manager: bool = False,
+                         nickname: str = '某人'):
     """正常聊天"""
     if not message.strip():
         return config.response.placeholder
@@ -64,23 +68,6 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
             await m.handle_respond(session_id, message, rendered, respond, n)
 
         return call
-    
-    def synthesize_speech(text: str, output_file: str, voice: str = "en-SG-WayneNeural"): # Singapore English, Wayne
-        account = config.azure.tts_accounts[0] if config.azure.tts_accounts else []
-        if account.speech_key:
-            speech_key, service_region = account.speech_key, account.speech_service_region
-            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-            # https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
-            speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_SynthVoice, voice)
-            audio_config = speechsdk.audio.AudioOutputConfig(filename=output_file)
-            synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
-            result = synthesizer.speak_text_async(text).get()
-        else:
-            return False
-        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            return True
-        else:
-            return False
 
     async def respond(msg: str):
         if not msg:
@@ -88,17 +75,27 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
         ret = await _respond(msg)
         for m in middlewares:
             await m.on_respond(session_id, message, msg)
-        cs = await ConversationHandler.get_handler(session_id)
-        if cs and cs.current_conversation.conversation_voice and isinstance(msg, str):
-            ts = datetime.datetime.now().timestamp()
-            if synthesize_speech(msg, f"output-{ ts }.wav", cs.current_conversation.conversation_voice):
-                await _respond(open(f"output-{ ts }.wav", "rb"))
-        if cs and cs.current_conversation.conversation_voice and isinstance(msg, MessageChain):
+        if isinstance(msg, str):
+            msg = MessageChain([Plain(msg)])
+        nonlocal conversation_context
+        if not conversation_context:
+            conversation_context = conversation_handler.current_conversation
+        # TTS Converting
+        if conversation_context.conversation_voice and isinstance(msg, MessageChain):
             for elem in msg:
                 if isinstance(elem, Plain) and str(elem):
-                    ts = datetime.datetime.now().timestamp()
-                    if synthesize_speech(str(elem), f"output-{ ts }.wav", cs.current_conversation.conversation_voice):
-                        await _respond(open(f"output-{ ts }.wav", "rb"))
+                    output_file = NamedTemporaryFile(mode='w+b', suffix='.wav', delete=False)
+                    output_file.close()
+                    if await synthesize_speech(
+                            str(elem),
+                            output_file.name,
+                            conversation_context.conversation_voice
+                    ):
+                        await _respond(Voice(path=output_file.name))
+                    try:
+                        os.unlink(output_file.name)
+                    except:
+                        pass
         return ret
 
     async def request(_session_id, prompt: str, conversation_context, _respond):
@@ -127,7 +124,9 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
                 if config.azure.tts_accounts:
                     conversation_context.conversation_voice = voice_type_search.group(1).strip()
-                    await respond(f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
+                    await respond(
+                        f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： "
+                        f"https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
                 else:
                     await respond(f"未配置 Azure TTS 账户，无法切换语音！")
                 return
@@ -156,7 +155,8 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
                         await conversation_context.switch_model(model_name)
                         await respond(f"已切换至 {model_name} 模型，让我们聊天吧！")
                 else:
-                    await respond(f"当前的 AI 不支持切换至 {model_name} 模型，目前仅支持：{conversation_context.supported_models}！")
+                    await respond(
+                        f"当前的 AI 不支持切换至 {model_name} 模型，目前仅支持：{conversation_context.supported_models}！")
                 return
 
             # 加载预设

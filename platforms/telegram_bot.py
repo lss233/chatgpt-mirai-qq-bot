@@ -5,7 +5,7 @@ import sys
 import asyncio
 import openai
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, Plain
+from graia.ariadne.message.element import Image, Plain, Voice
 from loguru import logger
 from telegram.request import HTTPXRequest
 from io import BytesIO, IOBase
@@ -41,17 +41,15 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
                     await update.message.reply_text(str(elem))
                 if isinstance(elem, Image):
                     await update.message.reply_photo(photo=await elem.get_bytes())
-                if isinstance(elem, IOBase):
-                    await update.message.reply_audio(audio=elem.read())
-                    elem.close()
+                if isinstance(elem, Voice):
+                    await update.message.reply_audio(audio=await elem.get_bytes())
             return
         if isinstance(msg, str):
             return await update.message.reply_text(msg)
         if isinstance(msg, Image):
             return await update.message.reply_photo(photo=await msg.get_bytes())
-        if isinstance(msg, IOBase):
-            await update.message.reply_audio(audio=msg.read())
-            msg.close()
+        if isinstance(msg, Voice):
+            await update.message.reply_audio(audio=await msg.get_bytes())
             return
 
     await handle_message(
@@ -92,6 +90,9 @@ async def bootstrap() -> None:
     app = ApplicationBuilder() \
         .proxy_url(config.telegram.proxy or openai.proxy) \
         .token(config.telegram.bot_token) \
+        .connect_timeout(30)\
+        .read_timeout(30)\
+        .write_timeout(30)\
         .get_updates_request(HTTPXRequest(http_version="1.1")) \
         .http_version('1.1') \
         .build()

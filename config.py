@@ -132,14 +132,6 @@ class BardCookiePath(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
-class TTSAccounts(BaseModel):
-    speech_key: str
-    """TTS KEY"""
-    speech_service_region: str
-    """TTS 地区"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
 class BingAuths(BaseModel):
     show_suggestions: bool = True
     """在 Bing 的回复后加上猜你想问"""
@@ -153,8 +145,10 @@ class BardAuths(BaseModel):
     """Bard 的账号列表"""
 
 class AzureAuths(BaseModel):
-    tts_accounts: List[TTSAccounts] = []
-    """Azure 的账号列表"""
+    tts_speech_key: Optional[str] = None
+    """TTS KEY"""
+    tts_speech_service_region: Optional[str] = None
+    """TTS 地区"""
 
 class YiyanCookiePath(BaseModel):
     cookie_content: str

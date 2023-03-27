@@ -47,6 +47,7 @@ class ConversationContext:
     """预设装饰文本"""
 
     conversation_voice: str = None
+    """语音音色"""
 
     @property
     def current_model(self):

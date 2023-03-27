@@ -4,7 +4,7 @@ from typing import Union, Optional
 
 import asyncio
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, At, Plain
+from graia.ariadne.message.element import Image, At, Plain, Voice
 from aiocqhttp import CQHttp, Event, MessageSegment
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
@@ -79,16 +79,18 @@ def transform_from_message_chain(chain: MessageChain):
             result = result + MessageSegment.image(f"base64://{elem.base64}")
         elif isinstance(elem, Plain):
             result = result + MessageSegment.text(str(elem))
+        elif isinstance(elem, Voice):
+            result = result + MessageSegment.record(f"base64://{elem.base64}")
     return result
 
 
 def response(event, is_group: bool):
     async def respond(resp):
         try:
-            if isinstance(resp, MessageChain):
-                resp = transform_from_message_chain(resp)
-            elif isinstance(resp, Image):
-                resp = MessageSegment.image(f"base64://{resp.base64}")
+            if not isinstance(resp, MessageChain):
+                resp = MessageChain(resp)
+            resp = transform_from_message_chain(resp)
+
             if config.response.quote:
                 resp = MessageSegment.reply(event.message_id) + resp
                 return await bot.send(event, resp)
