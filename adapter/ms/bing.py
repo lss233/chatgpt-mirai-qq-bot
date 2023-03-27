@@ -64,7 +64,7 @@ class BingAdapter(BotAdapter):
                                 parsed_content = parsed_content + f"* {suggestion.get('text')}  \n"
                         yield parsed_content
                     parsed_content = parsed_content + remaining_conversations
-                    # not final的parsed_content已经yield走了，只能在末尾加剩余回复数了，或者改用EdgeGPT自己封装的ask之后再正则替换
+                    # not final的parsed_content已经yield走了，只能在末尾加剩余回复数，或者改用EdgeGPT自己封装的ask之后再正则替换
                     if parsed_content == remaining_conversations:  # No content
                         yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
                         await self.on_reset()
