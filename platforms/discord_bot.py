@@ -10,8 +10,7 @@ from graia.ariadne.message.element import Image, Plain
 from loguru import logger
 
 from universal import handle_message
-from io import BytesIO
-import azure.cognitiveservices.speech as speechsdk
+from io import BytesIO, IOBase
 
 sys.path.append(os.getcwd())
 
@@ -22,26 +21,6 @@ intents.typing = False
 intents.presences = False
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-# 这个函数放在这里, lss233 肯定会骂我的 (by copilot)
-def synthesize_speech(text: str, output_file: str, voice: str = "en-SG-WayneNeural"): # Singapore English, Wayne
-    account = config.azure.tts_accounts[0] if config.azure else []
-    if account.speech_key:
-        speech_key, service_region = account.speech_key, account.speech_service_region
-        speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-        # https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/text-to-speech
-        speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_SynthVoice, voice)
-        audio_config = speechsdk.audio.AudioOutputConfig(filename=output_file)
-
-        synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
-        result = synthesizer.speak_text_async(text).get()
-    else:
-        return False
-
-    if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-        return True
-    else:
-        return False
 
 async def on_message_event(message: discord.Message) -> None:
     if message.author == bot.user:
@@ -68,22 +47,23 @@ async def on_message_event(message: discord.Message) -> None:
                     chunks = [str(elem)[i:i + 1500] for i in range(0, len(str(elem)), 1500)]
                     for chunk in chunks:
                         await message.reply(chunk)
-                        ts = datetime.datetime.now().timestamp()
-                        if synthesize_speech(chunk, f"output-{ ts }.wav"):
-                            await message.reply(file=discord.File(f"output-{ ts }.wav", filename="voice.wav"))
-                    return
-                elif isinstance(elem, Image):
-                    return await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
+                if isinstance(elem, Image):
+                    await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
+                if isinstance(elem, IOBase):
+                    await message.reply(file=discord.File(elem.name, filename="voice.wav"))
+                    elem.close()
+            return
         if isinstance(msg, str):
             chunks = [str(msg)[i:i + 1500] for i in range(0, len(str(msg)), 1500)]
             for chunk in chunks:
                 await message.reply(chunk)
-                ts = datetime.datetime.now().timestamp()
-                if synthesize_speech(chunk, f"output-{ ts }.wav"):
-                    await message.reply(file=discord.File(f"output-{ ts }.wav", filename="voice.wav"))
             return
-        elif isinstance(msg, Image):
+        if isinstance(msg, Image):
             return await message.reply(file=discord.File(BytesIO(await msg.get_bytes()), filename='image.png'))
+        if isinstance(msg, IOBase):
+            await message.reply(file=discord.File(msg.name, filename="voice.wav"))
+            msg.close()
+            return
 
     await handle_message(response,
                          f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}",

@@ -40,6 +40,7 @@
 * [x] 支持 ChatGPT API
 * [x] 支持 Bing 聊天
 * [x] 支持 Google bard
+* [x] 支持 poe.com 网页版
 * [x] 支持 文心一言 网页版
 * [x] 支持 ChatGLM-6B 本地版
 
@@ -356,6 +357,13 @@ auto_remove_old_conversations = true
 
 # === OpenAI 账号部分结束
 
+# === Poe 账号部分开始
+# 如果你没有 Poe 账号，可以直接删除这部分
+[poe]
+[[poe.accounts]]
+# 登陆 poe.com 网站后，通过开发者工具查看Cookie获取
+p_b = "V4j***"
+# === Poe 账号部分结束
 
 # === Bing 设置部分开始
 # 如果你没有 Bing 账号，可以直接删除这部分
@@ -588,6 +596,24 @@ warning_msg = "\n\n警告：额度即将耗尽！\n目前已发送：{usage}条�
 
 # 超额消息
 exceed = "已达到额度限制，请等待下一小时继续和我对话。"
+
+[azure]
+[[azure.tts_accounts]]
+speech_key = 'xxx'
+speech_service_region = 'xxx'
+
+[text_to_speech]
+always = false
+# https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
+default = "en-SG-WayneNeural"
+
+[bard]
+[[bard.accounts]]
+cookie_content = "xxx"
+
+[discord]
+bot_token = "xxx"
+
 ```
 
 ### 对接至机器人平台  
@@ -833,6 +859,16 @@ title_pattern="qq-{session_id}"
 3. 按下 F12，打开开发者工具（DevTools）
 4. 找到 控制台（或 Console），输入 `document.cookie` 然后回车
 5. 复制接下来出现的一段文本，这就是你的 Cookie
+
+### Poe 账号 Cookie 获取方法
+
+你需要通过电脑浏览器来获得 Poe Cookie，如果你有别的手段能获得 cookie 的话也是可以的。  
+
+1. 确认能科学上网
+2. 打开 https://poe.com 并登陆
+3. 按下 F12，打开开发者工具（DevTools）
+4. 找到 `应用程序 - 存储` 或 `应用 - 存储` 或 `存储`， 查看Cookie下 https://poe.com 域名下的 "p-b" 
+5. 复制值即可
 
 ### 文心一言 账号 Cookie 获取方法
 

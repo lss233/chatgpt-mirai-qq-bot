@@ -17,6 +17,7 @@ from adapter.ms.bing import BingAdapter
 from adapter.google.bard import BardAdapter
 from adapter.openai.api import OpenAIAPIAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
+from adapter.quora.poe import PoeBot, PoeAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
     CommandRefusedException
@@ -47,6 +48,8 @@ class ConversationContext:
     preset_decoration_format: Optional[str] = "{prompt}"
     """预设装饰文本"""
 
+    conversation_voice: str = None
+
     @property
     def current_model(self):
         return self.adapter.current_model
@@ -64,6 +67,8 @@ class ConversationContext:
             self.adapter = ChatGPTWebAdapter(self.session_id)
         elif _type == 'chatgpt-api':
             self.adapter = ChatGPTAPIAdapter(self.session_id)
+        elif PoeBot.parse(_type):
+            self.adapter = PoeAdapter(self.session_id, PoeBot.parse(_type))
         elif _type == 'bing':
             self.adapter = BingAdapter(self.session_id)
         elif _type == 'bing-c':
@@ -179,6 +184,12 @@ class ConversationContext:
                         self.preset_decoration_format = text
                         continue
 
+                    voice_account = config.azure.tts_accounts[0] if config.azure.tts_accounts else []
+                    if role == 'voice' and voice_account and voice_account.speech_key:
+                        self.conversation_voice = text.strip()
+                        logger.debug(f"Set conversation voice to {self.conversation_voice}")
+                        continue
+
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
                         yield item
         self.preset = keyword
@@ -229,6 +240,8 @@ class ConversationHandler:
         else:
             conversation = ConversationContext(_type, self.session_id)
             self.conversations[_type] = conversation
+            if config.text_to_speech.always:
+                conversation.conversation_voice = config.text_to_speech.default
             return conversation
 
     """切换对话上下文"""
