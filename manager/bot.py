@@ -20,7 +20,7 @@ from revChatGPT.typing import Error as V1Error
 
 from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from loguru import logger
-from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath
+from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, PoeCookieAuth
 import OpenAIAuth
 import urllib3.exceptions
 import utils.network as network
@@ -28,6 +28,7 @@ from tinydb import TinyDB, Query
 import hashlib
 import datetime
 from dateutil.relativedelta import relativedelta
+from poe import Client as PoeClient
 
 
 class BotManager:
@@ -36,6 +37,7 @@ class BotManager:
     bots: Dict[str, List] = {
         "chatgpt-web": [],
         "openai-api": [],
+        "poe-web": [],
         "bing-cookie": [],
         "bard-cookie": [],
         "yiyan-cookie": [],
@@ -51,6 +53,9 @@ class BotManager:
     bard: List[BardCookiePath]
     """Bard Account Infos"""
 
+    poe: List[PoeCookieAuth]
+    """Poe Account infos"""
+
     yiyan: List[YiyanCookiePath]
     """Yiyan Account Infos"""
 
@@ -61,6 +66,7 @@ class BotManager:
         self.openai = config.openai.accounts if config.openai else []
         self.bing = config.bing.accounts if config.bing else []
         self.bard = config.bard.accounts if config.bard else []
+        self.poe = config.poe.accounts if config.poe else []
         self.yiyan = config.yiyan.accounts if config.yiyan else []
         try:
             os.mkdir('data')
@@ -74,6 +80,7 @@ class BotManager:
         self.bots = {
             "chatgpt-web": [],
             "openai-api": [],
+            "poe-web": [],
             "bing-cookie": [],
             "bard-cookie": [],
             "yiyan-cookie": [],
@@ -81,6 +88,8 @@ class BotManager:
         self.__setup_system_proxy()
         if len(self.bing) > 0:
             self.login_bing()
+        if len(self.poe) > 0:
+            self.login_poe()
         if len(self.bard) > 0:
             self.login_bard()
         if len(self.openai) > 0:
@@ -105,7 +114,9 @@ class BotManager:
                 logger.info(f"AI 类型：{k} - 可用账号： {len(v)} 个")
         # 自动推测默认 AI
         if not self.config.response.default_ai:
-            if len(self.bots['chatgpt-web']) > 0:
+            if len(self.bots['poe-web']) > 0:
+                self.config.response.default_ai = 'poe-chatgpt'
+            elif len(self.bots['chatgpt-web']) > 0:
                 self.config.response.default_ai = 'chatgpt-web'
             elif len(self.bots['openai-api']) > 0:
                 self.config.response.default_ai = 'chatgpt-api'
@@ -147,6 +158,28 @@ class BotManager:
         if len(self.bots) < 1:
             logger.error("所有 Bard 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['bard-cookie'])}/{len(self.bing)} 个 Bard 账号！")
+
+    def login_poe(self):
+        def poe_check_auth(client: PoeClient) -> bool:
+            try:
+                response = client.get_bot_names()
+                logger.debug(f"poe bot is running. bot names -> {response}")
+                return True
+            except KeyError:
+                return False
+        try:
+            for i, account in enumerate(self.poe):
+                logger.info("正在解析第 {i} 个 poe web 账号", i=i + 1)
+                bot = PoeClient(token=account.p_b)
+                if poe_check_auth(bot):
+                    self.bots["poe-web"].append(bot)
+                    logger.success("解析成功！", i=i + 1)
+        except Exception as e:
+            logger.error("解析失败：")
+            logger.exception(e)
+        if len(self.bots["poe-web"]) < 1:
+            logger.error("所有 Poe 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['poe-web'])}/{len(self.bing)} 个 poe web 账号！")
 
     def login_yiyan(self):
         for i, account in enumerate(self.yiyan):

@@ -120,17 +120,29 @@ class OpenAIAPIKey(OpenAIAuthBase):
     """OpenAI 的 api_key"""
 
 
+class PoeCookieAuth(BaseModel):
+    p_b: str
+    """登陆 poe.com 后 Cookie 中 p_b 的值"""
+
+
 class BingCookiePath(BaseModel):
     cookie_content: str
     """Bing 的 Cookie 文件内容"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+
 class BardCookiePath(BaseModel):
     cookie_content: str
     """Bard 的 Cookie 文件内容"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
+
+
+class PoeAuths(BaseModel):
+    accounts: List[PoeCookieAuth] = []
+    """Poe 的账号列表"""
+
 
 class TTSAccounts(BaseModel):
     speech_key: str
@@ -148,13 +160,16 @@ class BingAuths(BaseModel):
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 
+
 class BardAuths(BaseModel):
     accounts: List[BardCookiePath] = []
     """Bard 的账号列表"""
 
+
 class AzureAuths(BaseModel):
     tts_accounts: List[TTSAccounts] = []
     """Azure 的账号列表"""
+
 
 class YiyanCookiePath(BaseModel):
     cookie_content: str
@@ -162,9 +177,11 @@ class YiyanCookiePath(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+
 class YiyanAuths(BaseModel):
     accounts: List[YiyanCookiePath] = []
     """文心一言的账号列表"""
+
 
 class TextToImage(BaseModel):
     always: bool = False
@@ -346,6 +363,7 @@ class Config(BaseModel):
     bard: BardAuths = BardAuths()
     azure: AzureAuths = AzureAuths()
     yiyan: YiyanAuths = YiyanAuths()
+    poe: PoeAuths = PoeAuths()
     text_to_image: TextToImage = TextToImage()
     text_to_speech: TextToSpeech = TextToSpeech()
     trigger: Trigger = Trigger()

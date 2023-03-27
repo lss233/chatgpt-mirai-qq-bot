@@ -38,9 +38,6 @@ class OpenAIAPIAdapter(BotAdapter):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         yield None
 
-    async def preset_ask(self, role: str, text: str):
-        yield None
-
     async def image_creation(self, prompt: str):
         logger.debug(f"[OpenAI Image] Prompt: {prompt}")
         response = await openai.Image.acreate(
