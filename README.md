@@ -504,7 +504,7 @@ max_timeout = 600
 # 对于每个提问的最长等待时间，超过此时间不再等待
 
 # 发送txt文本随机的一行作为响应时间过长时要发送的提醒的内容,填写该文件的路径
-# timeout_path = ""
+#timeout_path = "/path/to/your/file.txt"
 
 cancel_wait_too_long = "啊哦，这个问题有点难，让我想了好久也没想明白。试试换个问法？"
 # 超过最长等待时间后发送的信息
