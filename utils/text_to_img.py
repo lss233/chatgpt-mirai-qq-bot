@@ -275,7 +275,8 @@ def makeExtension(*args, **kwargs):
     return DisableHTMLExtension(*args, **kwargs)
 
 
-def md_to_html(text):
+def md_to_html(text: str) -> str:
+    text = text.replace("\n", "  \n")
     extensions = [
         DisableHTMLExtension(),
         MathExtension(enable_dollar_delimiter=True),  # 开启美元符号渲染
