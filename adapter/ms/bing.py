@@ -61,7 +61,7 @@ class BingAdapter(BotAdapter):
                             parsed_content = parsed_content + '\n猜你想问：  \n'
                             for suggestion in suggestions:
                                 parsed_content = parsed_content + f"* {suggestion.get('text')}  \n"
-                                yield parsed_content
+                        yield parsed_content
                     if parsed_content == remaining_conversations:  # No content
                         yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
                         await self.on_reset()

@@ -23,11 +23,10 @@ class BardAdapter(BotAdapter):
         self.account = botManager.pick('bard-cookie')
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
         self.bard_session_id = ""
+        self.r = ""
+        self.rc = ""
         self.headers = {
             "Cookie": self.account.cookie_content,
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/2.0.4515.159 Safari/537.36',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': '',
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
         }
 
@@ -46,6 +45,8 @@ class BardAdapter(BotAdapter):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
         self.bard_session_id = ""
+        self.r = ""
+        self.rc = ""
         await self.get_at_token()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
@@ -53,15 +54,15 @@ class BardAdapter(BotAdapter):
             await self.get_at_token()
         try:
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
-            content = quote(prompt)
-            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.bard_session_id}%5C%22%2C%5C%22%5C%22%2C%5C%22%5C%22%5D%5D%22%5D&at={self.at}&"
+            content = quote(prompt.replace('"',"'")).replace("%0A","%5C%5Cn")
+            # 奇怪的格式 [null,"[[\"\"],null,[\"\",\"\",\"\"]]"]
+            raw_data = f"f.req=%5Bnull%2C%22%5B%5B%5C%22{content}%5C%22%5D%2Cnull%2C%5B%5C%22{self.bard_session_id}%5C%22%2C%5C%22{self.r}%5C%22%2C%5C%22{self.rc}%5C%22%5D%5D%22%5D&at={self.at}&"
             response = await self.client.post(
                 url,
                 timeout=30,
                 headers=self.headers,
                 content=raw_data,
             )
-
             if response.status_code != 200:
                 logger.error(f"[Bard] 请求出现错误，状态码: {response.status_code}")
                 logger.error(f"[Bard] {response.text}")
@@ -72,13 +73,22 @@ class BardAdapter(BotAdapter):
                     data = json.loads(json.loads(lines)[0][2])
                     result = data[0][0]
                     self.bard_session_id = data[1][0]
-                    logger.debug(f"[Bard] {self.bard_session_id} - {result}")
+                    self.r = data[1][1] # 用于下一次请求, 这个位置是固定的
+                    # self.rc = data[4][1][0]
+                    for check in data:
+                        if not check:
+                            continue
+                        for element in [element for row in check for element in row]:
+                            if "rc_" in element:
+                                self.rc = element
+                                break
+                    logger.debug(f"[Bard] {self.bard_session_id} - {self.r} - {self.rc} - {result}")
                     yield result
                     break
 
         except Exception as e:
             logger.exception(e)
-            yield "出现了些错误"
+            yield "[Bard] 出现了些错误"
             await self.on_reset()
             return
 

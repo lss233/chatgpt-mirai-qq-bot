@@ -57,7 +57,7 @@ class MarkdownImageRenderer(Renderer):
         for rendered in groups:
             if not str(rendered).strip():
                 continue
-            everything = everything + str(rendered)
+            everything = everything + str(rendered) + '  '
         if everything:
             return MessageChain([await to_image(everything)])
         return None
@@ -105,7 +105,7 @@ class MixedContentMessageChainRenderer(Renderer):
                 if plain_blocks.strip():
                     holds.append(Plain(plain_blocks.strip()))
                     plain_blocks = ''
-                rich_blocks = rich_blocks + str(rendered) + '\n'
+                rich_blocks = rich_blocks + str(rendered) + '  \n'
             else:
                 if rich_blocks.strip():
                     holds.append(await to_image(rich_blocks.strip()))

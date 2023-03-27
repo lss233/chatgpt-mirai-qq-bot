@@ -40,6 +40,8 @@
 * [x] 支持 ChatGPT API
 * [x] 支持 Bing 聊天
 * [x] 支持 Google bard
+* [x] 支持 poe.com 网页版
+* [x] 支持 文心一言 网页版
 
 **平台兼容情况**  
 
@@ -379,6 +381,21 @@ cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  Microso
 # 如果你想用代理（可能有BUG）
 # proxy="http://127.0.0.1:1080"
 # === Bing 设置部分结束
+
+# === 文心一言 设置部分开始
+# 如果你没有 Bing 账号，可以直接删除这部分
+[yiyan]
+
+# 第 1 个 文心一言 账号
+# 理论上，你可以添加无限多个 文心一言 账号。  
+# 多账号的配置方法和 OpenAI 的一样。
+[[yiyan.accounts]]
+# 你的账号 Cookie，获取方法见 README
+cookie_content = 'PSTM=XXXXXXXX; BIDUPSID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;  ...一串很长的文本...'
+# 如果你想用代理（可能有BUG）
+# proxy="http://127.0.0.1:1080"
+# === 文心一言 设置部分结束
+
 
 [text_to_image]
 # 文字转图片
@@ -816,6 +833,11 @@ title_pattern="qq-{session_id}"
 3. 按下 F12，打开开发者工具（DevTools）
 4. 找到 `应用程序 - 存储` 或 `应用 - 存储` 或 `存储`， 查看Cookie下 https://poe.com 域名下的 "p-b" 
 5. 复制值即可
+
+### 文心一言 账号 Cookie 获取方法
+
+请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
+
 
 ## 🦊 加载预设
 

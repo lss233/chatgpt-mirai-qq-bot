@@ -1,3 +1,5 @@
+import datetime
+
 import asyncio
 import time
 from universal import handle_message
@@ -20,7 +22,7 @@ from graia.ariadne.event.lifecycle import AccountLaunch
 from graia.broadcast.exceptions import ExecutionStop
 from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
 from graia.ariadne.message.commander import Commander
-from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward
+from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward, DisplayStrategy
 
 from loguru import logger
 
@@ -29,6 +31,7 @@ from utils.text_to_img import to_image
 from manager.bot import BotManager
 from constants import config, botManager
 from middlewares.ratelimit import manager as ratelimit_manager
+import datetime
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 if config.mirai.reverse_ws_port:
@@ -53,12 +56,78 @@ else:
 
 
 async def response_as_image(target: Union[Friend, Group], source: Source, response):
-    return await app.send_message(target, await to_image(response),
-                                  quote=source if config.response.quote else False)
+    return
 
 
 async def response_as_text(target: Union[Friend, Group], source: Source, response):
     return await app.send_message(target, response, quote=source if config.response.quote else False)
+
+
+def response(target: Union[Friend, Group], source: Source):
+    async def respond(msg: AriadneBaseModel):
+        # 如果是非字符串
+        if isinstance(msg, Image) or isinstance(msg, MessageChain):
+            event = await app.send_message(
+                target,
+                msg,
+                quote=source if config.response.quote else False
+            )
+
+        elif config.text_to_image.always:
+            event = await app.send_message(
+                target,
+                await to_image(str(msg)),
+                quote=source if config.response.quote else False
+            )
+        else:
+            event = await app.send_message(
+                target,
+                str(msg),
+                quote=source if config.response.quote else False
+            )
+        if event.source.id < 0:
+            event = await app.send_message(
+                target,
+                MessageChain(
+                    Forward(
+                        [
+                            ForwardNode(
+                                target=config.mirai.qq,
+                                name="ChatGPT",
+                                message=msg,
+                                time=datetime.datetime.now()
+                            )
+                        ]
+                    )
+                )
+            )
+        if event.source.id < 0:
+            await app.send_message(
+                target,
+                "消息发送失败，被TX吞了，尝试转成图片再试一次，请稍等",
+                quote=source if config.response.quote else False
+            )
+            new_elems = []
+            for elem in msg:
+                if not new_elems:
+                    new_elems.append(elem)
+                elif isinstance(new_elems[-1], Plain) and isinstance(elem, Plain):
+                    new_elems[-1].text = new_elems[-1].text + '\n' + elem.text
+                else:
+                    new_elems.append(elem)
+            rendered_elems = []
+            for elem in new_elems:
+                if isinstance(elem, Plain):
+                    rendered_elems.append(await to_image(elem))
+                else:
+                    rendered_elems.append(elem)
+            event = await app.send_message(
+                target,
+                MessageChain(rendered_elems),
+                quote=source if config.response.quote else False
+            )
+        return event
+    return respond
 
 
 FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
@@ -72,20 +141,8 @@ async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
     if chain.display.startswith("."):
         return
 
-    async def response(msg: AriadneBaseModel):
-        # 如果是非字符串
-        if isinstance(msg, Image) or isinstance(msg, MessageChain):
-            return await app.send_message(target, msg, quote=source if config.response.quote else False)
-
-        if config.text_to_image.always:
-            return await response_as_image(target, source, msg)
-        else:
-            event = await response_as_text(target, source, msg)
-            if event.source.id < 0:
-                return await response_as_image(target, source, msg)
-
     await handle_message(
-        response,
+        response(target, source),
         f"friend-{target.id}",
         chain.display,
         chain,
@@ -104,20 +161,8 @@ async def group_message_listener(target: Group, source: Source, chain: GroupTrig
     if chain.display.startswith("."):
         return
 
-    async def response(msg: AriadneBaseModel):
-        # 如果是非字符串
-        if isinstance(msg, Image) or isinstance(msg, MessageChain):
-            return await app.send_message(target, msg, quote=source if config.response.quote else False)
-
-        if config.text_to_image.always:
-            return await response_as_image(target, source, msg)
-        else:
-            event = await response_as_text(target, source, msg)
-            if event.source.id < 0:
-                return await response_as_image(target, source, msg)
-
     await handle_message(
-        response,
+        response(target, source),
         f"group-{target.id}",
         chain.display,
         chain,
@@ -233,7 +278,12 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
             answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
                               f' - 可用：{round(total_available, 2)}$\n' \
                               f' - 绑卡：{has_payment_method}'
-            node = ForwardNode(target=config.mirai.qq, message=MessageChain(Plain(answer)))
+            node = ForwardNode(
+                target=config.mirai.qq,
+                name="ChatGPT",
+                message=MessageChain(Plain(answer)),
+                time=datetime.datetime.now()
+            )
             nodes.append(node)
 
         await app.recall_message(msg)
@@ -243,6 +293,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         await app.send_message(event, MessageChain(Forward(nodes)))
     finally:
         raise ExecutionStop()
+
 
 def main():
     app.launch_blocking()
