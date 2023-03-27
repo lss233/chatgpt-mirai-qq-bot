@@ -232,6 +232,8 @@ class Trigger(BaseModel):
         "text-davinci-002-render-paid"
     ]
     """允许普通用户切换的模型列表"""
+    allow_switching_ai: bool = True
+    """允许普通用户切换AI"""
 
 
 class Response(BaseModel):
