@@ -500,6 +500,9 @@ timeout = 30.0
 # 超过响应时间时要发送的提醒
 timeout_format = "我还在思考中，请再等一下~"
 
+# 随机读取txt文件的一行作为超过响应时间时要发送的提醒的内容
+# timeout_path = "/path/to/your/file.txt"
+
 max_timeout = 600
 # 对于每个提问的最长等待时间，超过此时间不再等待
 

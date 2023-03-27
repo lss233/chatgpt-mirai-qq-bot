@@ -6,6 +6,7 @@ from loguru import logger
 import os
 import sys
 import toml
+from pathlib import Path
 
 
 class Onebot(BaseModel):
@@ -44,9 +45,11 @@ class TelegramBot(BaseModel):
     manager_chat: Optional[int] = None
     """管理员的 chat id"""
 
+
 class DiscordBot(BaseModel):
     bot_token: str
     """Discord Bot 的 token"""
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -65,7 +68,8 @@ class OpenAIAuths(BaseModel):
 
     gpt3_params: OpenAIGPT3Params = OpenAIGPT3Params()
 
-    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth, OpenAIAPIKey]] = []
+    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth,
+                         OpenAIAccessTokenAuth, OpenAIAPIKey]] = []
 
 
 class OpenAIAuthBase(BaseModel):
@@ -126,19 +130,13 @@ class BingCookiePath(BaseModel):
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
+
 class BardCookiePath(BaseModel):
     cookie_content: str
     """Bard 的 Cookie 文件内容"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
-class TTSAccounts(BaseModel):
-    speech_key: str
-    """TTS KEY"""
-    speech_service_region: str
-    """TTS 地区"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
 
 class BingAuths(BaseModel):
     show_suggestions: bool = True
@@ -148,23 +146,11 @@ class BingAuths(BaseModel):
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 
+
 class BardAuths(BaseModel):
     accounts: List[BardCookiePath] = []
-    """Bard 的账号列表"""
+    """Bing 的账号列表"""
 
-class AzureAuths(BaseModel):
-    tts_accounts: List[TTSAccounts] = []
-    """Azure 的账号列表"""
-
-class YiyanCookiePath(BaseModel):
-    cookie_content: str
-    """"文心一言网站的 Cookie 内容"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-class YiyanAuths(BaseModel):
-    accounts: List[YiyanCookiePath] = []
-    """文心一言的账号列表"""
 
 class TextToImage(BaseModel):
     always: bool = False
@@ -274,6 +260,8 @@ class Response(BaseModel):
     timeout_format: str = "我还在思考中，请再等一下~"
     """响应时间过长时要发送的提醒"""
 
+    timeout_path: Path = Path("/path/to/your/file.txt")
+
     max_timeout: float = 600.0
     """最长等待时间，超过此时间取消回应"""
 
@@ -338,8 +326,6 @@ class Config(BaseModel):
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
-    azure: AzureAuths = AzureAuths()
-    yiyan: YiyanAuths = YiyanAuths()
     text_to_image: TextToImage = TextToImage()
     trigger: Trigger = Trigger()
     response: Response = Response()
@@ -406,7 +392,8 @@ class Config(BaseModel):
                     'config.json'):
                 logger.info("正在转换旧版配置文件……")
                 Config.save_config(Config.__load_json_config())
-                logger.warning("提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
+                logger.warning(
+                    "提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
                 try:
                     os.rename('config.json', 'config.json.old')
                 except Exception as e:
@@ -426,8 +413,10 @@ class Config(BaseModel):
     def save_config(config: Config) -> Config:
         try:
             with open("config.cfg", "wb") as f:
-                parsed_str = toml.dumps(config.dict()).encode(sys.getdefaultencoding())
+                parsed_str = toml.dumps(config.dict()).encode(
+                    sys.getdefaultencoding())
                 f.write(parsed_str)
         except Exception as e:
             logger.exception(e)
             logger.warning("配置保存失败。")
+
