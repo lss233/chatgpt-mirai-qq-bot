@@ -34,7 +34,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str, chai
     conversation_handler = await ConversationHandler.get_handler(session_id)
     conversation_context = None
     # 指定前缀对话
-    if ' ' in message:
+    if ' ' in message and (config.trigger.allow_switching_ai or is_manager):
         for ai_type, prefixes in config.trigger.prefix_ai.items():
             for prefix in prefixes:
                 if prefix + ' ' in message:
