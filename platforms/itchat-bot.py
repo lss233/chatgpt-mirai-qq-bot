@@ -84,19 +84,19 @@ def is_online(auto_login=False):
         logger.info('微信已离线..')
         return False
 
-    hotReload = True  # 一段时间内不用再扫码
-    loginCallback = init_data
-    exitCallback = exit_msg
+    hot_reload = True  # 一段时间内不用再扫码
+    login_callback = init_data
+    exit_callback = exit_msg
     try:
         for _ in range(2):  # 尝试登录 2 次。
             if platform.system() in ('Windows', 'Darwin'):
-                itchat.auto_login(hotReload=hotReload,
-                                  loginCallback=loginCallback, exitCallback=exitCallback)
+                itchat.auto_login(hotReload=hot_reload,
+                                  loginCallback=login_callback, exitCallback=exit_callback)
                 itchat.run(blockThread=False) # 不让程序阻塞，否则无法调用handle_message。
             else:
                 # 命令行显示登录二维码。
-                itchat.auto_login(enableCmdQR=2, hotReload=hotReload, loginCallback=loginCallback,
-                                  exitCallback=exitCallback)
+                itchat.auto_login(enableCmdQR=2, hotReload=hot_reload, loginCallback=login_callback,
+                                  exitCallback=exit_callback)
                 itchat.run(blockThread=False)
             if _online():
                 logger.info('登录成功')
@@ -104,9 +104,9 @@ def is_online(auto_login=False):
     except Exception as exception:  # 登录失败的错误处理。
         sex = str(exception)
         if sex == "'User'":
-            logger.info('此微信号不能登录网页版微信，不能运行此项目。没有任何其它解决办法！可以换个号再试试。')
+            logger.exception('此微信号不能登录网页版微信，不能运行此项目。没有任何其它解决办法！可以换个号再试试。')
         else:
-            logger.info(sex)
+            logger.error(sex)
 
     # delete_cache()  # 清理缓存数据
     logger.info('登录失败。')
