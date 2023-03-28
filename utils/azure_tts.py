@@ -16,6 +16,7 @@ async def synthesize_speech(text: str, output_file: str, voice: str = "en-SG-Way
     audio_config = speechsdk.audio.AudioOutputConfig(filename=output_file)
     synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
 
-    result = await asyncio.get_event_loop().run_in_executor(None, synthesizer.speak_text_async(text).get)
+    # result = await asyncio.get_event_loop().run_in_executor(None, synthesizer.speak_text_async(text).get)
+    result = synthesizer.speak_text_async(text).get()
 
     return result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted
