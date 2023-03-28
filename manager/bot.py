@@ -378,8 +378,13 @@ class BotManager:
 
             resp = await session.get(f"{openai.api_base}/dashboard/billing/credit_grants", proxy=account.proxy)
             resp = await resp.json()
+
+            if 'error' in resp:
+                raise Exception(resp['error']['message'])
+
             grant_available = resp.get("total_available")
             grant_used = resp.get("total_used")
+
 
             resp = await session.get(f"{openai.api_base}/dashboard/billing/subscription", proxy=account.proxy)
             resp = await resp.json()
