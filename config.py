@@ -49,6 +49,12 @@ class DiscordBot(BaseModel):
     bot_token: str
     """Discord Bot 的 token"""
 
+class ItchatBot(BaseModel):
+    """Itchat Bot 的配置"""
+    hot_reload: bool = False
+    """是否开启热重载"""
+
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -378,6 +384,7 @@ class Ratelimit(BaseModel):
 
 class Config(BaseModel):
     # === Platform Settings ===
+    itchat: Optional[ItchatBot] = None
     onebot: Optional[Onebot] = None
     mirai: Optional[Mirai] = None
     telegram: Optional[TelegramBot] = None

@@ -15,6 +15,9 @@ elif config.telegram:
 elif config.discord:
     logger.info("检测到 discord 配置，将以 discord bot 模式启动……")
     from platforms.discord_bot import main
+elif config.itchat:
+    logger.info("检测到 itchat 配置，将以 itchat 模式启动……")
+    from platforms.itchat_bot import main
 else:
     logger.info("检测到 mirai 配置，将以 mirai 模式启动……")
     from platforms.ariadne_bot import main
