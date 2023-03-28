@@ -438,9 +438,9 @@ tts_speech_service_region = 'xxx'
 always = false
 # 默认音色
 # 可参考 Azure：
-# https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
+# https://learn.microsoft.com/zh-CN/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
 
-default = "en-SG-WayneNeural"
+default = "zh-CN-XiaoyouNeural"
 
 
 
