@@ -390,7 +390,7 @@ cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  Microso
 # === Bing 设置部分结束
 
 # === 文心一言 设置部分开始
-# 如果你没有 Bing 账号，可以直接删除这部分
+# 如果你没有 文心一言 账号，可以直接删除这部分
 [yiyan]
 
 # 第 1 个 文心一言 账号
@@ -530,6 +530,14 @@ buffer_delay = 15
 # bing-c: New Bing (新必应对话风格-创造力)
 # bing-p: New Bing (新必应对话风格-精确)
 # bing-b: New Bing (新必应对话风格-平衡)
+# yiyan - 百度 文心一言 网页版
+# chatglm-api - 清华 ChatGLM-API 接口
+# sage - POE Sage 模型
+# beaver - POE GPT4 模型
+# calude2 - POE Calude2 模型
+# calude - POE Calude 模型
+# chinchilla - POE ChatGPT 模型
+# nutria - POE Dragonfly 模型
 default_ai = "chatgpt-web"
 # 匹配指令成功但没有对话内容时发送的消息
 placeholder = "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n如果您需要重置我们的会话，请回复`重置会话`。"
