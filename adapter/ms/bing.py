@@ -41,7 +41,6 @@ class BingAdapter(BotAdapter):
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
-        remaining_conversations = f'剩余回复数：{self.count} / 15:  \n'
         parsed_content = ''
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
@@ -52,9 +51,11 @@ class BingAdapter(BotAdapter):
                         response = re.sub(r"\[(\d+)\]: ", r"\1: ", response)
                     else:
                         response = re.sub(r"(\[\d+\]\: .+)+", "", response)
-                    parsed_content = remaining_conversations + response
+                    parsed_content = response
 
                 else:
+                    max_messages = response["item"]["throttling"]["maxNumUserMessagesInConversation"]
+                    remaining_conversations = f'\n剩余回复数：{self.count} / {max_messages} '
                     if len(response["item"].get('messages', [])) > 1 and config.bing.show_suggestions:
                         suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
                         if len(suggestions) > 0:
@@ -62,6 +63,8 @@ class BingAdapter(BotAdapter):
                             for suggestion in suggestions:
                                 parsed_content = parsed_content + f"* {suggestion.get('text')}  \n"
                         yield parsed_content
+                    parsed_content = parsed_content + remaining_conversations
+                    # not final的parsed_content已经yield走了，只能在末尾加剩余回复数，或者改用EdgeGPT自己封装的ask之后再正则替换
                     if parsed_content == remaining_conversations:  # No content
                         yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
                         await self.on_reset()
