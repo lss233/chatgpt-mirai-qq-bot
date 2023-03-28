@@ -91,14 +91,17 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                 if isinstance(elem, Plain) and str(elem):
                     output_file = NamedTemporaryFile(mode='w+b', suffix='.wav', delete=False)
                     output_file.close()
+                    logger.debug(f"开始转换语音 - {output_file.name} - {conversation_context.session_id}")
                     if await synthesize_speech(
                             str(elem),
                             output_file.name,
                             conversation_context.conversation_voice
                     ):
                         await _respond(Voice(path=output_file.name))
+                        logger.debug(f"语音转换完成 - {output_file.name} - {conversation_context.session_id}")
                     try:
                         os.unlink(output_file.name)
+                        logger.debug(f"删除临时文件 - {output_file.name} - {conversation_context.session_id}")
                     except:
                         pass
         return ret

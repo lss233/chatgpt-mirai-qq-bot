@@ -1,7 +1,6 @@
 import os
 import sys
 
-import datetime
 import discord
 from discord.ext import commands
 
@@ -10,7 +9,7 @@ from graia.ariadne.message.element import Image, Plain, Voice
 from loguru import logger
 
 from universal import handle_message
-from io import BytesIO, IOBase
+from io import BytesIO
 
 sys.path.append(os.getcwd())
 
@@ -50,7 +49,7 @@ async def on_message_event(message: discord.Message) -> None:
                 if isinstance(elem, Image):
                     await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
                 if isinstance(elem, Voice):
-                    await message.reply(file=discord.File(await elem.get_bytes(), filename="voice.wav"))
+                    await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename="voice.wav"))
             return
         if isinstance(msg, str):
             chunks = [str(msg)[i:i + 1500] for i in range(0, len(str(msg)), 1500)]
@@ -60,7 +59,7 @@ async def on_message_event(message: discord.Message) -> None:
         if isinstance(msg, Image):
             return await message.reply(file=discord.File(BytesIO(await msg.get_bytes()), filename='image.png'))
         if isinstance(msg, Voice):
-            await message.reply(file=discord.File(await msg.get_bytes(), filename="voice.wav"))
+            await message.reply(file=discord.File(BytesIO(await msg.get_bytes()), filename="voice.wav"))
             return
 
     await handle_message(response,
