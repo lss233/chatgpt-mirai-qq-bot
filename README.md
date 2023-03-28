@@ -530,6 +530,7 @@ buffer_delay = 15
 # bing-c: New Bing (新必应对话风格-创造力)
 # bing-p: New Bing (新必应对话风格-精确)
 # bing-b: New Bing (新必应对话风格-平衡)
+# bard - Google Bard
 # yiyan - 百度 文心一言 网页版
 # chatglm-api - 清华 ChatGLM-API 接口
 # sage - POE Sage 模型
