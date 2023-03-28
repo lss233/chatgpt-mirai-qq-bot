@@ -54,6 +54,7 @@
 | OneBot   | 支持   | 支持   | 支持   | 支持    | 支持   |
 | Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持   |
 | Discord  | 支持   | 支持   | 部分支持 | 不支持   | 部分支持 |
+| Itchat | 支持 | 支持 | 部分支持 | 不支持 | 不支持 |
 
 * [交流群（Discord）](https://discord.gg/hYSmQDJrHq)会发布最新的项目动态、问题答疑和交流 [（QQ 群 已满）](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 。  
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
@@ -678,6 +679,14 @@ proxy = "http://localhost:1080"
 manager_chat = 1234567890
 ```
 就可以使用 Telegram 机器人和 ChatGPT 聊天！
+
+#### Itchat Bot （微信机器人）
+
+将 `config.cfg` 中的 `[mirai]` 块删除，然后加入以下配置：
+```properties
+[itchat]
+```
+而后仅需运行“启动ChatGPT.cmd”，即可使用手机微信，通过扫描二维码启动微信机器人。
 
 ### OpenAI 多账号支持  
 
