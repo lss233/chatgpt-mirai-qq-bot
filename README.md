@@ -398,6 +398,7 @@ cookie_content = 'MUID=xxxxx; SRCHD=AF=xxxx; SRCHUID=V=2&GUID=xxxxxxxx;  Microso
 # 多账号的配置方法和 OpenAI 的一样。
 [[yiyan.accounts]]
 # 你的账号 Cookie，获取方法见 README
+# 该渠道为对接网页版文心一言，有封号风险，请自行取舍。
 cookie_content = 'PSTM=XXXXXXXX; BIDUPSID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;  ...一串很长的文本...'
 # 如果你想用代理（可能有BUG）
 # proxy="http://127.0.0.1:1080"
