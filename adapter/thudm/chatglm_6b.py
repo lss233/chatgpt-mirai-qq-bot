@@ -38,6 +38,3 @@ class ChatGLM6BAdapter(BotAdapter):
         self.conversation_history = ret['history'][- self.account.max_turns:]
         yield ret['response']
         return
-
-    async def preset_ask(self, role: str, text: str):
-        yield None

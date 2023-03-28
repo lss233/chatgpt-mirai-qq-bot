@@ -51,7 +51,4 @@ class PoeAdapter(BotAdapter):
     async def on_reset(self):
         """当会话被重置时，此函数被调用"""
         self.poe_client.send_chat_break(self.poe_bot.value)
-
-    def use_default_preset_ask(self) -> bool:
-        """使用默认预设逻辑"""
-        return True
+ 

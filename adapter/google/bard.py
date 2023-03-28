@@ -91,7 +91,3 @@ class BardAdapter(BotAdapter):
             yield "[Bard] 出现了些错误"
             await self.on_reset()
             return
-
-    def use_default_preset_ask(self) -> bool:
-        """使用默认预设逻辑"""
-        return True
