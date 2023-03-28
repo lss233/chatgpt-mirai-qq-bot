@@ -55,7 +55,7 @@
 | Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持 | 支持   |
 | Discord  | 支持   | 支持   | 部分支持 | 不支持   | 支持 | 支持   |
 
-* [交流群（Discord）](https://discord.gg/hYSmQDJrHq)会发布最新的项目动态、问题答疑和交流 [（QQ 群 已满）](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 。  
+* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [（QQ 群 已满）](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 。  
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。  
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
