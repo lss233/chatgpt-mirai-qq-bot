@@ -908,6 +908,7 @@ python api.py
 ```
 
 
+
 ## 🦊 加载预设
 
 如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
@@ -938,6 +939,17 @@ python api.py
 
 默认使用的字体是 [更纱黑体](https://github.com/be5invis/Sarasa-Gothic)。  
 
+## 🎙 文字转语音
+
+自 v2.2.5 开始，我们支持文字转语音功能。  
+
+目前仅支持 Azure TTS 引擎提供的文字转语音服务。  
+
+你只需要在配置文件中填写 azure 的 `tts_speech_key` 和 `tts_speech_service_region`，  
+
+然后将 `text_to_speech` 中的 `always` 设置成 true，或者通过预设、切换语音命令来开启语音功能。  
+
+**提示：在 Windows 平台上使用语音功能需要安装最新的 VC 运行库，你可以在[这里](https://learn.microsoft.com/zh-CN/cpp/windows/latest-supported-vc-redist?view=msvc-170)下载。`
 ## 🎈 相似项目
 
 除了我们以外，还有这些很出色的项目：  

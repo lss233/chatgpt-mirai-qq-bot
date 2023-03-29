@@ -20,7 +20,6 @@ from graia.ariadne.message.element import ForwardNode, Plain, Forward, Voice
 from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
 from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
 from graia.broadcast.exceptions import ExecutionStop
-from graiax import silkcoder
 from loguru import logger
 from typing_extensions import Annotated
 
@@ -65,12 +64,9 @@ def response(target: Union[Friend, Group], source: Source):
     async def respond(msg: AriadneBaseModel):
         # 音频编码
         if isinstance(msg, Voice):
+            from utils.azure_tts import encode_to_silk
             msg = Voice(
-                data_bytes=await silkcoder.async_encode(
-                    await msg.get_bytes(),
-                    audio_format='ogg',
-                    ios_adaptive=True
-                )
+                data_bytes=await encode_to_silk(await msg.get_bytes())
             )
         # 如果是非字符串
         if not isinstance(msg, Plain) and not isinstance(msg, str):
