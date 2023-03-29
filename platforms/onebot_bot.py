@@ -248,6 +248,7 @@ async def _(event: Event):
 @bot.on_startup
 async def startup():
     await botManager.login()
+    logger.success("启动完毕，接收消息中……")
 
 def main():
     bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
