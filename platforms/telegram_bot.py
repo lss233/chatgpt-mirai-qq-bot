@@ -1,17 +1,11 @@
-import math
-import os
-import sys
-
 import asyncio
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
 from loguru import logger
 from telegram.request import HTTPXRequest
-from io import BytesIO, IOBase
-from universal import handle_message
 
-sys.path.append(os.getcwd())
+from universal import handle_message
 
 from constants import botManager, config
 

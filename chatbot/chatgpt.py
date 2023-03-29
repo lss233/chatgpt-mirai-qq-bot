@@ -1,10 +1,4 @@
 import datetime
-import os
-import sys
-
-
-sys.path.append(os.getcwd())
-
 import asyncio
 from typing import Union
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot

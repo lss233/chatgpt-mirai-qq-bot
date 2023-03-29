@@ -3,7 +3,6 @@ import sys
 
 import discord
 from discord.ext import commands
-
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
 from loguru import logger

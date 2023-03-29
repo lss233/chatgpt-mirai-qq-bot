@@ -3,8 +3,11 @@ import sys
 
 sys.path.append(os.getcwd())
 
+from utils.exithooks import hook
 from loguru import logger
 from constants import config
+
+hook()
 
 if config.onebot:
     logger.info("检测到 Onebot 配置，将以 Onebot 模式启动……")

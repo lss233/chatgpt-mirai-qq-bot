@@ -1,40 +1,35 @@
 import datetime
+import time
+from typing import Union
 
 import asyncio
-import time
-
-from graiax import silkcoder
-
-from universal import handle_message
-import constants
-from typing import Union
-from typing_extensions import Annotated
+from graia.amnesia.builtins.aiohttp import AiohttpServerService
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
     HttpClientConfig,
     WebsocketClientConfig,
     config as ariadne_config, WebsocketServerConfig,
 )
-from graia.amnesia.builtins.aiohttp import AiohttpServerService
+from graia.ariadne.event.lifecycle import AccountLaunch
+from graia.ariadne.event.message import MessageEvent, TempMessage
+from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from graia.ariadne.message import Source
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
-from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from graia.ariadne.event.message import MessageEvent, TempMessage
-from graia.ariadne.event.lifecycle import AccountLaunch
-from graia.broadcast.exceptions import ExecutionStop
-from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
 from graia.ariadne.message.commander import Commander
-from graia.ariadne.message.element import Image, ForwardNode, Plain, Forward, DisplayStrategy, Voice
-
+from graia.ariadne.message.element import ForwardNode, Plain, Forward, Voice
+from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
+from graia.ariadne.model import Friend, Group, Member, AriadneBaseModel
+from graia.broadcast.exceptions import ExecutionStop
+from graiax import silkcoder
 from loguru import logger
+from typing_extensions import Annotated
 
-from utils.text_to_img import to_image
-
-from manager.bot import BotManager
+import constants
 from constants import config, botManager
+from manager.bot import BotManager
 from middlewares.ratelimit import manager as ratelimit_manager
-import datetime
+from universal import handle_message
+from utils.text_to_img import to_image
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 if config.mirai.reverse_ws_port:

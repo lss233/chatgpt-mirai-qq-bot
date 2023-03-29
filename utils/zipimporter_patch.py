@@ -15,3 +15,7 @@ def exec_module(self, module):
 
 
 zipimporter.exec_module = exec_module
+
+def patch():
+    # 仅仅是为了防止 IDE 自动优化
+    pass

@@ -1,5 +1,4 @@
 import io
-import re
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -13,17 +12,17 @@ from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
-from adapter.ms.bing import BingAdapter
 from adapter.google.bard import BardAdapter
+from adapter.ms.bing import BingAdapter
 from adapter.openai.api import OpenAIAPIAdapter
-from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from adapter.quora.poe import PoeBot, PoeAdapter
+from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
     CommandRefusedException
 from renderer import Renderer
-from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
+from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
 
 handlers = dict()

@@ -1,8 +1,5 @@
 import time
-from typing import Union, Callable, Optional
-
-from graia.ariadne.message import Source
-from graia.ariadne.model import Friend, Group
+from typing import Callable, Optional
 
 from constants import config
 from conversation import ConversationContext

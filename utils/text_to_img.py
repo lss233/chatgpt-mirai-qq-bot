@@ -1,34 +1,37 @@
-import asyncio
+import base64
+import itertools
+import os
 import pathlib
+import shutil
+import textwrap
 from io import BytesIO
 from io import StringIO
-import os
 from tempfile import NamedTemporaryFile
 
 import aiohttp
+import asyncio
 import imgkit
 
-from config import Config
-from PIL import Image, ImageDraw, ImageFont
-import textwrap
-import itertools
-import unicodedata
-from graia.ariadne.message.element import Image as GraiaImage
-from charset_normalizer import from_bytes
-import utils.zipimporter_patch
-# Do not delete this line, it has be loaded before markdown
+# Do not delete this line, it has be loaded **BEFORE** markdown
+from utils.zipimporter_patch import patch
+
 import markdown
+import qrcode
+import unicodedata
+from PIL import Image
+from PIL import ImageDraw, ImageFont
+from charset_normalizer import from_bytes
+from graia.ariadne.message.element import Image as GraiaImage
+from loguru import logger
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.tables import TableExtension
 from mdx_math import MathExtension
-
 from pygments.formatters import HtmlFormatter
 from pygments.styles.xcode import XcodeStyle
-from loguru import logger
-import shutil
-import qrcode
-import base64
-from PIL import Image
+
+from config import Config
+
+patch()
 
 config = Config.load_config()
 

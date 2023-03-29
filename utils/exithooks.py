@@ -37,3 +37,7 @@ def foo():
 
 
 atexit.register(foo)
+
+def hook():
+    # 仅仅是为了防止 IDE 自动优化掉 import
+    pass

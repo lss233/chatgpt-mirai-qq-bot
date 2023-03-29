@@ -1,34 +1,32 @@
+import datetime
+import hashlib
+import itertools
+import os
 import urllib.request
+from typing import List, Dict
 from urllib.parse import urlparse
 
+import OpenAIAuth
 import aiohttp
 import openai
 import requests
+import urllib3.exceptions
 from aiohttp import ClientConnectorError
-from revChatGPT import V1
-
+from dateutil.relativedelta import relativedelta
+from loguru import logger
+from poe import Client as PoeClient
 from requests.exceptions import SSLError, RequestException
-
-from chatbot.chatgpt import ChatGPTBrowserChatbot
-from exceptions import NoAvailableBotException, APIKeyNoFundsError
-
-import itertools
-from typing import Union, List, Dict
-import os
+from revChatGPT import V1
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
 from revChatGPT.typing import Error as V1Error
-
-from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
-from loguru import logger
-from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, PoeCookieAuth
-import OpenAIAuth
-import urllib3.exceptions
-import utils.network as network
 from tinydb import TinyDB, Query
-import hashlib
-import datetime
-from dateutil.relativedelta import relativedelta
-from poe import Client as PoeClient
+
+import utils.network as network
+from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
+from chatbot.chatgpt import ChatGPTBrowserChatbot
+from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
+    PoeCookieAuth
+from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 
 class BotManager:
