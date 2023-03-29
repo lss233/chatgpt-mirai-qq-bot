@@ -1127,7 +1127,7 @@ p_b = "V4j***"
 cookie_content = 'BDUSS=xxxxxxxxx'
 ```
 
-Cookie 获取方法：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/Bard-Cookie-%E8%8E%B7%E5%8F%96%E6%96%B9%E6%B3%95)
+Cookie 获取方法：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
 
 ###### 相关设置
 
