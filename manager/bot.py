@@ -137,6 +137,7 @@ class BotManager:
                 self.config.response.default_ai = 'chatgpt-web'
 
     def login_bing(self):
+        os.environ['BING_PROXY_URL'] = self.config.bing.bing_endpoint
         for i, account in enumerate(self.bing):
             logger.info("正在解析第 {i} 个 Bing 账号", i=i + 1)
             if proxy := self.__check_proxy(account.proxy):

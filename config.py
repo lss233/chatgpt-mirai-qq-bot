@@ -163,7 +163,9 @@ class BingAuths(BaseModel):
     show_references: bool = True
     """在 Bing 的回复前加上引用资料"""
     wss_link: str = "wss://sydney.bing.com/sydney/ChatHub"
-    """Bing 的接入点"""
+    """Bing 的 Websocket 接入点"""
+    bing_endpoint: str = "https://edgeservices.bing.com/edgesvc/turing/conversation/create"
+    """Bing 的会话创建接入点"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 
