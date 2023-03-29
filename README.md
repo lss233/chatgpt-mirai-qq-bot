@@ -639,11 +639,13 @@ exceed = "已达到额度限制，请等待下一小时继续和我对话。"
 
 下面是对配置文件的详细介绍。
 
+---
+
 ### 对接平台
 
 目前，我们支持对接：QQ、Telegram、Discord 三个平台。
 
-#### 对接 QQ
+#### 🐧 对接 QQ
 
 我们支持两种不同的 QQ 机器人协议，他们分别是： Mirai 和 OneBot。
 
@@ -710,7 +712,7 @@ reverse_ws_port = 6555
 
 就可以使用 go-cqhttp 或者其他支持 OneBot 协议的程序和 ChatGPT 聊天！
 
-#### 对接 Telegram 机器人
+#### ✈ 对接 Telegram 机器人
 
 将 `config.cfg` 中的 `[mirai]` 块删除，然后加入以下配置：
 
@@ -726,7 +728,7 @@ manager_chat = 1234567890
 ```
 就可以使用 Telegram 机器人和 AI 聊天！
 
-#### 对接 Discord 机器人
+#### 🎧 对接 Discord 机器人
 
 将 `config.cfg` 中的 `[mirai]` 块删除，然后加入以下配置：
 
@@ -737,6 +739,8 @@ bot_token = "xxx"
 ```
 
 就可以在 Discord 中和 AI 聊天了！
+
+---
 
 ### AI 平台与多账号支持
 
@@ -764,7 +768,7 @@ bot_token = "xxx"
 
 
 
-#### 接入 OpenAI
+#### 🙄 接入 OpenAI
 
 OpenAI 的 ChatGPT 是我们最早支持的语言模型。  
 
@@ -772,7 +776,7 @@ ChatGPT 分为两种，一种是网页版，另一种是 API 版。
 
 OpenAI 的设置开始于一行  `[openai]` ，随后每个账号的设置开始于一行 `[[openai.accounts]]`。
 
-##### 网页版
+##### 👨🏻‍💻 网页版
 
 网页版即使用 `https://chat.openai.com` 里的 ChatGPT。 
 
@@ -932,7 +936,7 @@ model="text-davinci-002-render-paid"
 
 
 
-##### API 版
+##### 💲 API 版
 
 **优点**：更快、可以设置参数、可以同时回复多个人、不封号
 
@@ -988,9 +992,9 @@ min_tokens = 1000
 
 参考网页版的 `使用代理` 部分。 
 
+---
 
-
-#### 接入 New Bing (Sydney)
+#### 😅 接入 New Bing (Sydney)
 
 New Bing 是我们支持的第二个 AI 模型。
 
@@ -1034,9 +1038,9 @@ cookie_content = 'MUID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; SRCHD=XX=XXXXXX; SRCHUI
 wss_link = "wss://sydney.bing.com/sydney/ChatHub"
 ```
 
+---
 
-
-#### 接入 Google Bard
+#### 🇬 接入 Google Bard
 
 Google Bard 是我们支持的第三个 AI 模型。
 
@@ -1062,9 +1066,9 @@ Bard Cookie 获取方法：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot
 
 Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
 
+---
 
-
-#### 接入 Poe
+#### 😾 接入 Poe
 
 Poe 是由 Quora 提供的 AI 对话平台，在这里你可以免费使用上述各种有门槛的语言模型。 
 
@@ -1102,9 +1106,9 @@ p_b = "V4j***"
 
 参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
 
+---
 
-
-#### 接入文心一言
+#### 🤡 接入文心一言
 
 文心一言的设置开始于一行  `[yiyan]` ，随后每个账号的设置开始于一行 `[[yiyan.accounts]]`。
 
@@ -1131,9 +1135,9 @@ Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版
 
 请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
 
+---
 
-
-#### 接入 ChatGLM
+#### 👩‍🎓 接入 ChatGLM
 
 ChatGLM 是由清华开源的离线语言模型，你可以用自己的服务器来运行语言模型。
 
@@ -1165,6 +1169,10 @@ pip install fastapi uvicorn
 # 启动
 python api.py
 ```
+
+
+
+
 
 ## 🦊 加载预设
 
