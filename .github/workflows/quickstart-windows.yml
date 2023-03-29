@@ -68,6 +68,9 @@ jobs:
         7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
         cp C:/tmp_files/wkhtmltox/bin/wkhtmltoimage.exe C:\generated_files\chatgpt\
         
+        echo "Downloading vc_redist.exe..."
+        Invoke-WebRequest -URI https://aka.ms/vs/17/release/vc_redist.x64.exe -O "C:\generated_files\【语音功能依赖】vc_redist.x64.exe"
+        
         echo "Downloading packages..."
         cd C:/generated_files/chatgpt
         python3.11\python.exe C:/generated_files/chatgpt/python3.11/get-pip.py
