@@ -136,8 +136,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                 if config.azure.tts_speech_key:
                     conversation_context.conversation_voice = voice_type_search.group(1).strip()
                     await respond(
-                        f"已切换至 {conversation_context.conversation_voice} 语音！详情参考： "
-                        f"https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices")
+                        f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
                 else:
                     await respond(f"未配置 Azure TTS 账户，无法切换语音！")
                 return
