@@ -226,7 +226,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                 respond_msg += "* chatglm-api - 清华 ChatGLM-6B (本地)\n"
             if len(botManager.bots['poe-web']) > 0:
                 respond_msg += "* sage   - POE Sage 模型\n"
-                respond_msg += "* calude - POE Calude 模型\n"
+                respond_msg += "* claude - POE Claude 模型\n"
                 respond_msg += "* chinchilla - POE ChatGPT 模型\n"
             await respond(respond_msg)
         except PresetNotFoundException:  # 预设不存在

@@ -533,8 +533,8 @@ buffer_delay = 15
 # chatglm-api - 清华 ChatGLM-API 接口
 # sage - POE Sage 模型
 # beaver - POE GPT4 模型
-# calude2 - POE Calude2 模型
-# calude - POE Calude 模型
+# claude2 - POE Claude2 模型
+# claude - POE Claude 模型
 # chinchilla - POE ChatGPT 模型
 # nutria - POE Dragonfly 模型
 default_ai = "chatgpt-web"
