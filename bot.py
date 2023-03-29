@@ -1,13 +1,19 @@
 import os
 import sys
 
+
 sys.path.append(os.getcwd())
 
+import asyncio
 from utils.exithooks import hook
 from loguru import logger
 from constants import config
 
 hook()
+
+# aiohttp issue
+if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if config.onebot:
     logger.info("检测到 Onebot 配置，将以 Onebot 模式启动……")

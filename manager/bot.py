@@ -151,7 +151,7 @@ class BotManager:
         if len(self.bots) < 1:
             logger.error("所有 Bing 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['bing-cookie'])}/{len(self.bing)} 个 Bing 账号！")
-    
+
     def login_bard(self):
         for i, account in enumerate(self.bard):
             logger.info("正在解析第 {i} 个 Bard 账号", i=i + 1)
@@ -175,6 +175,7 @@ class BotManager:
                 return True
             except KeyError:
                 return False
+
         try:
             for i, account in enumerate(self.poe):
                 logger.info("正在解析第 {i} 个 poe web 账号", i=i + 1)
@@ -374,7 +375,8 @@ class BotManager:
         raise Exception("All login method failed")
 
     async def check_api_info(self, account):
-        async with aiohttp.ClientSession(conn_timeout=30, read_timeout=30) as session:
+        async with aiohttp.ClientSession(conn_timeout=30, read_timeout=30, trust_env=True,
+                                         connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             session.headers.add("Authorization", f"Bearer {account.api_key}")
 
             resp = await session.get(f"{openai.api_base}/dashboard/billing/credit_grants", proxy=account.proxy)
@@ -385,7 +387,6 @@ class BotManager:
 
             grant_available = resp.get("total_available")
             grant_used = resp.get("total_used")
-
 
             resp = await session.get(f"{openai.api_base}/dashboard/billing/subscription", proxy=account.proxy)
             resp = await resp.json()
