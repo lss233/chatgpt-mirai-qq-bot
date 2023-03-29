@@ -125,6 +125,8 @@ class OpenAIAPIKey(OpenAIAuthBase):
 class PoeCookieAuth(BaseModel):
     p_b: str
     """登陆 poe.com 后 Cookie 中 p_b 的值"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
 
 
 class BingCookiePath(BaseModel):

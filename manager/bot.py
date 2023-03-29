@@ -179,7 +179,9 @@ class BotManager:
         try:
             for i, account in enumerate(self.poe):
                 logger.info("正在解析第 {i} 个 poe web 账号", i=i + 1)
-                bot = PoeClient(token=account.p_b)
+                if proxy := self.__check_proxy(account.proxy):
+                    account.proxy = proxy
+                bot = PoeClient(token=account.p_b, proxy=account.proxy)
                 if poe_check_auth(bot):
                     self.bots["poe-web"].append(bot)
                     logger.success("解析成功！", i=i + 1)
@@ -188,7 +190,7 @@ class BotManager:
             logger.exception(e)
         if len(self.bots["poe-web"]) < 1:
             logger.error("所有 Poe 账号均解析失败！")
-        logger.success(f"成功解析 {len(self.bots['poe-web'])}/{len(self.bing)} 个 poe web 账号！")
+        logger.success(f"成功解析 {len(self.bots['poe-web'])}/{len(self.poe)} 个 poe web 账号！")
 
     def login_yiyan(self):
         for i, account in enumerate(self.yiyan):

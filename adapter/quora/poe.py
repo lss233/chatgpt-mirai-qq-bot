@@ -31,7 +31,7 @@ class PoeAdapter(BotAdapter):
         """获取内部队列"""
         super().__init__(session_id)
         self.session_id = session_id
-        self.poe_bot = poe_bot if poe_bot else PoeBot.ChatGPT
+        self.poe_bot = poe_bot or PoeBot.ChatGPT
         self.poe_client = botManager.pick("poe-web")
 
     async def ask(self, msg: str) -> Generator[str, None, None]:
