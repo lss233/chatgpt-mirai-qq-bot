@@ -694,6 +694,8 @@ ws_url = "http://localhost:8080"
 
 通常来说，使用正向连接模式没有什么优点，因此我们觉得你没有必要对这里的配置进行修改。  
 
+---
+
 ##### OneBot 协议
 
 OneBot 协议可以用于对接 go-cqhttp。
@@ -727,6 +729,8 @@ proxy = "http://localhost:1080"
 manager_chat = 1234567890
 ```
 就可以使用 Telegram 机器人和 AI 聊天！
+
+---
 
 #### 🎧 对接 Discord 机器人
 
@@ -766,7 +770,7 @@ bot_token = "xxx"
 
 接下来介绍每一种 AI 平台的配置方法。  
 
-
+---
 
 #### 🙄 接入 OpenAI
 
@@ -1131,7 +1135,7 @@ Cookie 获取方法：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki
 
 这项设置是每个账号独立的。  
 
-Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
+参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
 
 请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
 
