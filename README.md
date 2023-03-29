@@ -714,6 +714,8 @@ reverse_ws_port = 6555
 
 就可以使用 go-cqhttp 或者其他支持 OneBot 协议的程序和 ChatGPT 聊天！
 
+---
+
 #### ✈ 对接 Telegram 机器人
 
 将 `config.cfg` 中的 `[mirai]` 块删除，然后加入以下配置：
@@ -780,7 +782,7 @@ ChatGPT 分为两种，一种是网页版，另一种是 API 版。
 
 OpenAI 的设置开始于一行  `[openai]` ，随后每个账号的设置开始于一行 `[[openai.accounts]]`。
 
-##### 👨🏻‍💻 网页版
+##### 👨🏻‍💻 接入网页版 OpenAI ChatGPT
 
 网页版即使用 `https://chat.openai.com` 里的 ChatGPT。 
 
@@ -938,9 +940,9 @@ model="text-davinci-002-render-paid"
 * `text-davinci-002-render-paid` - Legacy 模型（Plus 专享）
 * `gpt-4` - GPT 4 模型（Plus 专享）
 
+---
 
-
-##### 💲 API 版
+##### 💲 接入 API 版 OpenAI ChatGPT
 
 **优点**：更快、可以设置参数、可以同时回复多个人、不封号
 
@@ -968,7 +970,7 @@ model="text-davinci-002-render-paid"
 api_endpoint = "https://api.oepnai.com/v1"
 ```
 
-
+  
 
 **2.模型参数**
 
@@ -988,7 +990,7 @@ frequency_penalty = 0.0
 min_tokens = 1000
 ```
 
-
+  
 
 **3.使用代理**
 
@@ -1027,6 +1029,8 @@ cookie_content = 'MUID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; SRCHD=XX=XXXXXX; SRCHUI
 所以我们建议使用国外的 IP。
 
 参考 OpenAI 网页版的 `使用代理` 部分。 
+
+  
 
 **2.Bing 的接入点**
 
@@ -1070,6 +1074,8 @@ Bard Cookie 获取方法：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot
 
 Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
 
+  
+
 ---
 
 #### 😾 接入 Poe
@@ -1110,6 +1116,8 @@ p_b = "V4j***"
 
 参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
 
+  
+
 ---
 
 #### 🤡 接入文心一言
@@ -1138,6 +1146,8 @@ Cookie 获取方法：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki
 参考 OpenAI 网页版的 `使用代理` 部分设置代理。 
 
 请参考这里：[wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)
+
+  
 
 ---
 
@@ -1173,8 +1183,6 @@ pip install fastapi uvicorn
 # 启动
 python api.py
 ```
-
-
 
 
 
