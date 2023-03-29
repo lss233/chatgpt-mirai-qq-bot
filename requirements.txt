@@ -14,7 +14,7 @@ python-markdown-math~=0.8
 pygments~=2.10.0
 imgkit~=1.2.2
 qrcode~=7.4.2
-openai~=0.26.5
+openai
 EdgeGPT==0.1.10.1
 aiohttp~=3.8.3
 selenium~=4.8.0
@@ -33,3 +33,6 @@ python-dateutil
 discord.py
 azure-cognitiveservices-speech
 poe-api~=0.2.0
+IProgress
+llama-index
+nltk

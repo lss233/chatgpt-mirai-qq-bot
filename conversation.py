@@ -15,6 +15,7 @@ from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.ms.bing import BingAdapter
 from adapter.google.bard import BardAdapter
+from adapter.llama_index.bot import LlamaIndexAdapter
 from adapter.openai.api import OpenAIAPIAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from adapter.quora.poe import PoeBot, PoeAdapter
@@ -83,6 +84,8 @@ class ConversationContext:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
         elif _type == 'bard':
             self.adapter = BardAdapter(self.session_id)
+        elif _type == 'llama_index':
+            self.adapter = LlamaIndexAdapter(self.session_id)
         elif _type == 'yiyan':
             self.adapter = YiyanAdapter(self.session_id)
         elif _type == 'chatglm-api':

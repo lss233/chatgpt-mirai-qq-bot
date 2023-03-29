@@ -1,0 +1,31 @@
+命令:你可以在 Wiki 了解机器人的内部命令和用法。
+
+搭建: 如果你在使用的过程中遇到问题，可以看搭建常见问题解答 | FAQ。
+
+对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534
+
+如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
+
+你可以使用这个项目来搭建代理：https://github.com/Ice-Hazymoon/openai-scf-proxy
+
+API 接入点，欢迎在交流群中分享你的接入点: api_endpoint = "https://api.oepnai.com/v1"
+
+这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得默认的 API 回复有些生硬，那么你可以通过调整 GPT 的参数来优化。参数具体含义可以见： https://platform.openai.com/docs/api-reference/completions/create
+
+Bing 的设置开始于一行 [bing] ，随后每个账号的设置开始于一行 [[bing.accounts]]。Cookie 获取方法截止至当前最新的版本， Bing 仅支持 Cookie 的方式登录。如果你的 Cookie 没这么长，那么说明你获取的 Cookie 可能是有问题的。根据社区反馈，中国大陆的 IP 可能无法直接使用 Bing，具体表现为登录失败，提示：Authentication failed. You have not been accepted into the beta。所以我们建议使用国外的 IP。参考 OpenAI 网页版的 使用代理 部分。
+
+Bing 的接入点这项设置是全局生效的（所有账号只需要设置一次）。除了使用代理之外，你还可以通过设置 Bing 接入点的方式来使用 Bing。你可以使用这个项目来搭建接入点：https://github.com/acheong08/EdgeGPT-Proxywss_link = "wss://sydney.bing.com/sydney/ChatHub"
+
+关闭 Bing 的引用链接和猜你想问这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得这两个东西有点烦，可以关闭他们。
+
+Bard 的设置开始于一行 [bard] ，随后每个账号的设置开始于一行 [[bard.accounts]]。Bard Cookie 获取方法：https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/Bard-Cookie-%E8%8E%B7%E5%8F%96%E6%96%B9%E6%B3%95
+
+使用代理这项设置是每个账号独立的。Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版的 使用代理 部分设置代理。
+
+Poe 是由 Quora 提供的 AI 对话平台，在这里你可以免费使用上述各种有门槛的语言模型。Poe 的设置开始于一行 [poe] ，随后每个账号的设置开始于一行 [[poe.accounts]]。Cookie 登录截止至当前最新的版本， Poe 仅支持通过 Cookie 的方式登录。我们只需要 Cookie 中的 p-b 字段。你需要通过电脑浏览器来获得 Poe Cookie，如果你有别的手段能获得 cookie 的话也是可以的。确认能科学上网打开 https://poe.com 并登陆按下 F12，打开开发者工具（DevTools）找到 应用程序 - 存储 或 应用 - 存储 或 存储， 查看Cookie下 https://poe.com 域名下的 "p-b"复制值即可相关设置
+
+接入文心一言的设置开始于一行 [yiyan] ，随后每个账号的设置开始于一行 [[yiyan.accounts]]。网页版 Cookie 登录截止至当前最新的版本， 仅支持通过 Cookie 的方式使用网页版文心一言。请注意：该方法有封号风险，具体原因未知，请自行取舍。Cookie 获取方法：https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B
+
+ChatGLM 是由清华开源的离线语言模型，你可以用自己的服务器来运行语言模型。ChatGLM 的设置开始于一行 [chatglm] ，随后每个账号的设置开始于一行 [[chatglm.accounts]]。API 访问我们使用 ChatGLM 项目中 api.py 所提供的 Web API 来访问 ChatGLM。
+
+如果你想让机器人自动带上某种聊天风格，可以使用预设功能。我们自带了 猫娘 和 正常 两种预设，你可以在 presets 文件夹下了解预设的写法。使用 加载预设 猫娘 来加载猫娘预设。下面是一些预设的小视频，你可以看看效果：MOSS： https://www.bilibili.com/video/av309604568。丁真：https://www.bilibili.com/video/av267013053.小黑子：https://www.bilibili.com/video/av309604568.高启强：https://www.bilibili.com/video/av779555493 关于预设系统的详细教程：Wiki你可以在 Awesome ChatGPT QQ Presets 获取由大家分享的预设。你也可以参考 Awesome-ChatGPT-prompts-ZH_CN 来调教你的 ChatGPT，还可以参考 Awesome ChatGPT Prompts 来解锁更多技能。
