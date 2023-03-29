@@ -375,6 +375,8 @@ p_b = "V4j***"
 show_suggestions = true
 # 在 Bing 的回复前加上引用资料
 show_references = true
+# Bing 的 WS 接入点，中国大陆访问时需要修改
+wss_link = "wss://sydney.bing.com/sydney/ChatHub"
 
 # 第 1 个 Bing 账号
 # 理论上，你可以添加无限多个 Bing 账号。  
@@ -641,7 +643,7 @@ exceed = "已达到额度限制，请等待下一小时继续和我对话。"
 
 ---
 
-### 对接平台
+### 🔌 对接平台
 
 目前，我们支持对接：QQ、Telegram、Discord 三个平台。
 
@@ -748,7 +750,7 @@ bot_token = "xxx"
 
 ---
 
-### AI 平台与多账号支持
+### 🦴 AI 平台与多账号支持
 
 我们所有的 AI 平台都支持多账号登录。  
 
@@ -1042,10 +1044,25 @@ cookie_content = 'MUID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX; SRCHD=XX=XXXXXX; SRCHUI
 
 ```toml
 [bing]
+
 # Bing 的 WS 接入点，欢迎在交流群中分享你的接入点
 wss_link = "wss://sydney.bing.com/sydney/ChatHub"
 ```
 
+**3.关闭 Bing 的引用链接和猜你想问**
+
+这项设置是全局生效的（所有账号只需要设置一次）。 
+
+如果你觉得这两个东西有点烦，可以关闭他们。  
+
+```toml
+[bing]
+
+# 在 Bing 的回复后加上猜你想问
+show_suggestions = false
+# 在 Bing 的回复前加上引用资料
+show_references = false
+```
 ---
 
 #### 🇬 接入 Google Bard

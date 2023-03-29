@@ -44,7 +44,8 @@ class BingAdapter(BotAdapter):
         parsed_content = ''
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
-                                                             conversation_style=self.conversation_style):
+                                                             conversation_style=self.conversation_style,
+                                                             wss_link=config.bing.wss_link):
                 if not final:
                     response = re.sub(r"\[\^\d+\^\]", "", response)
                     if config.bing.show_references:

@@ -162,6 +162,8 @@ class BingAuths(BaseModel):
     """在 Bing 的回复后加上猜你想问"""
     show_references: bool = True
     """在 Bing 的回复前加上引用资料"""
+    wss_link: str = "wss://sydney.bing.com/sydney/ChatHub"
+    """Bing 的接入点"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
 
