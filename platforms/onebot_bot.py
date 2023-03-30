@@ -72,7 +72,7 @@ def transform_message_chain(text: str) -> MessageChain:
     return message_chain
 
 
-async def transform_from_message_chain(chain: MessageChain):
+def transform_from_message_chain(chain: MessageChain):
     result = ''
     for elem in chain:
         if isinstance(elem, Image):
