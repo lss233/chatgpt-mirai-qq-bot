@@ -19,7 +19,7 @@ EdgeGPT==0.1.10.1
 aiohttp~=3.8.3
 selenium~=4.8.3
 OpenAIAuth~=0.3.2
-urllib3~=1.26.14
+urllib3~=1.26.15
 
 requests~=2.28.2
 uuid~=1.30
