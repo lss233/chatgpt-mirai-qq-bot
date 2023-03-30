@@ -91,12 +91,9 @@ def response(event, is_group: bool):
             if not isinstance(resp, MessageChain):
                 resp = MessageChain(resp)
             resp = transform_from_message_chain(resp)
-            if resp.strip() == 0:
-                logger.warning("[OneBot] 似乎没有需要发送出去的消息，忽略本次操作")
-                return
-            if config.response.quote and '[CQ:record,file=' not in resp:  # skip voice
+            if config.response.quote and '[CQ:record,file=' not in str(resp):  # skip voice
                 resp = MessageSegment.reply(event.message_id) + resp
-                return await bot.send(event, resp)
+            return await bot.send(event, resp)
         except Exception as e:
             logger.exception(e)
             logger.warning("原始消息发送失败，尝试通过转发发送")
