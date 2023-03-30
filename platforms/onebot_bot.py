@@ -90,7 +90,7 @@ def response(event, is_group: bool):
         try:
             if not isinstance(resp, MessageChain):
                 resp = MessageChain(resp)
-            resp = await transform_from_message_chain(resp)
+            resp = transform_from_message_chain(resp)
             if config.response.quote and '[CQ:record,file=' not in str(resp):  # skip voice
                 resp = MessageSegment.reply(event.message_id) + resp
             return await bot.send(event, resp)
