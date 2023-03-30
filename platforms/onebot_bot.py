@@ -72,7 +72,7 @@ def transform_message_chain(text: str) -> MessageChain:
     return message_chain
 
 
-def transform_from_message_chain(chain: MessageChain):
+async def transform_from_message_chain(chain: MessageChain):
     result = ''
     for elem in chain:
         if isinstance(elem, Image):
@@ -95,7 +95,7 @@ def response(event, is_group: bool):
         try:
             if not isinstance(resp, MessageChain):
                 resp = MessageChain(resp)
-            resp = transform_from_message_chain(resp)
+            resp = await transform_from_message_chain(resp)
             if config.response.quote and '[CQ:record,file=' not in str(resp):  # skip voice
                 resp = MessageSegment.reply(event.message_id) + resp
             return await bot.send(event, resp)
