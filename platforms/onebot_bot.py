@@ -94,7 +94,7 @@ def response(event, is_group: bool):
             if resp.strip() == 0:
                 logger.warning("[OneBot] 似乎没有需要发送出去的消息，忽略本次操作")
                 return
-            if config.response.quote:
+            if config.response.quote and '[CQ:record,file=' not in resp:  # skip voice
                 resp = MessageSegment.reply(event.message_id) + resp
                 return await bot.send(event, resp)
         except Exception as e:
