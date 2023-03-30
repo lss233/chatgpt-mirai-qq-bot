@@ -9,7 +9,7 @@ loguru~=0.6.0
 asyncio~=3.4.3
 pydantic~=1.10.5
 
-markdown~=3.4.1
+markdown~=3.4.3
 python-markdown-math~=0.8
 pygments~=2.10.0
 imgkit~=1.2.2
