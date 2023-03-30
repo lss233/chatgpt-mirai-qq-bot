@@ -80,6 +80,11 @@ def transform_from_message_chain(chain: MessageChain):
         elif isinstance(elem, Plain):
             result = result + MessageSegment.text(str(elem))
         elif isinstance(elem, Voice):
+            # 音频编码
+            from utils.azure_tts import encode_to_silk
+            elem = Voice(
+                data_bytes=await encode_to_silk(await elem.get_bytes())
+            )
             result = result + MessageSegment.record(f"base64://{elem.base64}")
     return result
 
