@@ -1,15 +1,13 @@
 import datetime
 from typing import Generator, Union
 
-import asyncio
-import janus
 from loguru import logger
 
 from adapter.botservice import BotAdapter
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 
 from constants import config, botManager
-from revChatGPT.typing import Error as V1Error
+from revChatGPT.typings import Error as V1Error
 
 from exceptions import BotRatelimitException, ConcurrentMessageException
 

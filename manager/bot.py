@@ -19,7 +19,7 @@ from poe import Client as PoeClient
 from requests.exceptions import SSLError, RequestException
 from revChatGPT import V1
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
-from revChatGPT.typing import Error as V1Error
+from revChatGPT.typings import Error as V1Error
 from tinydb import TinyDB, Query
 
 import utils.network as network
