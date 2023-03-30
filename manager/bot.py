@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import itertools
 import os
+import time
 import urllib.request
 from typing import List, Dict
 from urllib.parse import urlparse
@@ -291,7 +292,7 @@ class BotManager:
             proxy_addr = urlparse(proxy)
             if not network.is_open(proxy_addr.hostname, proxy_addr.port):
                 raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-            requests.get(self.config.openai.browserless_endpoint + "/api/", proxies={
+            requests.get("http://www.gstatic.com/generate_204", proxies={
                 "https": proxy,
                 "http": proxy
             })
@@ -299,7 +300,6 @@ class BotManager:
             return proxy
         else:
             return openai.proxy
-        return None
 
     def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
         """保存登录缓存"""
@@ -377,6 +377,7 @@ class BotManager:
     async def check_api_info(self, account):
         async with aiohttp.ClientSession(conn_timeout=30, read_timeout=30, trust_env=True,
                                          connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+            timing_start_at = time.time()
             session.headers.add("Authorization", f"Bearer {account.api_key}")
 
             resp = await session.get(f"{openai.api_base}/dashboard/billing/credit_grants", proxy=account.proxy)
@@ -403,13 +404,15 @@ class BotManager:
                 proxy=account.proxy)
             resp = await resp.json()
             total_usage = resp.get("total_usage") / 100
-
+            timing_stop_at = time.time()
+            logger.debug(f"本次查询平均延迟：{round((timing_stop_at - timing_start_at) / 3, 2)}s")
         return grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd
 
     async def __login_openai_apikey(self, account):
         logger.info("尝试使用 api_key 登录中...")
         if proxy := self.__check_proxy(account.proxy):
             openai.proxy = proxy
+            account.proxy = proxy
         logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
 
         grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(
