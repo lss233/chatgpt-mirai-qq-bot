@@ -86,20 +86,27 @@ def transform_from_message_chain(chain: MessageChain):
 
 def response(event, is_group: bool):
     async def respond(resp):
+        logger.debug("[OneBot] 尝试发送消息：" + str(resp))
         try:
             if not isinstance(resp, MessageChain):
                 resp = MessageChain(resp)
             resp = transform_from_message_chain(resp)
-
+            if resp.strip() == 0:
+                logger.warning("[OneBot] 似乎没有需要发送出去的消息，忽略本次操作")
+                return
             if config.response.quote:
                 resp = MessageSegment.reply(event.message_id) + resp
                 return await bot.send(event, resp)
         except Exception as e:
             logger.exception(e)
             logger.warning("原始消息发送失败，尝试通过转发发送")
-            return await bot.call_action("send_group_forward_msg" if is_group else "send_private_forward_msg", group_id=event.group_id, messages=[
-                MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
-            ])
+            return await bot.call_action(
+                "send_group_forward_msg" if is_group else "send_private_forward_msg",
+                group_id=event.group_id,
+                messages=[
+                    MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
+                ]
+            )
 
     return respond
 
@@ -214,6 +221,7 @@ async def _(event: Event):
 @bot.on_message()
 async def _(event: Event):
     pattern = ".查询API余额"
+    event.message = str(event.message)
     if not event.message.strip() == pattern:
         return
     if not event.user_id == config.onebot.manager_qq:
@@ -222,7 +230,7 @@ async def _(event: Event):
     bots = botManager.bots.get("openai-api", [])
     for account in bots:
         tasklist.append(botManager.check_api_info(account))
-    msg = await bot.send(event, "查询中，请稍等……")
+    await bot.send(event, "查询中，请稍等……")
 
     nodes = []
     for account, r in zip(bots, await asyncio.gather(*tasklist)):
@@ -249,6 +257,7 @@ async def _(event: Event):
 async def startup():
     await botManager.login()
     logger.success("启动完毕，接收消息中……")
+
 
 def main():
     bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
