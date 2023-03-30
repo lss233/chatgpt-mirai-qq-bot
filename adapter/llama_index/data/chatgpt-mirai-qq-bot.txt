@@ -1,31 +1,65 @@
-命令:你可以在 Wiki 了解机器人的内部命令和用法。
+介绍：如果你在chatgpt-qq机器人的搭建的过程中遇到问题，请先看搭建常见问题解答:https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85
 
-搭建: 如果你在使用的过程中遇到问题，可以看搭建常见问题解答 | FAQ。
+介绍：对于 Windows 用户，chatgpt-qq机器人的搭建，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534
 
-对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534
+介绍：如果你是手机党，chatgpt-qq机器人的搭建，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
 
-如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
+介绍：你可以使用这个项目来搭建api endpoint代理：https://github.com/Ice-Hazymoon/openai-scf-proxy 。如果是chatgpt-web的接入点，你可以使用这个：https://chatgpt-proxy.lss233.com/api/
 
-你可以使用这个项目来搭建代理：https://github.com/Ice-Hazymoon/openai-scf-proxy
+介绍：openai API 接入点，欢迎在交流群中分享你的接入点: api_endpoint = "https://api.oepnai.com/v1" 。 这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得默认的 API 回复有些生硬，那么你可以通过调整 GPT 的参数来优化。参数具体含义可以见： https://platform.openai.com/docs/api-reference/completions/create
 
-API 接入点，欢迎在交流群中分享你的接入点: api_endpoint = "https://api.oepnai.com/v1"
+介绍：Bing 的设置开始于一行 [bing] ，随后每个账号的设置开始于一行 [[bing.accounts]]。Cookie 获取方法:你需要通过电脑浏览器来获得 Bing Cookie，如果你有别的手段能获得 cookie 的话也是可以的。1.切换到国外节点。2.打开 https://bing.com。3.按下 F12，打开开发者工具（DevTools）。4.找到 Console （或控制台），在一个蓝色的 > 后面输入：document.cookie 并回车。5.复制下一行出现的内容，他们就是你的 Cookie。如果你的 Cookie 没这么长，那么说明你获取的 Cookie 可能是有问题的。根据社区反馈，中国大陆的 IP 可能无法直接使用 Bing，具体表现为登录失败，提示：Authentication failed. You have not been accepted into the beta。所以建议使用国外的 IP。参考 OpenAI 网页版的 使用代理 部分。Bing 的接入点这项设置是全局生效的（所有账号只需要设置一次）。除了使用代理之外，你还可以通过设置 Bing 接入点的方式来使用 Bing。你可以使用这个项目来搭建接入点：https://github.com/acheong08/EdgeGPT-Proxywss_link = "wss://sydney.bing.com/sydney/ChatHub" 。关闭 Bing 的引用链接和猜你想问这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得这两个东西有点烦，可以关闭他们。
 
-这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得默认的 API 回复有些生硬，那么你可以通过调整 GPT 的参数来优化。参数具体含义可以见： https://platform.openai.com/docs/api-reference/completions/create
+介绍：Bard 的设置开始于一行 [bard] ，随后每个账号的设置开始于一行 [[bard.accounts]]。Bard Cookie 获取方法：https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/Bard-Cookie-%E8%8E%B7%E5%8F%96%E6%96%B9%E6%B3%95 。 使用代理这项设置是每个账号独立的。Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版的 使用代理 部分设置代理。
 
-Bing 的设置开始于一行 [bing] ，随后每个账号的设置开始于一行 [[bing.accounts]]。Cookie 获取方法截止至当前最新的版本， Bing 仅支持 Cookie 的方式登录。如果你的 Cookie 没这么长，那么说明你获取的 Cookie 可能是有问题的。根据社区反馈，中国大陆的 IP 可能无法直接使用 Bing，具体表现为登录失败，提示：Authentication failed. You have not been accepted into the beta。所以我们建议使用国外的 IP。参考 OpenAI 网页版的 使用代理 部分。
+介绍：Poe 是由 Quora 提供的 AI 对话平台，在这里你可以免费使用上述各种有门槛的语言模型。Poe 的设置开始于一行 [poe] ，随后每个账号的设置开始于一行 [[poe.accounts]]。Cookie 登录截止至当前最新的版本， Poe 仅支持通过 Cookie 的方式登录。我们只需要 Cookie 中的 p-b 字段。你需要通过电脑浏览器来获得 Poe Cookie，如果你有别的手段能获得 cookie 的话也是可以的。确认能科学上网打开 https://poe.com 并登陆按下 F12，打开开发者工具（DevTools）找到 应用程序 - 存储 或 应用 - 存储 或 存储， 查看Cookie下 https://poe.com 域名下的 "p-b"复制值即可相关设置
 
-Bing 的接入点这项设置是全局生效的（所有账号只需要设置一次）。除了使用代理之外，你还可以通过设置 Bing 接入点的方式来使用 Bing。你可以使用这个项目来搭建接入点：https://github.com/acheong08/EdgeGPT-Proxywss_link = "wss://sydney.bing.com/sydney/ChatHub"
+介绍：接入文心一言的设置开始于一行 [yiyan] ，随后每个账号的设置开始于一行 [[yiyan.accounts]]。网页版 Cookie 登录截止至当前最新的版本， 仅支持通过 Cookie 的方式使用网页版文心一言。请注意：该方法有封号风险，具体原因未知，请自行取舍。Cookie 获取方法：https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B
 
-关闭 Bing 的引用链接和猜你想问这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得这两个东西有点烦，可以关闭他们。
+介绍：ChatGLM 是由清华开源的离线语言模型，你可以用自己的服务器来运行语言模型。ChatGLM 的设置开始于一行 [chatglm] ，随后每个账号的设置开始于一行 [[chatglm.accounts]]。API 访问我们使用 ChatGLM 项目中 api.py 所提供的 Web API 来访问 ChatGLM。
 
-Bard 的设置开始于一行 [bard] ，随后每个账号的设置开始于一行 [[bard.accounts]]。Bard Cookie 获取方法：https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/Bard-Cookie-%E8%8E%B7%E5%8F%96%E6%96%B9%E6%B3%95
+介绍：如果你想让机器人自动带上某种聊天风格，可以使用预设功能。我们自带了 猫娘 和 正常 两种预设，你可以在 presets 文件夹下了解预设的写法。使用 加载预设 猫娘 来加载猫娘预设。下面是一些预设的小视频，你可以看看效果：MOSS： https://www.bilibili.com/video/av309604568。丁真：https://www.bilibili.com/video/av267013053.小黑子：https://www.bilibili.com/video/av309604568.高启强：https://www.bilibili.com/video/av779555493 关于预设系统的详细教程：Wiki你可以在 Awesome ChatGPT QQ Presets 获取由大家分享的预设。你也可以参考 Awesome-ChatGPT-prompts-ZH_CN 来调教你的 ChatGPT，还可以参考 Awesome ChatGPT Prompts 来解锁更多技能。
 
-使用代理这项设置是每个账号独立的。Bard 目前仅允许美国的 IP 访问，所以你可以参考 OpenAI 网页版的 使用代理 部分设置代理。
+介绍：Linux 一键部署教程:为了避免在你的 Linux 服务器上装一大票软件污染环境，我们使用了 Docker 来帮助你管理程序。你需要准备的有：一台版本比较新的 Linux 系统，它可以是 Ubuntu、 CentOS 或者是其他有 Docker 的系统。你的服务器至少需要的软件： curl。0x00 获取最新版本的 Linux 一键部署脚本：打开项目的发布页面：https://github.com/lss233/chatgpt-mirai-qq-bot/releases 。排在最顶部的版本通常旁边有一个蓝色的 Latest 标识，这就说明它是项目的最新版本。你要做的就是复制这里面的命令，然后粘贴到你的 Linux 终端中并回车，它就会开始安装。
 
-Poe 是由 Quora 提供的 AI 对话平台，在这里你可以免费使用上述各种有门槛的语言模型。Poe 的设置开始于一行 [poe] ，随后每个账号的设置开始于一行 [[poe.accounts]]。Cookie 登录截止至当前最新的版本， Poe 仅支持通过 Cookie 的方式登录。我们只需要 Cookie 中的 p-b 字段。你需要通过电脑浏览器来获得 Poe Cookie，如果你有别的手段能获得 cookie 的话也是可以的。确认能科学上网打开 https://poe.com 并登陆按下 F12，打开开发者工具（DevTools）找到 应用程序 - 存储 或 应用 - 存储 或 存储， 查看Cookie下 https://poe.com 域名下的 "p-b"复制值即可相关设置
+介绍：Windows 快速部署教程：如果你想在 Windows 上部署这个项目，那么你将需要：Python 3.11 或以上。如果你想部署成 QQ 机器人，那么还需要 Java、mirai、mirai-console-loader、mirai-api-http 等一大票东西。不过别担心，只要使用 Windows 快速部署包，这些东西都会有的。0x00 获取最新版本的 Windows 快速部署包打开项目的发布页面：https://github.com/lss233/chatgpt-mirai-qq-bot/releases排在最顶部的版本通常旁边有一个蓝色的 Latest 标识，这就说明它是项目的最新版本。你可以在这张卡片的下方找到一个名为 Windows-quickstart-refs.tags.vx.x.x.zip 的文件，其中， x.x.x 为版本号。这就是最新版本的 Windows 快速部署包，点击即可下载。0x01 解压，初始化快速部署包下载完成后，第一件事就是解压。解压完成后，你可以看见一个文件夹。我们需要执行 初始化.cmd 。它会为你安装一些依赖和插件。启动 初始化.cmd 之后的界面如下图所示，你要做的就是按照程序的指示，不断地按回车。随后，一个记事本会被弹出，这是初始化程序想让你填写配置文件。这个时候，你可以参考这里的教程来填写配置文件，完成之后，保存文件，然后关闭记事本，根据程序的指示结束初始化。0x02 首次启动 ChatGPT，首次启动的过程是最艰难的，有 80% 的小白止步于此，但它其实很容易。我们先双击 启动 ChatGPT.cmd ，如果你遇到问题，清参考这个链接来排查：https://darks-organization.gitbook.io/chatgpt-qq/bu-shu-jiao-cheng/kuai-su-bu-shu-jiao-cheng。当你的 ChatGPT 顺利启动以后，保持这个窗口开着别关！接下来，我们启动 Mirai。0x03 首次启动 Mirai。启动 Mirai 的过程是萌新的第二场噩梦，但它其实也很容易。首先，双击 启动 Mirai.cmd，然后等待程序启动完毕。如果你看见了红色的错误提示，无需理会。但是当你看到这样一行日志的时候，说明它已经启动完毕了，接下来我们要做的就是登录 QQ。登录 QQ：选中这个 启动 Mirai.cmd 之后出现的黑色窗口，然后输入下面的命令： login 你机器人的QQ号 你机器人的密码 MACOS 然后轻轻敲一下回车。这个时候，Mirai 就会尝试登录你提供的账号。完成滑动验证：接下来，Mirai 很有可能会要求你提供验证码。这个验证码其实就和你平时登录 QQ 时做的验证码是一样的。 我们用鼠标选中 Mirai 提供的那一段链接，然后按一下 鼠标右键，这段链接就会被复制。打开浏览器，在地址栏中粘贴你复制的链接并回车，你会看见一个这样的页面：接下来，我们对着页面的空白处按下 F12，打开 开发人员工具。切换到 Network（网络） 选项卡，然后在这个框中输入 verify我们放着这个窗口不管，回到刚刚那个网页，把所有的滑动验证完成，直到它不再出现新的验证码。这个时候，回到开发人员工具的窗口，你会发现多出了很多东西：我们选中最后一个点击 然后右键 ticket 后面的那串代码，点击复制。回到  启动 Mirai.cmd的那个黑色窗口，按下鼠标右键，那串代码就会被粘贴到里面。我们按下回车，继续。完成手机短信验证接下来，Mirai 很有可能会让你进行短信验证。通常到了这一步的时候，你离整个项目顺利运行已经不远了。看到下面这段提示后，我们输入 yes 回车。随后你的手机上将会收到一条短信验证码，把验证码中的数字输入到窗口中，然后回车。
 
-接入文心一言的设置开始于一行 [yiyan] ，随后每个账号的设置开始于一行 [[yiyan.accounts]]。网页版 Cookie 登录截止至当前最新的版本， 仅支持通过 Cookie 的方式使用网页版文心一言。请注意：该方法有封号风险，具体原因未知，请自行取舍。Cookie 获取方法：https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B
+介绍：对接 Discord：将 config.cfg 中的 [mirai] 块删除，然后加入以下配置：[discord]# 这里填写你 Discord 机器人的 token bot_token = "xxx" 就可以在 Discord 中和 AI 聊天了！说明书：https://darks-organization.gitbook.io/chatgpt-qq/pei-zhi-wen-jian-jiao-cheng/dui-jie-liao-tian-ping-tai/dui-jie-discord
 
-ChatGLM 是由清华开源的离线语言模型，你可以用自己的服务器来运行语言模型。ChatGLM 的设置开始于一行 [chatglm] ，随后每个账号的设置开始于一行 [[chatglm.accounts]]。API 访问我们使用 ChatGLM 项目中 api.py 所提供的 Web API 来访问 ChatGLM。
+介绍：将 config.cfg 中的 [mirai] 块删除，然后加入以下配置：[telegram] # 这个 token 是找 BotFather 要的 bot_token = "你的 Bot token" # 如果部署在国内，就填这个设置代理 # 不填的话就会读取系统的代理设置 proxy = "http://localhost:1080" 说明书：https://darks-organization.gitbook.io/chatgpt-qq/pei-zhi-wen-jian-jiao-cheng/dui-jie-liao-tian-ping-tai/dui-jie-telegram
 
-如果你想让机器人自动带上某种聊天风格，可以使用预设功能。我们自带了 猫娘 和 正常 两种预设，你可以在 presets 文件夹下了解预设的写法。使用 加载预设 猫娘 来加载猫娘预设。下面是一些预设的小视频，你可以看看效果：MOSS： https://www.bilibili.com/video/av309604568。丁真：https://www.bilibili.com/video/av267013053.小黑子：https://www.bilibili.com/video/av309604568.高启强：https://www.bilibili.com/video/av779555493 关于预设系统的详细教程：Wiki你可以在 Awesome ChatGPT QQ Presets 获取由大家分享的预设。你也可以参考 Awesome-ChatGPT-prompts-ZH_CN 来调教你的 ChatGPT，还可以参考 Awesome ChatGPT Prompts 来解锁更多技能。
+介绍：对接 OneBot：OneBot 协议可以用于对接 go-cqhttp 等机器人框架。如果你要使用 OneBot 协议，那么你就将 config.cfg 中的 [mirai] 块删除，然后加入以下配置：https://darks-organization.gitbook.io/chatgpt-qq/pei-zhi-wen-jian-jiao-cheng/dui-jie-liao-tian-ping-tai/dui-jie-onebot。就可以使用 go-cqhttp 或者其他支持 OneBot 协议的程序和 ChatGPT 聊天！go-cqhttp 的设置教程OneBot 是一个典型的支持 OneBot 协议的平台。如果你在使用 go-cqhttp，那就可以不需要理会 Mirai 了。. 下载 go-cqhttp。你可以在这里下载最新的 go-cqhttp：https://github.com/Mrs4s/go-cqhttp/releases 。2. 初始化 go-cqhttp。解压并启动 go-cqhttp，选 3 后回车，退出程序。3. 设置 go-cqhttp编辑 go-cqhttp 的 config.yaml，设置机器人的 QQ 号和反向 Universal 地址 （这个反向 Universal 地址和前面的 reverse_ws_host 、reverse_ws_port ）有关。这里的 universal 地址的写法如下：如果你的 go-cqhttp 和 chatgpt 在同一台机器上，那么就写： ws://localhost:8566/ws ，这里的 8566 和 reverse_ws_port的值是一样的。如果你的 go-cqhttp 和 chatgpt 在不同的机器上，那么就在上面的基础上，把 localhost 改成你 chatgpt 服务器的 IP 地址。4. 映射 `reverse_ws_port` 端口这一步是使用 Docker 部署的同学才需要做的， Windows 用户可以直接跳过。打开 docker-compose.yaml，在图中的位置加入下面这么一行：https://darks-organization.gitbook.io/chatgpt-qq/pei-zhi-wen-jian-jiao-cheng/dui-jie-liao-tian-ping-tai/dui-jie-onebot 然后执行 docker-compose up -d 更新即可。5. 启动 go-cqhttp，生成配置文件首次启动时我们不要登录 QQ，我们只是需要它生成的 device.json文件。6. 打开 device.json，修改协议找到 protocol，把后面的数字改成 2，然后保存并退出即可。 这会让 go-cqhttp 使用 Android Watch 协议进行登录。7. 启动 go-cqhttp，扫码并登录。注意事项这个go-cqhttp 的扫码登录，是需要你自己的手机 QQ 和 go-cqhttp 在同一个网络环境下的才能成功的。这个问题有三种解决方法：方法一：代理。在你的服务器上搭个代理，让你的手机通过代理再进行扫码。方法二：同步 session.token 文件。在你自己的电脑上用同样的 device.json 来登陆一次 go-cqhttp，扫码登录成功后，把这个 session.token 放到服务器上。方法三：在自己电脑运行。你自己的电脑上跑 go-cqhttp，然后在服务器跑 chatgpt然后通过 go-cqhttp 的反向 websocket 功能，让你电脑上的 go-cqhttp 连接上服务器的 chatgpt 程序。唯一要修改的就是：在第2步里面将 127.0.0.1 就换成你运行 chatgpt 服务器的公网 IP 地址。
+
+介绍：OpenAI 的 ChatGPT 是机器人最早支持的语言模型。说明书：https://darks-organization.gitbook.io/chatgpt-qq/pei-zhi-wen-jian-jiao-cheng/jie-ru-yu-yan-mo-xing/jie-ru-openai-de-chatgpt。ChatGPT 分为两种，一种是网页版，另一种是 API 版。OpenAI 的设置开始于一行 [openai] ，随后每个账号的设置开始于一行 [[openai.accounts]]。
+
+介绍：接入网页版 OpenAI ChatGPT网页版即使用 https://chat.openai.com 里的 ChatGPT。优点：更聪明、不花钱缺点：一次只能回复一个人、可能会封号。机器人提供了多种不同的方式登录网页版，你可以选择你觉得最好用的那一种。登录方式：access_token。这种登录方式被认为是最简单的登录方式。你只需要在 [openai] 的后面加入这一段：浏览器打开并登录登录 ChatGPT打开 https://chat.openai.com/api/auth/session。你可以看见下面一段 JSON 代码，提取出这段代码中的 "eyJhbGciOiJS*****X7GdA" ，填写到配置文件中即可。accessToken 的有效期为 30 天，到期后需要使用同样的方法进行更换。1. 网页版接入点endpoint，这项设置是全局生效的（所有账号只需要设置一次）。我们通过一种特殊的方法访问 OpenAI 的网页版 ChatGPT，这需要我们指定一个网页版的接入点。[openai]# 网页版 ChatGPT 接入点，欢迎在交流群中分享你的接入点 browserless_endpoint = "https://chatgpt-proxy.lss233.com/api/"使用代理。这项设置是每个账号独立的。由于 OpenAI 现在封锁了中国大陆的 IP 请求，因此我们建议在国内部署的同学都使用代理访问。proxy="http://127.0.0.1:1080"如果你不填写代理设置，程序在启动时会使用系统代理中的设置。Docker 部署的用户请注意：你可能需要把 127.0.0.1 修改为宿主机的 IP 地址，以使用宿主机中运行的代理程序。
+
+介绍：接入 API 版 OpenAI ChatGPT：优点：更快、可以设置参数、可以同时回复多个人、不封号缺点：花钱[[openai.accounts]]# 这里填写你在 OpenAI 官网获取的 API Keyapi_key = "sk-xxxx"2.模型参数。这项设置是全局生效的（所有账号只需要设置一次）。如果你觉得默认的 API 回复有些生硬，那么你可以通过调整 GPT 的参数来优化。参数具体含义可以见： https://platform.openai.com/docs/api-reference/completions/create
+
+出现问题：Websocket reconnecting... | mirai-conosle started successfully  处理方法： Mirai 窗口中的红色输出无需理会。 直接看 https://github.com/lss233/chatgpt-mirai-qq-bot/issues/142 。当机器人不回你的时候，有很大一种可能就是 ChatGPT 程序正在不断地输出 Websocket reconnecting 错误信息。Websocket 在这里是做什么用的？让 ChatGPT 接入 QQ 的过程相当复杂，但只要合理的使用现有的开源项目，这个功能就可以实现。在这里，我们主要使用了两个软件：Mirai 和 chatgpt-mirai-qq-bot。Mirai： 负责和 QQ 服务器通信，由 project-mirai 团队开发.chatgpt-mirai-qq-bot： 负责和 ChatGPT 服务器通信，即本项目Mirai 和 chatgpt-mirai-qq-bot 之间则使用 Websocket 进行通信，将两者连接起来。Mirai 端负责实现 Websocket 通信的功能由一个叫做 mirai-api-http 的插件实现。chatgpt-mirai-qq-bot 的 Websocket 通信功能则由一个叫 Aridane 的框架实现。你看见的不断刷新的错误，就是由 Aridane 输出的。即，整个系统的通信流程为：ChatGPT <---> chatgpt-mirai-qq-bot <--内部代码--> Aridane <--Websocket--> mirai-api-http <-- 插件加载--> Mirai <---> QQ .错误出现的原因:要让 ChatGPT 收到来自 QQ 的消息，我们得保证上面的每一个通信环节都没有问题才行。而我们需要关注的地方主要就在chatgpt-mirai-qq-bot <--内部代码--> Aridane <--Websocket--> mirai-api-http <-- 插件加载--> Mirai 这个环节。我们从右往左看，先看 Mirai。1 Mirai：是否加载了 mirai-api-http? 在启动阶段时， Mirai 会输出 mirai-api-http 的运行情况。你可以观察日志，看看有没有这样下图中白框中的文本：listening at http://localhost:8080 ， 如果没有，说明你没有安装 mirai-api-http插件。怎么办？通常来说，如果你使用的是 Linux 一键脚本部署、 Docker-Compose 部署等方法，那么这个 mirai-api-http 肯定是自带了的。唯一的可能就是你自己修改了 Docker 容器里的东西，把它给删了。解决方法：重新部署一次。对于 Windows 快速部署包 的用户，这个 mirai-api-http 也是自带了的，只不过它是在初始化的过程中帮你安装上的。出现这个问题的可能原因是初始化的过程中安装失败了。解决方法：重新执行 初始化.cmd。对于其他方法的用户。这就不属于我的已知范畴了，你应该知道如何解决。 2 mirai-api-http: 配置是否正确？Websocket 连接建立有两要素：服务器地址和端口号服务器的密钥要正确你得保证这两个设置在两个软件之间的设置是一样的。我怎么知道这些设置是不是正确的？通常来说，如果你使用的是 Linux 一键脚本部署、 Docker-Compose 部署等方法，那么正确的地址和端口号应该为： mirai:8080。含义：mirai 是地址，8080 是端口。 这是为了让它监听在 mirai 容器的 8080 端口。对于 Windows 快速部署包 的用户，正确的地址和端口号应该为： localhost:8080。含义：本地机器上的 8080 端口。对于其他方法的用户。这就不属于我的已知范畴了，你应该知道如何解决。那密钥呢？如果你的密钥认证是关闭状态，那么你就可以忽略这个设置。如果你的密钥认证是开启状态，那么你先记住它，因为我们后面要用到。我要怎么修改它？它的设置在 ./mirai/config/net.mamoe.mirai-api-http/setting.yml 这里面，你可以看见。3. Aridane <-> mirai-http-api: QQ 没登录前面说过， Mirai 是用来登录 QQ 的。如果你没有登录机器人账号，那么也会导致这个问题的出现。怎么看？还是刚刚那段日志，我们看最后几句话。如果你看见了：Addon: iTXTech Soyuz未安装 。这说明 QQ 没有登录。怎么办？对于 Linux 一键脚本部署、 Docker-Compose 部署等方法的用户：第一步： 执行 docker-compose run --rm mirai 开启一个临时用来登录的容器第二步：输入登录命令，登录 QQ，完成验证码登录命令的格式是：login 把这里换成你的机器人QQ号 把这里换成你机器人的密码 ANDROID_WATCH 然后回车。例如：login 483059481 030513lss233 ANDROID_WATCH如果你遇到了滑动验证码的问题，请参考：https://github.com/takayama-lily/node-onebot/issues/28第三步：输入自动登录设置命令。要输入两个命令，它们的格式是：autologin add 把这里换成你的机器人QQ号 把这里换成你机器人的密码 然后回车。autologin setConfig 把这里换成你的机器人QQ号 PROTOCOL ANDROID_WATCH 然后回车。第四步：登录成功以后，按下 Ctrl + C 退出临时容器。第五步：执行 docker-compose restart mirai， 重启 mirai 容器对于 Windows 用户，你只需要做第二步和第三步就可以了。4. chatgpt-mirai-qq-bot <-> Aridane: 配置有误。如果前面几步都没问题，那么肯定是这一步有问题。打开 chatgpt-mirai-qq-bot 的配置文件（即 config.cfg），你可以看见这么一段：[mirai]qq = 把这里改成你机器人的QQ号api_key = "1234567890"http_url = "http://localhost:8080"ws_url = "http://localhost:8080"还记得我们在第二步里提到的服务器地址、端口号和密钥吗？它就是填在这里的。如果你的服务器地址是 localhost，端口号是 8080，密钥是 1234567890，那你应该这么填：[mirai]qq = 把这里改成你机器人的QQ号api_key = "1234567890"http_url = "http://localhost:8080"ws_url = "http://localhost:8080"如果你 的服务器地址是mirai，端口号是8080，密钥是1234567890，那你应该这么填：[mirai]qq = 把这里改成你机器人的QQ号api_key = "1234567890"http_url = "http://mirai:8080"ws_url = "http://mirai:8080"如果你的密钥认证是关闭状态，那你可以随便填这里的 api_key。改完以后，重启 chatgpt 即可。Linux 一键部署、Docker-Compose 用户重启方法：执行 docker-compose restart chatgptWindows 重启方法：关掉那个一直在刷 Websocket is reconnecting 的窗口，然后双击 启动ChatGPT.cmd
+
+出现问题：系统找不到指定路径  处理方法：请注意程序不要放在包含中文、空格的路径中。
+
+出现问题：ChatGPT is at Capacity right now 处理方法：服务器过载。出现这个情况时不断刷新即可。
+
+出现问题：The system cannot write to the specified device. 处理方法：此问题常见于 Windows Server 2012 服务器，请使用 Powershell 启动 初始化.cmd。
+
+出现问题：AttributeError: 'OpenAISessionTokenAuth ' object has no attribute 'api_key '  处理方法：此问题出现于 1.6 及以上版本，原因是你没有在配置文件中填写 OpenAI 的 api_key。
+
+出现问题：当前QQ版本过低，请升级至最新版本后再登录。 处理方法：你的 QQ 被腾讯风控了。建议用你现在的这个 IP 挂一段时间 PC QQ。或者换go-cqhttp.
+
+出现问题：ModuleNotFoundError 处理方法： 初始化的过程出现问题，重新初始化。如果初始化没用，可以参考：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/101
+
+出现问题：TimeoutException 处理方法：这个一般是因为在自动登录 OpenAI 的过程中操作超时了，可能的原因有：OpenAI 服务器爆满，打不开。你服务器配置太低，太卡你的网络不好，或者被 Cloudflare 拦了，没打开登录界面。
+
+出现问题：Access denied 处理方法：你现在用的这个 IP 被 OpenAI/你配置的代理 封禁/限流了，换一个 IP。参考：https://github.com/lss233/chatgpt-mirai-qq-bot/issues/294
+
+出现问题：OpenAI登录失败： TLSClientException 处理方法：你的本地代理配置有问题，连接不上 OpenAI 服务器。解决方法：可以换一个代理节点，或者考虑在国外服务器上部署。
+
+出现问题：OpenAI 在返回结果时出现了错误 处理方法：可能是因为你的 OpenAI 账号一小时内发太多消息被限流了。 可以试试登录多个账号。听说 plus 版会好点。
+
+出现问题：配置文件有误：TomlDecodeError 处理方法：这就是你配置文件写得有问题。 看看你的 config.cfg 和 项目 README.md 的有什么差别，改一改。配置文件格式可以在这里进行解析校验：https://pseitz.github.io/toml-to-json-online-converter/
+
+出现问题：TxCaptchaHelper 卡住 处理方法：解决滑动验证码可以参考：https://github.com/takayama-lily/node-onebot/issues/28
+
+出现问题：QQ登录不了可以按以下步骤尝试：1.删除mirai文件夹下bots文件夹；2.将mirai-login-solver-sakura-0.0.8.mirai2.jar文件放入mirai文件夹下plugins文件夹中；3.将mirai文件夹下config/Console/AutoLogin.yml所属账号的配置改成4.打开mirai，尝试重新登录，如果弹出链接的框，就把上面的链接复制到浏览器打开，F12将ticket的值取出填回弹框，点击确认选择短信验证或其他验证方式；5.可以将bots文件夹备份，mirai/config/Console/AutoLogin.yml文件备份，下次可以直接使用备份好的文件登录。

@@ -36,3 +36,4 @@ poe-api~=0.2.0
 IProgress
 llama-index
 nltk
+nest_asyncio

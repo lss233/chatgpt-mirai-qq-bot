@@ -7,7 +7,9 @@ from exceptions import BotOperationNotSupportedException
 from loguru import logger
 import os
 from llama_index import (
-    GPTTreeIndex
+    GPTTreeIndex,
+    GPTKeywordTableIndex,
+    GPTSimpleVectorIndex
 )
 
 
@@ -17,7 +19,9 @@ class LlamaIndexAdapter(BotAdapter):
     def __init__(self, session_id: str = ""):
         self.api_info = botManager.pick('openai-api')
         os.environ['OPENAI_API_KEY'] = self.api_info.api_key
-        self.index = GPTTreeIndex.load_from_disk('./adapter/llama_index/index.json') # 把随地大小便的index.json放在这里
+        # self.index = GPTTreeIndex.load_from_disk('./adapter/llama_index/index.json') # 把随地大小便的index.json放在这里
+        # self.index = GPTKeywordTableIndex.load_from_disk('./adapter/llama_index/index.json')
+        self.index = GPTSimpleVectorIndex.load_from_disk('./adapter/llama_index/github_index.json')
 
 
     async def rollback(self):
@@ -28,7 +32,7 @@ class LlamaIndexAdapter(BotAdapter):
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         try:
-            yield f"{self.index.query(prompt)}"
+            yield f"{self.index.query(prompt, verbose=True)}"
 
         except Exception as e:
             logger.exception(e)
