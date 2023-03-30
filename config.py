@@ -175,13 +175,6 @@ class BardAuths(BaseModel):
     """Bard 的账号列表"""
 
 
-class AzureAuths(BaseModel):
-    tts_speech_key: Optional[str] = None
-    """TTS KEY"""
-    tts_speech_service_region: Optional[str] = None
-    """TTS 地区"""
-
-
 class YiyanCookiePath(BaseModel):
     cookie_content: str
     """"文心一言网站的 Cookie 内容"""
@@ -229,8 +222,25 @@ class TextToImage(BaseModel):
 class TextToSpeech(BaseModel):
     always: bool = False
     """设置后所有的会话都会转语音再发一次"""
-    vits: bool = False
+    engine: str = ""
+
+
+class AzureConfig(BaseModel):
+    tts_speech_key: Optional[str] = None
+    """TTS KEY"""
+    tts_speech_service_region: Optional[str] = None
+    """TTS 地区"""
     default: str = "zh-CN-XiaoyanNeural"
+    """Azure语音默认音色"""
+
+
+class VitsConfig(BaseModel):
+    host_url: str = ""
+    """VITS_API目标主机，目前仅支持基于MoeGoe的API"""
+    role_id: int = 0
+    """VITS角色ID，详情见模型提供"""
+    port: int = 23456
+    """VTIS_API服务器端口"""
 
 
 class Trigger(BaseModel):
@@ -394,7 +404,7 @@ class Config(BaseModel):
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
-    azure: AzureAuths = AzureAuths()
+    azure: AzureConfig = AzureConfig()
     yiyan: YiyanAuths = YiyanAuths()
     chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
@@ -408,6 +418,7 @@ class Config(BaseModel):
     presets: Preset = Preset()
     ratelimit: Ratelimit = Ratelimit()
     baiducloud: BaiduCloud = BaiduCloud()
+    vits: VitsConfig = VitsConfig()
 
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():

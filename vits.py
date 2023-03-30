@@ -1,9 +1,7 @@
-import mirai
 import os
-import platform
-import re
 import requests
 import datetime
+from loguru import logger
 from constants import config
 
 
@@ -12,11 +10,8 @@ def download_voice(base_url, text, lang, id, format, port):
     timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
     filename = f"output_{timestamp}.{format}"
 
-    # 构建跨平台的路径
-
     save_dir = os.path.join('data', 'voice')
 
-    # 如果目录不存在就创建它
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -28,18 +23,18 @@ def download_voice(base_url, text, lang, id, format, port):
     if response.status_code == 200:
         with open(save_path, 'wb') as f:
             f.write(response.content)
-        print(f"文件已保存到：{save_path}")
+        logger.success(f"文件已保存到：{save_path}")
     else:
-        print(f"请求失败：{response.status_code}")
+        logger.error(f"请求失败：{response.status_code}")
     return save_path
 
 
 def response(text, format):
-    base_url = 'http://127.0.0.1'
+    host_url = config.vits.host_url
     lang = 'zh'
-    id = 3
-    port = 23456
-    return download_voice(base_url, text, lang, id, format, port)
+    id = config.vits.role_id
+    port = config.vits.port
+    return download_voice(host_url, text, lang, id, format, port)
 
 
 def vits_api(message: str):

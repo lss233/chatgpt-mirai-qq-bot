@@ -85,6 +85,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         nonlocal conversation_context
         if not conversation_context:
             conversation_context = conversation_handler.current_conversation
+
         # TTS Converting
         async def tts_process_element(elem, conversation_context):
             if not isinstance(elem, Plain) or not str(elem):
@@ -93,7 +94,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             output_file = NamedTemporaryFile(mode='w+b', suffix='.wav', delete=False)
             output_file.close()
             logger.debug(f"开始转换语音 - {output_file.name} - {conversation_context.session_id}")
-            if config.text_to_speech.vits:
+            if "vits" == config.text_to_speech.engine:
                 from vits import vits_api
                 output_file.name = vits_api(str(elem))
                 await _respond(Voice(path=output_file.name))
