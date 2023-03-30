@@ -64,7 +64,7 @@ cls
 
 COPY "%BASE_DIR%\files\scripts\启动ChatGPT.cmd" .
 COPY "%BASE_DIR%\files\scripts\启动Mirai.cmd" .
-ECHO 接下来请先执行 【启动ChatGPT.cmd】，启动程序。
-ECHO 然后执行 【启动Mirai.cmd】 并登录机器人 QQ，然后就可以开始使用了！
+ECHO "接下来请先执行 【启动ChatGPT.cmd】，启动程序。"
+ECHO "然后执行 【启动Mirai.cmd】 并登录机器人 QQ，然后就可以开始使用了！"
 
 pause
