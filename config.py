@@ -24,7 +24,7 @@ class Mirai(BaseModel):
     """Bot 的 QQ 号"""
     manager_qq: int = 0
     """机器人管理员的 QQ 号"""
-    api_key: str
+    api_key: str = "1234567890"
     """mirai-api-http 的 verifyKey"""
     http_url: str = "http://localhost:8080"
     """mirai-api-http 的 http 适配器地址"""
