@@ -60,7 +60,7 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint = "https://bypass.duti.tech/api/"
+    browserless_endpoint = "https://bypass.churchless.tech/api/"
     """自定义无浏览器登录模式的接入点"""
     api_endpoint = "https://api.openai.com/v1"
     """自定义 OpenAI API 的接入点"""
