@@ -1,8 +1,6 @@
 import datetime
 import asyncio
-from typing import Union
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
-from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from config import OpenAIAuthBase
 from utils import QueueInfo
 
@@ -12,7 +10,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     account: OpenAIAuthBase
 
-    bot: Union[V1Chatbot, BrowserChatbot]
+    bot: V1Chatbot
 
     mode: str
 
@@ -55,13 +53,9 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         # self.queue 已交给 MiddlewareConcurrentLock 处理，此处不处理
         self.bot.conversation_id = conversation_id
         self.bot.parent_id = parent_id
-        if self.mode == 'proxy' or self.mode == 'browserless':
-            async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
-                yield r
-            self.update_accessed_at()
-        else:
-            yield await self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
-            self.update_accessed_at()
+        async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
+            yield r
+        self.update_accessed_at()
 
     def __str__(self) -> str:
         return self.bot.__str__()

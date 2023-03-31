@@ -23,7 +23,6 @@ from revChatGPT.typings import Error as V1Error
 from tinydb import TinyDB, Query
 
 import utils.network as network
-from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
     PoeCookieAuth
@@ -241,8 +240,7 @@ class BotManager:
                     bot = await self.__login_V1(account)
                     self.bots["chatgpt-web"].append(bot)
                 elif account.mode == "browser":
-                    bot = self.__login_browser(account)
-                    self.bots["chatgpt-web"].append(bot)
+                    raise Exception("浏览器模式已移除，请使用 browserless 模式。")
                 else:
                     raise Exception("未定义的登录类型：" + account.mode)
                 bot.id = i
