@@ -9,9 +9,11 @@ import os
 from llama_index import (
     GPTTreeIndex,
     GPTKeywordTableIndex,
-    GPTSimpleVectorIndex
+    GPTSimpleVectorIndex,
+    LLMPredictor,
+    ServiceContext,
 )
-
+from langchain import OpenAI
 
 class LlamaIndexAdapter(BotAdapter):
     api_info: OpenAIAPIKey = None
@@ -21,7 +23,9 @@ class LlamaIndexAdapter(BotAdapter):
         os.environ['OPENAI_API_KEY'] = self.api_info.api_key
         # self.index = GPTTreeIndex.load_from_disk('./adapter/llama_index/index.json') # 把随地大小便的index.json放在这里
         # self.index = GPTKeywordTableIndex.load_from_disk('./adapter/llama_index/index.json')
-        self.index = GPTSimpleVectorIndex.load_from_disk('./adapter/llama_index/github_index.json')
+        llm_predictor = LLMPredictor(llm=OpenAI(temperature=0.1, model_name="gpt-4", max_tokens=4000))
+        service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor)
+        self.index = GPTSimpleVectorIndex.load_from_disk('./adapter/llama_index/github_index.json', service_context=service_context)
 
 
     async def rollback(self):
