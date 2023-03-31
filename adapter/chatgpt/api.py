@@ -4,6 +4,7 @@ from typing import Generator, Union
 
 import asyncio
 import janus
+import openai
 from loguru import logger
 from revChatGPT.V3 import Chatbot as OpenAIChatbot
 
@@ -86,7 +87,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.bot.conversation[self.session_id].pop(1)
             logger.debug("清理 token，历史记录遗忘后使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
 
-        os.environ['API_URL'] = config.openai.api_endpoint + '/chat/completions'
+        os.environ['API_URL'] = openai.api_base + '/chat/completions'
         full_response = ''
         queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
         loop = asyncio.get_running_loop()
