@@ -259,5 +259,7 @@ async def startup():
     logger.success("启动完毕，接收消息中……")
 
 
-def main():
+def main(multi_threads=False):
+    if multi_threads:
+        asyncio.set_event_loop(asyncio.new_event_loop())
     bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)

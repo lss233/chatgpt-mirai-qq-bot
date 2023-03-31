@@ -298,5 +298,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         raise ExecutionStop()
 
 
-def main():
+def main(multi_threads=False):
+    if multi_threads:
+        asyncio.set_event_loop(asyncio.new_event_loop())
     app.launch_blocking()

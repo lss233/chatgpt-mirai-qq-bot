@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 
@@ -79,5 +80,7 @@ async def on_message(message):
     await on_message_event(message)
 
 
-def main():
+def main(multi_threads=False):
+    if multi_threads:
+        asyncio.set_event_loop(asyncio.new_event_loop())
     bot.run(config.discord.bot_token)

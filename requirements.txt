@@ -1,3 +1,4 @@
+flask[async]~=2.2.3
 graia-ariadne==0.11.2
 graiax-silkcoder
 revChatGPT==4.0.5
@@ -32,4 +33,5 @@ undetected_chromedriver
 python-dateutil
 discord.py
 azure-cognitiveservices-speech
-poe-api~=0.2.2
+poe-api~=0.2.4
+
