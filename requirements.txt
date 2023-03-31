@@ -14,7 +14,7 @@ python-markdown-math~=0.8
 pygments~=2.10.0
 imgkit~=1.2.2
 qrcode~=7.4.2
-openai
+openai~=0.27.2
 EdgeGPT==0.1.10.1
 aiohttp~=3.8.3
 selenium~=4.8.0
@@ -37,3 +37,4 @@ IProgress
 llama-index
 nltk
 nest_asyncio
+httpx
