@@ -101,6 +101,10 @@ class BotManager:
                 V1.BASE_URL = self.config.openai.browserless_endpoint or V1.BASE_URL
             logger.info(f"当前的 browserless_endpoint 为：{V1.BASE_URL}")
 
+            if V1.BASE_URL == 'https://bypass.duti.tech/api/':
+                logger.error("检测到你还在使用旧的 browserless_endpoint，已为您切换。")
+                V1.BASE_URL = "https://bypass.churchless.tech/api/"
+
             if not V1.BASE_URL.endswith("api/"):
                 logger.warning(
                     f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
