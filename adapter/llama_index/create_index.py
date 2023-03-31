@@ -11,8 +11,6 @@ from langchain import OpenAI
 import os
 import nest_asyncio
 
-os.environ['OPENAI_API_KEY'] = "xxx"
-
 # load from directory
 #documents = SimpleDirectoryReader('./data').load_data() # 随地大小便
 #llm_predictor = LLMPredictor(llm=OpenAI(temperature=0.7, model_name="gpt-4", max_tokens=4000))
@@ -23,7 +21,7 @@ os.environ['OPENAI_API_KEY'] = "xxx"
 
 # load from github
 nest_asyncio.apply()
-github_token = "xxx"
+github_token = os.environ['GITHUB_TOKEN']
 owner = "lss233"
 repo = "chatgpt-mirai-qq-bot"
 branch = "browser-version"
