@@ -60,9 +60,9 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint = "https://bypass.churchless.tech/api/"
+    browserless_endpoint: Optional[str] = None
     """自定义无浏览器登录模式的接入点"""
-    api_endpoint = "https://api.openai.com/v1"
+    api_endpoint: Optional[str] = None
     """自定义 OpenAI API 的接入点"""
 
     gpt3_params: OpenAIGPT3Params = OpenAIGPT3Params()
