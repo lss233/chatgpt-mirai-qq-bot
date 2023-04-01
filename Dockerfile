@@ -15,7 +15,7 @@ RUN apt-get update && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /app
+RUN mkdir -p /app && touch /tmp/log.txt
 WORKDIR /app
 
 COPY requirements.txt /app
