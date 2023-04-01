@@ -23,6 +23,7 @@ from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
 
 from utils.azure_tts import synthesize_speech
+from utils.text_to_speech import get_tts_voice
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
@@ -87,38 +88,11 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             conversation_context = conversation_handler.current_conversation
 
         # TTS Converting
-        async def tts_process_element(elem, conversation_context):
-            if not isinstance(elem, Plain) or not str(elem):
-                return
+        if conversation_context.conversation_voice and isinstance(msg, MessageChain):
+            for elem in msg:
+                await _respond(await get_tts_voice(elem, conversation_context))
 
-            output_file = NamedTemporaryFile(mode='w+b', suffix='.wav', delete=False)
-            output_file.close()
-            logger.debug(f"开始转换语音 - {output_file.name} - {conversation_context.session_id}")
-            if "vits" == config.text_to_speech.engine:
-                from utils.vits import VitsAPI
-                output_file.name = await VitsAPI.vits_api(str(elem))
-                await _respond(Voice(path=output_file.name))
-                logger.debug(f"语音转换完成 - {output_file.name} - {conversation_context.session_id}")
-            elif await synthesize_speech(
-                    str(elem),
-                    output_file.name,
-                    conversation_context.conversation_voice
-            ):
-                await _respond(Voice(path=output_file.name))
-                logger.debug(f"语音转换完成 - {output_file.name} - {conversation_context.session_id}")
-            try:
-                os.unlink(output_file.name)
-                logger.debug(f"删除临时文件 - {output_file.name} - {conversation_context.session_id}")
-            except:
-                pass
-
-        async def tts_process_message(msg, conversation_context):
-            if conversation_context.conversation_voice and isinstance(msg, MessageChain):
-                for elem in msg:
-                    await tts_process_element(elem, conversation_context)
-            return ret
-
-        await tts_process_message(msg, conversation_context)
+        return ret
 
     async def request(_session_id, prompt: str, conversation_context, _respond):
         try:

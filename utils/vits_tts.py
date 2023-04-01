@@ -109,7 +109,7 @@ class VitsAPI:
             return self.save_voice_file(content, format)
 
     async def process_message(self, message):
-        if config.mirai:
+        if config.mirai or config.onebot:
             output_file = await self.response(message, "silk")
         else:
             output_file = await self.response(message, "wav")
