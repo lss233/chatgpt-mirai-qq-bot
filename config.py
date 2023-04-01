@@ -240,7 +240,7 @@ class AzureConfig(BaseModel):
 class VitsConfig(BaseModel):
     api_url: str = ""
     """VITS API 地址，目前仅支持基于MoeGoe的API"""
-    lang: str = "mix"
+    lang: str = "zh"
     """VITS_API目标语言"""
     speed: float = 1.4
     """VITS语言语速"""

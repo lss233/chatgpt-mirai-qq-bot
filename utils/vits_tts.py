@@ -56,24 +56,14 @@ class VitsAPI:
                 logger.error(f"请求失败：{str(e)}")
                 return None
 
-    def save_voice_file(self, content, format):
-        now = datetime.datetime.now()
-        timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
-        filename = f"output_{timestamp}.{format}"
-
-        save_dir = os.path.join('voicedata')
-
-        if not os.path.exists(save_dir):
-            os.makedirs(save_dir)
-
-        save_path = os.path.join(save_dir, filename)
+    def save_voice_file(self, content, save_path):
 
         try:
             with open(save_path, 'wb') as f:
                 f.write(content)
-            logger.success(f"文件已保存到：{save_path}")
+            logger.success(f"[VITS TTS] 文件已保存到：{save_path}")
         except IOError as e:
-            logger.error(f"文件写入失败：{str(e)}")
+            logger.error(f"[VITS TTS] 文件写入失败：{str(e)}")
             return None
 
         return save_path
@@ -102,22 +92,22 @@ class VitsAPI:
 
         return matched_text
 
-    async def response(self, text, format):
+    async def response(self, text, format, path):
         text = self.linguistic_process(text)
         content = await self.get_voice_data(text, self.lang, format)
         if content is not None:
-            return self.save_voice_file(content, format)
+            return self.save_voice_file(content, path)
 
-    async def process_message(self, message):
+    async def process_message(self, message, path):
         if config.mirai or config.onebot:
-            output_file = await self.response(message, "silk")
+            output_file = await self.response(message, "silk", path)
         else:
-            output_file = await self.response(message, "wav")
+            output_file = await self.response(message, "wav", path)
 
         return output_file
 
     @staticmethod
-    async def vits_api(message: str):
+    async def vits_api(message: str, path: str):
         vits_api_instance = VitsAPI()
         await vits_api_instance.initialize()
-        return await vits_api_instance.process_message(message)
+        return await vits_api_instance.process_message(message, path)

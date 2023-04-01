@@ -20,7 +20,9 @@ async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
     logger.debug(f"[TextToSpeech] 开始转换语音 - {output_file.name} - {conversation_context.session_id}")
     if "vits" == config.text_to_speech.engine:
         from utils.vits_tts import VitsAPI
-        output_file.name = await VitsAPI.vits_api(str(elem))
+        if config.mirai or config.onebot:
+            output_file.name = output_file.name + ".silk"
+        await VitsAPI.vits_api(str(elem), output_file.name)
         logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
         return Voice(path=output_file.name)
     elif "azure" == config.text_to_speech.engine:
