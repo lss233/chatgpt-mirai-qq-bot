@@ -1,6 +1,5 @@
 import os
 import re
-import asyncio
 import datetime
 from loguru import logger
 from constants import config
@@ -12,9 +11,7 @@ __all__ = ['VitsAPI']
 
 class VitsAPI:
     def __init__(self):
-        self.host_url = config.vits.host_url
         self.lang = config.vits.lang
-        self.port = config.vits.port
         self.id = None
         self.speed = config.vits.speed
 
@@ -25,7 +22,7 @@ class VitsAPI:
         return any(str(given_id) in item for item in json_array)
 
     async def voice_speakers_check(self):
-        url = f"{self.host_url}:{self.port}/voice/speakers"
+        url = f"{config.vits.api_url}/speakers"
         timeout = ClientTimeout(total=10)
 
         async with ClientSession(timeout=timeout) as session:
@@ -45,7 +42,7 @@ class VitsAPI:
                 return integer_number
 
     async def get_voice_data(self, text, lang, format):
-        url = f"{self.host_url}:{self.port}/voice?text={text}&lang={lang}&id={self.id}&format={format}"
+        url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={format}"
 
         timeout = ClientTimeout(total=10)
         async with ClientSession(timeout=timeout) as session:
