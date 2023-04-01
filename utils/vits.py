@@ -13,7 +13,6 @@ class VitsAPI:
     def __init__(self):
         self.lang = config.vits.lang
         self.id = None
-        self.speed = config.vits.speed
 
     async def initialize(self):
         self.id = await self.voice_speakers_check()
@@ -41,7 +40,7 @@ class VitsAPI:
                 return integer_number
 
     async def get_voice_data(self, text, lang, format):
-        url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={format}"
+        url = f"{config.vits.api_url}?text=[LENGTH={config.vits.speed}]{text}&lang={lang}&id={self.id}&format={format}"
 
         async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             try:
