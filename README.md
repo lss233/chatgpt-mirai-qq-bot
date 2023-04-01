@@ -1,6 +1,14 @@
-# ChatGPT Mirai QQ Bot
+<p align="center">
+  <h3 align="center">ChatGPT QQ Bot</h3>
+  <p align="center">
+    一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！
+    <br/>
+    <br/>
+    <a href="https://darks-organization.gitbook.io/chatgpt-qq/"><strong>查看使用教程 »</strong></a>
+    <br/>
+  </p>
+</p>
 
-**一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！**  
 
 ![Github stars](https://badgen.net/github/stars/lss233/chatgpt-mirai-qq-bot?icon=github&label=stars)
 [![Docker build latest](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml/badge.svg?branch=browser-version)](https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml)
@@ -10,24 +18,22 @@
 
 ***
 
-如果你自己也有做机器人的想法，可以看看下面这些项目：
- - [Ariadne](https://github.com/GraiaProject/Ariadne) - 一个优雅且完备的 Python QQ 机器人框架 （主要是这个 ！！！）
- - [mirai-api-http](https://github.com/project-mirai/mirai-api-http) - 提供HTTP API供所有语言使用 mirai QQ 机器人
- - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT) - 非官方 ChatGPT Python 支持库  
+* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [QQ 群](https://jq.qq.com/?_wv=1027&k=XbGuxdTu) 。  
+  加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
+  如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
+* [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
-本项目基于以上项目开发，所以你可以给他们也点个 star ！
+![Preview](.github/preview.png)
 
 
 **⚡ 支持**   
-* [x] 文字转图片发送  
-* [x] 群聊回复引用
+* [x] 图片发送
 * [x] 关键词触发回复
-* [x] 正向代理
 * [x] 多账号支持
-* [x] 支持接入百度云内容审核（主要是防封）
-* [x] 指定用户/群组额度限制 
-* [x] 预设人格初始化
-* [x] 支持 Mirai、 go-cqhttp、 Telegram Bot
+* [x] 百度云内容审核
+* [x] 额度限制 
+* [x] 预设人格初
+* [x] 支持 Mirai、 go-cqhttp、 Telegram、Discord  
 * [x] 支持 ChatGPT 网页版
 * [x] 支持 ChatGPT Plus
 * [x] 支持 ChatGPT API
@@ -37,34 +43,24 @@
 * [x] 支持 文心一言 网页版
 * [x] 支持 ChatGLM-6B 本地版
 
-**平台兼容情况**  
+**多平台兼容**  
 
 不仅仅是 Mirai， 我们支持多种平台。  
 
-| 平台       | 群聊回复 | 私聊回复 | 条件触发 | 管理员指令 | 绘图 | 语音回复 |
-| -------- | ---- | ---- | ---- | ----- | -- |------|
-| Mirai    | 支持   | 支持   | 支持   | 支持    | 支持 | 支持   |
-| OneBot   | 支持   | 支持   | 支持   | 支持    | 支持 | 支持   |
-| Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持 | 支持   |
-| Discord  | 支持   | 支持   | 部分支持 | 不支持   | 支持 | 支持   |
+| 平台       | 群聊回复 | 私聊回复 | 条件触发 | 管理员指令 | 绘图  | 语音回复 |
+|----------|------|------|------|-------|-----|------|
+| Mirai    | 支持   | 支持   | 支持   | 支持    | 支持  | 支持   |
+| OneBot   | 支持   | 支持   | 支持   | 支持    | 支持  | 支持   |
+| Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持  | 支持   |
+| Discord  | 支持   | 支持   | 部分支持 | 不支持   | 支持  | 支持   |
 
-* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [（QQ 群 已满）](https://jq.qq.com/?_wv=1027&k=voXtxBSw) 。  
-  加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
-  如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。  
-* [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
-
-![Preview](.github/preview.png)
 
 ## 🐎 命令
 
-你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/) 了解机器人的内部命令和用法。  
+**你可以在 [Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/) 了解机器人的内部命令。**  
 
 
 ## 🔧 搭建
-
-如果你在使用的过程中遇到问题，可以看[**搭建常见问题解答 | FAQ**](https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85)。   
-
-对于 Windows 用户，此处有一个视频教程供你参考：https://www.bilibili.com/video/av991984534  
 
 如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
 
@@ -142,7 +138,7 @@ cd chatgpt-mirai-qq-bot
 pip3 install -r requirements.txt
 ```
 
-3. 参照下文调整配置文件。
+3. 参照项目文档调整配置文件。
 
 
 4. 启动 bot.
@@ -150,13 +146,6 @@ pip3 install -r requirements.txt
 python3 bot.py
 ```
 </details>
-
-
-
-## ⚙ 配置与使用
-
-请移步至我们的项目文档来了解如何编写配置文件和使用机器人：[项目文档](https://darks-organization.gitbook.io/chatgpt-qq/)
-
 
 ## 🦊 加载预设
 
@@ -199,6 +188,14 @@ python3 bot.py
 **提示**：在 Windows 平台上使用语音功能需要安装最新的 VC 运行库，你可以在[这里](https://learn.microsoft.com/zh-CN/cpp/windows/latest-supported-vc-redist?view=msvc-170)下载。`
 
 ## 🎈 相似项目
+
+如果你自己也有做机器人的想法，可以看看下面这些项目：
+ - [Ariadne](https://github.com/GraiaProject/Ariadne) - 一个优雅且完备的 Python QQ 机器人框架 （主要是这个 ！！！）
+ - [mirai-api-http](https://github.com/project-mirai/mirai-api-http) - 提供HTTP API供所有语言使用 mirai QQ 机器人
+ - [Reverse Engineered ChatGPT by OpenAI](https://github.com/acheong08/ChatGPT) - 非官方 ChatGPT Python 支持库  
+
+本项目基于以上项目开发，所以你可以给他们也点个 star ！
+
 
 除了我们以外，还有这些很出色的项目：  
 
