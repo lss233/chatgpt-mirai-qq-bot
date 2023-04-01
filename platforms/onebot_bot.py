@@ -256,6 +256,40 @@ async def _(event: Event):
         await bot.call_action("send_private_forward_msg", user_id=event.user_id, messages=nodes)
 
 
+@bot.on_message()
+async def _(event: Event):
+    pattern = ".预设列表"
+    event.message = str(event.message)
+    if not event.message.strip() == pattern:
+        return
+
+    if config.presets.hide and not event.user_id == config.onebot.manager_qq:
+        return await bot.send(event, "您没有权限执行这个操作")
+    nodes = []
+    for keyword, path in config.presets.keywords.items():
+        try:
+            with open(path) as f:
+                preset_data = f.read().replace("\n\n", "\n=========\n")
+            answer = f"预设名：{keyword}\n" + preset_data
+
+            node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
+            nodes.append(node)
+        except:
+            pass
+
+    if len(nodes) == 0:
+        await bot.send(event, "没有查询到任何预设！")
+        return
+    try:
+        if event.group_id:
+            await bot.call_action("send_group_forward_msg", group_id=event.group_id, messages=nodes)
+        else:
+            await bot.call_action("send_private_forward_msg", user_id=event.user_id, messages=nodes)
+    except Exception as e:
+        logger.exception(e)
+        await bot.send(event, "消息发送失败！请在私聊中查看。")
+
+
 @bot.on_startup
 async def startup():
     await botManager.login()

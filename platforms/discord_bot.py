@@ -20,6 +20,7 @@ intents.presences = False
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+
 async def on_message_event(message: discord.Message) -> None:
     if message.author == bot.user:
         return

@@ -385,6 +385,8 @@ class Preset(BaseModel):
     keywords: dict[str, str] = dict()
     loaded_successful: str = "预设加载成功！"
     scan_dir: str = "./presets"
+    hide: bool = False
+    """是否禁止使用其他人 .预设列表 命令来查看预设"""
 
 
 class Ratelimit(BaseModel):

@@ -23,7 +23,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     if type == 'group' and (
             bot_username not in update.message.text and (
-                update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)
+            update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)
     ):
         logger.debug(f"忽略消息（未满足匹配规则）: {update.message.text} ")
         return
@@ -79,20 +79,34 @@ async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await msg.edit_text(answer)
 
 
+async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if config.presets.hide and not update.message.from_user.id == config.telegram.manager_chat:
+        return await update.message.reply_text("您没有权限执行这个操作")
+    for keyword, path in config.presets.keywords.items():
+        try:
+            with open(path) as f:
+                preset_data = f.read().replace("\n\n", "\n=========\n")
+            answer = f"预设名：{keyword}\n" + preset_data
+            await update.message.reply_text(answer)
+        except:
+            pass
+
+
 async def bootstrap() -> None:
     """Set up the application and a custom webserver."""
     app = ApplicationBuilder() \
         .proxy_url(config.telegram.proxy or openai.proxy) \
         .token(config.telegram.bot_token) \
-        .connect_timeout(30)\
-        .read_timeout(30)\
-        .write_timeout(30)\
+        .connect_timeout(30) \
+        .read_timeout(30) \
+        .write_timeout(30) \
         .get_updates_request(HTTPXRequest(http_version="1.1")) \
         .http_version('1.1') \
         .build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
     app.add_handler(CommandHandler("check_api", on_check_api))
+    app.add_handler(CommandHandler("presets", on_check_presets_list))
     await app.initialize()
     await botManager.login()
     await app.start()

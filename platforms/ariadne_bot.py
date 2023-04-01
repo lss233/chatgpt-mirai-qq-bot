@@ -190,12 +190,12 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 @app.broadcast.receiver(AccountLaunch)
 async def start_background():
     try:
-        logger.info("OpenAI 服务器登录中……")
+        logger.info("ChatGPT for QQ 登录账号中……")
         await botManager.login()
     except:
-        logger.error("OpenAI 服务器登录失败！")
+        logger.error("ChatGPT for QQ 登录账号失败！")
         exit(-1)
-    logger.info("OpenAI 服务器登录成功")
+    logger.info("ChatGPT for QQ 登录账号成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
     if config.mirai.reverse_ws_port:
         logger.info("[提示] 当前为反向 ws 模式，请确保你的 mirai api http 设置了正确的 reverse-ws adapter 配置")
@@ -257,6 +257,39 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
         current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         return await app.send_message(event,
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
+    finally:
+        raise ExecutionStop()
+
+
+@cmd.command(".预设列表")
+async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
+    try:
+        if config.presets.hide and not sender.id == config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        nodes = []
+        for keyword, path in config.presets.keywords.items():
+            try:
+                with open(path) as f:
+                    preset_data = f.read().replace("\n\n", "\n=========\n")
+                answer = f"预设名：{keyword}\n" + preset_data
+
+                node = ForwardNode(
+                    target=config.mirai.qq,
+                    name="ChatGPT",
+                    message=MessageChain(Plain(answer)),
+                    time=datetime.datetime.now()
+                )
+                nodes.append(node)
+            except:
+                pass
+
+        if len(nodes) == 0:
+            await app.send_message(event, "没有查询到任何预设")
+            return
+        await app.send_message(event, MessageChain(Forward(nodes)))
+    except Exception as e:
+        logger.exception(e)
+        await app.send_message(event, MessageChain("消息发送失败！请在私聊中查看。"))
     finally:
         raise ExecutionStop()
 
