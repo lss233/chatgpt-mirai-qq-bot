@@ -244,6 +244,8 @@ class VitsConfig(BaseModel):
     """VITS_API目标语言"""
     speed: float = 2.5
     """VITS语言语速"""
+    timeout: int = 30
+    """语音生成超时时间"""
 
 
 class Trigger(BaseModel):

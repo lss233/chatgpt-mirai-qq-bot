@@ -23,9 +23,8 @@ class VitsAPI:
 
     async def voice_speakers_check(self):
         url = f"{config.vits.api_url}/speakers"
-        timeout = ClientTimeout(total=10)
 
-        async with ClientSession(timeout=timeout) as session:
+        async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             async with session.post(url=url) as res:
                 json_array = await res.json()
 
@@ -44,14 +43,16 @@ class VitsAPI:
     async def get_voice_data(self, text, lang, format):
         url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={format}"
 
-        timeout = ClientTimeout(total=10)
-        async with ClientSession(timeout=timeout) as session:
+        async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             try:
                 async with session.get(url) as response:
                     if response.status != 200:
                         logger.error(f"请求失败：{response.status}")
                         return None
                     return await response.read()
+            except TimeoutError as e:
+                logger.error(f"请求语音超时：{text}")
+                return None
             except Exception as e:
                 logger.error(f"请求失败：{str(e)}")
                 return None
