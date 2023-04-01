@@ -119,7 +119,10 @@ async def _(event: Event):
     try:
         msg = await FriendTrigger(chain, None)
     except:
+        logger.debug(f"丢弃私聊消息：{event.message}（原因：不符合触发前缀）")
         return
+
+    logger.debug(f"私聊消息：{event.message}")
 
     try:
         await handle_message(
@@ -148,7 +151,10 @@ async def _(event: Event):
         for it in GroupTrigger:
             chain = await it(chain, event)
     except:
+        logger.debug(f"丢弃群聊消息：{event.message}（原因：不符合触发前缀）")
         return
+
+    logger.debug(f"群聊消息：{event.message}")
 
     await handle_message(
         response(event, True),

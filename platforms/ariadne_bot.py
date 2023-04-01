@@ -62,12 +62,6 @@ async def response_as_text(target: Union[Friend, Group], source: Source, respons
 
 def response(target: Union[Friend, Group], source: Source):
     async def respond(msg: AriadneBaseModel):
-        # 音频编码
-        if isinstance(msg, Voice):
-            from utils.azure_tts import encode_to_silk
-            msg = Voice(
-                data_bytes=await encode_to_silk(await msg.get_bytes())
-            )
         # 如果是非字符串
         if not isinstance(msg, Plain) and not isinstance(msg, str):
             event = await app.send_message(
@@ -130,15 +124,22 @@ def response(target: Union[Friend, Group], source: Source):
                 quote=source if config.response.quote else False
             )
         return event
+
     return respond
 
 
-FriendTrigger = Annotated[MessageChain, DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)]
+FriendTrigger = DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)
 
 
 @app.broadcast.receiver("FriendMessage", priority=19)
 async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
-                                  chain: FriendTrigger):
+                                  chain: MessageChain):
+    try:
+        chain = await FriendTrigger(chain, None)
+    except:
+        logger.debug(f"丢弃私聊消息：{chain.display}（原因：不符合触发前缀）")
+        return
+
     if target.id == config.mirai.qq:
         return
     if chain.display.startswith("."):

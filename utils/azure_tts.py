@@ -16,7 +16,8 @@ except ImportError as e:
     async def encode_to_silk(a=None):
         logger.warning("警告：Silk 转码模块无法加载，语音可能无法正常播放，请安装最新的 vc_redist 运行库。")
         return a
-    asyncio.run(encode_to_silk())
+    if config.text_to_speech.engine == 'azure':
+        asyncio.run(encode_to_silk())
 
 
 try:
@@ -57,4 +58,5 @@ except FileNotFoundError as e:
         logger.error("参考链接：")
         logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/447")
         return None
-    asyncio.run(synthesize_speech())
+    if config.text_to_speech.engine == 'azure':
+        asyncio.run(synthesize_speech())

@@ -43,7 +43,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         if isinstance(msg, Image):
             return await update.message.reply_photo(photo=await msg.get_bytes())
         if isinstance(msg, Voice):
-            await update.message.reply_audio(audio=await msg.get_bytes())
+            await update.message.reply_audio(audio=await msg.get_bytes(), title="Voice")
             return
 
     await handle_message(
