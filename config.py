@@ -242,7 +242,7 @@ class VitsConfig(BaseModel):
     """VITS API 地址，目前仅支持基于MoeGoe的API"""
     lang: str = "mix"
     """VITS_API目标语言"""
-    speed: float = 2.5
+    speed: float = 1.4
     """VITS语言语速"""
     timeout: int = 30
     """语音生成超时时间"""
