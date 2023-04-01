@@ -9,27 +9,28 @@ from requests.exceptions import RequestException
 import requests
 
 
-def voice_speakers_check(id: int):
-    url = "http://127.0.0.1:23456/voice/speakers"
+def check_id_exists(json_array, given_id):
+    for item in json_array:
+        if str(given_id) in item:
+            return True
+    return False
 
+
+def voice_speakers_check(host_url, port, id: int):
+    url = f"{host_url}:{port}/voice/speakers"
     res = requests.post(url=url)
-    json_data = res.json()
+    json_array = res.json()
 
-    # 遍历JSON数组，检查ID是否存在
-    id_found = False
-    for item in json_data:
-        if str(id) in item.values():
-            id_found = True
-            break
+    result = check_id_exists(json_array, id)
 
     # 如果ID不存在，抛出异常
-    if not id_found:
-        raise Exception("ID not found in JSON array")
+    if not result:
+        raise Exception("不存在该语音音色，请检查配置文件")
 
     return id
 
 
-def download_voice(base_url, text, lang, id, format, port):
+def download_voice(base_url, text, lang, id, format, port, speed):
     now = datetime.datetime.now()
     timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
     filename = f"output_{timestamp}.{format}"
@@ -88,11 +89,12 @@ def linguistic_process(text: str, lang: str):
 
 def response(text, format):
     host_url = config.vits.host_url
-    lang = 'mix'
-    id = voice_speakers_check(config.vits.role_id)
+    lang = config.vits.lang
     port = config.vits.port
-    text = linguistic_process(text)
-    return download_voice(host_url, text, lang, id, format, port)
+    id = voice_speakers_check(host_url, port, config.vits.role_id)
+    text = linguistic_process(text, lang)
+    speed = config.vits.speed
+    return download_voice(host_url, text, lang, id, format, port, speed)
 
 
 def vits_api(message: str):

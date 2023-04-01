@@ -29,6 +29,8 @@ class MiddlewareBaiduCloud(Middleware):
                 result = await response.json()
                 self.access_token = result.get("access_token")
 
+                return self.access_token
+
     async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
         try:
             if config.baiducloud.check:
