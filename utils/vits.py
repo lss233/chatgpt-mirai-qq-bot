@@ -1,112 +1,126 @@
 import os
-import requests
-import datetime
 import re
+import asyncio
+import datetime
 from loguru import logger
 from constants import config
-from requests.exceptions import RequestException
-
-import requests
+from aiohttp import ClientSession, ClientTimeout
 
 
-def check_id_exists(json_array, given_id):
-    for item in json_array:
-        if str(given_id) in item:
-            return True
-    return False
+__all__ = ['VitsAPI']
 
 
-def voice_speakers_check(host_url, port, id: int):
-    url = f"{host_url}:{port}/voice/speakers"
-    res = requests.post(url=url)
-    json_array = res.json()
+class VitsAPI:
+    def __init__(self):
+        self.host_url = config.vits.host_url
+        self.lang = config.vits.lang
+        self.port = config.vits.port
+        self.id = None
+        self.speed = config.vits.speed
 
-    result = check_id_exists(json_array, id)
+    async def initialize(self):
+        self.id = await self.voice_speakers_check()
 
-    # 如果ID不存在，抛出异常
-    if not result:
-        raise Exception("不存在该语音音色，请检查配置文件")
+    def check_id_exists(self, json_array, given_id):
+        return any(str(given_id) in item for item in json_array)
 
-    return id
+    async def voice_speakers_check(self):
+        url = f"{self.host_url}:{self.port}/voice/speakers"
+        timeout = ClientTimeout(total=10)
 
+        async with ClientSession(timeout=timeout) as session:
+            async with session.post(url=url) as res:
+                json_array = await res.json()
 
-def download_voice(base_url, text, lang, id, format, port, speed):
-    now = datetime.datetime.now()
-    timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
-    filename = f"output_{timestamp}.{format}"
+                try:
+                    integer_number = int(config.text_to_speech.default)
+                    result = self.check_id_exists(json_array, integer_number)
+                except ValueError:
+                    logger.error("vits引擎中音色只能为纯数字")
+                    return None
 
-    save_dir = os.path.join('voicedata')
+                if not result:
+                    raise Exception("不存在该语音音色，请检查配置文件")
 
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
+                return integer_number
 
-    save_path = os.path.join(save_dir, filename)
+    async def get_voice_data(self, text, lang, format):
+        url = f"{self.host_url}:{self.port}/voice?text={text}&lang={lang}&id={self.id}&format={format}"
 
-    url = f"{base_url}:{port}/voice?text={text}&lang={lang}&id={id}&format={format}"
-    try:
-        response = requests.get(url)
-    except RequestException as e:
-        logger.error(f"请求失败：{str(e)}")
-        return None
+        timeout = ClientTimeout(total=10)
+        async with ClientSession(timeout=timeout) as session:
+            try:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        logger.error(f"请求失败：{response.status}")
+                        return None
+                    return await response.read()
+            except Exception as e:
+                logger.error(f"请求失败：{str(e)}")
+                return None
 
-    if response.status_code == 200:
+    def save_voice_file(self, content, format):
+        now = datetime.datetime.now()
+        timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
+        filename = f"output_{timestamp}.{format}"
+
+        save_dir = os.path.join('voicedata')
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        save_path = os.path.join(save_dir, filename)
+
         try:
             with open(save_path, 'wb') as f:
-                f.write(response.content)
+                f.write(content)
             logger.success(f"文件已保存到：{save_path}")
         except IOError as e:
             logger.error(f"文件写入失败：{str(e)}")
             return None
-    else:
-        logger.error(f"请求失败：{response.status_code}")
-        return None
 
-    return save_path
+        return save_path
 
+    def linguistic_process(self, text):
+        if len(text) > 150:
+            text = "这句话太长了，抱歉"
 
-def linguistic_process(text: str, lang: str):
-    matched_text = ''
-    if "mix" == lang:
-        regex = r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+'
+        lang = self.lang
+        patterns = {
+            "mix": r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
+            "zh": r'[\u4e00-\u9fff]+',
+            "ja": r'[\u3040-\u309f\u30a0-\u30ff]+',
+        }
+        regex = patterns.get(lang, '')
         matches = re.findall(regex, text)
-        for match in matches:
-            if re.search('[\u4e00-\u9fff]+', match):
-                matched_text += '[ZH]' + match + '[ZH]'
-            elif re.search('[\u3040-\u309f\u30a0-\u30ff]+', match):
-                matched_text += '[JA]' + match + '[JA]'
-            elif re.search('\w+', match):
-                matched_text += "[ZH]还有一些我不会说，抱歉[ZH]"
-    elif "zh" == lang:
-        regex = r'[\u4e00-\u9fff]+'
-        matches = re.findall(regex, text)
-        matched_text = ''.join(matches)
-    elif "ja" == lang:
-        regex = r'[\u3040-\u309f\u30a0-\u30ff]+'
-        matches = re.findall(regex, text)
-        matched_text = ''.join(matches)
-    return matched_text
+        if lang == "mix":
+            matched_text = ''.join(
+                '[ZH]' + match + '[ZH]' if re.search('[\u4e00-\u9fff]+', match) else
+                '[JA]' + match + '[JA]' if re.search('[\u3040-\u309f\u30a0-\u30ff]+', match) else
+                "[ZH]还有一些我不会说，抱歉[ZH]"
+                for match in matches
+            )
+        else:
+            matched_text = ''.join(matches)
 
+        return matched_text
 
-def response(text, format):
-    host_url = config.vits.host_url
-    lang = config.vits.lang
-    port = config.vits.port
+    async def response(self, text, format):
+        text = self.linguistic_process(text)
+        content = await self.get_voice_data(text, self.lang, format)
+        if content is not None:
+            return self.save_voice_file(content, format)
 
-    try:
-        integer_number = int(config.text_to_speech.default)
-        id = voice_speakers_check(host_url, port, integer_number)
-    except ValueError:
-        logger.error("vits引擎中音色只能为纯数字")
+    async def process_message(self, message):
+        if config.mirai:
+            output_file = await self.response(message, "silk")
+        else:
+            output_file = await self.response(message, "wav")
 
-    text = linguistic_process(text, lang)
-    speed = config.vits.speed
-    return download_voice(host_url, text, lang, id, format, port, speed)
+        return output_file
 
-
-def vits_api(message: str):
-    if config.mirai:
-        output_file = response(message, "silk")
-    else:
-        output_file = response(message, "wav")
-
-    return output_file
+    @staticmethod
+    async def vits_api(message: str):
+        vits_api_instance = VitsAPI()
+        await vits_api_instance.initialize()
+        return await vits_api_instance.process_message(message)
