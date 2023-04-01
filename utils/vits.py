@@ -91,7 +91,13 @@ def response(text, format):
     host_url = config.vits.host_url
     lang = config.vits.lang
     port = config.vits.port
-    id = voice_speakers_check(host_url, port, int(config.text_to_speech.default))
+
+    try:
+        integer_number = int(config.text_to_speech.default)
+        id = voice_speakers_check(host_url, port, integer_number)
+    except ValueError:
+        logger.error("vits引擎中音色只能为纯数字")
+
     text = linguistic_process(text, lang)
     speed = config.vits.speed
     return download_voice(host_url, text, lang, id, format, port, speed)
