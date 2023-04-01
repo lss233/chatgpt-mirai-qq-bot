@@ -91,7 +91,7 @@ def response(text, format):
     host_url = config.vits.host_url
     lang = config.vits.lang
     port = config.vits.port
-    id = voice_speakers_check(host_url, port, config.vits.role_id)
+    id = voice_speakers_check(host_url, port, int(config.text_to_speech.default))
     text = linguistic_process(text, lang)
     speed = config.vits.speed
     return download_voice(host_url, text, lang, id, format, port, speed)

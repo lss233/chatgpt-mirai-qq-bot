@@ -95,7 +95,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             output_file.close()
             logger.debug(f"开始转换语音 - {output_file.name} - {conversation_context.session_id}")
             if "vits" == config.text_to_speech.engine:
-                from vits import vits_api
+                from utils.vits import vits_api
                 output_file.name = vits_api(str(elem))
                 await _respond(Voice(path=output_file.name))
                 logger.debug(f"语音转换完成 - {output_file.name} - {conversation_context.session_id}")

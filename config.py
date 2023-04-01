@@ -224,7 +224,10 @@ class TextToImage(BaseModel):
 class TextToSpeech(BaseModel):
     always: bool = False
     """设置后所有的会话都会转语音再发一次"""
-    engine: str = ""
+    engine: str = "azure"
+    """文字转语音引擎选择，当前有azure和vits"""
+    default: str = "zh-CN-XiaoyanNeural"
+    """默认设置为Azure语音音色"""
 
 
 class AzureConfig(BaseModel):
@@ -232,8 +235,6 @@ class AzureConfig(BaseModel):
     """TTS KEY"""
     tts_speech_service_region: Optional[str] = None
     """TTS 地区"""
-    default: str = "zh-CN-XiaoyanNeural"
-    """Azure语音默认音色"""
 
 
 class VitsConfig(BaseModel):
@@ -241,8 +242,6 @@ class VitsConfig(BaseModel):
     """VITS_API目标主机，目前仅支持基于MoeGoe的API"""
     lang: str = "mix"
     """VITS_API目标语言"""
-    role_id: int = 0
-    """VITS角色ID，详情见模型提供"""
     speed: float = 1.0
     """VITS语言语速"""
     port: int = 23456
