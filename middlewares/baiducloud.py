@@ -29,23 +29,6 @@ class MiddlewareBaiduCloud(Middleware):
                 result = await response.json()
                 self.access_token = result.get("access_token")
 
-                # 保存access_token到文件
-                data = {"access_token": self.access_token}
-                with open("data/baidu_access_token.json", "w") as f:
-                    json.dump(data, f)
-
-                return self.access_token
-
-    async def read_access_token(self):
-        try:
-            with open("data/baidu_access_token.json", "r") as f:
-                data = json.load(f)
-                self.access_token = data["access_token"]
-        except (FileNotFoundError, json.JSONDecodeError, KeyError):
-            self.access_token = None
-
-        return self.access_token
-
     async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
         try:
             if config.baiducloud.check:

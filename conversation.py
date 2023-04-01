@@ -64,7 +64,7 @@ class ConversationContext:
         self.switch_renderer()
 
         if config.text_to_speech.always:
-            self.conversation_voice = config.text_to_speech.default
+            self.conversation_voice = config.azure.default
 
         if _type == 'chatgpt-web':
             self.adapter = ChatGPTWebAdapter(self.session_id)

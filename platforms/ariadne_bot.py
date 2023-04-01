@@ -60,14 +60,24 @@ async def response_as_text(target: Union[Friend, Group], source: Source, respons
     return await app.send_message(target, response, quote=source if config.response.quote else False)
 
 
+# 音频编码判断
+async def process_voice_data(msg, engine):
+    if engine == "vits":
+        return await msg.get_bytes()
+    elif engine == "azure":
+        from utils.azure_tts import encode_to_silk
+        return await encode_to_silk(await msg.get_bytes())
+    else:
+        raise ValueError("不存在该文字转音频引擎，请检查配置文件是否正确")
+
+
 def response(target: Union[Friend, Group], source: Source):
     async def respond(msg: AriadneBaseModel):
         # 音频编码
         if isinstance(msg, Voice):
-            from utils.azure_tts import encode_to_silk
-            msg = Voice(
-                data_bytes=await encode_to_silk(await msg.get_bytes())
-            )
+            engine = config.text_to_speech.engine
+            data_bytes = await process_voice_data(msg, engine)
+            msg = Voice(data_bytes=data_bytes)
         # 如果是非字符串
         if not isinstance(msg, Plain) and not isinstance(msg, str):
             event = await app.send_message(
@@ -130,6 +140,7 @@ def response(target: Union[Friend, Group], source: Source):
                 quote=source if config.response.quote else False
             )
         return event
+
     return respond
 
 
