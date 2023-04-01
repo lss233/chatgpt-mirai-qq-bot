@@ -36,4 +36,4 @@ EXPOSE 14500
 
 CMD ["/bin/bash", "/app/docker/start.sh"]
 
-RUN ln -sf /proc/1/fd/1 /tmp/log.txt
+# RUN ln -sf /proc/1/fd/1 /tmp/log.txt
