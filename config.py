@@ -239,8 +239,12 @@ class AzureConfig(BaseModel):
 class VitsConfig(BaseModel):
     host_url: str = ""
     """VITS_API目标主机，目前仅支持基于MoeGoe的API"""
+    lang: str = "mix"
+    """VITS_API目标语言"""
     role_id: int = 0
     """VITS角色ID，详情见模型提供"""
+    speed: float = 1.0
+    """VITS语言语速"""
     port: int = 23456
     """VTIS_API服务器端口"""
 
