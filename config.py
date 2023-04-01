@@ -24,7 +24,7 @@ class Mirai(BaseModel):
     """Bot 的 QQ 号"""
     manager_qq: int = 0
     """机器人管理员的 QQ 号"""
-    api_key: str
+    api_key: str = "1234567890"
     """mirai-api-http 的 verifyKey"""
     http_url: str = "http://localhost:8080"
     """mirai-api-http 的 http 适配器地址"""
@@ -60,9 +60,9 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint = "https://bypass.duti.tech/api/"
+    browserless_endpoint: Optional[str] = None
     """自定义无浏览器登录模式的接入点"""
-    api_endpoint = "https://api.openai.com/v1"
+    api_endpoint: Optional[str] = None
     """自定义 OpenAI API 的接入点"""
 
     gpt3_params: OpenAIGPT3Params = OpenAIGPT3Params()
@@ -168,6 +168,8 @@ class BingAuths(BaseModel):
     """Bing 的会话创建接入点"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
+    max_messages: int = 20
+    """Bing 的最大消息数，仅展示用"""
 
 
 class BardAuths(BaseModel):

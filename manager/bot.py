@@ -98,12 +98,20 @@ class BotManager:
             self.login_bard()
         if len(self.openai) > 0:
             if self.config.openai.browserless_endpoint:
-                V1.BASE_URL = self.config.openai.browserless_endpoint
-            if self.config.openai.api_endpoint:
-                openai.api_base = self.config.openai.api_endpoint
-            if not self.config.openai.browserless_endpoint.endswith("api/"):
+                V1.BASE_URL = self.config.openai.browserless_endpoint or V1.BASE_URL
+            logger.info(f"当前的 browserless_endpoint 为：{V1.BASE_URL}")
+
+            if V1.BASE_URL == 'https://bypass.duti.tech/api/':
+                logger.error("检测到你还在使用旧的 browserless_endpoint，已为您切换。")
+                V1.BASE_URL = "https://bypass.churchless.tech/api/"
+
+            if not V1.BASE_URL.endswith("api/"):
                 logger.warning(
                     f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+
+            if self.config.openai.api_endpoint:
+                openai.api_base = self.config.openai.api_endpoint or openai.api_base
+            logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
 
             await self.login_openai()
         if len(self.yiyan) > 0:
@@ -359,6 +367,7 @@ class BotManager:
 
         if cached_account.get('password'):
             logger.info("尝试使用 email + password 登录中...")
+            logger.warning("警告：该方法已不推荐使用，建议使用 access_token 登录。")
             config.pop('access_token', None)
             config.pop('session_token', None)
             config['email'] = cached_account.get('email')
