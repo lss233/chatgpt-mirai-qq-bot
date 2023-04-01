@@ -15,7 +15,7 @@ class BaiduCloud:
     def __init__(self):
         self.access_token = None
         self.expiration_time = None
-        self.token_file = "/data/token_info.json"
+        self.token_file = "data/token_info.json"
         self.load_token_info()
 
     def save_token_info(self):
@@ -83,36 +83,42 @@ class MiddlewareBaiduCloud(Middleware):
         self.baidu_cloud = BaiduCloud()
 
     async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
+        # 未审核消息路径
+        if not config.baiducloud.check:
+            return await action(session_id, prompt, rendered, respond)
+        # 不处理图片信息
+        if isinstance(rendered, Image):
+            return await action(session_id, prompt, rendered, respond)
+
+        should_pass = False
+
         try:
-            if config.baiducloud.check:
-                if not self.baidu_cloud.access_token:
-                    logger.debug(f"正在获取access_token，请稍等")
-                    self.baidu_cloud.access_token = await self.baidu_cloud.get_access_token()
+            if not self.baidu_cloud.access_token:
+                logger.debug(f"[百度云审核] 正在获取access_token，请稍等")
+                self.baidu_cloud.access_token = await self.baidu_cloud.get_access_token()
 
-                # 不处理图片信息
-                if isinstance(rendered, Image):
-                    return await action(session_id, prompt, rendered, respond)
+            response_dict = await self.baidu_cloud.get_conclusion(str(rendered))
 
-                response_dict = await self.baidu_cloud.get_conclusion(str(rendered))
-
-                # 处理百度云审核结果
-                conclusion = response_dict["conclusion"]
-                if conclusion in "合规":
-                    logger.success(f"百度云判定结果：{conclusion}")
-                    return await action(session_id, prompt, rendered, respond)
-                else:
-                    msg = response_dict['data'][0]['msg']
-                    logger.error(f"百度云判定结果：{conclusion}")
-                    conclusion = f"{config.baiducloud.prompt_message}\n原因：{msg}"
-                    return await action(session_id, prompt, conclusion, respond)
-            # 未审核消息路径
+            # 处理百度云审核结果
+            conclusion = response_dict["conclusion"]
+            if conclusion in "合规":
+                logger.success(f"[百度云审核] 判定结果：{conclusion}")
+                should_pass = True
             else:
-                return await action(session_id, prompt, rendered, respond)
+                msg = response_dict['data'][0]['msg']
+                logger.error(f"[百度云审核] 判定结果：{conclusion}")
+                conclusion = f"{config.baiducloud.prompt_message}\n原因：{msg}"
+                return await action(session_id, prompt, conclusion, respond)
+
         except aiohttp.ClientError as e:
             logger.error(f"HTTP error occurred: {e}")
-            conclusion = f"百度云判定出错\n以下是原消息：{rendered}"
-            return await action(session_id, prompt, conclusion, respond)
+
+            await respond("[百度云审核] 判定出错\n以下是原消息：")
+            should_pass = True
+
         except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error occurred: {e}")
+            logger.error(f"[百度云审核] JSON decode error occurred: {e}")
         except StopIteration as e:
-            logger.error(f"StopIteration exception occurred: {e}")
+            logger.error(f"[百度云审核] StopIteration exception occurred: {e}")
+        if should_pass:
+            return await action(session_id, prompt, rendered, respond)
