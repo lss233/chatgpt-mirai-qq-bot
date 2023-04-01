@@ -423,17 +423,22 @@ class BotManager:
             openai.proxy = proxy
             account.proxy = proxy
         logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
+        total_available = 0.00001
+        try:
 
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(
-            account)
+            grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(
+                account)
 
-        total_available = grant_available
+            total_available = grant_available
 
-        if has_payment_method:
-            logger.success(f"查询到此 API 为订阅用户，本月已用：{total_usage}美元，硬上限：{hard_limit_usd}美元。")
-            total_available = total_available + hard_limit_usd - total_usage
+            if has_payment_method:
+                logger.success(f"查询到此 API 为订阅用户，本月已用：{total_usage}美元，硬上限：{hard_limit_usd}美元。")
+                total_available = total_available + hard_limit_usd - total_usage
 
-        logger.success(f"查询到 API 总可用余额： {total_available}美元")
+            logger.success(f"查询到 API 总可用余额： {total_available}美元")
+        except:
+            logger.warning("在查询 API 额度时遇到问题，请自行确认额度。")
+
         if int(total_available) <= 0:
             raise APIKeyNoFundsError("API 余额不足，无法继续使用。")
         return account
