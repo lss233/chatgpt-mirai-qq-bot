@@ -1,0 +1,126 @@
+import os
+import re
+import asyncio
+import datetime
+from loguru import logger
+from constants import config
+from aiohttp import ClientSession, ClientTimeout
+
+
+__all__ = ['VitsAPI']
+
+
+class VitsAPI:
+    def __init__(self):
+        self.host_url = config.vits.host_url
+        self.lang = config.vits.lang
+        self.port = config.vits.port
+        self.id = None
+        self.speed = config.vits.speed
+
+    async def initialize(self):
+        self.id = await self.voice_speakers_check()
+
+    def check_id_exists(self, json_array, given_id):
+        return any(str(given_id) in item for item in json_array)
+
+    async def voice_speakers_check(self):
+        url = f"{self.host_url}:{self.port}/voice/speakers"
+        timeout = ClientTimeout(total=10)
+
+        async with ClientSession(timeout=timeout) as session:
+            async with session.post(url=url) as res:
+                json_array = await res.json()
+
+                try:
+                    integer_number = int(config.text_to_speech.default)
+                    result = self.check_id_exists(json_array, integer_number)
+                except ValueError:
+                    logger.error("vits引擎中音色只能为纯数字")
+                    return None
+
+                if not result:
+                    raise Exception("不存在该语音音色，请检查配置文件")
+
+                return integer_number
+
+    async def get_voice_data(self, text, lang, format):
+        url = f"{self.host_url}:{self.port}/voice?text={text}&lang={lang}&id={self.id}&format={format}"
+
+        timeout = ClientTimeout(total=10)
+        async with ClientSession(timeout=timeout) as session:
+            try:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        logger.error(f"请求失败：{response.status}")
+                        return None
+                    return await response.read()
+            except Exception as e:
+                logger.error(f"请求失败：{str(e)}")
+                return None
+
+    def save_voice_file(self, content, format):
+        now = datetime.datetime.now()
+        timestamp = now.strftime('%Y-%m-%d_%H-%M-%S')
+        filename = f"output_{timestamp}.{format}"
+
+        save_dir = os.path.join('voicedata')
+
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        save_path = os.path.join(save_dir, filename)
+
+        try:
+            with open(save_path, 'wb') as f:
+                f.write(content)
+            logger.success(f"文件已保存到：{save_path}")
+        except IOError as e:
+            logger.error(f"文件写入失败：{str(e)}")
+            return None
+
+        return save_path
+
+    def linguistic_process(self, text):
+        if len(text) > 150:
+            text = "这句话太长了，抱歉"
+
+        lang = self.lang
+        patterns = {
+            "mix": r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
+            "zh": r'[\u4e00-\u9fff]+',
+            "ja": r'[\u3040-\u309f\u30a0-\u30ff]+',
+        }
+        regex = patterns.get(lang, '')
+        matches = re.findall(regex, text)
+        if lang == "mix":
+            matched_text = ''.join(
+                '[ZH]' + match + '[ZH]' if re.search('[\u4e00-\u9fff]+', match) else
+                '[JA]' + match + '[JA]' if re.search('[\u3040-\u309f\u30a0-\u30ff]+', match) else
+                "[ZH]还有一些我不会说，抱歉[ZH]"
+                for match in matches
+            )
+        else:
+            matched_text = ''.join(matches)
+
+        return matched_text
+
+    async def response(self, text, format):
+        text = self.linguistic_process(text)
+        content = await self.get_voice_data(text, self.lang, format)
+        if content is not None:
+            return self.save_voice_file(content, format)
+
+    async def process_message(self, message):
+        if config.mirai:
+            output_file = await self.response(message, "silk")
+        else:
+            output_file = await self.response(message, "wav")
+
+        return output_file
+
+    @staticmethod
+    async def vits_api(message: str):
+        vits_api_instance = VitsAPI()
+        await vits_api_instance.initialize()
+        return await vits_api_instance.process_message(message)
