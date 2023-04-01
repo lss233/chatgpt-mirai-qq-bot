@@ -423,7 +423,6 @@ class BotManager:
             openai.proxy = proxy
             account.proxy = proxy
         logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
-        total_available = 0.00001
         try:
 
             grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(
@@ -437,6 +436,7 @@ class BotManager:
 
             logger.success(f"查询到 API 总可用余额： {total_available}美元")
         except:
+            total_available = 0.00001
             logger.warning("在查询 API 额度时遇到问题，请自行确认额度。")
 
         if int(total_available) <= 0:
