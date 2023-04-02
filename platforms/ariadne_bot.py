@@ -3,6 +3,7 @@ import time
 from typing import Union
 
 import asyncio
+from charset_normalizer import from_bytes
 from graia.amnesia.builtins.aiohttp import AiohttpServerService
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
@@ -269,8 +270,9 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
         nodes = []
         for keyword, path in config.presets.keywords.items():
             try:
-                with open(path) as f:
-                    preset_data = f.read().replace("\n\n", "\n=========\n")
+                with open(path, 'rb') as f:
+                    guessed_str = from_bytes(f.read()).best()
+                    preset_data = str(guessed_str).replace("\n\n", "\n=========\n")
                 answer = f"预设名：{keyword}\n" + preset_data
 
                 node = ForwardNode(

@@ -3,6 +3,7 @@ import time
 from typing import Union, Optional
 
 import asyncio
+from charset_normalizer import from_bytes
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, At, Plain, Voice
 from aiocqhttp import CQHttp, Event, MessageSegment
@@ -234,8 +235,9 @@ async def _(event: Event):
     nodes = []
     for keyword, path in config.presets.keywords.items():
         try:
-            with open(path) as f:
-                preset_data = f.read().replace("\n\n", "\n=========\n")
+            with open(path, 'rb') as f:
+                guessed_str = from_bytes(f.read()).best()
+                preset_data = str(guessed_str).replace("\n\n", "\n=========\n")
             answer = f"预设名：{keyword}\n" + preset_data
 
             node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
