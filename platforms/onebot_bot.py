@@ -242,8 +242,8 @@ async def _(event: Event):
 
             node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
             nodes.append(node)
-        except:
-            pass
+        except Exception as e:
+            logger.error(e)
 
     if len(nodes) == 0:
         await bot.send(event, "没有查询到任何预设！")
