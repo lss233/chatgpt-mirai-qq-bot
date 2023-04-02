@@ -293,14 +293,5 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
     finally:
         raise ExecutionStop()
 
-
-@cmd.command(".查询API余额")
-async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
-    try:
-        return await app.send_message(event, "此功能已无法使用")
-    finally:
-        raise ExecutionStop()
-
-
 def main():
     app.launch_blocking()
