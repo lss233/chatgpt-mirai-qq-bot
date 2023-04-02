@@ -1,10 +1,7 @@
-import os
-import re
-import datetime
+import regex as re
 from loguru import logger
 from constants import config
 from aiohttp import ClientSession, ClientTimeout
-
 
 __all__ = ['VitsAPI']
 
@@ -74,16 +71,17 @@ class VitsAPI:
 
         lang = self.lang
         patterns = {
-            "mix": r'[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
-            "zh": r'[\u4e00-\u9fff]+',
-            "ja": r'[\u3040-\u309f\u30a0-\u30ff]+',
+            "mix": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff]+|[\u3040-\u309f\u30a0-\u30ff]+|\w+|[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
+            "zh": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff\p{P}]+',
+            "ja": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u3040-\u309f\u30a0-\u30ff\p{P}]+',
         }
         regex = patterns.get(lang, '')
         matches = re.findall(regex, text)
         if lang == "mix":
             matched_text = ''.join(
-                '[ZH]' + match + '[ZH]' if re.search('[\u4e00-\u9fff]+', match) else
-                '[JA]' + match + '[JA]' if re.search('[\u3040-\u309f\u30a0-\u30ff]+', match) else
+                '[ZH]' + match + '[ZH]' if re.search(patterns['zh'], match) else
+                '[JA]' + match + '[JA]' if re.search(patterns['ja'], match) else
+                match if re.search('[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+', match) else
                 "[ZH]还有一些我不会说，抱歉[ZH]"
                 for match in matches
             )
