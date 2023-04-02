@@ -55,6 +55,10 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     )
 
 
+async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return await update.message.reply_text("此功能已无法使用")
+
+
 async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if config.presets.hide and not update.message.from_user.id == config.telegram.manager_chat:
         return await update.message.reply_text("您没有权限执行这个操作")
