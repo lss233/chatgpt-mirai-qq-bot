@@ -439,7 +439,7 @@ class BotManager:
             total_available = 0.00001
             logger.warning("在查询 API 额度时遇到问题，请自行确认额度。")
 
-        if int(total_available) <= 0:
+        if float(total_available) <= 0:
             raise APIKeyNoFundsError("API 余额不足，无法继续使用。")
         return account
 
