@@ -295,6 +295,7 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
     finally:
         raise ExecutionStop()
 
+
 def main(event_loop=asyncio.get_event_loop()):
     asyncio.set_event_loop(event_loop)
     app.launch_blocking()
