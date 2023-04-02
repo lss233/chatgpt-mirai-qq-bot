@@ -89,10 +89,12 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             for elem in msg:
                 task = asyncio.create_task(get_tts_voice(elem, conversation_context))
                 tasks.append(task)
-            responses = await asyncio.gather(*tasks)
-            for voice in responses:
-                if voice:
-                    await _respond(voice)
+            while tasks:
+                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                for voice_task in done:
+                    voice = await voice_task
+                    if voice:
+                        await _respond(voice)
 
         return ret
 
