@@ -297,7 +297,7 @@ def md_to_html(text: str) -> str:
     return h
 
 
-async def get_qr_data(text):
+async def get_pastebin_url(text):
     """将 Markdown 文本保存到 Mozilla Pastebin，并获得 URL"""
     async with aiohttp.ClientSession() as session:
         payload = {'expires': '86400', 'format': 'url', 'lexer': '_markdown', 'content': text}
@@ -305,14 +305,18 @@ async def get_qr_data(text):
             async with session.post('https://pastebin.mozilla.org/api/',
                                     data=payload) as resp:
                 resp.raise_for_status()
-                url = await resp.text()
+                pastebin_url = await resp.text()
         except Exception as e:
-            url = "上传失败：" + str(e)
-        image = qrcode.make(url)
-        buffered = BytesIO()
-        image.save(buffered, format="JPEG")
-        img_str = base64.b64encode(buffered.getvalue())
-        return "data:image/jpeg;base64," + img_str.decode('utf-8')
+            pastebin_url = "上传失败：" + str(e)
+        return pastebin_url
+
+def get_qr_data(pastebin_url):
+    """生成 URL 的二维码"""
+    image = qrcode.make(pastebin_url)
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue())
+    return "data:image/jpeg;base64," + img_str.decode('utf-8')
 
 
 async def text_to_image(text):
@@ -325,12 +329,16 @@ async def text_to_image(text):
         asset_folder = os.path.join(os.getcwd(), 'assets', 'texttoimg')
 
         font_path = os.path.join(os.getcwd(), config.text_to_image.font_path)
-
+        
+        # 上传到 Mozilla Pastebin 并获取 URL
+        pastebin_url = await get_pastebin_url(text)
+        
         # 输出html到字符串io流
         with StringIO() as output_file:
             # 填充正文
             html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri()) \
-                .replace("{qrcode}", await get_qr_data(text)) \
+                .replace("{pastebin_url}", pastebin_url) \
+                .replace("{qrcode}", get_qr_data(pastebin_url)) \
                 .replace("{content}", content) \
                 .replace("{font_size_texttoimg}", str(config.text_to_image.font_size)) \
                 .replace("{font_path_texttoimg}", pathlib.Path(font_path).as_uri())
