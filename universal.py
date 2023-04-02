@@ -1,19 +1,17 @@
-import os
 import re
 from typing import Callable
 
+import asyncio
 import openai
-from tempfile import NamedTemporaryFile
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain, Voice
+from graia.ariadne.message.element import Plain
 from httpx import HTTPStatusError, ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
 
-from constants import config
 from constants import botManager
-
+from constants import config
 from conversation import ConversationHandler
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException
@@ -21,8 +19,6 @@ from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
-
-from utils.azure_tts import synthesize_speech
 from utils.text_to_speech import get_tts_voice
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
@@ -89,8 +85,14 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
 
         # TTS Converting
         if conversation_context.conversation_voice and isinstance(msg, MessageChain):
+            tasks = []
             for elem in msg:
-                await _respond(await get_tts_voice(elem, conversation_context))
+                task = asyncio.create_task(get_tts_voice(elem, conversation_context))
+                tasks.append(task)
+            responses = await asyncio.gather(*tasks)
+            for voice in responses:
+                if voice:
+                    await _respond(voice)
 
         return ret
 

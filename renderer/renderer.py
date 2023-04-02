@@ -1,6 +1,7 @@
 import re
 
 from renderer import Renderer
+from utils.asyncutils import evaluate_array
 from utils.text_to_img import to_image
 
 from typing import Optional
@@ -116,6 +117,7 @@ class MixedContentMessageChainRenderer(Renderer):
             holds.append(await to_image(rich_blocks))
         if plain_blocks.strip():
             holds.append(Plain(plain_blocks))
+        await evaluate_array(holds)
         if holds:
             return MessageChain(holds)
         return None
