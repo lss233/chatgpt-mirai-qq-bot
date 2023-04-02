@@ -223,37 +223,7 @@ async def _(event: Event):
 
 @bot.on_message()
 async def _(event: Event):
-    pattern = ".查询API余额"
-    event.message = str(event.message)
-    if not event.message.strip() == pattern:
-        return
-    if not event.user_id == config.onebot.manager_qq:
-        return await bot.send(event, "您没有权限执行这个操作")
-    tasklist = []
-    bots = botManager.bots.get("openai-api", [])
-    for account in bots:
-        tasklist.append(botManager.check_api_info(account))
-    await bot.send(event, "查询中，请稍等……")
-
-    nodes = []
-    for account, r in zip(bots, await asyncio.gather(*tasklist)):
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
-        total_available = grant_available
-        if has_payment_method:
-            total_available = total_available + hard_limit_usd - total_usage
-        answer = '' + account.api_key[:6] + "**" + account.api_key[-3:] + '\n'
-        answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
-                          f' - 可用：{round(total_available, 2)}$\n' \
-                          f' - 绑卡：{has_payment_method}'
-        node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
-        nodes.append(node)
-    if len(nodes) == 0:
-        await bot.send(event, "没有查询到任何 API！")
-        return
-    if event.group_id:
-        await bot.call_action("send_group_forward_msg", group_id=event.group_id, messages=nodes)
-    else:
-        await bot.call_action("send_private_forward_msg", user_id=event.user_id, messages=nodes)
+    return await bot.send(event, "此功能已无法使用")
 
 
 @bot.on_message()

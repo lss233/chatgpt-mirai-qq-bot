@@ -297,37 +297,7 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
 @cmd.command(".查询API余额")
 async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
     try:
-        if not sender.id == config.mirai.manager_qq:
-            return await app.send_message(event, "您没有权限执行这个操作")
-        tasklist = []
-        bots = botManager.bots.get("openai-api", [])
-        for account in bots:
-            tasklist.append(botManager.check_api_info(account))
-        msg = await app.send_message(event, "查询中，请稍等……")
-
-        nodes = []
-        for account, r in zip(bots, await asyncio.gather(*tasklist)):
-            grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
-            total_available = grant_available
-            if has_payment_method:
-                total_available = total_available + hard_limit_usd - total_usage
-            answer = '' + account.api_key[:6] + "**" + account.api_key[-3:] + '\n'
-            answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
-                              f' - 可用：{round(total_available, 2)}$\n' \
-                              f' - 绑卡：{has_payment_method}'
-            node = ForwardNode(
-                target=config.mirai.qq,
-                name="ChatGPT",
-                message=MessageChain(Plain(answer)),
-                time=datetime.datetime.now()
-            )
-            nodes.append(node)
-
-        await app.recall_message(msg)
-        if len(nodes) == 0:
-            await app.send_message(event, "没有查询到任何 API")
-            return
-        await app.send_message(event, MessageChain(Forward(nodes)))
+        return await app.send_message(event, "此功能已无法使用")
     finally:
         raise ExecutionStop()
 
