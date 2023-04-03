@@ -3,6 +3,7 @@ import time
 from typing import Union, Optional
 
 import asyncio
+from charset_normalizer import from_bytes
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, At, Plain, Voice
 from aiocqhttp import CQHttp, Event, MessageSegment
@@ -221,39 +222,40 @@ async def _(event: Event):
                           f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
 
+
 @bot.on_message()
 async def _(event: Event):
-    pattern = ".查询API余额"
+    pattern = ".预设列表"
     event.message = str(event.message)
     if not event.message.strip() == pattern:
         return
-    if not event.user_id == config.onebot.manager_qq:
-        return await bot.send(event, "您没有权限执行这个操作")
-    tasklist = []
-    bots = botManager.bots.get("openai-api", [])
-    for account in bots:
-        tasklist.append(botManager.check_api_info(account))
-    await bot.send(event, "查询中，请稍等……")
 
+    if config.presets.hide and not event.user_id == config.onebot.manager_qq:
+        return await bot.send(event, "您没有权限执行这个操作")
     nodes = []
-    for account, r in zip(bots, await asyncio.gather(*tasklist)):
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
-        total_available = grant_available
-        if has_payment_method:
-            total_available = total_available + hard_limit_usd - total_usage
-        answer = '' + account.api_key[:6] + "**" + account.api_key[-3:] + '\n'
-        answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
-                          f' - 可用：{round(total_available, 2)}$\n' \
-                          f' - 绑卡：{has_payment_method}'
-        node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
-        nodes.append(node)
+    for keyword, path in config.presets.keywords.items():
+        try:
+            with open(path, 'rb') as f:
+                guessed_str = from_bytes(f.read()).best()
+                preset_data = str(guessed_str).replace("\n\n", "\n=========\n")
+            answer = f"预设名：{keyword}\n" + preset_data
+
+            node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
+            nodes.append(node)
+        except Exception as e:
+            logger.error(e)
+
     if len(nodes) == 0:
-        await bot.send(event, "没有查询到任何 API！")
+        await bot.send(event, "没有查询到任何预设！")
         return
-    if event.group_id:
-        await bot.call_action("send_group_forward_msg", group_id=event.group_id, messages=nodes)
-    else:
-        await bot.call_action("send_private_forward_msg", user_id=event.user_id, messages=nodes)
+    try:
+        if event.group_id:
+            await bot.call_action("send_group_forward_msg", group_id=event.group_id, messages=nodes)
+        else:
+            await bot.call_action("send_private_forward_msg", user_id=event.user_id, messages=nodes)
+    except Exception as e:
+        logger.exception(e)
+        await bot.send(event, "消息发送失败！请在私聊中查看。")
 
 
 @bot.on_startup
