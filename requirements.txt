@@ -31,6 +31,6 @@ discord.py
 azure-cognitiveservices-speech
 poe-api~=0.2.4
 
-regex~=2022.10.31
+regex~=2023.3.23
 httpx~=0.23.3
 janus~=1.0.0
