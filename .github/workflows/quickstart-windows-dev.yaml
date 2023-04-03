@@ -1,0 +1,92 @@
+name: Create Quickstart for Windows 64 on dev
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'browser-version-dev'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Quickstart
+    runs-on: Windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Generate files
+      run: |
+        mkdir C:/generated_files
+        mkdir C:/tmp_files
+        echo "Creating folders..."
+        cd C:/generated_files
+        mkdir mirai
+        mkdir chatgpt
+        mkdir mirai/plugins
+        echo "Downloading JRE..."
+        Invoke-WebRequest -URI https://download.bell-sw.com/java/17.0.6+10/bellsoft-jre17.0.6+10-windows-amd64.zip -OutFile C:/tmp_files/jre.zip
+        7z x C:/tmp_files/jre.zip -r -oC:/generated_files/mirai/jre/
+        
+        echo "Downloading mcl..."
+        Invoke-WebRequest -URI https://github.com/iTXTech/mirai-console-loader/releases/download/v2.1.2/mcl-2.1.2.zip -OutFile C:/tmp_files/mcl.zip
+        7z x C:/tmp_files/mcl.zip -r -oC:/generated_files/mirai/
+        cd C:/generated_files/mirai/
+        $search  = [Regex]::Escape('set JAVA_BINARY=java')
+        $replace = 'set JAVA_BINARY=jre\jre-17.0.6\bin\java.exe'
+
+        (Get-Content -Path 'C:/generated_files/mirai/mcl.cmd' -Raw) -replace $search, $replace | Set-Content -Path 'C:/generated_files/mirai/mcl.cmd'
+
+        Invoke-WebRequest -URI https://github.com/cssxsh/fix-protocol-version/releases/download/v1.3.0/fix-protocol-version-1.3.0.mirai2.jar -OutFile C:/generated_files/mirai/plugins/fix-protocol-version-1.3.0.mirai2.jar
+
+        ./mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
+        ./mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
+        ./mcl.cmd --update-package xyz.cssxsh.mirai:fix-protocol-version --channel stable --type plugin
+        ./mcl.cmd --dry-run
+
+        cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
+        echo "Downloading Python3.11 ..."
+        Invoke-WebRequest https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip -OutFile C:/tmp_files/python.zip
+        7z x C:/tmp_files/python.zip -r -oC:/generated_files/chatgpt/python3.11
+
+        echo "Downloading get-pip.py ..."
+        Invoke-WebRequest -URI https://bootstrap.pypa.io/get-pip.py -OutFile C:/generated_files/chatgpt/python3.11/get-pip.py
+        echo "import site" >> C:/generated_files/chatgpt/python3.11/python311._pth
+
+        echo "Moving files..."
+        mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
+
+        echo "Replacing..."
+        cp C:/generated_files/files/scripts/初始化.cmd C:/generated_files/
+        
+        Invoke-WebRequest -URI https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -OutFile C:/tmp_files/presets.zip
+        7z x C:/tmp_files/presets.zip -oC:/tmp_files/
+        Copy-Item C:\tmp_files\awesome-chatgpt-qq-presets-master\*  -Destination C:\generated_files\chatgpt\presets\ -Recurse
+        
+        Invoke-WebRequest -URI https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.mxe-cross-win64.7z -O C:/tmp_files/wkhtmltox.7z
+        
+        echo "Downloading vc_redist.exe..."
+        Invoke-WebRequest -URI https://aka.ms/vs/17/release/vc_redist.x64.exe -O "C:\generated_files\【语音功能依赖】vc_redist.x64.exe"
+        
+        echo "Setting up wkhtmltox"
+        7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
+        cp C:/tmp_files/wkhtmltox/bin/wkhtmltoimage.exe C:\generated_files\chatgpt\
+        
+        echo "Downloading packages..."
+        cd C:/generated_files/chatgpt
+        python3.11\python.exe C:/generated_files/chatgpt/python3.11/get-pip.py
+        python3.11\python.exe -m pip install -r requirements.txt
+        
+        echo "Packing..." 
+        cd C:/generated_files
+        7z a quickstart-windows-amd64.zip C:\generated_files\*
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: quickstart-windows-amd64.zip
+        path: |
+          C:\generated_files\quickstart-windows-amd64.zip
+

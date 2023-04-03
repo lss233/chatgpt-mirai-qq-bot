@@ -1,141 +1,32 @@
-import os, sys
+import os
+import sys
+
+
 sys.path.append(os.getcwd())
 
-import utils.exithooks
-from io import BytesIO
-from typing import Union
-from typing_extensions import Annotated
-from graia.ariadne.app import Ariadne
-from graia.ariadne.connection.config import (
-    HttpClientConfig,
-    WebsocketClientConfig,
-    config as ariadne_config,
-)
-from graia.ariadne.message import Source
-from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.parser.base import DetectPrefix, MentionMe
-from graia.ariadne.event.mirai import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
-from graia.ariadne.message.element import Image
-from graia.ariadne.model import Friend, Group
-from loguru import logger
-
 import asyncio
-import chatbot
-from config import Config
-from text_to_img import text_to_image
+from utils.exithooks import hook
+from loguru import logger
+from constants import config
 
+hook()
 
-config = Config.load_config()
-# Refer to https://graia.readthedocs.io/ariadne/quickstart/
-app = Ariadne(
-    ariadne_config(
-        config.mirai.qq,  # 配置详见 config.json
-        config.mirai.api_key,
-        HttpClientConfig(host=config.mirai.http_url),
-        WebsocketClientConfig(host=config.mirai.ws_url),
-    ),
-)
-queue_size = 0
-queue_lock = None
+# aiohttp issue
+if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-async def create_timeout_task(target: Union[Friend, Group], source: Source):
-    await asyncio.sleep(config.response.timeout)
-    await app.send_message(target, config.response.timeout_format, quote=source if config.response.quote else False)
+if config.onebot:
+    logger.info("检测到 Onebot 配置，将以 Onebot 模式启动……")
+    from platforms.onebot_bot import main
+elif config.telegram:
+    logger.info("检测到 telegram 配置，将以 telegram bot 模式启动……")
+    from platforms.telegram_bot import main
+elif config.discord:
+    logger.info("检测到 discord 配置，将以 discord bot 模式启动……")
+    from platforms.discord_bot import main
+else:
+    logger.info("检测到 mirai 配置，将以 mirai 模式启动……")
+    from platforms.ariadne_bot import main
 
-async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
-    if not message.strip():
-        return config.response.placeholder
-    
-    global queue_lock, queue_size
-    if queue_lock is None:
-        queue_lock = asyncio.Lock()
-
-    timeout_task = None
-
-    session, is_new_session = chatbot.get_chat_session(session_id)
-    
-    # 回滚
-    if message.strip() in config.trigger.rollback_command:
-        resp = session.rollback_conversation()
-        if resp:
-            return config.response.rollback_success + '\n' + resp
-        return config.response.rollback_fail
-
-    # 队列满时拒绝新的消息
-    if config.response.max_queue_size > 0 and queue_size > config.response.max_queue_size:
-        return config.response.queue_full
-    else:
-        # 提示用户：请求已加入队列
-        if queue_size > config.response.queued_notice_size:
-            await app.send_message(target, config.response.queued_notice.format(queue_size=queue_size), quote=source if config.response.quote else False)
-
-    # 以下开始需要排队
-    queue_size = queue_size + 1
-    async with queue_lock:
-        try:
-
-            timeout_task = asyncio.create_task(create_timeout_task(target, source))
-
-            # 重置会话
-            if message.strip() in config.trigger.reset_command:
-                session.reset_conversation()
-                await chatbot.initial_process(session)
-                return config.response.reset
-
-            # 新会话
-            if is_new_session:
-                await chatbot.initial_process(session)
-
-            # 加载关键词人设
-            resp = await chatbot.keyword_presets_process(session, message)
-            if resp:
-                logger.debug(f"{session_id} - {resp}")
-                return resp
-
-            # 正常交流
-            resp = await session.get_chat_response(message)
-            if resp:
-                logger.debug(f"{session_id} - {resp}")
-                return resp.strip()
-        except Exception as e:
-            if str(e)  == "('Response code error: ', 429)" or 'overloaded' in str(e):
-                return config.response.request_too_fast
-            logger.exception(e)
-            return config.response.error_format.format(exc=e)
-        finally:
-            queue_size = queue_size - 1
-            if timeout_task:
-                timeout_task.cancel()
-    ### 排队结束
-
-
-@app.broadcast.receiver("FriendMessage")
-async def friend_message_listener(app: Ariadne, friend: Friend, source: Source, chain: Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]):
-    if friend.id == config.mirai.qq:
-        return
-    response = await handle_message(friend, f"friend-{friend.id}", chain.display, source)
-    await app.send_message(friend, response, quote=source if config.response.quote else False)
-
-GroupTrigger = Annotated[MessageChain, MentionMe(config.trigger.require_mention != "at"), DetectPrefix(config.trigger.prefix)] if config.trigger.require_mention != "none" else Annotated[MessageChain, DetectPrefix(config.trigger.prefix)]
-
-@app.broadcast.receiver("GroupMessage")
-async def group_message_listener(group: Group, source: Source, chain: GroupTrigger):
-    response = await handle_message(group, f"group-{group.id}", chain.display, source)
-    event = await app.send_message(group, response)
-    if event.source.id < 0:
-        img = text_to_image(text=response)
-        b = BytesIO()
-        img.save(b, format="png")
-        await app.send_message(group, Image(data_bytes=b.getvalue()), quote=source if config.response.quote else False)
-
-@app.broadcast.receiver("NewFriendRequestEvent")
-async def on_friend_request(event: NewFriendRequestEvent):
-    if config.system.accept_friend_request:
-        await event.accept()
-
-@app.broadcast.receiver("BotInvitedJoinGroupRequestEvent")
-async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
-    if config.system.accept_group_invite:
-        await event.accept()
-
-app.launch_blocking()
+# 如果想要同时支持多平台，在这里开多线程就行了
+main()

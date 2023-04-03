@@ -2,8 +2,10 @@ import atexit
 import sys
 from loguru import logger
 
+
 class ExitHooks(object):
     def __init__(self):
+        self._orig_exit = None
         self.exit_code = None
         self.exception = None
 
@@ -19,8 +21,10 @@ class ExitHooks(object):
     def exc_handler(self, exc_type, exc, *args):
         self.exception = exc
 
+
 hooks = ExitHooks()
 hooks.hook()
+
 
 def foo():
     if hooks.exit_code is not None or hooks.exception is not None:
@@ -30,4 +34,10 @@ def foo():
         logger.exception(hooks.exception)
         logger.error("你可以在这里阅读常见问题的解决方案：")
         logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85")
+
+
 atexit.register(foo)
+
+def hook():
+    # 仅仅是为了防止 IDE 自动优化掉 import
+    pass
