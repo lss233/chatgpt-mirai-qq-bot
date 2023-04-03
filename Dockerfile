@@ -3,11 +3,7 @@ FROM python:3.11.2-slim-bullseye
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt install software-properties-common apt-transport-https wget ca-certificates gnupg2 wkhtmltopdf -yq && \
-    wget -qO /usr/share/keyrings/xpra-2022.gpg https://xpra.org/xpra-2022.gpg  && \
-    echo deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/xpra-2022.gpg] https://xpra.org/ bullseye main |  tee /etc/apt/sources.list.d/xpra.list && \
-    apt-get update && \
-    apt install --no-install-recommends xpra xpra-html5 dbus-x11 xvfb xfonts-base xfonts-100dpi xfonts-75dpi libgl1-mesa-dri xauth xterm binutils qtbase5-dev -yq && \
+    apt install --no-install-recommends xvfb binutils qtbase5-dev -yq && \
     strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5 && \
     apt-get clean && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
@@ -17,7 +13,7 @@ RUN mkdir -p /app
 WORKDIR /app
 
 COPY requirements.txt /app
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
