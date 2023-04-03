@@ -34,6 +34,7 @@
 * [x] 额度限制 
 * [x] 预设人格初
 * [x] 支持 Mirai、 go-cqhttp、 Telegram、Discord  
+* [x] 可作为 HTTP 服务端提供 Web API
 * [x] 支持 ChatGPT 网页版
 * [x] 支持 ChatGPT Plus
 * [x] 支持 ChatGPT API
@@ -147,6 +148,48 @@ python3 bot.py
 ```
 </details>
 
+## 🕸 HTTP API
+
+在 `config.cfg` 中加入以下配置后，将额外提供http支持：  
+
+```toml
+[http]
+# 填写提供服务的端口
+host = "0.0.0.0"
+port = 8080
+debug = false
+```
+启动后将提供以下接口：  
+
+**POST**    `/v1/chat`  
+
+**请求参数**  
+
+|参数名|必选|类型|说明|
+|:---|:---|:---|:---|
+|session_id| 是 | String |会话ID，默认：`friend-default_session`|
+|username| 是 | String |用户名，默认：`某人`|
+|message| 是 | String |消息，不能为空|  
+
+**请求示例**
+```json
+{
+    "session_id": "friend-123456",
+    "username": "testuser",
+    "message": "ping"
+}
+```
+**响应**
+|参数名|类型|说明|
+|:---|:---|:---|
+|message| String |返回信息，HTML 格式|
+**响应示例**
+```json
+{
+    "message": "pong!"
+}
+```
+
 ## 🦊 加载预设
 
 如果你想让机器人自动带上某种聊天风格，可以使用预设功能。  
@@ -204,7 +247,7 @@ python3 bot.py
 * [fuergaosi233 / wechat-chatgpt](https://github.com/fuergaosi233/wechat-chatgpt) - 在微信上迅速接入 ChatGPT
 
 
-## 🛠 贡献者名单  
+## 🛠 贡献者名单   
 
 欢迎提出新的点子、 Pull Request。  
 

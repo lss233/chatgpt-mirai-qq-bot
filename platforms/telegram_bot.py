@@ -89,7 +89,8 @@ async def bootstrap() -> None:
     await app.updater.start_polling(drop_pending_updates=True)
 
 
-def main():
+def main(event_loop=asyncio.get_event_loop()):
+    asyncio.set_event_loop(event_loop)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(bootstrap())
     loop.run_forever()
