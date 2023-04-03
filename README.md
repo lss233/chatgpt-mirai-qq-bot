@@ -35,7 +35,7 @@
 * [x] 指定用户/群组额度限制 
 * [x] 预设人格初始化
 * [x] 支持 Mirai、 go-cqhttp、 Telegram Bot
-* [x] 支持 http 服务
+* [x] 可作为 HTTP 服务端提供 Web API
 * [x] 支持 ChatGPT 网页版
 * [x] 支持 ChatGPT Plus
 * [x] 支持 ChatGPT API
@@ -760,17 +760,17 @@ debug = false
 ```
 启动后将提供以下接口：
 ##### 请求URL
-- `POST` `/v1/chat/completions`
+- `POST` `/v1/chat`
 ##### 请求参数
 |参数名|必选|类型|说明|
 |:---|:---|:---|:---|
-|session_id|是|字符串|会话ID，默认：default_session|
+|session_id|是|字符串|会话ID，默认：friend-default_session|
 |username|是|字符串|用户名，默认：某人|
 |message|是|字符串|消息，不能为空|
 ##### 请求示例
 ```json
 {
-    "session_id": "123456",
+    "session_id": "friend-123456",
     "username": "testuser",
     "message": "ping"
 }

@@ -1,12 +1,8 @@
 import asyncio
-import threading
-import time
-from queue import Queue
 
 from flask import Flask, request, jsonify
-from graia.ariadne.message.element import Image
 from graia.ariadne.message.chain import MessageChain
-import base64
+from graia.ariadne.message.element import Image
 from loguru import logger
 from werkzeug.serving import run_simple
 
@@ -46,7 +42,7 @@ async def process_request(bot_request: BotRequest):
             elif isinstance(ele, Image):
                 bot_request.append_result_message(f'<img src="data:image/png;base64,{ele.base64}"/>')
             else:
-                logger.warning(f"Not support message -> {str(ele)}")
+                logger.warning(f"Unsupported message -> {str(ele)}")
                 bot_request.append_result_message(str(ele))
 
     await handle_message(
@@ -57,7 +53,7 @@ async def process_request(bot_request: BotRequest):
     )
 
 
-@app.route('/v1/chat/completions', methods=['POST'])
+@app.route('/v1/chat', methods=['POST'])
 async def chat_completions():
     session_id = request.json.get('session_id') or "friend-default_session"
     username = request.json.get('username') or "某人"
@@ -72,12 +68,9 @@ async def chat_completions():
     return jsonify(bot_request.result)
 
 
-def main(multi_threads=False, event_loop=None):
-    if multi_threads:
-        asyncio.set_event_loop(event_loop)
-        loop = event_loop
-    else:
-        loop = asyncio.get_event_loop()
+def main(event_loop=asyncio.get_event_loop()):
+    asyncio.set_event_loop(event_loop)
+    loop = asyncio.get_event_loop()
     loop.run_until_complete(botManager.login())
     logger.info(f"Bot is ready. Logged in as http service!")
     run_simple(hostname=config.http.host, port=config.http.port, application=app, use_debugger=config.http.debug)
