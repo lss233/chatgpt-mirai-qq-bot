@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/*
 
-RUN cp ./fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
+COPY ./fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
 
 RUN mkdir -p /app
 WORKDIR /app
