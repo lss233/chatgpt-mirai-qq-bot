@@ -30,7 +30,7 @@ class ChatGLM6BAdapter(BotAdapter):
         response = await self.client.post(
             self.account.api_endpoint,
             timeout=self.account.timeout,
-            headers={"Content-Type": "application/json"}, 
+            headers={"Content-Type": "application/json"},
             json={"prompt": prompt, "history": self.conversation_history}
         )
         response.raise_for_status()
