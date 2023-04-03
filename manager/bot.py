@@ -19,7 +19,7 @@ from poe import Client as PoeClient
 from requests.exceptions import SSLError, RequestException
 from revChatGPT import V1
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
-from revChatGPT.typing import Error as V1Error
+from revChatGPT.typings import Error as V1Error
 from tinydb import TinyDB, Query
 
 import utils.network as network
@@ -98,12 +98,20 @@ class BotManager:
             self.login_bard()
         if len(self.openai) > 0:
             if self.config.openai.browserless_endpoint:
-                V1.BASE_URL = self.config.openai.browserless_endpoint
-            if self.config.openai.api_endpoint:
-                openai.api_base = self.config.openai.api_endpoint
-            if not self.config.openai.browserless_endpoint.endswith("api/"):
+                V1.BASE_URL = self.config.openai.browserless_endpoint or V1.BASE_URL
+            logger.info(f"当前的 browserless_endpoint 为：{V1.BASE_URL}")
+
+            if V1.BASE_URL == 'https://bypass.duti.tech/api/':
+                logger.error("检测到你还在使用旧的 browserless_endpoint，已为您切换。")
+                V1.BASE_URL = "https://bypass.churchless.tech/api/"
+
+            if not V1.BASE_URL.endswith("api/"):
                 logger.warning(
                     f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+
+            if self.config.openai.api_endpoint:
+                openai.api_base = self.config.openai.api_endpoint or openai.api_base
+            logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
 
             await self.login_openai()
         if len(self.yiyan) > 0:
@@ -359,6 +367,7 @@ class BotManager:
 
         if cached_account.get('password'):
             logger.info("尝试使用 email + password 登录中...")
+            logger.warning("警告：该方法已不推荐使用，建议使用 access_token 登录。")
             config.pop('access_token', None)
             config.pop('session_token', None)
             config['email'] = cached_account.get('email')
@@ -374,59 +383,13 @@ class BotManager:
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
 
-    async def check_api_info(self, account):
-        async with aiohttp.ClientSession(conn_timeout=30, read_timeout=30, trust_env=True,
-                                         connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
-            timing_start_at = time.time()
-            session.headers.add("Authorization", f"Bearer {account.api_key}")
-
-            resp = await session.get(f"{openai.api_base}/dashboard/billing/credit_grants", proxy=account.proxy)
-            resp = await resp.json()
-
-            if 'error' in resp:
-                raise Exception(resp['error']['message'])
-
-            grant_available = resp.get("total_available")
-            grant_used = resp.get("total_used")
-
-            resp = await session.get(f"{openai.api_base}/dashboard/billing/subscription", proxy=account.proxy)
-            resp = await resp.json()
-            has_payment_method = resp.get('has_payment_method')
-            hard_limit_usd = resp.get('hard_limit_usd')
-
-            current_month = datetime.datetime.now().replace(day=1)
-            next_month = current_month + relativedelta(months=1)
-
-            start_date = current_month.strftime('%Y-%m-%d')
-            end_date = next_month.strftime('%Y-%m-%d')
-            resp = await session.get(
-                f"{openai.api_base}/dashboard/billing/usage?start_date={start_date}&end_date={end_date}",
-                proxy=account.proxy)
-            resp = await resp.json()
-            total_usage = resp.get("total_usage") / 100
-            timing_stop_at = time.time()
-            logger.debug(f"本次查询平均延迟：{round((timing_stop_at - timing_start_at) / 3, 2)}s")
-        return grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd
-
     async def __login_openai_apikey(self, account):
         logger.info("尝试使用 api_key 登录中...")
         if proxy := self.__check_proxy(account.proxy):
             openai.proxy = proxy
             account.proxy = proxy
         logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
-
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = await self.check_api_info(
-            account)
-
-        total_available = grant_available
-
-        if has_payment_method:
-            logger.success(f"查询到此 API 为订阅用户，本月已用：{total_usage}美元，硬上限：{hard_limit_usd}美元。")
-            total_available = total_available + hard_limit_usd - total_usage
-
-        logger.success(f"查询到 API 总可用余额： {total_available}美元")
-        if int(total_available) <= 0:
-            raise APIKeyNoFundsError("API 余额不足，无法继续使用。")
+        logger.warning("在查询 API 额度时遇到问题，请自行确认额度。")
         return account
 
     def pick(self, type: str):

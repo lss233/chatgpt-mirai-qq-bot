@@ -1,19 +1,17 @@
-import os
 import re
 from typing import Callable
 
+import asyncio
 import openai
-from tempfile import NamedTemporaryFile
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain, Voice
+from graia.ariadne.message.element import Plain
 from httpx import HTTPStatusError, ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
 
-from constants import config
 from constants import botManager
-
+from constants import config
 from conversation import ConversationHandler
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException
@@ -21,8 +19,7 @@ from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
-
-from utils.azure_tts import synthesize_speech
+from utils.text_to_speech import get_tts_voice
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
@@ -85,25 +82,20 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         nonlocal conversation_context
         if not conversation_context:
             conversation_context = conversation_handler.current_conversation
+
         # TTS Converting
         if conversation_context.conversation_voice and isinstance(msg, MessageChain):
+            tasks = []
             for elem in msg:
-                if isinstance(elem, Plain) and str(elem):
-                    output_file = NamedTemporaryFile(mode='w+b', suffix='.wav', delete=False)
-                    output_file.close()
-                    logger.debug(f"开始转换语音 - {output_file.name} - {conversation_context.session_id}")
-                    if await synthesize_speech(
-                            str(elem),
-                            output_file.name,
-                            conversation_context.conversation_voice
-                    ):
-                        await _respond(Voice(path=output_file.name))
-                        logger.debug(f"语音转换完成 - {output_file.name} - {conversation_context.session_id}")
-                    try:
-                        os.unlink(output_file.name)
-                        logger.debug(f"删除临时文件 - {output_file.name} - {conversation_context.session_id}")
-                    except:
-                        pass
+                task = asyncio.create_task(get_tts_voice(elem, conversation_context))
+                tasks.append(task)
+            while tasks:
+                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                for voice_task in done:
+                    voice = await voice_task
+                    if voice:
+                        await _respond(voice)
+
         return ret
 
     async def request(_session_id, prompt: str, conversation_context, _respond):

@@ -24,7 +24,7 @@ class Mirai(BaseModel):
     """Bot 的 QQ 号"""
     manager_qq: int = 0
     """机器人管理员的 QQ 号"""
-    api_key: str
+    api_key: str = "1234567890"
     """mirai-api-http 的 verifyKey"""
     http_url: str = "http://localhost:8080"
     """mirai-api-http 的 http 适配器地址"""
@@ -69,9 +69,9 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint = "https://bypass.duti.tech/api/"
+    browserless_endpoint: Optional[str] = None
     """自定义无浏览器登录模式的接入点"""
-    api_endpoint = "https://api.openai.com/v1"
+    api_endpoint: Optional[str] = None
     """自定义 OpenAI API 的接入点"""
 
     gpt3_params: OpenAIGPT3Params = OpenAIGPT3Params()
@@ -177,18 +177,13 @@ class BingAuths(BaseModel):
     """Bing 的会话创建接入点"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
+    max_messages: int = 20
+    """Bing 的最大消息数，仅展示用"""
 
 
 class BardAuths(BaseModel):
     accounts: List[BardCookiePath] = []
     """Bard 的账号列表"""
-
-
-class AzureAuths(BaseModel):
-    tts_speech_key: Optional[str] = None
-    """TTS KEY"""
-    tts_speech_service_region: Optional[str] = None
-    """TTS 地区"""
 
 
 class YiyanCookiePath(BaseModel):
@@ -238,7 +233,28 @@ class TextToImage(BaseModel):
 class TextToSpeech(BaseModel):
     always: bool = False
     """设置后所有的会话都会转语音再发一次"""
+    engine: str = "azure"
+    """文字转语音引擎选择，当前有azure和vits"""
     default: str = "zh-CN-XiaoyanNeural"
+    """默认设置为Azure语音音色"""
+
+
+class AzureConfig(BaseModel):
+    tts_speech_key: Optional[str] = None
+    """TTS KEY"""
+    tts_speech_service_region: Optional[str] = None
+    """TTS 地区"""
+
+
+class VitsConfig(BaseModel):
+    api_url: str = ""
+    """VITS API 地址，目前仅支持基于MoeGoe的API"""
+    lang: str = "zh"
+    """VITS_API目标语言"""
+    speed: float = 1.4
+    """VITS语言语速"""
+    timeout: int = 30
+    """语音生成超时时间"""
 
 
 class Trigger(BaseModel):
@@ -369,7 +385,7 @@ class BaiduCloud(BaseModel):
     """百度云API_KEY 24位英文数字字符串"""
     baidu_secret_key: str = ""
     """百度云SECRET_KEY 32位的英文数字字符串"""
-    illgalmessage: str = "[百度云]请珍惜机器人，当前返回内容不合规"
+    prompt_message: str = "[百度云]请珍惜机器人，当前返回内容不合规"
     """不合规消息自定义返回"""
 
 
@@ -378,6 +394,8 @@ class Preset(BaseModel):
     keywords: dict[str, str] = dict()
     loaded_successful: str = "预设加载成功！"
     scan_dir: str = "./presets"
+    hide: bool = False
+    """是否禁止使用其他人 .预设列表 命令来查看预设"""
 
 
 class Ratelimit(BaseModel):
@@ -403,7 +421,7 @@ class Config(BaseModel):
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
-    azure: AzureAuths = AzureAuths()
+    azure: AzureConfig = AzureConfig()
     yiyan: YiyanAuths = YiyanAuths()
     chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
@@ -417,6 +435,7 @@ class Config(BaseModel):
     presets: Preset = Preset()
     ratelimit: Ratelimit = Ratelimit()
     baiducloud: BaiduCloud = BaiduCloud()
+    vits: VitsConfig = VitsConfig()
 
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
