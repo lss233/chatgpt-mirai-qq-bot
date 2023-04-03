@@ -25,9 +25,13 @@ requests~=2.28.2
 uuid~=1.30
 
 python-telegram-bot
-aiocqhttp
+aiocqhttp~=1.4.3
 tls-client
-python-dateutil
+python-dateutil~=2.8.2
 discord.py
 azure-cognitiveservices-speech
 poe-api~=0.2.4
+
+regex~=2022.10.31
+httpx~=0.23.3
+janus~=1.0.0
