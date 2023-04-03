@@ -41,8 +41,9 @@ if config.mirai:
 if len(bots) > 1:
     logger.info("进入多线程模式")
     bot_threads = []
+    loop = asyncio.get_event_loop()
     for main in bots:
-        bot_threads.append(threading.Thread(target=main, args=[True]))
+        bot_threads.append(threading.Thread(target=main, args=[True, loop]))
     for thread in bot_threads:
         thread.start()
         time.sleep(10)
