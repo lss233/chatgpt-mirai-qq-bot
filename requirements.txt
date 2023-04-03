@@ -1,6 +1,6 @@
 graia-ariadne==0.11.3
 graiax-silkcoder
-revChatGPT==4.0.11
+revChatGPT==4.1.1.1
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
