@@ -4,6 +4,9 @@ import time
 from queue import Queue
 
 from flask import Flask, request, jsonify
+from graia.ariadne.message.element import Image
+from graia.ariadne.message.chain import MessageChain
+import base64
 from loguru import logger
 from werkzeug.serving import run_simple
 
@@ -20,19 +23,31 @@ class BotRequest:
         self.message = message
         self.result = None
 
+    def append_result_message(self, message):
+        if not self.result:
+            self.result = {
+                "message": message
+            }
+        elif not self.result["message"]:
+            self.result["message"] = message
+        else:
+            self.result["message"] = f'{self.result["message"]}\n{message}'
+
 
 async def process_request(bot_request: BotRequest):
     async def response(msg):
         logger.info(f"Got response msg -> {msg}")
-        if isinstance(msg, str):
-            bot_request.result = {
-                "message": msg
-            }
-        else:
-            logger.warning(f"Not support message -> {str(msg)}")
-            bot_request.result = {
-                "message": str(msg)
-            }
+        _resp = msg
+        if not isinstance(msg, MessageChain):
+            _resp = MessageChain(msg)
+        for ele in _resp:
+            if isinstance(ele, str):
+                bot_request.append_result_message(ele)
+            elif isinstance(ele, Image):
+                bot_request.append_result_message(f'<img src="data:image/png;base64,{ele.base64}"/>')
+            else:
+                logger.warning(f"Not support message -> {str(ele)}")
+                bot_request.append_result_message(str(ele))
 
     await handle_message(
         response,
