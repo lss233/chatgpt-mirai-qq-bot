@@ -42,6 +42,7 @@ class VitsAPI:
 
     async def voice_speakers_check(self, new_id=None):
         json_array = await self.get_json_array()
+        vits_list = json_array["VITS"]
 
         try:
             if new_id is not None:
@@ -50,7 +51,7 @@ class VitsAPI:
                 integer_number = int(config.text_to_speech.default)
             else:
                 raise ValueError("默认语音音色未设置，请检查配置文件")
-            voice_name = self.check_id_exists(json_array, integer_number)
+            voice_name = self.check_id_exists(vits_list, integer_number)
         except ValueError:
             logger.error("vits引擎中音色只能为纯数字")
             return None
