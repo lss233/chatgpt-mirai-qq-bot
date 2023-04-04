@@ -264,10 +264,12 @@ async def _(event: Event):
 
 @bot.on_startup
 async def startup():
-    await botManager.login()
     logger.success("启动完毕，接收消息中……")
 
 
-def main(event_loop=asyncio.get_event_loop()):
-    asyncio.set_event_loop(event_loop)
-    bot.run(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    return await bot.run_task(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
+

@@ -1,15 +1,14 @@
 import asyncio
 
-from flask import Flask, request, jsonify
+from quart import Quart, request, jsonify
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image
 from loguru import logger
-from werkzeug.serving import run_simple
 
 from constants import botManager, config
 from universal import handle_message
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 
 class BotRequest:
@@ -55,9 +54,10 @@ async def process_request(bot_request: BotRequest):
 
 @app.route('/v1/chat', methods=['POST'])
 async def chat_completions():
-    session_id = request.json.get('session_id') or "friend-default_session"
-    username = request.json.get('username') or "某人"
-    message = request.json.get('message')
+    data = await request.get_json()
+    session_id = data.get('session_id') or "friend-default_session"
+    username = data.get('username') or "某人"
+    message = data.get('message')
     logger.info(f"Get message from {session_id}[{username}]:\n{message}")
     if message is None or str(message).strip() == '':
         return '{"message": "message 不能为空！"}'
@@ -68,9 +68,8 @@ async def chat_completions():
     return jsonify(bot_request.result)
 
 
-def main(event_loop=asyncio.get_event_loop()):
-    asyncio.set_event_loop(event_loop)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(botManager.login())
-    logger.info(f"Bot is ready. Logged in as http service!")
-    run_simple(hostname=config.http.host, port=config.http.port, application=app, use_debugger=config.http.debug)
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    return await app.run_task(host=config.http.host, port=config.http.port, debug=config.http.debug)

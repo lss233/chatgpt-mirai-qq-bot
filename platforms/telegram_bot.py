@@ -87,14 +87,13 @@ async def bootstrap() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
     app.add_handler(CommandHandler("presets", on_check_presets_list))
     await app.initialize()
-    await botManager.login()
     await app.start()
     logger.info("启动完毕，接收消息中……")
     await app.updater.start_polling(drop_pending_updates=True)
 
 
-def main(event_loop=asyncio.get_event_loop()):
-    asyncio.set_event_loop(event_loop)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(bootstrap())
-    loop.run_forever()
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    return await bootstrap()
