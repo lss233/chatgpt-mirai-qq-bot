@@ -293,4 +293,5 @@ async def start_task():
     """|coro|
     以异步方式启动
     """
+    app._patch_launch_manager()
     await app.launch_manager.launch()
