@@ -8,6 +8,7 @@ from loguru import logger
 
 from constants import config
 from utils.azure_tts import synthesize_speech, encode_to_silk
+from utils.azure_free_tts import azure_free_speech, mp3_to_silk
 
 
 async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
@@ -37,6 +38,9 @@ async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
 
             logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
             return voice
-
+    elif "azure_free" == config.text_to_speech.engine:
+        binary_array = await azure_free_speech(str(elem), conversation_context.conversation_voice)
+        voice = Voice(data_bytes=await mp3_to_silk(bytes(binary_array)))
+        return voice
     else:
         raise ValueError("不存在该文字转音频引擎，请检查配置文件是否正确")
