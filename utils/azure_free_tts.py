@@ -8,6 +8,7 @@ from loguru import logger
 try:
     from graiax import silkcoder
 
+
     async def mp3_to_silk(input_data: bytes) -> bytes:
         return await silkcoder.async_encode(
             input_data,
@@ -37,6 +38,7 @@ try:
     def gen_cid():
         return secrets.token_hex(16)
 
+
     def gen_ip():
         return str(randint(10, 255)) + \
                '.' + str(randint(10, 255)) + \
@@ -48,6 +50,7 @@ try:
     }
     byte_dict = {
     }
+
 
     class Stat:
         def __init__(self, val):
@@ -75,6 +78,11 @@ try:
                 stop_event.set()
                 websocket_thread = None
                 stop_event = None
+        for key in list(message_dict.keys()):
+            message_dict[key].put([])
+            del message_dict[key]
+        for key in list(byte_dict.keys()):
+            del byte_dict[key]
 
 
     def on_message(ws, data):
@@ -130,7 +138,7 @@ try:
                '<prosody rate="0%" pitch="0%">hi</prosody>' \
                '</voice>' \
                '</speak>'
-        if isinstance(ws, websocket.WebSocketApp):
+        if isinstance(ws, websocket.WebSocketApp) and ws.keep_running:
             ws.send(ssml)
 
 
@@ -156,6 +164,8 @@ try:
         rate： 语速
         pitch: 音调
     """
+
+
     def build_ssml(text: str, voice_name: str, style: str, lexicon: str = '', rate: int = -1, pitch: int = -1):
         rate_str = ('rate="' + str(rate) + '%"') if rate != -1 else ''
         pitch_str = ('pitch="' + str(pitch) + '%"') if pitch != -1 else ''
@@ -173,7 +183,7 @@ try:
 
     def conn():
         global ws, websocket_thread, stop_event
-        if ws is None:
+        if ws is None or not ws.keep_running:
             stop_event = threading.Event()
             ws = websocket.WebSocketApp(ws_url + gen_cid(),
                                         header=header,
@@ -190,13 +200,17 @@ try:
             ), args={stop_event})
             websocket_thread.start()
 
-            # 90s发送一次心跳维持连接
+            # 60s发送一次心跳维持连接
             def action(func=None):
                 if func:
-                    func()
+                    try:
+                        func()
+                    except RuntimeError:
+                        print()
                 if isinstance(websocket_thread, threading.Thread):
-                    t = threading.Timer(90.0, action, args=[sendHeartbeat])
+                    t = threading.Timer(60.0, action, args=[sendHeartbeat])
                     t.start()
+
             action()
             time.sleep(3)
         return ws
@@ -205,7 +219,6 @@ try:
     async def azure_free_speech(text: str, voice_name: str = 'zh-CN-XiaoyiNeural', style: str = 'affectionate'):
         cid = gen_cid()
         ssml = build_ssml(text, voice_name, style)
-        _ws = conn()
         timestamp = int(time.time())
         speechConfig = {
             "context": {
@@ -221,19 +234,43 @@ try:
             }
         }
         config_body = 'X-Timestamp:' + str(timestamp) \
-              + '\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n' \
-              + json.dumps(speechConfig)
+                      + '\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n' \
+                      + json.dumps(speechConfig)
         ssml_body = 'X-Timestamp:' + str(timestamp) + '\r\nX-RequestId:' + cid + \
-                '\r\nContent-Type:application/ssml+xml\r\nPath:ssml\r\n\r\n' + ssml
-        _ws.send(config_body)
-        _ws.send(ssml_body)
-        msg_queue = queue.Queue()
-        message_dict[cid] = msg_queue
-        # logger.info(f'send cid:{cid}')
-        data = msg_queue.get()
-        del message_dict[cid]
-        return data
+                    '\r\nContent-Type:application/ssml+xml\r\nPath:ssml\r\n\r\n' + ssml
+        result = None
 
+        def action():
+            _ws = conn()
+            _ws.send(config_body)
+            _ws.send(ssml_body)
+            msg_queue = queue.Queue()
+            message_dict[cid] = msg_queue
+            # logger.info(f'send cid:{cid}')
+            data = msg_queue.get()
+            return data
+
+        if cid in message_dict:
+            del message_dict[cid]
+        return retry(action)
+
+
+    def retry(func, count=2):
+        error = None
+        result = None
+        while count >= 0:
+            try:
+                result = func()
+                if len(result) > 0:
+                    break
+                count -= 1
+            except Exception as err:
+                logger.warning("azure free api execute error! retry ...")
+                count -= 1
+                error = err
+        if error:
+            raise error
+        return result
 
 except FileNotFoundError as e:
     async def synthesize_speech(a=None, b=None, c=None):
