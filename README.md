@@ -1,7 +1,7 @@
 <p align="center">
-  <h3 align="center">ChatGPT QQ Bot</h3>
+  <h3 align="center">ChatGPT for Bot</h3>
   <p align="center">
-    一款使用 OpenAI 的 ChatGPT 进行聊天的 QQ 机器人！
+    一款支持各种主流语言模型的聊天的机器人！
     <br/>
     <br/>
     <a href="https://darks-organization.gitbook.io/chatgpt-qq/"><strong>查看使用教程 »</strong></a>
@@ -46,7 +46,7 @@
 
 **多平台兼容**  
 
-不仅仅是 Mirai， 我们支持多种平台。  
+我们支持多种聊天平台。  
 
 | 平台       | 群聊回复 | 私聊回复 | 条件触发 | 管理员指令 | 绘图  | 语音回复 |
 |----------|------|------|------|-------|-----|------|
