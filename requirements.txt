@@ -1,13 +1,13 @@
 graia-ariadne==0.11.3
 graiax-silkcoder
-revChatGPT~=4.0.11
+revChatGPT==4.1.1.1
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
 
 loguru~=0.6.0
 asyncio~=3.4.3
-pydantic~=1.10.5
+pydantic~=1.10.7
 
 markdown~=3.4.3
 python-markdown-math~=0.8
@@ -16,7 +16,7 @@ imgkit~=1.2.3
 qrcode~=7.4.2
 openai~=0.27.2
 EdgeGPT==0.1.22
-aiohttp~=3.8.3
+aiohttp~=3.8.4
 OpenAIAuth~=0.3.2
 urllib3~=1.26.15
 
@@ -31,7 +31,7 @@ discord.py
 azure-cognitiveservices-speech
 poe-api~=0.2.4
 
-regex~=2022.10.31
+regex~=2023.3.23
 httpx~=0.23.3
 janus~=1.0.0
 quart~=0.18.3

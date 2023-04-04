@@ -23,10 +23,11 @@ class VitsAPI:
         async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             async with session.post(url=url) as res:
                 json_array = await res.json()
+                vits_list = json_array["VITS"]
 
                 try:
                     integer_number = int(config.text_to_speech.default)
-                    result = self.check_id_exists(json_array, integer_number)
+                    result = self.check_id_exists(vits_list, integer_number)
                 except ValueError:
                     logger.error("vits引擎中音色只能为纯数字")
                     return None
