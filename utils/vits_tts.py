@@ -10,32 +10,56 @@ class VitsAPI:
     def __init__(self):
         self.lang = config.vits.lang
         self.id = None
+        self.initialized = False
 
-    async def initialize(self):
-        self.id = await self.voice_speakers_check()
+    async def initialize(self, new_id=None):
+        if new_id is not None:
+            await self.set_id(new_id)
+        else:
+            self.id = await self.voice_speakers_check()
 
-    def check_id_exists(self, json_array, given_id):
-        return any(str(given_id) in item for item in json_array)
+        self.initialized = True
 
-    async def voice_speakers_check(self):
+    def check_id_exists(self, json_dict, given_id):
+        return json_dict.get(str(given_id), False)
+
+    async def set_id(self, new_id):
+        json_array = await self.get_json_array()
+        voice_name = self.check_id_exists(json_array, new_id)
+
+        if not voice_name:
+            raise Exception("不存在该语音音色，请检查配置文件")
+
+        self.id = new_id
+        return voice_name
+
+    async def get_json_array(self):
         url = f"{config.vits.api_url}/speakers"
 
         async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             async with session.post(url=url) as res:
-                json_array = await res.json()
-                vits_list = json_array["VITS"]
+                return await res.json()
 
-                try:
-                    integer_number = int(config.text_to_speech.default)
-                    result = self.check_id_exists(vits_list, integer_number)
-                except ValueError:
-                    logger.error("vits引擎中音色只能为纯数字")
-                    return None
+    async def voice_speakers_check(self, new_id=None):
+        json_array = await self.get_json_array()
+        vits_list = json_array["VITS"]
 
-                if not result:
-                    raise Exception("不存在该语音音色，请检查配置文件")
+        try:
+            if new_id is not None:
+                integer_number = int(new_id)
+            elif config.text_to_speech.default is not None:
+                integer_number = int(config.text_to_speech.default)
+            else:
+                raise ValueError("默认语音音色未设置，请检查配置文件")
+            voice_name = self.check_id_exists(vits_list, integer_number)
+        except ValueError:
+            logger.error("vits引擎中音色只能为纯数字")
+            return None
 
-                return integer_number
+        if not voice_name:
+            raise Exception("不存在该语音音色，请检查配置文件")
+
+        return integer_number
 
     async def get_voice_data(self, text, lang, format):
         url = f"{config.vits.api_url}?text=[LENGTH={config.vits.speed}]{text}&lang={lang}&id={self.id}&format={format}"
@@ -98,6 +122,9 @@ class VitsAPI:
             return self.save_voice_file(content, path)
 
     async def process_message(self, message, path):
+        if not self.initialized:
+            await self.initialize()
+
         if config.mirai or config.onebot:
             output_file = await self.response(message, "silk", path)
         else:
@@ -105,8 +132,10 @@ class VitsAPI:
 
         return output_file
 
-    @staticmethod
-    async def vits_api(message: str, path: str):
-        vits_api_instance = VitsAPI()
-        await vits_api_instance.initialize()
-        return await vits_api_instance.process_message(message, path)
+
+vits_api_instance = VitsAPI()
+
+
+async def vits_api(message: str, path: str):
+    await vits_api_instance.initialize()
+    return await vits_api_instance.process_message(message, path)

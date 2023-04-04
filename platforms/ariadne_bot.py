@@ -294,5 +294,3 @@ async def start_task():
     以异步方式启动
     """
     await app.launch_manager.launch()
-
-

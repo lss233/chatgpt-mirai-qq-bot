@@ -221,8 +221,6 @@ async def _(event: Event):
     return await bot.send(event,
                           f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
-
-
 @bot.on_message()
 async def _(event: Event):
     pattern = ".预设列表"

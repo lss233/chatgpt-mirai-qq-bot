@@ -54,7 +54,6 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         nickname=update.message.from_user.full_name or "群友"
     )
 
-
 async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if config.presets.hide and not update.message.from_user.id == config.telegram.manager_chat:
         return await update.message.reply_text("您没有权限执行这个操作")
