@@ -37,6 +37,8 @@ class PoeAdapter(BotAdapter):
     async def ask(self, msg: str) -> Generator[str, None, None]:
         """向 AI 发送消息"""
         final_resp = None
+        if not self.poe_client.ws_connected:
+            self.poe_client.connect_ws()
         for final_resp in self.poe_client.send_message(chatbot=self.poe_bot.value, message=msg):
             pass
         if final_resp is None:
