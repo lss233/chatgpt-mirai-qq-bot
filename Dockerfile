@@ -2,6 +2,8 @@ FROM python:3.11.2-slim-bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN cp ./fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
+
 RUN apt-get update && \
     apt install --no-install-recommends xvfb binutils qtbase5-dev wkhtmltopdf -yq && \
     (strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5 || true) && \
