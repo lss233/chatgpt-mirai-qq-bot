@@ -2,7 +2,7 @@ FROM python:3.11.2-slim-bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN cp ./fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
+COPY ./fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
 
 RUN apt-get update && \
     apt install --no-install-recommends xvfb binutils qtbase5-dev wkhtmltopdf -yq && \
