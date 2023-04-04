@@ -1,7 +1,9 @@
 import os
 import sys
-sys.path.append(os.getcwd())
 
+sys.path.append(os.getcwd())
+import creart
+from asyncio import AbstractEventLoop
 import asyncio
 from utils.exithooks import hook
 from loguru import logger
@@ -14,7 +16,8 @@ if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.starts
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
-loop = asyncio.new_event_loop()
+loop = creart.create(AbstractEventLoop)
+
 loop.run_until_complete(botManager.login())
 
 bots = []
