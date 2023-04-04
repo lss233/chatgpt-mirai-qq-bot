@@ -288,6 +288,7 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
     finally:
         raise ExecutionStop()
 
+
 async def start_task():
     """|coro|
     以异步方式启动
