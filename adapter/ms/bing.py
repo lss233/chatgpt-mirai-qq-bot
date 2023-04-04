@@ -1,4 +1,4 @@
-import asyncio
+import json
 from typing import Generator
 
 from constants import config
@@ -26,9 +26,12 @@ class BingAdapter(BotAdapter):
         self.conversation_style = conversation_style
         account = botManager.pick('bing-cookie')
         self.cookieData = []
-        for line in account.cookie_content.split("; "):
-            name, value = line.split("=", 1)
-            self.cookieData.append({"name": name, "value": value})
+        if account.cookie_content.strip().startswith('['):
+            self.cookieData = json.loads(account.cookie_content)
+        else:
+            for line in account.cookie_content.split("; "):
+                name, value = line.split("=", 1)
+                self.cookieData.append({"name": name, "value": value})
 
         self.bot = EdgeChatbot(cookies=self.cookieData, proxy=account.proxy)
 
@@ -81,5 +84,6 @@ class BingAdapter(BotAdapter):
             yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
             await self.on_reset()
             return
+
     async def preset_ask(self, role: str, text: str):
         yield None  # Bing 不使用预设功能
