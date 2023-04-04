@@ -150,16 +150,7 @@ class YiyanAdapter(BotAdapter):
                 break
 
     async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role in ['assistant', 'yiyan']:
-            logger.debug(f"[预设] 响应：{text}")
-            yield text
-        else:
-            logger.debug(f"[预设] 发送：{text}")
-            item = None
-            async for item in self.ask(text): ...
-            if item:
-                logger.debug(f"[预设] Chatbot 回应：{item}")
-            pass  # 不发送 AI 的回应，免得串台
+        yield None  # 不使用预设功能，防止错乱恢复卡住
 
     def __check_response(self, resp):
         if int(resp['code']) != 0:
