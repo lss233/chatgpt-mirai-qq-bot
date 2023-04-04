@@ -58,7 +58,7 @@ class MarkdownImageRenderer(Renderer):
         for rendered in groups:
             if not str(rendered).strip():
                 continue
-            everything = everything + str(rendered) + '  '
+            everything = everything + str(rendered) + '  \n'
         if everything:
             return MessageChain([await to_image(everything)])
         return None
