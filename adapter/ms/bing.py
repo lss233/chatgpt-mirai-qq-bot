@@ -1,6 +1,7 @@
 import json
 from typing import Generator, Union
 
+import asyncio
 from constants import config
 from adapter.botservice import BotAdapter
 from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle
