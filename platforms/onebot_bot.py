@@ -58,7 +58,7 @@ def transform_message_chain(text: str) -> MessageChain:
         message_class = message_classes.get(cq_type)
         if message_class:
             text_segment = text[start:match.start()]
-            if text_segment:
+            if text_segment and not text_segment.startswith('[CQ:reply,'):
                 messages.append(Plain(text_segment))
             if cq_type == "at":
                 params["target"] = int(params.pop("qq"))
