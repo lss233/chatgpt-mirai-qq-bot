@@ -15,7 +15,7 @@ pygments~=2.10.0
 imgkit~=1.2.3
 qrcode~=7.4.2
 openai~=0.27.2
-EdgeGPT==0.1.10.1
+EdgeGPT==0.1.22
 aiohttp~=3.8.4
 OpenAIAuth~=0.3.2
 urllib3~=1.26.15
@@ -34,3 +34,4 @@ poe-api~=0.2.4
 regex~=2023.3.23
 httpx~=0.23.3
 janus~=1.0.0
+quart~=0.18.3

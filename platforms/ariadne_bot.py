@@ -190,13 +190,6 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 @app.broadcast.receiver(AccountLaunch)
 async def start_background():
-    try:
-        logger.info("ChatGPT for QQ 登录账号中……")
-        await botManager.login()
-    except:
-        logger.error("ChatGPT for QQ 登录账号失败！")
-        exit(-1)
-    logger.info("ChatGPT for QQ 登录账号成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
     if config.mirai.reverse_ws_port:
         logger.info("[提示] 当前为反向 ws 模式，请确保你的 mirai api http 设置了正确的 reverse-ws adapter 配置")
@@ -295,5 +288,8 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
     finally:
         raise ExecutionStop()
 
-def main():
-    app.launch_blocking()
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    await app.launch_manager.launch()

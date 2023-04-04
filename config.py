@@ -50,6 +50,15 @@ class DiscordBot(BaseModel):
     """Discord Bot 的 token"""
 
 
+class HttpService(BaseModel):
+    host: str = "0.0.0.0"
+    """0.0.0.0则不限制访问地址"""
+    port: int = 8080
+    """Http service port, 默认8080"""
+    debug: bool = False
+    """是否开启debug，错误时展示日志"""
+
+
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
     max_tokens: int = 4000
@@ -406,6 +415,7 @@ class Config(BaseModel):
     mirai: Optional[Mirai] = None
     telegram: Optional[TelegramBot] = None
     discord: Optional[DiscordBot] = None
+    http: Optional[HttpService] = None
 
     # === Account Settings ===
     openai: OpenAIAuths = OpenAIAuths()
