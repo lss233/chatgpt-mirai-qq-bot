@@ -124,18 +124,30 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             elif prompt in config.trigger.rollback_command:
                 task = conversation_context.rollback()
 
+
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
-                if config.azure.tts_speech_key:
-                    conversation_context.conversation_voice = voice_type_search.group(1).strip()
-                    if conversation_context.conversation_voice == '关闭':
-                        conversation_context.conversation_voice = None
-                        await respond(
-                            f"已关闭语音，让我们继续聊天吧！")
-                    else:
-                        await respond(
-                            f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
-                else:
+                if not config.azure.tts_speech_key and config.text_to_speech.engine != "vits":
                     await respond(f"未配置 Azure TTS 账户，无法切换语音！")
+                conversation_context.conversation_voice = voice_type_search.group(1).strip()
+                if conversation_context.conversation_voice == '关闭':
+                    conversation_context.conversation_voice = None
+                    await respond(f"已关闭语音，让我们继续聊天吧！")
+                elif config.text_to_speech.engine == "vits":
+                    from utils.vits_tts import vits_api_instance
+
+                    try:
+                        if conversation_context.conversation_voice != "None":
+                            voice_id = int(conversation_context.conversation_voice)
+                            voice_name = await vits_api_instance.set_id(voice_id)
+                        else:
+                            voice_name = await vits_api_instance.set_id(None)
+                        await respond(f"已切换至 {voice_name} 语音，让我们继续聊天吧！")
+                    except ValueError:
+                        await respond(f"提供的语音ID无效，请输入一个有效的数字ID。")
+                    except Exception as e:
+                        await respond(str(e))
+                else:
+                    await respond(f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
                 return
 
             elif prompt in config.trigger.mixed_only_command:
