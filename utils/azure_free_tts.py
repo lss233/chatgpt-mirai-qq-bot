@@ -27,11 +27,15 @@ try:
     # import azure.cognitiveservices.speech as speechsdk
     import edge_tts
 
+    from pydub import AudioSegment
+
 
     async def azure_free_speech(text: str, voice_name: str, path: str):
         try:
             communicate = edge_tts.Communicate(text, voice_name)
-            await communicate.save(path)
+            await communicate.save(path + ".mp3")
+            sound = AudioSegment.from_mp3(path + ".mp3")
+            sound.export(path, format="wav")
             return True
         except Exception as err:
             logger.error(f"Azure free api error: ", err)

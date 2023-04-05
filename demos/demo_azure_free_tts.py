@@ -7,7 +7,7 @@ import os
 import asyncio
 
 async def main():
-    path = os.getcwd() + "/1.mp3"
+    path = os.getcwd() + "/1.wav"
     if await azure_free_speech('你好世界！我是微软Abc', 'zh-CN-XiaoyiNeural', path):
     # print(binary_array)
         print(path)
