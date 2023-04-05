@@ -30,7 +30,7 @@ try:
     from pydub import AudioSegment
 
 
-    async def azure_free_speech(text: str, voice_name: str, path: str):
+    async def edge_tts_speech(text: str, voice_name: str, path: str):
         try:
             communicate = edge_tts.Communicate(text, voice_name)
             await communicate.save(path + ".mp3")
@@ -38,7 +38,7 @@ try:
             sound.export(path, format="wav")
             return True
         except Exception as err:
-            logger.error(f"Azure free api error: ", err)
+            logger.error(f"edge-tts api error: ", err)
             return False
 
 

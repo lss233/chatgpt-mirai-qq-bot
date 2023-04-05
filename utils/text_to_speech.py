@@ -8,7 +8,7 @@ from loguru import logger
 
 from constants import config
 from utils.azure_tts import synthesize_speech, encode_to_silk
-from utils.azure_free_tts import azure_free_speech
+from utils.edge_tts import edge_tts_speech
 
 
 async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
@@ -40,7 +40,7 @@ async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
             return voice
     elif "azure_free" == config.text_to_speech.engine:
         output_file.name = output_file.name
-        if await azure_free_speech(str(elem), conversation_context.conversation_voice, output_file.name):
+        if await edge_tts_speech(str(elem), conversation_context.conversation_voice, output_file.name):
             voice = Voice(path=output_file.name)
             if config.mirai or config.onebot:
                 voice = Voice(data_bytes=await encode_to_silk(await voice.get_bytes()))
