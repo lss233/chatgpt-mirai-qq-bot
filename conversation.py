@@ -61,6 +61,8 @@ class ConversationContext:
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
+        self.last_resp = ''
+
         self.switch_renderer()
 
         if config.text_to_speech.always:
@@ -121,6 +123,7 @@ class ConversationContext:
 
     async def reset(self):
         await self.adapter.on_reset()
+        self.last_resp = ''
         yield config.response.reset
 
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
@@ -145,6 +148,7 @@ class ConversationContext:
             prompt = self.preset_decoration_format\
                 .replace("{prompt}", prompt)\
                 .replace("{nickname}", name)\
+                .replace("{last_resp}", self.last_resp)\
                 .replace("{date}", datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
         async with self.renderer:
@@ -153,6 +157,7 @@ class ConversationContext:
                     yield item
                 else:
                     yield await self.renderer.render(item)
+                self.last_resp = item or ''
             yield await self.renderer.result()
 
     async def rollback(self):
