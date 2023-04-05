@@ -38,7 +38,7 @@ async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
 
             logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
             return voice
-    elif "azure_free" == config.text_to_speech.engine:
+    elif "edge" == config.text_to_speech.engine:
         output_file.name = output_file.name
         if await edge_tts_speech(str(elem), conversation_context.conversation_voice, output_file.name):
             voice = Voice(path=output_file.name)
