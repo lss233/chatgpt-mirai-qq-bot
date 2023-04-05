@@ -23,7 +23,7 @@
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
-![Preview](.github____/preview.png)
+![Preview](.github/preview.png)
 
 
 **⚡ 支持**   
