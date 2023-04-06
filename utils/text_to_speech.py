@@ -39,8 +39,8 @@ async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
             logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
             return voice
     elif "edge" == config.text_to_speech.engine:
-        output_file.name = output_file.name
         if await edge_tts_speech(str(elem), conversation_context.conversation_voice, output_file.name):
+            output_file.name = output_file.name + ".mp3"
             voice = Voice(path=output_file.name)
             if config.mirai or config.onebot:
                 voice = Voice(data_bytes=await encode_to_silk(await voice.get_bytes()))
