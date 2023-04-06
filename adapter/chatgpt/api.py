@@ -25,6 +25,7 @@ class ChatGPTAPIAdapter(BotAdapter):
     hashed_user_id: str
 
     def __init__(self, session_id: str = "unknown"):
+        self.__conversation_keep_from = 0
         self.session_id = session_id
         self.hashed_user_id = "user-" + hashu("session_id").to_bytes(8, "big").hex()
         self.api_info = botManager.pick('openai-api')
@@ -67,6 +68,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.bot.api_key = self.api_info.api_key
         self.bot.proxy = self.api_info.proxy
         self.bot.conversation[self.session_id] = []
+        self.__conversation_keep_from = 0
 
     def ask_sync(self, sync_q, prompt):
         try:
@@ -82,9 +84,10 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
             ]
+            self.__conversation_keep_from = 1
         while self.bot.max_tokens - self.bot.get_token_count(self.session_id) < config.openai.gpt3_params.min_tokens and \
-                len(self.bot.conversation[self.session_id]) > 1:
-            self.bot.conversation[self.session_id].pop(1)
+                len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
+            self.bot.conversation[self.session_id].pop(self.__conversation_keep_from)
             logger.debug("清理 token，历史记录遗忘后使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
 
         os.environ['API_URL'] = openai.api_base + '/chat/completions'
@@ -118,4 +121,6 @@ class ChatGPTAPIAdapter(BotAdapter):
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = []
+            self.__conversation_keep_from = 0
         self.bot.conversation[self.session_id].append({"role": role, "content": text})
+        self.__conversation_keep_from = len(self.bot.conversation[self.session_id])
