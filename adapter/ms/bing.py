@@ -1,6 +1,7 @@
 import json
-from typing import Generator
+from typing import Generator, Union
 
+import asyncio
 from constants import config
 from adapter.botservice import BotAdapter
 from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle
@@ -79,6 +80,8 @@ class BingAdapter(BotAdapter):
 
                 yield parsed_content
             logger.debug("[Bing AI 响应] " + parsed_content)
+        except Union[asyncio.exceptions.TimeoutError, asyncio.exceptions.CancelledError] as e:
+            raise e
         except Exception as e:
             logger.exception(e)
             yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"

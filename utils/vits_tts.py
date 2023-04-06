@@ -21,7 +21,7 @@ class VitsAPI:
         self.initialized = True
 
     def check_id_exists(self, json_dict, given_id):
-        return json_dict.get(str(given_id), False)
+        return json_dict[given_id].get(str(given_id), False)
 
     async def set_id(self, new_id):
         json_array = await self.get_json_array()
