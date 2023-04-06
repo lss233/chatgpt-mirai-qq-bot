@@ -9,7 +9,7 @@ try:
     async def encode_to_silk(input_data: bytes) -> bytes:
         return await silkcoder.async_encode(
             input_data,
-            audio_format='ogg',
+            audio_format=None,
             ios_adaptive=True
         )
 except ImportError as e:
