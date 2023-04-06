@@ -2,11 +2,10 @@ import re
 import time
 from typing import Union, Optional
 
-import asyncio
+from aiocqhttp import CQHttp, Event, MessageSegment
 from charset_normalizer import from_bytes
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, At, Plain, Voice
-from aiocqhttp import CQHttp, Event, MessageSegment
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
 from loguru import logger
@@ -14,8 +13,8 @@ from loguru import logger
 import constants
 from constants import config, botManager
 from manager.bot import BotManager
-from universal import handle_message
 from middlewares.ratelimit import manager as ratelimit_manager
+from universal import handle_message
 
 bot = CQHttp()
 
