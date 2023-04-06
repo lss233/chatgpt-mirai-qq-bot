@@ -1,11 +1,10 @@
-import asyncio
-
-from quart import Quart, request, jsonify
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image
+from graia.ariadne.message.element import Plain
 from loguru import logger
+from quart import Quart, request, jsonify
 
-from constants import botManager, config
+from constants import config
 from universal import handle_message
 
 app = Quart(__name__)
@@ -31,17 +30,17 @@ class BotRequest:
 
 async def process_request(bot_request: BotRequest):
     async def response(msg):
-        logger.info(f"Got response msg -> {msg}")
+        logger.info(f"Got response msg -> {type(msg)} -> {msg}")
         _resp = msg
         if not isinstance(msg, MessageChain):
             _resp = MessageChain(msg)
         for ele in _resp:
-            if isinstance(ele, str):
-                bot_request.append_result_message(ele)
+            if isinstance(ele, Plain) and str(ele):
+                bot_request.append_result_message(str(ele))
             elif isinstance(ele, Image):
                 bot_request.append_result_message(f'<img src="data:image/png;base64,{ele.base64}"/>')
             else:
-                logger.warning(f"Unsupported message -> {str(ele)}")
+                logger.warning(f"Unsupported message -> {type(ele)} -> {str(ele)}")
                 bot_request.append_result_message(str(ele))
 
     await handle_message(
