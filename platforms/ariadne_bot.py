@@ -3,6 +3,7 @@ import time
 from typing import Union
 
 import asyncio
+from charset_normalizer import from_bytes
 from graia.amnesia.builtins.aiohttp import AiohttpServerService
 from graia.ariadne.app import Ariadne
 from graia.ariadne.connection.config import (
@@ -189,13 +190,6 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 
 @app.broadcast.receiver(AccountLaunch)
 async def start_background():
-    try:
-        logger.info("ChatGPT for QQ 登录账号中……")
-        await botManager.login()
-    except:
-        logger.error("ChatGPT for QQ 登录账号失败！")
-        exit(-1)
-    logger.info("ChatGPT for QQ 登录账号成功")
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
     if config.mirai.reverse_ws_port:
         logger.info("[提示] 当前为反向 ws 模式，请确保你的 mirai api http 设置了正确的 reverse-ws adapter 配置")
@@ -269,8 +263,9 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
         nodes = []
         for keyword, path in config.presets.keywords.items():
             try:
-                with open(path) as f:
-                    preset_data = f.read().replace("\n\n", "\n=========\n")
+                with open(path, 'rb') as f:
+                    guessed_str = from_bytes(f.read()).best()
+                    preset_data = str(guessed_str).replace("\n\n", "\n=========\n")
                 answer = f"预设名：{keyword}\n" + preset_data
 
                 node = ForwardNode(
@@ -294,43 +289,9 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
         raise ExecutionStop()
 
 
-@cmd.command(".查询API余额")
-async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
-    try:
-        if not sender.id == config.mirai.manager_qq:
-            return await app.send_message(event, "您没有权限执行这个操作")
-        tasklist = []
-        bots = botManager.bots.get("openai-api", [])
-        for account in bots:
-            tasklist.append(botManager.check_api_info(account))
-        msg = await app.send_message(event, "查询中，请稍等……")
-
-        nodes = []
-        for account, r in zip(bots, await asyncio.gather(*tasklist)):
-            grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
-            total_available = grant_available
-            if has_payment_method:
-                total_available = total_available + hard_limit_usd - total_usage
-            answer = '' + account.api_key[:6] + "**" + account.api_key[-3:] + '\n'
-            answer = answer + f' - 本月已用: {round(total_usage, 2)}$\n' \
-                              f' - 可用：{round(total_available, 2)}$\n' \
-                              f' - 绑卡：{has_payment_method}'
-            node = ForwardNode(
-                target=config.mirai.qq,
-                name="ChatGPT",
-                message=MessageChain(Plain(answer)),
-                time=datetime.datetime.now()
-            )
-            nodes.append(node)
-
-        await app.recall_message(msg)
-        if len(nodes) == 0:
-            await app.send_message(event, "没有查询到任何 API")
-            return
-        await app.send_message(event, MessageChain(Forward(nodes)))
-    finally:
-        raise ExecutionStop()
-
-
-def main():
-    app.launch_blocking()
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    app._patch_launch_manager()
+    await app.launch_manager.launch()

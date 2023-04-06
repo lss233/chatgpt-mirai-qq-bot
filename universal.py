@@ -1,19 +1,17 @@
-import os
 import re
 from typing import Callable
 
+import asyncio
 import openai
-from tempfile import NamedTemporaryFile
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain, Voice
+from graia.ariadne.message.element import Plain
 from httpx import HTTPStatusError, ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
 
-from constants import config
 from constants import botManager
-
+from constants import config
 from conversation import ConversationHandler
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException
@@ -21,8 +19,6 @@ from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
-
-from utils.azure_tts import synthesize_speech
 from utils.text_to_speech import get_tts_voice
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
@@ -89,8 +85,16 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
 
         # TTS Converting
         if conversation_context.conversation_voice and isinstance(msg, MessageChain):
+            tasks = []
             for elem in msg:
-                await _respond(await get_tts_voice(elem, conversation_context))
+                task = asyncio.create_task(get_tts_voice(elem, conversation_context))
+                tasks.append(task)
+            while tasks:
+                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                for voice_task in done:
+                    voice = await voice_task
+                    if voice:
+                        await _respond(voice)
 
         return ret
 
@@ -120,18 +124,30 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             elif prompt in config.trigger.rollback_command:
                 task = conversation_context.rollback()
 
+
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
-                if config.azure.tts_speech_key:
-                    conversation_context.conversation_voice = voice_type_search.group(1).strip()
-                    if conversation_context.conversation_voice == '关闭':
-                        conversation_context.conversation_voice = None
-                        await respond(
-                            f"已关闭语音，让我们继续聊天吧！")
-                    else:
-                        await respond(
-                            f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
-                else:
+                if not config.azure.tts_speech_key and config.text_to_speech.engine != "vits":
                     await respond(f"未配置 Azure TTS 账户，无法切换语音！")
+                conversation_context.conversation_voice = voice_type_search.group(1).strip()
+                if conversation_context.conversation_voice == '关闭':
+                    conversation_context.conversation_voice = None
+                    await respond(f"已关闭语音，让我们继续聊天吧！")
+                elif config.text_to_speech.engine == "vits":
+                    from utils.vits_tts import vits_api_instance
+
+                    try:
+                        if conversation_context.conversation_voice != "None":
+                            voice_id = int(conversation_context.conversation_voice)
+                            voice_name = await vits_api_instance.set_id(voice_id)
+                        else:
+                            voice_name = await vits_api_instance.set_id(None)
+                        await respond(f"已切换至 {voice_name} 语音，让我们继续聊天吧！")
+                    except ValueError:
+                        await respond(f"提供的语音ID无效，请输入一个有效的数字ID。")
+                    except Exception as e:
+                        await respond(str(e))
+                else:
+                    await respond(f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
                 return
 
             elif prompt in config.trigger.mixed_only_command:

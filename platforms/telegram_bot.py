@@ -54,31 +54,6 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         nickname=update.message.from_user.full_name or "群友"
     )
 
-
-async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message.from_user.id == config.telegram.manager_chat:
-        return await update.message.reply_text("您没有权限执行这个操作")
-
-    tasklist = []
-    bots = botManager.bots.get("openai-api", [])
-    for account in bots:
-        tasklist.append(botManager.check_api_info(account))
-    msg = await update.message.reply_text("查询中，请稍等……")
-    answer = ''
-    for account, r in zip(bots, await asyncio.gather(*tasklist)):
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
-        total_available = grant_available
-        if has_payment_method:
-            total_available = total_available + hard_limit_usd - total_usage
-        answer = answer + '* `' + account.api_key[:6] + "**" + account.api_key[-3:] + '`'
-        answer = answer + f' - ' + f'本月已用: `{round(total_usage, 2)}$`, 可用：`{round(total_available, 2)}$`, 绑卡：{has_payment_method}'
-        answer = answer + '\n'
-    if answer == '':
-        await msg.edit_text("没有查询到任何 API")
-        return
-    await msg.edit_text(answer)
-
-
 async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if config.presets.hide and not update.message.from_user.id == config.telegram.manager_chat:
         return await update.message.reply_text("您没有权限执行这个操作")
@@ -105,16 +80,15 @@ async def bootstrap() -> None:
         .build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
-    app.add_handler(CommandHandler("check_api", on_check_api))
     app.add_handler(CommandHandler("presets", on_check_presets_list))
     await app.initialize()
-    await botManager.login()
     await app.start()
     logger.info("启动完毕，接收消息中……")
     await app.updater.start_polling(drop_pending_updates=True)
 
 
-def main():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(bootstrap())
-    loop.run_forever()
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    return await bootstrap()
