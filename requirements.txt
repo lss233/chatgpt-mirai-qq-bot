@@ -29,9 +29,11 @@ tls-client
 python-dateutil~=2.8.2
 discord.py
 azure-cognitiveservices-speech
-poe-api~=0.2.5
+poe-api~=0.2.7
 
 regex~=2023.3.23
 httpx~=0.23.3
 janus~=1.0.0
 Quart==0.17.0
+
+edge-tts
