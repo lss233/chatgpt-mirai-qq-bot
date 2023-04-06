@@ -100,6 +100,9 @@ class VitsAPI:
             "zh": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff\p{P}]+',
             "ja": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u3040-\u309f\u30a0-\u30ff\p{P}]+',
         }
+
+        patterns['auto'] = patterns['mix']
+
         regex = patterns.get(lang, '')
         matches = re.findall(regex, text)
         if lang == "mix":
