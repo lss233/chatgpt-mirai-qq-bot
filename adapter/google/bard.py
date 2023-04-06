@@ -78,10 +78,13 @@ class BardAdapter(BotAdapter):
                     for check in data:
                         if not check:
                             continue
-                        for element in [element for row in check for element in row]:
-                            if "rc_" in element:
-                                self.rc = element
-                                break
+                        try:
+                            for element in [element for row in check for element in row]:
+                                if "rc_" in element:
+                                    self.rc = element
+                                    break
+                        except:
+                            continue
                     logger.debug(f"[Bard] {self.bard_session_id} - {self.r} - {self.rc} - {result}")
                     yield result
                     break
