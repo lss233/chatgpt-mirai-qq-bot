@@ -1,15 +1,13 @@
-import asyncio
 import os
 import sys
+from io import BytesIO
 
 import discord
 from discord.ext import commands
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
-from loguru import logger
 
 from universal import handle_message
-from io import BytesIO
 
 sys.path.append(os.getcwd())
 

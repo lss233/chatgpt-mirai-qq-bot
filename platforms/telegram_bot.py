@@ -1,16 +1,13 @@
-import asyncio
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
 from loguru import logger
-from telegram.request import HTTPXRequest
-
-from universal import handle_message
-
-from constants import botManager, config
-
 from telegram import Update, constants
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
+from telegram.request import HTTPXRequest
+
+from constants import config
+from universal import handle_message
 
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

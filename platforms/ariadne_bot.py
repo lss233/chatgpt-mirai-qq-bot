@@ -2,7 +2,6 @@ import datetime
 import time
 from typing import Union
 
-import asyncio
 from charset_normalizer import from_bytes
 from graia.amnesia.builtins.aiohttp import AiohttpServerService
 from graia.ariadne.app import Ariadne
