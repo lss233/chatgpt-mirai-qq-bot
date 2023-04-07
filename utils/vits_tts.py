@@ -62,7 +62,7 @@ class VitsAPI:
         return integer_number
 
     async def get_voice_data(self, text, lang, format):
-        url = f"{config.vits.api_url}?text=[LENGTH={config.vits.speed}]{text}&lang={lang}&id={self.id}&format={format}"
+        url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={format}&length={config.vits.speed}"
 
         async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             try:
@@ -95,13 +95,14 @@ class VitsAPI:
             text = "这句话太长了，抱歉"
 
         lang = self.lang
+
+        if lang == "auto":return text
+
         patterns = {
             "mix": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff]+|[\u3040-\u309f\u30a0-\u30ff]+|\w+|[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
             "zh": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff\p{P}]+',
             "ja": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u3040-\u309f\u30a0-\u30ff\p{P}]+',
         }
-
-        patterns['auto'] = patterns['mix']
 
         regex = patterns.get(lang, '')
         matches = re.findall(regex, text)
