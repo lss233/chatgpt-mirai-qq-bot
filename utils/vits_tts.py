@@ -45,7 +45,7 @@ class VitsAPI:
                 async with session.post(url=url) as res:
                     json_array = await res.json()
                     return json_array["VITS"]
-                    
+
         except Exception as e:
             logger.error(f"获取语音音色列表失败: {str(e)}")
             raise Exception("获取语音音色列表失败，请检查网络连接和API设置")
@@ -149,7 +149,7 @@ class VitsAPI:
         )
 
 
-vits_api_instance = VitsAPI() 
+vits_api_instance = VitsAPI()
 async def vits_api(message: str, path: str):
     await vits_api_instance.initialize()
     return await vits_api_instance.process_message(message, path)
