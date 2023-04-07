@@ -29,7 +29,7 @@ class MiddlewareConcurrentLock(Middleware):
                 queue_info = internal_queue
         # 队列满时拒绝新的消息
         if 0 < config.response.max_queue_size < queue_info.size:
-            logger.debug(f"[Concurrent] 队列已满，拒绝服务！")
+            logger.debug("[Concurrent] 队列已满，拒绝服务！")
             await respond(config.response.queue_full)
             return
         else:
@@ -39,5 +39,5 @@ class MiddlewareConcurrentLock(Middleware):
         # 在队列中执行
         logger.debug(f"[Concurrent] 排队中，前面还有 {queue_info.size} 个人！")
         async with queue_info:
-            logger.debug(f"[Concurrent] 排到了！")
+            logger.debug("[Concurrent] 排到了！")
             await action(session_id, prompt, conversation_context, respond)

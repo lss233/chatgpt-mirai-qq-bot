@@ -42,25 +42,28 @@ class ChatGPTWebAdapter(BotAdapter):
             self.supported_models.append('gpt-4')
 
     async def switch_model(self, model_name):
-        if self.bot.account.auto_remove_old_conversations:
-            if self.conversation_id is not None:
-                await self.bot.delete_conversation(self.conversation_id)
+        if (
+            self.bot.account.auto_remove_old_conversations
+            and self.conversation_id is not None
+        ):
+            await self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
         # self.current_model = model_name
         raise Exception("此 AI 暂不支持切换模型的操作！")
 
     async def rollback(self):
-        if len(self.parent_id_prev_queue) > 0:
-            self.parent_id = self.parent_id_prev_queue.pop()
-            return True
-        else:
+        if len(self.parent_id_prev_queue) <= 0:
             return False
+        self.parent_id = self.parent_id_prev_queue.pop()
+        return True
 
     async def on_reset(self):
-        if self.bot.account.auto_remove_old_conversations:
-            if self.conversation_id is not None:
-                await self.bot.delete_conversation(self.conversation_id)
+        if (
+            self.bot.account.auto_remove_old_conversations
+            and self.conversation_id is not None
+        ):
+            await self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
         self.bot = botManager.pick('chatgpt-web')
@@ -95,9 +98,9 @@ class ChatGPTWebAdapter(BotAdapter):
             if e.code == 2:
                 current_time = datetime.datetime.now()
                 self.bot.refresh_accessed_at()
-                logger.debug("[ChatGPT-Web] accessed at: " + str(self.bot.accessed_at))
+                logger.debug(f"[ChatGPT-Web] accessed at: {str(self.bot.accessed_at)}")
                 first_accessed_at = self.bot.accessed_at[0] if len(self.bot.accessed_at) > 0 \
-                    else current_time - datetime.timedelta(hours=1)
+                        else current_time - datetime.timedelta(hours=1)
                 remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
                 minute = remaining[0]
                 second = remaining[1].seconds

@@ -25,7 +25,7 @@ from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
 
-handlers = dict()
+handlers = {}
 
 
 class ConversationContext:
@@ -145,11 +145,12 @@ class ConversationContext:
                 return
 
         if self.preset_decoration_format:
-            prompt = self.preset_decoration_format\
-                .replace("{prompt}", prompt)\
-                .replace("{nickname}", name)\
-                .replace("{last_resp}", self.last_resp)\
-                .replace("{date}", datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+            prompt = (
+                self.preset_decoration_format.replace("{prompt}", prompt)
+                .replace("{nickname}", name)
+                .replace("{last_resp}", self.last_resp)
+                .replace("{date}", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            )
 
         async with self.renderer:
             async for item in self.adapter.ask(prompt):
@@ -173,15 +174,10 @@ class ConversationContext:
 
     async def load_preset(self, keyword: str):
         self.preset_decoration_format = None
-        if keyword not in config.presets.keywords:
-            if not keyword == 'default':
-                raise PresetNotFoundException(keyword)
-        else:
+        if keyword in config.presets.keywords:
             presets = config.load_preset(keyword)
             for text in presets:
-                if text.strip() and text.startswith('#'):
-                    continue
-                else:
+                if not text.strip() or not text.startswith('#'):
                     # 判断格式是否为 role: 文本
                     if ':' in text:
                         role, text = text.split(':', 1)
@@ -199,6 +195,8 @@ class ConversationContext:
 
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
                         yield item
+        elif keyword != 'default':
+            raise PresetNotFoundException(keyword)
         self.preset = keyword
 
     def delete_message(self, respond_msg):
@@ -219,7 +217,7 @@ class ConversationHandler:
     session_id: str = 'unknown'
 
     def __init__(self, session_id: str):
-        self.conversations = dict()
+        self.conversations = {}
         self.session_id = session_id
 
     def list(self) -> List[ConversationContext]:
@@ -234,20 +232,18 @@ class ConversationHandler:
     async def first_or_create(self, _type: str):
         if _type in self.conversations:
             return self.conversations[_type]
-        else:
-            conversation = ConversationContext(_type, self.session_id)
-            self.conversations[_type] = conversation
-            return conversation
+        conversation = ConversationContext(_type, self.session_id)
+        self.conversations[_type] = conversation
+        return conversation
 
     """创建新的上下文"""
 
     async def create(self, _type: str):
         if _type in self.conversations:
             return self.conversations[_type]
-        else:
-            conversation = ConversationContext(_type, self.session_id)
-            self.conversations[_type] = conversation
-            return conversation
+        conversation = ConversationContext(_type, self.session_id)
+        self.conversations[_type] = conversation
+        return conversation
 
     """切换对话上下文"""
 

@@ -49,8 +49,8 @@ with open("./assets/texttoimg/template.html", "rb") as f:
 if config.text_to_image.wkhtmltoimage is None:
     os.environ["PATH"] = os.environ["PATH"] + os.pathsep + os.getcwd()
     config.text_to_image.wkhtmltoimage = shutil.which("wkhtmltoimage")
-    if config.text_to_image.wkhtmltoimage is None:
-        logger.error("未检测到 wkhtmltoimage，无法进行 Markdown 渲染！")
+if config.text_to_image.wkhtmltoimage is None:
+    logger.error("未检测到 wkhtmltoimage，无法进行 Markdown 渲染！")
 
 
 class TextWrapper(textwrap.TextWrapper):
@@ -67,10 +67,9 @@ class TextWrapper(textwrap.TextWrapper):
         """
         Calcaute display length of a line
         """
-        charslen = 0
-        for char in text:
-            charslen += self.char_widths[unicodedata.east_asian_width(char)]
-        return charslen
+        return sum(
+            self.char_widths[unicodedata.east_asian_width(char)] for char in text
+        )
 
     def _wrap_chunks(self, chunks):
         """_wrap_chunks(chunks : [string]) -> [string]
@@ -89,10 +88,7 @@ class TextWrapper(textwrap.TextWrapper):
         if self.width <= 0:
             raise ValueError("invalid width %r (must be > 0)" % self.width)
         if self.max_lines is not None:
-            if self.max_lines > 1:
-                indent = self.subsequent_indent
-            else:
-                indent = self.initial_indent
+            indent = self.subsequent_indent if self.max_lines > 1 else self.initial_indent
             if len(indent) + len(self.placeholder.lstrip()) > self.width:
                 raise ValueError("placeholder too large for max width")
 
@@ -108,11 +104,7 @@ class TextWrapper(textwrap.TextWrapper):
             cur_len = 0
 
             # Figure out which static string will prefix this line.
-            if lines:
-                indent = self.subsequent_indent
-            else:
-                indent = self.initial_indent
-
+            indent = self.subsequent_indent if lines else self.initial_indent
             # Maximum width for this line.
             width = self.width - len(indent)
 
@@ -124,14 +116,11 @@ class TextWrapper(textwrap.TextWrapper):
             while chunks:
                 l = self._strlen(chunks[-1])
 
-                # Can at least squeeze this chunk onto the current line.
-                if cur_len + l <= width:
-                    cur_line.append(chunks.pop())
-                    cur_len += l
-
-                # Nope, this line is full.
-                else:
+                if cur_len + l > width:
                     break
+
+                cur_line.append(chunks.pop())
+                cur_len += l
 
             # The current line is full, and the next chunk is too big to
             # fit on *any* line (not just this one).
@@ -197,11 +186,7 @@ class TextWrapper(textwrap.TextWrapper):
         """
         # Figure out when indent is larger than the specified width, and make
         # sure at least one character is stripped off on every pass
-        if width < 1:
-            space_left = 1
-        else:
-            space_left = width - cur_len
-
+        space_left = 1 if width < 1 else width - cur_len
         # If we're allowed to break long words, then do so: put as much
         # of the next chunk onto the current line as will fit.
         space_left = self._get_space_left(reversed_chunks[-1], space_left)
@@ -307,7 +292,7 @@ async def get_qr_data(text):
                 resp.raise_for_status()
                 url = await resp.text()
         except Exception as e:
-            url = "上传失败：" + str(e)
+            url = f"上传失败：{str(e)}"
         image = qrcode.make(url)
         buffered = BytesIO()
         image.save(buffered, format="JPEG")

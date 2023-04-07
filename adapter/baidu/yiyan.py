@@ -20,9 +20,8 @@ def get_ts():
 
 def extract_image(html):
     pattern = r'<img src="(.*?)" /><br>'
-    match = re.search(pattern, html)
-    if match:
-        return match.group(1), re.sub(pattern, '', html)
+    if match := re.search(pattern, html):
+        return match[1], re.sub(pattern, '', html)
     else:
         return None, html
 
@@ -132,9 +131,7 @@ class YiyanAdapter(BotAdapter):
 
             sentence_id = req.json()["data"]["sent_id"]
 
-            content = req.json()["data"]["content"]
-
-            if content:
+            if content := req.json()["data"]["content"]:
                 url, content = extract_image(content)
                 if url:
                     yield GraiaImage(data_bytes=await self.__download_image(url))
@@ -150,7 +147,7 @@ class YiyanAdapter(BotAdapter):
                 break
 
     async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role in ['assistant', 'yiyan']:
+        if role.endswith('bot') or role in {'assistant', 'yiyan'}:
             logger.debug(f"[预设] 响应：{text}")
             yield text
         else:
@@ -159,7 +156,6 @@ class YiyanAdapter(BotAdapter):
             async for item in self.ask(text): ...
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
-            pass  # 不发送 AI 的回应，免得串台
 
     def __check_response(self, resp):
         if int(resp['code']) != 0:

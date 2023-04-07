@@ -58,7 +58,7 @@ async def chat_completions():
     username = data.get('username') or "某人"
     message = data.get('message')
     logger.info(f"Get message from {session_id}[{username}]:\n{message}")
-    if message is None or str(message).strip() == '':
+    if message is None or not str(message).strip():
         return '{"message": "message 不能为空！"}'
     # Create a new BotRequest object and add it to the queue
     bot_request = BotRequest(session_id, username, message)

@@ -92,10 +92,10 @@ class MiddlewareBaiduCloud(Middleware):
 
         try:
             if not self.baidu_cloud.access_token:
-                logger.debug(f"[百度云文本审核] 正在获取access_token，请稍等")
+                logger.debug("[百度云文本审核] 正在获取access_token，请稍等")
                 self.baidu_cloud.access_token = await self.baidu_cloud.get_access_token()
 
-            response_dict = await self.baidu_cloud.get_conclusion(str(rendered))
+            response_dict = await self.baidu_cloud.get_conclusion(rendered)
 
             # 处理百度云审核结果
             conclusion = response_dict["conclusion"]
