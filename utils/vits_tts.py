@@ -106,18 +106,22 @@ class VitsAPI:
 
         regex = patterns.get(lang, '')
         matches = re.findall(regex, text)
-        if lang == "mix":
-            matched_text = ''.join(
-                '[ZH]' + match + '[ZH]' if re.search(patterns['zh'], match) else
-                '[JA]' + match + '[JA]' if re.search(patterns['ja'], match) else
-                match if re.search('[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+', match) else
-                "[ZH]还有一些我不会说，抱歉[ZH]"
+        return (
+            ''.join(
+                f'[ZH]{match}[ZH]'
+                if re.search(patterns['zh'], match)
+                else f'[JA]{match}[JA]'
+                if re.search(patterns['ja'], match)
+                else match
+                if re.search(
+                    '[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+', match
+                )
+                else "[ZH]还有一些我不会说，抱歉[ZH]"
                 for match in matches
             )
-        else:
-            matched_text = ''.join(matches)
-
-        return matched_text
+            if lang == "mix"
+            else ''.join(matches)
+        )
 
     async def response(self, text, format, path):
         text = self.linguistic_process(text)
@@ -129,12 +133,11 @@ class VitsAPI:
         if not self.initialized:
             await self.initialize()
 
-        if config.mirai or config.onebot:
-            output_file = await self.response(message, "silk", path)
-        else:
-            output_file = await self.response(message, "wav", path)
-
-        return output_file
+        return (
+            await self.response(message, "silk", path)
+            if config.mirai or config.onebot
+            else await self.response(message, "wav", path)
+        )
 
 
 vits_api_instance = VitsAPI()
