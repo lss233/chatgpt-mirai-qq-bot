@@ -52,13 +52,16 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     )
 
 async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if config.presets.hide and not update.message.from_user.id == config.telegram.manager_chat:
+    if (
+        config.presets.hide
+        and update.message.from_user.id != config.telegram.manager_chat
+    ):
         return await update.message.reply_text("您没有权限执行这个操作")
     for keyword, path in config.presets.keywords.items():
         try:
             with open(path) as f:
                 preset_data = f.read().replace("\n\n", "\n=========\n")
-            answer = f"预设名：{keyword}\n" + preset_data
+            answer = f"预设名：{keyword}\n{preset_data}"
             await update.message.reply_text(answer)
         except:
             pass

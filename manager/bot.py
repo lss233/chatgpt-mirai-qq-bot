@@ -233,13 +233,13 @@ class BotManager:
                 if isinstance(account, OpenAIAPIKey):
                     bot = await self.__login_openai_apikey(account)
                     self.bots["openai-api"].append(bot)
-                elif account.mode == "proxy" or account.mode == "browserless":
+                elif account.mode in ["proxy", "browserless"]:
                     bot = await self.__login_V1(account)
                     self.bots["chatgpt-web"].append(bot)
                 elif account.mode == "browser":
                     raise Exception("浏览器模式已移除，请使用 browserless 模式。")
                 else:
-                    raise Exception("未定义的登录类型：" + account.mode)
+                    raise Exception(f"未定义的登录类型：{account.mode}")
                 bot.id = i
                 bot.account = account
                 logger.success("登录成功！", i=i + 1)
@@ -290,19 +290,18 @@ class BotManager:
             openai.proxy = system_proxy
 
     def __check_proxy(self, proxy):
-        if proxy is not None:
-            logger.info(f"[代理测试] 正在检查代理配置：{proxy}")
-            proxy_addr = urlparse(proxy)
-            if not network.is_open(proxy_addr.hostname, proxy_addr.port):
-                raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
-            requests.get("http://www.gstatic.com/generate_204", proxies={
-                "https": proxy,
-                "http": proxy
-            })
-            logger.success(f"[代理测试] 连接成功！")
-            return proxy
-        else:
+        if proxy is None:
             return openai.proxy
+        logger.info(f"[代理测试] 正在检查代理配置：{proxy}")
+        proxy_addr = urlparse(proxy)
+        if not network.is_open(proxy_addr.hostname, proxy_addr.port):
+            raise Exception("登录失败! 无法连接至本地代理服务器，请检查配置文件中的 proxy 是否正确！")
+        requests.get("http://www.gstatic.com/generate_204", proxies={
+            "https": proxy,
+            "http": proxy
+        })
+        logger.success("[代理测试] 连接成功！")
+        return proxy
 
     def __save_login_cache(self, account: OpenAIAuthBase, cache: dict):
         """保存登录缓存"""
@@ -315,12 +314,12 @@ class BotManager:
         account_sha = hashlib.sha256(account.json().encode('utf8')).hexdigest()
         q = Query()
         cache = self.cache_db.get(q.account == account_sha)
-        return cache['cache'] if cache is not None else dict()
+        return cache['cache'] if cache is not None else {}
 
     async def __login_V1(self, account: OpenAIAuthBase) -> ChatGPTBrowserChatbot:
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
-        config = dict()
+        config = {}
         if proxy := self.__check_proxy(account.proxy):
             config['proxy'] = proxy
         if cached_account.get('paid'):
@@ -383,12 +382,14 @@ class BotManager:
         if proxy := self.__check_proxy(account.proxy):
             openai.proxy = proxy
             account.proxy = proxy
-        logger.info("当前检查的 API Key 为：" + account.api_key[:8] + "******" + account.api_key[-4:])
+        logger.info(
+            f"当前检查的 API Key 为：{account.api_key[:8]}******{account.api_key[-4:]}"
+        )
         logger.warning("在查询 API 额度时遇到问题，请自行确认额度。")
         return account
 
     def pick(self, type: str):
-        if not type in self.roundrobin:
+        if type not in self.roundrobin:
             self.roundrobin[type] = itertools.cycle(self.bots[type])
         if len(self.bots[type]) == 0:
             raise NoAvailableBotException(type)

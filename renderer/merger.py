@@ -48,9 +48,7 @@ class BufferedContentMerger(Renderer):
             result = result + MessageChain(self.hold)
         if parent := await self.parent.result():
             result = result + parent
-        if len(result) > 0:
-            return result
-        return None
+        return result if len(result) > 0 else None
 
 
 class LengthContentMerger(Renderer):
@@ -85,6 +83,4 @@ class LengthContentMerger(Renderer):
             result = result + MessageChain(self.hold)
         if parent := await self.parent.result():
             result = result + parent
-        if len(result) > 0:
-            return result
-        return None
+        return result if len(result) > 0 else None

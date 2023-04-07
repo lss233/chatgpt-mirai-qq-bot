@@ -28,7 +28,7 @@ renderer = MixedContentMessageChainRenderer(renderer)
 async def render(text: str):
     async with renderer:
         total_text = ''
-        for _, i in enumerate(data):
+        for i in data:
             await asyncio.sleep(0.03)
             partial = await renderer.render(i)
             if partial:

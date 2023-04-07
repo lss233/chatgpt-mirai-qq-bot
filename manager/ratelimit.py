@@ -27,7 +27,7 @@ class RateLimitManager:
 
         q = Query()
         entity = self.limit_db.get(q.fragment({"type": _type, "id": _id}))
-        if entity is None and not _id == '默认':
+        if entity is None and _id != '默认':
             return self.limit_db.get(q.fragment({"type": _type, "id": '默认'}))
         return entity
         
@@ -69,7 +69,4 @@ class RateLimitManager:
             return 0
 
         # 此类型下为禁止
-        if limit['rate'] == 0:
-            return 1
-
-        return usage['count'] / limit['rate']
+        return 1 if limit['rate'] == 0 else usage['count'] / limit['rate']

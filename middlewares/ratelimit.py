@@ -15,10 +15,7 @@ class MiddlewareRatelimit(Middleware):
 
     async def handle_request(self, session_id: str, prompt: str, respond: Callable,
                              conversation_context: Optional[ConversationContext], action: Callable):
-        if '-' in session_id:
-            _id = session_id.split('-', 1)[1]
-        else:
-            _id = session_id
+        _id = session_id.split('-', 1)[1] if '-' in session_id else session_id
         rate_usage = manager.check_exceed('好友' if session_id.startswith("friend-") else '群组', _id)
         if rate_usage >= 1:
             await respond(config.ratelimit.exceed)

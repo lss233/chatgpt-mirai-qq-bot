@@ -15,11 +15,10 @@ class ChatGLM6BAdapter(BotAdapter):
         self.client = httpx.AsyncClient()
 
     async def rollback(self):
-        if len(self.conversation_history) > 0:
-            self.conversation_history = self.conversation_history[:-1]
-            return True
-        else:
+        if len(self.conversation_history) <= 0:
             return False
+        self.conversation_history = self.conversation_history[:-1]
+        return True
 
     async def on_reset(self):
         self.conversation_history = []
