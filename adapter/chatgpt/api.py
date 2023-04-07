@@ -57,11 +57,10 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.bot.engine = self.current_model
 
     async def rollback(self):
-        if len(self.bot.conversation[self.session_id]) > 0:
-            self.bot.rollback(convo_id=self.session_id, n=2)
-            return True
-        else:
+        if len(self.bot.conversation[self.session_id]) <= 0:
             return False
+        self.bot.rollback(convo_id=self.session_id, n=2)
+        return True
 
     async def on_reset(self):
         self.api_info = botManager.pick('openai-api')
@@ -86,11 +85,13 @@ class ChatGPTAPIAdapter(BotAdapter):
             ]
             self.__conversation_keep_from = 1
         while self.bot.max_tokens - self.bot.get_token_count(self.session_id) < config.openai.gpt3_params.min_tokens and \
-                len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
+                    len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
             self.bot.conversation[self.session_id].pop(self.__conversation_keep_from)
-            logger.debug("清理 token，历史记录遗忘后使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
+            logger.debug(
+                f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.get_token_count(self.session_id))}"
+            )
 
-        os.environ['API_URL'] = openai.api_base + '/chat/completions'
+        os.environ['API_URL'] = f'{openai.api_base}/chat/completions'
         full_response = ''
         queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
         loop = asyncio.get_running_loop()
@@ -109,11 +110,11 @@ class ChatGPTAPIAdapter(BotAdapter):
         await future
         queue.close()
         await queue.wait_closed()
-        logger.debug("[ChatGPT-API] 响应：" + full_response)
-        logger.debug("使用 token 数：" + str(self.bot.get_token_count(self.session_id)))
+        logger.debug(f"[ChatGPT-API] 响应：{full_response}")
+        logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
 
     async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role in ['assistant', 'chatgpt']:
+        if role.endswith('bot') or role in {'assistant', 'chatgpt'}:
             logger.debug(f"[预设] 响应：{text}")
             yield text
             role = 'assistant'

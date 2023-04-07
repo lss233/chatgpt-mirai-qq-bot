@@ -54,8 +54,7 @@ def transform_message_chain(text: str) -> MessageChain:
     for match in matches:
         cq_type, params_str = match.groups()
         params = dict(re.findall(r"(\w+)=([^,]+)", params_str))
-        message_class = message_classes.get(cq_type)
-        if message_class:
+        if message_class := message_classes.get(cq_type):
             text_segment = text[start:match.start()]
             if text_segment and not text_segment.startswith('[CQ:reply,'):
                 messages.append(Plain(text_segment))
@@ -63,13 +62,10 @@ def transform_message_chain(text: str) -> MessageChain:
                 params["target"] = int(params.pop("qq"))
             messages.append(message_class(**params))
             start = match.end()
-    # Append any remaining plain text
-    text_segment = text[start:]
-    if text_segment:
+    if text_segment := text[start:]:
         messages.append(Plain(text_segment))
 
-    message_chain = MessageChain(*messages)
-    return message_chain
+    return MessageChain(*messages)
 
 
 def transform_from_message_chain(chain: MessageChain):
@@ -86,7 +82,7 @@ def transform_from_message_chain(chain: MessageChain):
 
 def response(event, is_group: bool):
     async def respond(resp):
-        logger.debug("[OneBot] 尝试发送消息：" + str(resp))
+        logger.debug(f"[OneBot] 尝试发送消息：{str(resp)}")
         try:
             if not isinstance(resp, MessageChain):
                 resp = MessageChain(resp)
@@ -167,9 +163,9 @@ async def _(event: Event):
 
 @bot.on_message()
 async def _(event: Event):
-    if not event.message == ".重新加载配置文件":
+    if event.message != ".重新加载配置文件":
         return
-    if not event.user_id == config.onebot.manager_qq:
+    if event.user_id != config.onebot.manager_qq:
         return await bot.send(event, "您没有权限执行这个操作")
     constants.config = config.load_config()
     config.scan_presets()
@@ -186,12 +182,12 @@ async def _(event: Event):
     match = re.match(pattern, event.message.strip())
     if not match:
         return
-    if not event.user_id == config.onebot.manager_qq:
+    if event.user_id != config.onebot.manager_qq:
         return await bot.send(event, "您没有权限执行这个操作")
     msg_type, msg_id, rate = match.groups()
     rate = int(rate)
 
-    if msg_type != "群组" and msg_type != "好友":
+    if msg_type not in ["群组", "好友"]:
         return await bot.send(event, "类型异常，仅支持设定【群组】或【好友】的额度")
     if msg_id != '默认' and not msg_id.isdecimal():
         return await bot.send(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
@@ -208,7 +204,7 @@ async def _(event: Event):
 
     msg_type, msg_id = match.groups()
 
-    if msg_type != "群组" and msg_type != "好友":
+    if msg_type not in ["群组", "好友"]:
         return await bot.send(event, "类型异常，仅支持设定【群组】或【好友】的额度")
     if msg_id != '默认' and not msg_id.isdecimal():
         return await bot.send(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
@@ -224,10 +220,10 @@ async def _(event: Event):
 async def _(event: Event):
     pattern = ".预设列表"
     event.message = str(event.message)
-    if not event.message.strip() == pattern:
+    if event.message.strip() != pattern:
         return
 
-    if config.presets.hide and not event.user_id == config.onebot.manager_qq:
+    if config.presets.hide and event.user_id != config.onebot.manager_qq:
         return await bot.send(event, "您没有权限执行这个操作")
     nodes = []
     for keyword, path in config.presets.keywords.items():
@@ -235,14 +231,14 @@ async def _(event: Event):
             with open(path, 'rb') as f:
                 guessed_str = from_bytes(f.read()).best()
                 preset_data = str(guessed_str).replace("\n\n", "\n=========\n")
-            answer = f"预设名：{keyword}\n" + preset_data
+            answer = f"预设名：{keyword}\n{preset_data}"
 
             node = MessageSegment.node_custom(event.self_id, "ChatGPT", answer)
             nodes.append(node)
         except Exception as e:
             logger.error(e)
 
-    if len(nodes) == 0:
+    if not nodes:
         await bot.send(event, "没有查询到任何预设！")
         return
     try:

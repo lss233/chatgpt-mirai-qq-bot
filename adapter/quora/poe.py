@@ -18,11 +18,16 @@ class PoeBot(Enum):
     @staticmethod
     def parse(bot_name: str):
         tmp_name = bot_name.lower()
-        for bot in PoeBot:
-            if str(bot.name).lower() == tmp_name or str(bot.value).lower() == tmp_name \
-                    or f"poe-{str(bot.name).lower()}" == tmp_name:
-                return bot
-        return None
+        return next(
+            (
+                bot
+                for bot in PoeBot
+                if str(bot.name).lower() == tmp_name
+                or str(bot.value).lower() == tmp_name
+                or f"poe-{str(bot.name).lower()}" == tmp_name
+            ),
+            None,
+        )
 
 
 class PoeAdapter(BotAdapter):
@@ -43,8 +48,7 @@ class PoeAdapter(BotAdapter):
             pass
         if final_resp is None:
             raise Exception("OpenAI 在返回结果时出现了错误")
-        resp = final_resp["text"]
-        yield resp
+        yield final_resp["text"]
 
     async def rollback(self):
         """回滚对话"""
