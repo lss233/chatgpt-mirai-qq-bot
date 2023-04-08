@@ -11,11 +11,6 @@ from constants import config, botManager
 
 hook()
 
-# aiohttp issue
-if sys.version_info[0] == 3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-
 loop = creart.create(AbstractEventLoop)
 
 loop.run_until_complete(botManager.login())
