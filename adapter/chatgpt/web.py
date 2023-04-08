@@ -49,8 +49,8 @@ class ChatGPTWebAdapter(BotAdapter):
             await self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
         self.parent_id = None
-        # self.current_model = model_name
-        raise Exception("此 AI 暂不支持切换模型的操作！")
+        self.current_model = model_name
+        await self.on_reset()
 
     async def rollback(self):
         if len(self.parent_id_prev_queue) <= 0:
@@ -59,11 +59,14 @@ class ChatGPTWebAdapter(BotAdapter):
         return True
 
     async def on_reset(self):
-        if (
-            self.bot.account.auto_remove_old_conversations
-            and self.conversation_id is not None
-        ):
-            await self.bot.delete_conversation(self.conversation_id)
+        try:
+            if (
+                self.bot.account.auto_remove_old_conversations
+                and self.conversation_id is not None
+            ):
+                await self.bot.delete_conversation(self.conversation_id)
+        except:
+            logger.warning("删除会话记录失败。")
         self.conversation_id = None
         self.parent_id = None
         self.bot = botManager.pick('chatgpt-web')
@@ -71,7 +74,7 @@ class ChatGPTWebAdapter(BotAdapter):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         try:
             last_response = None
-            async for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id):
+            async for resp in self.bot.ask(prompt, self.conversation_id, self.parent_id, model=self.current_model):
                 last_response = resp
                 if self.conversation_id:
                     self.conversation_id_prev_queue.append(self.conversation_id)
