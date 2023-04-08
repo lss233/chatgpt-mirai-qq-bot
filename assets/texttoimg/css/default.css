@@ -6,7 +6,8 @@ body {
     padding-bottom: 10px;
     background-color: white;
     padding: 30px;
-    color: #516272
+    color: #516272;
+    word-break: break-all
 }
 
 body>*:first-child {
