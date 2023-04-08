@@ -1,9 +1,6 @@
 import ctypes
 import os
-from typing import Generator, Union
-
-import asyncio
-import janus
+from typing import Generator
 import openai
 from loguru import logger
 from revChatGPT.V3 import Chatbot as OpenAIChatbot
@@ -69,23 +66,15 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.bot.conversation[self.session_id] = []
         self.__conversation_keep_from = 0
 
-    def ask_sync(self, sync_q, prompt):
-        try:
-            for resp in self.bot.ask_stream(prompt, role=self.hashed_user_id, convo_id=self.session_id):
-                sync_q.put(resp)
-            sync_q.put(None)
-        except Exception as e:
-            sync_q.put(e)
-        sync_q.join()
-
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
             ]
             self.__conversation_keep_from = 1
+
         while self.bot.max_tokens - self.bot.get_token_count(self.session_id) < config.openai.gpt3_params.min_tokens and \
-                    len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
+                len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
             self.bot.conversation[self.session_id].pop(self.__conversation_keep_from)
             logger.debug(
                 f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.get_token_count(self.session_id))}"
@@ -93,23 +82,9 @@ class ChatGPTAPIAdapter(BotAdapter):
 
         os.environ['API_URL'] = f'{openai.api_base}/chat/completions'
         full_response = ''
-        queue: janus.Queue[Union[str, Exception, None]] = janus.Queue()
-        loop = asyncio.get_running_loop()
-        future = loop.run_in_executor(None, self.ask_sync, queue.sync_q, prompt)
-        while not queue.async_q.closed:
-            resp = await queue.async_q.get()
-            queue.async_q.task_done()
-            if isinstance(resp, Exception):
-                # 出现了错误
-                raise resp
-            elif resp is None:
-                # 发完了
-                break
+        async for resp in self.bot.ask_stream_async(prompt=prompt, role=self.hashed_user_id, convo_id=self.session_id):
             full_response += resp
             yield full_response
-        await future
-        queue.close()
-        await queue.wait_closed()
         logger.debug(f"[ChatGPT-API] 响应：{full_response}")
         logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
 
