@@ -23,7 +23,11 @@
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
-![Preview](.github/preview.png)
+| ![猫娘问答](https://img.shields.io/badge/-%E7%8C%AB%E5%A8%98%E9%97%AE%E7%AD%94-pink?style=for-the-badge)                     | ![生活助手](https://img.shields.io/badge/-生活助手-orange?style=for-the-badge)                   | ![文字 RPG](https://img.shields.io/badge/-文字RPG-skyblue?style=for-the-badge)            |
+|------------------------------|------------------------------|------------------------------|
+| ![image](https://user-images.githubusercontent.com/8984680/230702158-73967aa9-01be-44d6-bbd9-24437e333140.png) | ![image](https://user-images.githubusercontent.com/8984680/230702177-de96f89b-053e-4313-a131-715af969db04.png) | ![image](https://user-images.githubusercontent.com/8984680/230702635-fb1de3bf-acbd-46ca-8d6f-caa47368b4d4.png) |
+
+
 
 
 **⚡ 支持**   
@@ -32,7 +36,7 @@
 * [x] 多账号支持
 * [x] 百度云内容审核
 * [x] 额度限制 
-* [x] 预设人格初
+* [x] 人格设定
 * [x] 支持 Mirai、 go-cqhttp、 Telegram、Discord  
 * [x] 可作为 HTTP 服务端提供 Web API
 * [x] 支持 ChatGPT 网页版
@@ -150,7 +154,8 @@ python3 bot.py
 
 ## 🕸 HTTP API
 
-在 `config.cfg` 中加入以下配置后，将额外提供http支持：  
+<details>
+    <summary>在 `config.cfg` 中加入以下配置后，将额外提供 HTTP API 支持。</summary>
 
 ```toml
 [http]
@@ -179,16 +184,18 @@ debug = false
     "message": "ping"
 }
 ```
-**响应**
+**响应格式**
 |参数名|类型|说明|
 |:---|:---|:---|
-|message| String |返回信息，HTML 格式|
-**响应示例**
+|message| String |返回信息，HTML 格式|  
+
+**响应示例**  
 ```json
 {
     "message": "pong!"
 }
 ```
+</details>
 
 ## 🦊 加载预设
 
