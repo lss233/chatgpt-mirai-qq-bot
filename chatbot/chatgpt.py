@@ -53,7 +53,8 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         # self.queue 已交给 MiddlewareConcurrentLock 处理，此处不处理
         self.bot.conversation_id = conversation_id
         self.bot.parent_id = parent_id
-        async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id, model=model):
+        self.bot.config['model'] = model
+        async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
             yield r
         self.update_accessed_at()
 
