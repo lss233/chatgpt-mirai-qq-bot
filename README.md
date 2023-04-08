@@ -4,7 +4,7 @@
     一款支持各种主流语言模型的聊天的机器人！
     <br/>
     <br/>
-    <a href="https://darks-organization.gitbook.io/chatgpt-qq/"><strong>查看使用教程 »</strong></a>
+    <a href="https://chatgpt-qq.lss233.com/"><strong>» 查看使用教程 »</strong></a>
     <br/>
   </p>
 </p>
@@ -48,7 +48,7 @@
 * [x] 支持 文心一言 网页版
 * [x] 支持 ChatGLM-6B 本地版
 
-**多平台兼容**  
+**🤖 多平台兼容**  
 
 我们支持多种聊天平台。  
 
@@ -219,7 +219,7 @@ debug = false
 
 ## 📷 文字转图片
 
-向 QQ 群发送消息失败时，自动将消息转为图片发送。  
+在发送代码或者向 QQ 群发送消息失败时，自动将消息转为图片发送。  
 
 字体文件存放于 `fonts/` 目录中。  
 
@@ -227,13 +227,7 @@ debug = false
 
 ## 🎙 文字转语音
 
-自 v2.2.5 开始，我们支持文字转语音功能。  
-
-目前仅支持 Azure TTS 引擎提供的文字转语音服务。  
-
-你只需要在配置文件中填写 azure 的 `tts_speech_key` 和 `tts_speech_service_region`，  
-
-然后将 `text_to_speech` 中的 `always` 设置成 true，或者通过预设、切换语音命令来开启语音功能。  
+自 v2.2.5 开始，我们支持接入微软的 Azure 引擎 和 VITS 引擎，让你的机器人发送语音。
 
 **提示**：在 Windows 平台上使用语音功能需要安装最新的 VC 运行库，你可以在[这里](https://learn.microsoft.com/zh-CN/cpp/windows/latest-supported-vc-redist?view=msvc-170)下载。`
 
