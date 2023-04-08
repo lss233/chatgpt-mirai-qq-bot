@@ -1,6 +1,6 @@
 graia-ariadne==0.11.3
 graiax-silkcoder
-revChatGPT==4.1.1.1
+revChatGPT==4.1.4
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
@@ -29,7 +29,7 @@ tls-client
 python-dateutil~=2.8.2
 discord.py
 azure-cognitiveservices-speech
-poe-api~=0.2.7
+poe-api~=0.2.8
 
 regex~=2023.3.23
 httpx~=0.23.3
