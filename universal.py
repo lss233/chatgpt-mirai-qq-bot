@@ -139,7 +139,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
 
                     try:
                         if conversation_context.conversation_voice != "None":
-                            voice_id = int(conversation_context.conversation_voice)
+                            voice_id = conversation_context.conversation_voice
                             voice_name = await vits_api_instance.set_id(voice_id)
                         else:
                             voice_name = await vits_api_instance.set_id(None)
