@@ -1,4 +1,5 @@
-![cover](https://user-images.githubusercontent.com/117586514/230780963-e5a4f47f-d66e-4a1b-aab9-2bd9abe87b76.png)
+![cover](https://user-images.githubusercontent.com/117586514/230783378-34ddb86a-c8d3-47a6-baa5-86e39200b258.png)
+
 ------------------------------------
 <p align="center">
   <h2 align="center">ChatGPT for Bot</h2>
