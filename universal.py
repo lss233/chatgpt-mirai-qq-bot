@@ -128,7 +128,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
 
 
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
-                if not config.azure.tts_speech_key and config.text_to_speech.engine != "vits":
+                if not config.azure.tts_speech_key and config.text_to_speech.engine == "azure":
                     await respond("未配置 Azure TTS 账户，无法切换语音！")
                 conversation_context.conversation_voice = voice_type_search[1].strip()
                 if conversation_context.conversation_voice == '关闭':
