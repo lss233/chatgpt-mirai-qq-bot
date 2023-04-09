@@ -6,9 +6,6 @@ services:
     environment:
       LANG: 'C.UTF-8'
       XPRA_PASSWORD: 'lss233' # XPRA 密码，建议修改
-    ports:
-      - "14500:14500"
-      - "8554:8554" # 用于反向 Websocket
     volumes:
       - ./config.cfg:/app/config.cfg
       - ./data:/app/data
