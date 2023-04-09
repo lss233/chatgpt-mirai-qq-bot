@@ -23,7 +23,7 @@ class VitsAPI:
     def check_id_exists(self, json_list, given_id):
         for item in json_list:
             for key, value in item.items():
-                if str(given_id) == key or str(given_id) == value:
+                if str(given_id) in [key, value]:
                     return key, value
         return None, None
 
