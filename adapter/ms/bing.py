@@ -1,6 +1,7 @@
 import json
 from typing import Generator, Union
 
+import aiohttp
 import asyncio
 from constants import config
 from adapter.botservice import BotAdapter
@@ -10,7 +11,7 @@ from constants import botManager
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
 import re
-
+from ImageGen import ImageGenAsync
 
 class BingAdapter(BotAdapter):
     cookieData = None
@@ -87,6 +88,22 @@ class BingAdapter(BotAdapter):
             yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
             await self.on_reset()
             return
+
+    async def image_creation(self, prompt: str):
+        logger.debug(f"[Bing Image] Prompt: {prompt}")
+
+        async with ImageGenAsync(self.bot.cookies["_U"], False) as image_generator:
+            images = await image_generator.get_images(prompt)
+
+            logger.debug(f"[Bing Image] Response: {images}")
+            tasks = [asyncio.create_task(self.__download_image(image)) for image in images]
+            return await asyncio.gather(*tasks)
+
+    async def __download_image(self, url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, proxy=self.bot.proxy) as resp:
+                if resp.status == 200:
+                    return await resp.read()
 
     async def preset_ask(self, role: str, text: str):
         yield None  # Bing 不使用预设功能

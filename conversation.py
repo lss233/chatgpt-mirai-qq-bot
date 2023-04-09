@@ -137,11 +137,17 @@ class ConversationContext:
                     image = chain.get_first(GraiaImage)
                     raw_bytes = io.BytesIO(await image.get_bytes())
                     raw_image = Image.open(raw_bytes)
-                    image_data = await self.openai_api.image_variation(src_img=raw_image)
+                    images = await self.openai_api.image_variation(src_img=raw_image)
                 else:
-                    image_data = await self.openai_api.image_creation(prompt)
-                logger.debug("[OpenAI Image] Downloaded")
-                yield GraiaImage(data_bytes=image_data)
+                    if isinstance(self.adapter, BingAdapter):
+                        images = await self.adapter.image_creation(prompt)
+                    else:
+                        images = await self.openai_api.image_creation(prompt)
+                if not isinstance(images, list):
+                    images = [images]
+                logger.debug("[Image] Downloaded")
+                for image in images:
+                    yield GraiaImage(data_bytes=image)
                 return
 
         if self.preset_decoration_format:
