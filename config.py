@@ -171,6 +171,9 @@ class BingAuths(BaseModel):
     """在 Bing 的回复后加上猜你想问"""
     show_references: bool = True
     """在 Bing 的回复前加上引用资料"""
+    show_remaining_count: bool = True
+    """在 Bing 的回复后加上剩余次数"""
+
     wss_link: str = "wss://sydney.bing.com/sydney/ChatHub"
     """Bing 的 Websocket 接入点"""
     bing_endpoint: str = "https://edgeservices.bing.com/edgesvc/turing/conversation/create"
