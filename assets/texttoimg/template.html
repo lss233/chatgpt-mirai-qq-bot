@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" initial-scale="1"/>
+    <title>Parsed content</title>
+
+    <link href="{path_texttoimg}/css/default.css" rel="stylesheet" />
+    <link href="{path_texttoimg}/css/github-md.css" rel="stylesheet" >
+    <link href="{path_texttoimg}/js/katex/katex.min.css" rel="stylesheet" >
+    <script src="{path_texttoimg}/js/highlight.js"></script>
+    <script src="{path_texttoimg}/js/polyfills.js"></script>
+    <script src="{path_texttoimg}/js/katex/katex.min.js"></script>
+    <script src="{path_texttoimg}/js/katex/contrib/auto-render.min.js"></script>
+    <script defer src="{path_texttoimg}/js/katex/contrib/mathtex-script-type.min.js"></script>
+    <script defer src="{path_texttoimg}/js/katex/contrib/mhchem.min.js"></script>
+    <script src="{path_texttoimg}/js/twemoji.min.js"></script>
+    <style>
+        .content {
+            min-height: 60px;
+        }
+        html {
+            font-size: {font_size_texttoimg}px;
+        }
+        @font-face {
+            font-family: "Custom Font";
+            src: url("{font_path_texttoimg}");
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header"><div></div></div>
+    <div id="content">{content}</div>
+    <div id="footer">
+        <div class="qrc">
+            <div id="qrcode">
+                <img src="{qrcode}" alt="" srcset="" width="120" height="120">
+            </div>
+        </div>
+    </div>
+    <script>
+        twemoji.parse(document.getElementById("content"), {
+            base: '{path_texttoimg}',
+            folder: '/emoji/png',
+            ext: '.png'
+        });
+        hljs.initHighlighting();
+        var codes = document.querySelectorAll('code')
+        for (var i = 0; i < codes.length; i++) {
+            var item = codes[i]
+            try {
+                var lang = item.classList[0].split('-')[1];
+                if (lang) {
+                  item.title = "[lang: " + lang + "]";
+                }
+            } catch (e) {
+
+            }
+        }
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: "\\(", right: "\\)", display: false},
+              {left: "\\begin{equation}", right: "\\end{equation}", display: true},
+              {left: "\\begin{align}", right: "\\end{align}", display: true},
+              {left: "\\begin{alignat}", right: "\\end{alignat}", display: true},
+              {left: "\\begin{gather}", right: "\\end{gather}", display: true},
+              {left: "\\begin{CD}", right: "\\end{CD}", display: true},
+              {left: "\\[", right: "\\]", display: true}
+          ],
+          // • rendering keys, e.g.:
+          throwOnError : false
+        });
+    </script>
+</body>
+
+</html>
