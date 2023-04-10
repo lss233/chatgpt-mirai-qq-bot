@@ -18,13 +18,16 @@ def retry(exceptions, tries=4, delay=3, backoff=2):
             _delay = delay
             while _tries > 0:
                 try:
-                    return await func(*args, **kwargs)
+                    async for result in func(*args, **kwargs):
+                        yield result
+                    return
                 except exceptions as e:
                     logger.error(f"遇到错误： {e}, 将在 {_delay} 秒后重试...")
                     await asyncio.sleep(_delay)
                     _tries -= 1
                     _delay *= backoff
-            return await func(*args, **kwargs)
+            async for result in func(*args, **kwargs):
+                yield result
 
         return wrapper
 
