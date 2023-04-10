@@ -2,6 +2,7 @@ import io
 from datetime import datetime
 from typing import List, Dict, Optional
 
+import httpx
 from EdgeGPT import ConversationStyle
 from PIL import Image
 from graia.amnesia.message import MessageChain
@@ -24,6 +25,7 @@ from renderer import Renderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
+from utils import retry
 
 handlers = {}
 
@@ -126,6 +128,7 @@ class ConversationContext:
         self.last_resp = ''
         yield config.response.reset
 
+    @retry((httpx.ConnectError, httpx.ConnectTimeout))
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
