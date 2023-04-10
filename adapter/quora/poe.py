@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Generator
 
+import asyncio
+
 from adapter.botservice import BotAdapter
 from constants import botManager
 
@@ -40,14 +42,15 @@ class PoeAdapter(BotAdapter):
         self.poe_client = botManager.pick("poe-web")
 
     async def ask(self, msg: str) -> Generator[str, None, None]:
+        # sourcery skip: raise-specific-error
         """向 AI 发送消息"""
         final_resp = None
-        if not self.poe_client.ws_connected:
-            self.poe_client.connect_ws()
+        while None in self.poe_client.active_messages.values():
+            await asyncio.sleep(0.01)
         for final_resp in self.poe_client.send_message(chatbot=self.poe_bot.value, message=msg):
-            pass
+            yield final_resp["text"]
         if final_resp is None:
-            raise Exception("OpenAI 在返回结果时出现了错误")
+            raise Exception("Poe 在返回结果时出现了错误")
         yield final_resp["text"]
 
     async def rollback(self):
