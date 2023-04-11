@@ -54,13 +54,12 @@ class BotInfo(asyncio.Lock):
     """向 ChatGPT 发送提问"""
     def ask(self, prompt, conversation_id = None, parent_id = None):
         resp = self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
-        if self.mode == 'proxy' or self.mode == 'browserless':
-            final_resp = None
-            for final_resp in resp:
-                pass
-            return final_resp
-        else:
+        if self.mode not in ['proxy', 'browserless']:
             return resp
+        final_resp = None
+        for final_resp in resp:
+            pass
+        return final_resp
 
     def __str__(self) -> str:
         return self.bot.__str__()
@@ -95,7 +94,7 @@ class BotManager():
             for i, account in enumerate(self.accounts):
                 logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
                 try:
-                    if account.mode == "proxy" or account.mode == "browserless":
+                    if account.mode in ["proxy", "browserless"]:
                         bot = self.__login_V1(account)
                     elif account.mode == "browser":
                         bot = self.__login_browser(account)

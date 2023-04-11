@@ -90,28 +90,25 @@ async def create_timeout_task(target: Union[Friend, Group], source: Source):
 async def handle_message(target: Union[Friend, Group], session_id: str, message: str, source: Source) -> str:
     if not message.strip():
         return config.response.placeholder
-    
+
     timeout_task = None
 
     session = chatbot.get_chat_session(session_id)
-    
+
     # 回滚
     if message.strip() in config.trigger.rollback_command:
-        resp = session.rollback_conversation()
-        if resp:
+        if resp := session.rollback_conversation():
             return config.response.rollback_success + '\n' + resp
         return config.response.rollback_fail
 
-    # 队列满时拒绝新的消息
     if config.response.max_queue_size > 0 and session.chatbot.queue_size > config.response.max_queue_size:
         return config.response.queue_full
-    else:
-        # 提示用户：请求已加入队列
-        if session.chatbot.queue_size > config.response.queued_notice_size:
-            await app.send_message(target, config.response.queued_notice.format(queue_size=session.chatbot.queue_size), quote=source if config.response.quote else False)
+    # 提示用户：请求已加入队列
+    if session.chatbot.queue_size > config.response.queued_notice_size:
+        await app.send_message(target, config.response.queued_notice.format(queue_size=session.chatbot.queue_size), quote=source if config.response.quote else False)
 
     # 以下开始需要排队
-    
+
     async with session.chatbot:
         try:
 
@@ -123,14 +120,8 @@ async def handle_message(target: Union[Friend, Group], session_id: str, message:
                 await chatbot.initial_process(session)
                 return config.response.reset
 
-            # # 新会话
-            # if is_new_session:
-            #     await chatbot.initial_process(session)
-
-            # 加载关键词人设
-            preset_search = re.search(config.presets.command, message)
-            if preset_search:
-                async for progress in session.load_conversation(preset_search.group(1)):
+            if preset_search := re.search(config.presets.command, message):
+                async for progress in session.load_conversation(preset_search[1]):
                     await app.send_message(target, progress, quote=source if config.response.quote else False)
                 return config.presets.loaded_successful
             # 正常交流

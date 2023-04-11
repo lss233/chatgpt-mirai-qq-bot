@@ -24,12 +24,7 @@ class ChatSession:
         self.reset_conversation()
 
     async def load_conversation(self, keyword='default'):
-        if not keyword in config.presets.keywords:
-            if keyword == 'default':
-                self.reset_conversation()
-            else:
-                raise ValueError("预设不存在，请检查你的输入是否有问题！")
-        else:
+        if keyword in config.presets.keywords:
             self.reset_conversation()
             presets = config.load_preset(keyword)
             for text in presets:
@@ -39,6 +34,11 @@ class ChatSession:
                     await self.get_chat_response(text.split('User:')[-1].strip())
                 else:
                     await self.get_chat_response(text.split('User:')[-1].strip())
+
+        elif keyword == 'default':
+            self.reset_conversation()
+        else:
+            raise ValueError("预设不存在，请检查你的输入是否有问题！")
 
     def reset_conversation(self):
         self.conversation_id = None

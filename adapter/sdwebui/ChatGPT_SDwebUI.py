@@ -16,14 +16,12 @@ from loguru import logger
 def clean_file_name(filename: str):
     invalid_chars = '[\\\/:*?"<>|]'
     replace_char = ','
-    file_outputname = re.sub(invalid_chars, replace_char, filename)[:140]
-    return file_outputname
+    return re.sub(invalid_chars, replace_char, filename)[:140]
 
 
 def getTimeStamp():
     t = time.localtime(time.time())
-    return str(t.tm_year) + '_' + str(t.tm_mon) + '_' + str(t.tm_mday) + '_' + str(t.tm_hour) + '_' + str(
-        t.tm_min) + '_' + str(t.tm_sec) + str(random.randint(10, 99))
+    return f'{str(t.tm_year)}_{str(t.tm_mon)}_{str(t.tm_mday)}_{str(t.tm_hour)}_{str(t.tm_min)}_{str(t.tm_sec)}{random.randint(10, 99)}'
 
 
 def get_pic_size_W(PROMPT):
@@ -36,10 +34,9 @@ def get_pic_size_W(PROMPT):
         num = match.group(2)
         if int(num) >= 512 and int(num) <= 1200:
             num_list.append(int(num))
-            break  # 只匹配第一个符合条件的 W: 后面的数字
         else:
             num_list.append(768)
-            break
+        break  # 只匹配第一个符合条件的 W: 后面的数字
     if not num_list:
         num_list.append(768)
     return num_list
@@ -53,10 +50,9 @@ def get_pic_size_H(PROMPT):
         num = match.group(2)
         if int(num) >= 512 and int(num) <= 1200:
             num_list.append(int(num))
-            break
         else:
             num_list.append(768)
-            break
+        break
     if not num_list:
         num_list.append(768)
     return num_list
@@ -64,24 +60,21 @@ def get_pic_size_H(PROMPT):
 
 def translate_CN_EN(text: str):
     url = "http://127.0.0.1:8084"
-    prompt_in = str(text)
+    prompt_in = text
     payload = {'prompt': prompt_in}
     headers = {
         'Content-Type': 'application/json'
     }
     resp = requests.post(url='http://127.0.0.1:8084/api/translation', json=payload, headers=headers)
-    if resp.status_code == 200:
-        ai_translation = resp.json()["data"]
-        return ai_translation
-    else:
-        return prompt_in
+    return resp.json()["data"] if resp.status_code == 200 else prompt_in
 
 
 def b64_img(image: Image):
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
-    img_base64 = 'data:image/png;base64,' + str(base64.b64encode(buffered.getvalue()), 'utf-8')
-    return img_base64
+    return 'data:image/png;base64,' + str(
+        base64.b64encode(buffered.getvalue()), 'utf-8'
+    )
 
 
 def text_to_img(PROMPT_WX, model_num='dalcefoPainting_3rd.safetensors[7107c05c1c]'):
@@ -90,20 +83,21 @@ def text_to_img(PROMPT_WX, model_num='dalcefoPainting_3rd.safetensors[7107c05c1c
     w_size = get_pic_size_W(PROMPT_WX)[0]
     h_size = get_pic_size_H(PROMPT_WX)[0]
     PROMPT_WX_00 = PROMPT_WX.replace(f"w:{w_size}", "").replace(f"h:{h_size}", "")
-    download_img_path = 'D:/TG图片生成/' + datetime.datetime.now().strftime("%Y-%m-%d") + f'/'
+    download_img_path = (
+        'D:/TG图片生成/' + datetime.datetime.now().strftime("%Y-%m-%d") + '/'
+    )
     if not os.path.exists(download_img_path):
         os.makedirs(download_img_path)
     # PROMPT_WX_01 = translate_CN_EN(PROMPT_WX_01)
 
     tran_pattern = re.compile('[\u4e00-\u9fa5]+')
-    tran_text = tran_pattern.findall(PROMPT_WX_00)
-    if tran_text:
+    if tran_text := tran_pattern.findall(PROMPT_WX_00):
         for word in tran_text:
             english_word = translate_CN_EN(word)
             PROMPT_WX_01 = PROMPT_WX_00.replace(word, english_word)  # 将中文字符用英文字符进行替换
     else:
         PROMPT_WX_01 = PROMPT_WX_00
-    prompt_in = f'masterpiece, best quality, illustration, extremely detailed 8K wallpaper, ' + str(PROMPT_WX_01)
+    prompt_in = f'masterpiece, best quality, illustration, extremely detailed 8K wallpaper, {str(PROMPT_WX_01)}'
     payload = {
         'enable_hr': 'false',
         'denoising_strength': 0.45,
@@ -128,21 +122,19 @@ def text_to_img(PROMPT_WX, model_num='dalcefoPainting_3rd.safetensors[7107c05c1c
     if response.status_code == 200:
         r = response.json()
     else:
-        logger.debug(f"图片生成失败！")
+        logger.debug("图片生成失败！")
 
     for i in r['images']:
         image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
 
-        png_payload = {
-            "image": "data:image/png;base64," + i
-        }
+        png_payload = {"image": f"data:image/png;base64,{i}"}
         response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
         if response.status_code == 200:
             pnginfo = PngImagePlugin.PngInfo()
         else:
-            logger.debug(f"图片生成失败！")
+            logger.debug("图片生成失败！")
         pnginfo.add_text("parameters", response2.json().get("info"))
-        path_save_img = download_img_path + 'TG_' + t_stamp + '.png'
+        path_save_img = f'{download_img_path}TG_{t_stamp}.png'
         image.save(path_save_img, pnginfo=pnginfo)
     return path_save_img
 
@@ -168,7 +160,7 @@ def img_to_img(src_img, PROMPT_WX, model_num='dalcefoPainting_3rd.safetensors[71
     for word in tran_text:
         english_word = translate_CN_EN(word)
         PROMPT_WX_01 = PROMPT_WX_00.replace(word, english_word)  # 将中文字符用英文字符进行替换
-    prompt_in = f'masterpiece, best quality, illustration, extremely detailed 8K wallpaper, ' + str(PROMPT_WX_01)
+    prompt_in = f'masterpiece, best quality, illustration, extremely detailed 8K wallpaper, {str(PROMPT_WX_01)}'
     payload = {
         'init_images': [b64_img(x) for x in src_img],
         'enable_hr': 'false',
@@ -194,21 +186,19 @@ def img_to_img(src_img, PROMPT_WX, model_num='dalcefoPainting_3rd.safetensors[71
     if response.status_code == 200:
         r = response.json()
     else:
-        logger.debug(f"图片生成失败！")
+        logger.debug("图片生成失败！")
 
     for i in r['images']:
         image = Image.open(io.BytesIO(base64.b64decode(i.split(",", 1)[0])))
 
-        png_payload = {
-            "image": "data:image/png;base64," + i
-        }
+        png_payload = {"image": f"data:image/png;base64,{i}"}
         response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
         if response.status_code == 200:
             pnginfo = PngImagePlugin.PngInfo()
         else:
-            logger.debug(f"图片生成失败！")
+            logger.debug("图片生成失败！")
         pnginfo.add_text("parameters", response2.json().get("info"))
-        path_save_img = download_img_path + 'TG_' + t_stamp + '.png'
+        path_save_img = f'{download_img_path}TG_{t_stamp}.png'
         image.save(path_save_img, pnginfo=pnginfo)
     return path_save_img
 
