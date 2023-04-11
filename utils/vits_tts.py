@@ -15,34 +15,43 @@ class VitsAPI:
     async def initialize(self, new_id=None):
         if new_id is not None:
             await self.set_id(new_id)
-        else:
+        elif self.id is None:
             self.id = await self.voice_speakers_check()
 
         self.initialized = True
 
-    def check_id_exists(self, json_dict, given_id):
-        return json_dict[given_id].get(str(given_id), False)
+    def check_id_exists(self, json_list, given_id):
+        for item in json_list:
+            for key, value in item.items():
+                if str(given_id) in [key, value]:
+                    return key, value
+        return None, None
 
     async def set_id(self, new_id):
         json_array = await self.get_json_array()
-        voice_name = self.check_id_exists(json_array, new_id)
+        id_found, voice_name = self.check_id_exists(json_array, new_id)
 
         if not voice_name:
             raise Exception("不存在该语音音色，请检查配置文件")
 
-        self.id = new_id
+        self.id = id_found
         return voice_name
 
     async def get_json_array(self):
         url = f"{config.vits.api_url}/speakers"
 
-        async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
-            async with session.post(url=url) as res:
-                return await res.json()
+        try:
+            async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
+                async with session.post(url=url) as res:
+                    json_array = await res.json()
+                    return json_array["VITS"]
+
+        except Exception as e:
+            logger.error(f"获取语音音色列表失败: {str(e)}")
+            raise Exception("获取语音音色列表失败，请检查网络连接和API设置")
 
     async def voice_speakers_check(self, new_id=None):
         json_array = await self.get_json_array()
-        vits_list = json_array["VITS"]
 
         try:
             if new_id is not None:
@@ -51,7 +60,7 @@ class VitsAPI:
                 integer_number = int(config.text_to_speech.default)
             else:
                 raise ValueError("默认语音音色未设置，请检查配置文件")
-            voice_name = self.check_id_exists(vits_list, integer_number)
+            voice_name = self.check_id_exists(json_array, integer_number)
         except ValueError:
             logger.error("vits引擎中音色只能为纯数字")
             return None
@@ -141,8 +150,7 @@ class VitsAPI:
 
 
 vits_api_instance = VitsAPI()
-
-
 async def vits_api(message: str, path: str):
     await vits_api_instance.initialize()
     return await vits_api_instance.process_message(message, path)
+

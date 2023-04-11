@@ -1,9 +1,13 @@
 config.json
 config.cfg
 __pycache__/
+<<<<<<< HEAD
 python3.11/
 .idea/
 data/*.json
 .chatgpt_cache.json
 Dockerfile.dev
 **/.DS_Store
+=======
+python3.9/
+>>>>>>> upstream/master

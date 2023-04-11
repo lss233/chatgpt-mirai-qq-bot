@@ -1,4 +1,8 @@
 config.json
 config.json.old
+<<<<<<< HEAD
 config.cfg
 .chatgpt_cache.json
+=======
+config.cfg
+>>>>>>> upstream/master
