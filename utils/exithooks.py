@@ -2,10 +2,15 @@ import atexit
 import sys
 from loguru import logger
 
+<<<<<<< HEAD
 
 class ExitHooks(object):
     def __init__(self):
         self._orig_exit = None
+=======
+class ExitHooks(object):
+    def __init__(self):
+>>>>>>> upstream/master
         self.exit_code = None
         self.exception = None
 
@@ -21,11 +26,17 @@ class ExitHooks(object):
     def exc_handler(self, exc_type, exc, *args):
         self.exception = exc
 
+<<<<<<< HEAD
 
 hooks = ExitHooks()
 hooks.hook()
 
 
+=======
+hooks = ExitHooks()
+hooks.hook()
+
+>>>>>>> upstream/master
 def foo():
     if hooks.exit_code is not None or hooks.exception is not None:
         if type(hooks.exception) is KeyboardInterrupt:
@@ -34,6 +45,7 @@ def foo():
         logger.exception(hooks.exception)
         logger.error("你可以在这里阅读常见问题的解决方案：")
         logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85")
+<<<<<<< HEAD
 
 
 atexit.register(foo)
@@ -41,3 +53,6 @@ atexit.register(foo)
 def hook():
     # 仅仅是为了防止 IDE 自动优化掉 import
     pass
+=======
+atexit.register(foo)
+>>>>>>> upstream/master
