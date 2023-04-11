@@ -13,10 +13,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/lss233/chatgpt-mirai-qq-bot/stargazers"><img src="https://img.shields.io/github/stars/lss233/chatgpt-mirai-qq-bot?color=pink&amp;logo=github&amp;style=for-the-badge" alt="Github stars"></a>
-  <a href="https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml"><img src="https://img.shields.io/github/actions/workflow/status/lss233/chatgpt-mirai-qq-bot/docker-latest.yml?color=green&amp;logo=docker&amp;logoColor=white&amp;style=for-the-badge" alt="Docker build latest"></a>
-  <a href="https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/"><img src="https://img.shields.io/docker/pulls/lss233/chatgpt-mirai-qq-bot?color=gold&amp;logo=docker&amp;logoColor=white&amp;style=for-the-badge" alt="Docker Pulls"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/github/license/lss233/chatgpt-mirai-qq-bot?&amp;color=skyblue&amp;style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/lss233/chatgpt-mirai-qq-bot/stargazers"><img src="https://img.shields.io/github/stars/lss233/chatgpt-mirai-qq-bot?color=E2CDBC&amp;logo=github&amp;style=for-the-badge" alt="Github stars"></a>
+  <a href="https://github.com/lss233/chatgpt-mirai-qq-bot/actions/workflows/docker-latest.yml"><img src="https://img.shields.io/github/actions/workflow/status/lss233/chatgpt-mirai-qq-bot/docker-latest.yml?color=E2CDBC&amp;logo=docker&amp;logoColor=white&amp;style=for-the-badge" alt="Docker build latest"></a>
+  <a href="https://hub.docker.com/r/lss233/chatgpt-mirai-qq-bot/"><img src="https://img.shields.io/docker/pulls/lss233/chatgpt-mirai-qq-bot?color=E2CDBC&amp;logo=docker&amp;logoColor=white&amp;style=for-the-badge" alt="Docker Pulls"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/lss233/chatgpt-mirai-qq-bot?&amp;color=E2CDBC&amp;style=for-the-badge" alt="License"></a>
 </p>
 
 ***
@@ -26,7 +26,7 @@
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
-| ![猫娘问答](https://img.shields.io/badge/-%E7%8C%AB%E5%A8%98%E9%97%AE%E7%AD%94-pink?style=for-the-badge)                     | ![生活助手](https://img.shields.io/badge/-生活助手-orange?style=for-the-badge)                   | ![文字 RPG](https://img.shields.io/badge/-文字RPG-skyblue?style=for-the-badge)            |
+| ![猫娘问答](https://img.shields.io/badge/-%E7%8C%AB%E5%A8%98%E9%97%AE%E7%AD%94-E2CDBC?style=for-the-badge)                     | ![生活助手](https://img.shields.io/badge/-生活助手-E2CDBC?style=for-the-badge)                   | ![文字 RPG](https://img.shields.io/badge/-文字RPG-E2CDBC?style=for-the-badge)            |
 |------------------------------|------------------------------|------------------------------|
 | ![image](https://user-images.githubusercontent.com/8984680/230702158-73967aa9-01be-44d6-bbd9-24437e333140.png) | ![image](https://user-images.githubusercontent.com/8984680/230702177-de96f89b-053e-4313-a131-715af969db04.png) | ![image](https://user-images.githubusercontent.com/8984680/230702635-fb1de3bf-acbd-46ca-8d6f-caa47368b4d4.png) |
 
