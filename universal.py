@@ -1,7 +1,7 @@
+import asyncio
 import re
 from typing import Callable
 
-import asyncio
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
@@ -12,7 +12,7 @@ from urllib3.exceptions import MaxRetryError
 
 from constants import botManager
 from constants import config
-from conversation import ConversationHandler
+from conversation import ConversationHandler, ConversationContext
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException
 from middlewares.baiducloud import MiddlewareBaiduCloud

@@ -23,6 +23,7 @@ import utils.network as network
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
     PoeCookieAuth
+from constants import LlmName
 from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 
@@ -394,3 +395,24 @@ class BotManager:
         if len(self.bots[type]) == 0:
             raise NoAvailableBotException(type)
         return next(self.roundrobin[type])
+
+    def bots_info(self):
+        bot_info = ""
+        if len(self.bots['chatgpt-web']) > 0:
+            bot_info += f"* {LlmName.ChatGPT_Web.value} : OpenAI ChatGPT 网页版\n"
+        if len(self.bots['openai-api']) > 0:
+            bot_info += f"* {LlmName.ChatGPT_Api.value} : OpenAI ChatGPT API版\n"
+        if len(self.bots['bing-cookie']) > 0:
+            bot_info += f"* {LlmName.BingC.value} : 微软 New Bing (创造力)\n"
+            bot_info += f"* {LlmName.BingB.value} : 微软 New Bing (平衡)\n"
+            bot_info += f"* {LlmName.BingP.value} : 微软 New Bing (精确)\n"
+        if len(self.bots['bard-cookie']) > 0:
+            bot_info += f"* {LlmName.Bard.value} : Google Bard\n"
+        if len(self.bots['yiyan-cookie']) > 0:
+            bot_info += f"* {LlmName.YiYan.value} : 百度 文心一言\n"
+        if len(self.bots['chatglm-api']) > 0:
+            bot_info += f"* {LlmName.ChatGLM.value} : 清华 ChatGLM-6B (本地)\n"
+        if len(self.bots['poe-web']) > 0:
+            bot_info += f"* {LlmName.PoeSage.value} : POE Sage 模型\n"
+            bot_info += f"* {LlmName.PoeClaude.value} : POE Claude 模型\n"
+            bot_info += f"* {LlmName.PoeChatGPT.value} : POE ChatGPT 模型\n"
