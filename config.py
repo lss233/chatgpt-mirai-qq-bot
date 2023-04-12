@@ -260,8 +260,6 @@ class VitsConfig(BaseModel):
     """语音生成超时时间"""
 
 
-
-
 class Trigger(BaseModel):
     prefix: List[str] = [""]
     """全局的触发响应前缀，同时适用于私聊和群聊，默认不需要"""
@@ -304,7 +302,8 @@ class Trigger(BaseModel):
     """允许普通用户切换的模型列表"""
     allow_switching_ai: bool = True
     """允许普通用户切换AI"""
-
+    ping_command: List[str] = ["ping"]
+    """获取服务状态"""
 
 
 class Response(BaseModel):
@@ -374,6 +373,9 @@ class Response(BaseModel):
 
     queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
     """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
+
+    ping_response: str = "当前AI：{current_ai}\n当前可用AI（输入此命令切换：切换AI XXX）：\n{supported_ai}"
+    """ping返回内容"""
 
 
 class System(BaseModel):

@@ -26,6 +26,7 @@ from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
 from utils import retry
+from constants import LlmName
 
 handlers = {}
 
@@ -70,25 +71,25 @@ class ConversationContext:
         if config.text_to_speech.always:
             self.conversation_voice = config.text_to_speech.default
 
-        if _type == 'chatgpt-web':
+        if _type == LlmName.ChatGPT_Web.value:
             self.adapter = ChatGPTWebAdapter(self.session_id)
-        elif _type == 'chatgpt-api':
+        elif _type == LlmName.ChatGPT_Api.value:
             self.adapter = ChatGPTAPIAdapter(self.session_id)
         elif PoeBot.parse(_type):
             self.adapter = PoeAdapter(self.session_id, PoeBot.parse(_type))
-        elif _type == 'bing':
+        elif _type == LlmName.Bing.value:
             self.adapter = BingAdapter(self.session_id)
-        elif _type == 'bing-c':
+        elif _type == LlmName.BingC.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.creative)
-        elif _type == 'bing-b':
+        elif _type == LlmName.BingB.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.balanced)
-        elif _type == 'bing-p':
+        elif _type == LlmName.BingP.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
-        elif _type == 'bard':
+        elif _type == LlmName.Bard.value:
             self.adapter = BardAdapter(self.session_id)
-        elif _type == 'yiyan':
+        elif _type == LlmName.YiYan.value:
             self.adapter = YiyanAdapter(self.session_id)
-        elif _type == 'chatglm-api':
+        elif _type == LlmName.ChatGLM.value:
             self.adapter = ChatGLM6BAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
