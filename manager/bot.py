@@ -141,6 +141,24 @@ class BotManager:
             else:
                 self.config.response.default_ai = 'chatgpt-web'
 
+    def reset_bot(self, bot):
+        from adapter.quora.poe import PoeClientWrapper
+        if isinstance(bot, PoeClientWrapper):
+            logger.info("Try to reset poe client.")
+            bot_id = bot.client_id
+            self.bots["poe-web"] = [x for x in self.bots["poe-web"] if x.client_id != bot_id]
+            p_b = bot.p_b
+            new_client = PoeClient(token=p_b, proxy=bot.client.proxy)
+            if self.poe_check_auth(new_client):
+                new_bot = PoeClientWrapper(bot_id, new_client, p_b)
+                self.bots["poe-web"].append(new_bot)
+                return new_bot
+            else:
+                logger.warning("Failed to reset poe bot, try to pick a new bot.")
+                return self.pick("poe-web")
+        else:
+            raise RuntimeError("Unsupported reset action.")
+
     def login_bing(self):
         os.environ['BING_PROXY_URL'] = self.config.bing.bing_endpoint
         for i, account in enumerate(self.bing):
@@ -172,23 +190,24 @@ class BotManager:
             logger.error("所有 Bard 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['bard-cookie'])}/{len(self.bing)} 个 Bard 账号！")
 
-    def login_poe(self):
-        def poe_check_auth(client: PoeClient) -> bool:
-            try:
-                response = client.get_bot_names()
-                logger.debug(f"poe bot is running. bot names -> {response}")
-                return True
-            except KeyError:
-                return False
+    def poe_check_auth(self, client: PoeClient) -> bool:
+        try:
+            response = client.get_bot_names()
+            logger.debug(f"poe bot is running. bot names -> {response}")
+            return True
+        except KeyError:
+            return False
 
+    def login_poe(self):
+        from adapter.quora.poe import PoeClientWrapper
         try:
             for i, account in enumerate(self.poe):
                 logger.info("正在解析第 {i} 个 poe web 账号", i=i + 1)
                 if proxy := self.__check_proxy(account.proxy):
                     account.proxy = proxy
                 bot = PoeClient(token=account.p_b, proxy=account.proxy)
-                if poe_check_auth(bot):
-                    self.bots["poe-web"].append(bot)
+                if self.poe_check_auth(bot):
+                    self.bots["poe-web"].append(PoeClientWrapper(i, bot, account.p_b))
                     logger.success("解析成功！", i=i + 1)
         except Exception as e:
             logger.error("解析失败：")
