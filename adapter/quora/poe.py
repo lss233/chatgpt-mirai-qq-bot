@@ -69,14 +69,13 @@ class PoeAdapter(BotAdapter):
             self.poe_client.last_ask_time = time.time()
         except Exception as e:
             logger.warning(f"Poe connection error {str(e)}")
-            if self.process_retry <= 3:
-                new_poe_client = botManager.reset_bot(self.poe_client)
-                self.poe_client = new_poe_client
-                self.process_retry += 1
-                async for resp in self.ask(msg):
-                    yield resp
-            else:
+            if self.process_retry > 3:
                 raise e
+            new_poe_client = botManager.reset_bot(self.poe_client)
+            self.poe_client = new_poe_client
+            self.process_retry += 1
+            async for resp in self.ask(msg):
+                yield resp
 
     def check_and_reset_client(self):
         current_time = time.time()
@@ -92,13 +91,12 @@ class PoeAdapter(BotAdapter):
             self.process_retry = 0
         except Exception as e:
             logger.warning(f"Poe connection error {str(e)}")
-            if self.process_retry <= 3:
-                new_poe_client = botManager.reset_bot(self.poe_client)
-                self.poe_client = new_poe_client
-                self.process_retry += 1
-                await self.rollback()
-            else:
+            if self.process_retry > 3:
                 raise e
+            new_poe_client = botManager.reset_bot(self.poe_client)
+            self.poe_client = new_poe_client
+            self.process_retry += 1
+            await self.rollback()
 
     async def on_reset(self):
         """当会话被重置时，此函数被调用"""
@@ -107,10 +105,9 @@ class PoeAdapter(BotAdapter):
             self.process_retry = 0
         except Exception as e:
             logger.warning(f"Poe connection error {str(e)}")
-            if self.process_retry <= 3:
-                new_poe_client = botManager.reset_bot(self.poe_client)
-                self.poe_client = new_poe_client
-                self.process_retry += 1
-                await self.on_reset()
-            else:
+            if self.process_retry > 3:
                 raise e
+            new_poe_client = botManager.reset_bot(self.poe_client)
+            self.poe_client = new_poe_client
+            self.process_retry += 1
+            await self.on_reset()
