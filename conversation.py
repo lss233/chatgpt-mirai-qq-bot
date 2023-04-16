@@ -99,12 +99,12 @@ class ConversationContext:
         # 没有就算了
         if config.sdwebui:
             self.drawing_adapter = SDDrawing()
-        else:
-            try:
+        elif config.bing.use_drawing:
+            with contextlib.suppress(NoAvailableBotException):
                 self.drawing_adapter = BingAdapter(self.session_id, ConversationStyle.creative)
-            except NoAvailableBotException:
-                with contextlib.suppress(NoAvailableBotException):
-                    self.drawing_adapter = OpenAIDrawing(self.session_id)
+        else:
+            with contextlib.suppress(NoAvailableBotException):
+                self.drawing_adapter = OpenAIDrawing(self.session_id)
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
