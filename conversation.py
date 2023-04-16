@@ -8,6 +8,7 @@ from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
 
+import constants
 from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
@@ -96,10 +97,14 @@ class ConversationContext:
         self.type = _type
 
         # 没有就算了
-        with contextlib.suppress(NoAvailableBotException):
-            self.drawing_adapter = (
-                SDDrawing() if config.sdwebui else OpenAIDrawing(session_id)
-            )
+        if config.sdwebui:
+            self.drawing_adapter = SDDrawing()
+        elif config.bing.use_drawing:
+            with contextlib.suppress(NoAvailableBotException):
+                self.drawing_adapter = BingAdapter(self.session_id, ConversationStyle.creative)
+        else:
+            with contextlib.suppress(NoAvailableBotException):
+                self.drawing_adapter = OpenAIDrawing(self.session_id)
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
@@ -138,11 +143,11 @@ class ConversationContext:
                     yield "未配置画图引擎，无法使用画图功能！"
                 prompt = prompt.removeprefix(prefix)
                 if chain.has(GraiaImage):
-                    image = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
+                    images = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
                 else:
-                    image = await self.drawing_adapter.text_to_img(prompt)
-                if image:
-                    yield image
+                    images = await self.drawing_adapter.text_to_img(prompt)
+                for i in images:
+                    yield i
                 return
 
         if self.preset_decoration_format:
