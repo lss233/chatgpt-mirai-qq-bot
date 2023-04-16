@@ -193,12 +193,76 @@ debug = false
 **响应格式**
 |参数名|类型|说明|
 |:---|:---|:---|
-|message| String |返回信息，HTML 格式|  
+|result| String |SUCESS,DONE,FAILED|
+|message| String[] |文本返回，支持多段返回|
+|voice| String[] |音频返回，支持多个音频的base64编码；参考：data:audio/mpeg;base64,...|
+|image| String[] |图片返回，支持多个图片的base64编码；参考：data:image/png;base64,...|
 
 **响应示例**  
 ```json
 {
-    "message": "pong!"
+    "result": "DONE",
+    "message": ["pong!"],
+    "voice": [],
+    "image": []
+}
+```
+
+**POST**    `/v2/chat`  
+
+**请求参数**  
+
+|参数名|必选|类型|说明|
+|:---|:---|:---|:---|
+|session_id| 是 | String |会话ID，默认：`friend-default_session`|
+|username| 是 | String |用户名，默认：`某人`|
+|message| 是 | String |消息，不能为空|  
+
+**请求示例**
+```json
+{
+    "session_id": "friend-123456",
+    "username": "testuser",
+    "message": "ping"
+}
+```
+**响应格式**
+字符串：request_id
+
+**响应示例**  
+```
+1681525479905
+```
+
+**GET**    `/v2/chat/response`  
+
+**请求参数**  
+
+|参数名|必选|类型|说明|
+|:---|:---|:---|:---|
+|request_id| 是 | String |请求id，/v2/chat返回的值|
+
+**请求示例**
+```
+/v2/chat/response?request_id=1681525479905
+```
+**响应格式**
+|参数名|类型|说明|
+|:---|:---|:---|
+|result| String |SUCESS,DONE,FAILED|
+|message| String[] |文本返回，支持多段返回|
+|voice| String[] |音频返回，支持多个音频的base64编码；参考：data:audio/mpeg;base64,...|
+|image| String[] |图片返回，支持多个图片的base64编码；参考：data:image/png;base64,...|
+
+* 每次请求返回增量并清空。DONE、FAILED之后没有更多返回。
+
+**响应示例**  
+```json
+{
+    "result": "DONE",
+    "message": ["pong!"],
+    "voice": ["data:audio/mpeg;base64,..."],
+    "image": ["data:image/png;base64,...", "data:image/png;base64,..."]
 }
 ```
 </details>
