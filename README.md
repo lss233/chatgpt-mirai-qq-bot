@@ -156,7 +156,7 @@ python3 bot.py
 </details>
 
 **[广告] 免费 OpenAI API Key**  
-<img src=https://user-images.githubusercontent.com/50035229/229976556-99e8ac26-c8c3-4f56-902d-a52a7f2e50d5.png width=300px />  
+<img src=https://user-images.githubusercontent.com/8984680/232325002-c3e4550e-f642-45fc-b51c-f570386721c3.png width=300px />  
 你可以在[这里获取免费的 OpenAI API Key](https://freeopenai.xyz/) 测试使用。
 ## 🕸 HTTP API
 
