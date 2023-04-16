@@ -4,7 +4,7 @@ import httpx
 from graia.ariadne.message.element import Image
 
 from constants import config
-from drawing.base import DrawingAPI
+from .base import DrawingAPI
 
 
 class SDWebUI(DrawingAPI):

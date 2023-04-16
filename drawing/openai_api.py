@@ -11,7 +11,7 @@ from loguru import logger
 
 from config import OpenAIAPIKey
 from constants import botManager
-from drawing.base import DrawingAPI
+from .base import DrawingAPI
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
 
