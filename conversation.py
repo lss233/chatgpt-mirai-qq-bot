@@ -1,20 +1,21 @@
-import io
+import contextlib
 from datetime import datetime
 from typing import List, Dict, Optional
 
+import httpx
 from EdgeGPT import ConversationStyle
-from PIL import Image
 from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
 
+import constants
 from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.google.bard import BardAdapter
 from adapter.ms.bing import BingAdapter
-from adapter.openai.api import OpenAIAPIAdapter
+from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
 from adapter.quora.poe import PoeBot, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
@@ -24,6 +25,8 @@ from renderer import Renderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
+from utils import retry
+from constants import LlmName
 
 handlers = {}
 
@@ -40,8 +43,9 @@ class ConversationContext:
     renderer: Renderer
     """消息渲染器"""
 
-    openai_api: OpenAIAPIAdapter = None
-    """OpenAI API适配器，提供聊天之外的功能"""
+    drawing_adapter: DrawingAPI = None
+    """绘图引擎"""
+
     preset: str = None
 
     preset_decoration_format: Optional[str] = "{prompt}"
@@ -68,35 +72,42 @@ class ConversationContext:
         if config.text_to_speech.always:
             self.conversation_voice = config.text_to_speech.default
 
-        if _type == 'chatgpt-web':
+        if _type == LlmName.ChatGPT_Web.value:
             self.adapter = ChatGPTWebAdapter(self.session_id)
-        elif _type == 'chatgpt-api':
+        elif _type == LlmName.ChatGPT_Api.value:
             self.adapter = ChatGPTAPIAdapter(self.session_id)
         elif PoeBot.parse(_type):
             self.adapter = PoeAdapter(self.session_id, PoeBot.parse(_type))
-        elif _type == 'bing':
+        elif _type == LlmName.Bing.value:
             self.adapter = BingAdapter(self.session_id)
-        elif _type == 'bing-c':
+        elif _type == LlmName.BingC.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.creative)
-        elif _type == 'bing-b':
+        elif _type == LlmName.BingB.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.balanced)
-        elif _type == 'bing-p':
+        elif _type == LlmName.BingP.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
-        elif _type == 'bard':
+        elif _type == LlmName.Bard.value:
             self.adapter = BardAdapter(self.session_id)
-        elif _type == 'yiyan':
+        elif _type == LlmName.YiYan.value:
             self.adapter = YiyanAdapter(self.session_id)
-        elif _type == 'chatglm-api':
+        elif _type == LlmName.ChatGLM.value:
             self.adapter = ChatGLM6BAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
 
         # 没有就算了
-        try:
-            self.openai_api = OpenAIAPIAdapter(session_id)
-        except NoAvailableBotException:
-            pass
+            if config.sdwebui:
+                self.drawing_adapter = SDDrawing()
+            else:
+                try:
+                    self.drawing_adapter = BingAdapter()
+                except NoAvailableBotException:
+                    try:
+                        self.drawing_adapter = OpenAIDrawing()
+                    except NoAvailableBotException:
+                        pass
+
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
@@ -126,28 +137,20 @@ class ConversationContext:
         self.last_resp = ''
         yield config.response.reset
 
+    @retry((httpx.ConnectError, httpx.ConnectTimeout))
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
             if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
-                if not self.openai_api:
-                    yield "没有 OpenAI API-key，无法使用画图功能！"
+                if not self.drawing_adapter:
+                    yield "未配置画图引擎，无法使用画图功能！"
                 prompt = prompt.removeprefix(prefix)
                 if chain.has(GraiaImage):
-                    image = chain.get_first(GraiaImage)
-                    raw_bytes = io.BytesIO(await image.get_bytes())
-                    raw_image = Image.open(raw_bytes)
-                    images = await self.openai_api.image_variation(src_img=raw_image)
+                    images = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
                 else:
-                    if isinstance(self.adapter, BingAdapter):
-                        images = await self.adapter.image_creation(prompt)
-                    else:
-                        images = await self.openai_api.image_creation(prompt)
-                if not isinstance(images, list):
-                    images = [images]
-                logger.debug("[Image] Downloaded")
-                for image in images:
-                    yield GraiaImage(data_bytes=image)
+                    images = await self.drawing_adapter.text_to_img(prompt)
+                for i in images:
+                    yield i
                 return
 
         if self.preset_decoration_format:

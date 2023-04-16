@@ -171,6 +171,9 @@ class BingAuths(BaseModel):
     """在 Bing 的回复后加上猜你想问"""
     show_references: bool = True
     """在 Bing 的回复前加上引用资料"""
+    show_remaining_count: bool = True
+    """在 Bing 的回复后加上剩余次数"""
+
     wss_link: str = "wss://sydney.bing.com/sydney/ChatHub"
     """Bing 的 Websocket 接入点"""
     bing_endpoint: str = "https://edgeservices.bing.com/edgesvc/turing/conversation/create"
@@ -257,8 +260,6 @@ class VitsConfig(BaseModel):
     """语音生成超时时间"""
 
 
-
-
 class Trigger(BaseModel):
     prefix: List[str] = [""]
     """全局的触发响应前缀，同时适用于私聊和群聊，默认不需要"""
@@ -301,7 +302,8 @@ class Trigger(BaseModel):
     """允许普通用户切换的模型列表"""
     allow_switching_ai: bool = True
     """允许普通用户切换AI"""
-
+    ping_command: List[str] = ["ping"]
+    """获取服务状态"""
 
 
 class Response(BaseModel):
@@ -372,6 +374,9 @@ class Response(BaseModel):
     queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
     """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
 
+    ping_response: str = "当前AI：{current_ai}\n当前可用AI（输入此命令切换：切换AI XXX）：\n{supported_ai}"
+    """ping返回内容"""
+
 
 class System(BaseModel):
     accept_group_invite: bool = False
@@ -392,8 +397,6 @@ class BaiduCloud(BaseModel):
     """不合规消息自定义返回"""
 
 
-
-
 class Preset(BaseModel):
     command: str = r"加载预设 (\w+)"
     keywords: dict[str, str] = {}
@@ -401,7 +404,6 @@ class Preset(BaseModel):
     scan_dir: str = "./presets"
     hide: bool = False
     """是否禁止使用其他人 .预设列表 命令来查看预设"""
-
 
 
 class Ratelimit(BaseModel):
@@ -413,6 +415,19 @@ class Ratelimit(BaseModel):
 
     exceed: str = "已达到额度限制，请等待下一小时继续和我对话。"
     """超额消息"""
+
+
+class SDWebUI(BaseModel):
+    api_url: str
+    """API 基地址，如：http://127.0.0.1:7890"""
+    prompt_prefix: str = 'masterpiece, best quality, illustration, extremely detailed 8K wallpaper'
+    """内置提示词，所有的画图内容都会加上这些提示词"""
+    negative_prompt: str = 'NG_DeepNegative_V1_75T, badhandv4, EasyNegative, bad hands, missing fingers, cropped legs, worst quality, low quality, normal quality, jpeg artifacts, blurry,missing arms, long neck, Humpbacked,multiple breasts, mutated hands and fingers, long body, mutation, poorly drawn , bad anatomy,bad shadow,unnatural body, fused breasts, bad breasts, more than one person,wings on halo,small wings, 2girls, lowres, bad anatomy, text, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, out of frame, lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers,'
+    """负面提示词"""
+    sampler_index: str = 'DPM++ SDE Karras'
+    filter_nsfw: bool = True
+    timeout: float = 10.0
+    """超时时间"""
 
 
 class Config(BaseModel):
@@ -443,6 +458,9 @@ class Config(BaseModel):
     baiducloud: BaiduCloud = BaiduCloud()
     vits: VitsConfig = VitsConfig()
 
+    # === External Utilities ===
+    sdwebui: Optional[SDWebUI] = None
+
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
             if os.path.isfile(path):
@@ -469,10 +487,10 @@ class Config(BaseModel):
                 else:
                     raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
 
-        except KeyError:
-            raise ValueError("预设不存在！")
-        except FileNotFoundError:
-            raise ValueError("预设文件不存在！")
+        except KeyError as e:
+            raise ValueError("预设不存在！") from e
+        except FileNotFoundError as e:
+            raise ValueError("预设文件不存在！") from e
         except Exception as e:
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")

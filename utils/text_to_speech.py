@@ -3,7 +3,7 @@ import os
 from tempfile import NamedTemporaryFile
 from typing import Optional
 
-from graia.ariadne.message.element import Plain, Voice
+from graia.ariadne.message.element import Plain, Voice, Image
 from loguru import logger
 
 from constants import config
@@ -12,6 +12,8 @@ from utils.edge_tts import edge_tts_speech
 
 
 async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
+    if isinstance(elem, Image) and hasattr(elem, 'raw_text'):
+        elem = elem.raw_text
     if not isinstance(elem, Plain) or not str(elem):
         return None
 
