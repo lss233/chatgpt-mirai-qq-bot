@@ -63,4 +63,4 @@ class OpenAI(DrawingAPI):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, proxy=self.api_info.proxy) as resp:
                 if resp.status == 200:
-                    return GraiaImage(bytes=await resp.read())
+                    return GraiaImage(data_bytes=await resp.read())

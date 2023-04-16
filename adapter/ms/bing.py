@@ -111,7 +111,7 @@ class BingAdapter(BotAdapter, DrawingAPI):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, proxy=self.bot.proxy) as resp:
                 if resp.status == 200:
-                    return await resp.read()
+                    return GraiaImage(data_bytes=await resp.read())
 
     async def preset_ask(self, role: str, text: str):
         yield None  # Bing 不使用预设功能
