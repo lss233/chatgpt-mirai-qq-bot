@@ -138,9 +138,11 @@ class ConversationContext:
                     yield "未配置画图引擎，无法使用画图功能！"
                 prompt = prompt.removeprefix(prefix)
                 if chain.has(GraiaImage):
-                    yield await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
+                    image = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
                 else:
-                    yield await self.drawing_adapter.text_to_img(prompt)
+                    image = await self.drawing_adapter.text_to_img(prompt)
+                if image:
+                    yield image
                 return
 
         if self.preset_decoration_format:
