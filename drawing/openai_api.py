@@ -40,7 +40,7 @@ class OpenAI(DrawingAPI):
         )
         image_url = response['data'][0]['url']
         logger.debug(f"[OpenAI Image] Response: {image_url}")
-        return await self.__download_image(image_url)
+        return [await self.__download_image(image_url)]
 
     async def img_to_img(self, init_images: List[GraiaImage], prompt=''):
         f = tempfile.mktemp(suffix='.png')
@@ -57,7 +57,7 @@ class OpenAI(DrawingAPI):
         )
         image_url = response['data'][0]['url']
         logger.debug(f"[OpenAI Image] Response: {image_url}")
-        return await self.__download_image(image_url)
+        return [await self.__download_image(image_url)]
 
     async def __download_image(self, url) -> GraiaImage:
         async with aiohttp.ClientSession() as session:

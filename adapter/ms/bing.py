@@ -1,5 +1,5 @@
 import json
-from typing import Generator, Union
+from typing import Generator, Union, List
 
 import aiohttp
 import asyncio
@@ -8,12 +8,14 @@ from adapter.botservice import BotAdapter
 from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle
 
 from constants import botManager
+from drawing import DrawingAPI
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
 import re
 from ImageGen import ImageGenAsync
+from graia.ariadne.message.element import Image as GraiaImage
 
-class BingAdapter(BotAdapter):
+class BingAdapter(BotAdapter, DrawingAPI):
     cookieData = None
     count: int = 0
 
@@ -92,7 +94,7 @@ class BingAdapter(BotAdapter):
             await self.on_reset()
             return
 
-    async def image_creation(self, prompt: str):
+    async def text_to_img(self, prompt: str):
         logger.debug(f"[Bing Image] Prompt: {prompt}")
 
         async with ImageGenAsync(self.bot.cookies["_U"], False) as image_generator:
@@ -101,6 +103,9 @@ class BingAdapter(BotAdapter):
             logger.debug(f"[Bing Image] Response: {images}")
             tasks = [asyncio.create_task(self.__download_image(image)) for image in images]
             return await asyncio.gather(*tasks)
+
+    async def img_to_img(self, init_images: List[GraiaImage], prompt=''):
+        return await self.text_to_img(prompt)
 
     async def __download_image(self, url):
         async with aiohttp.ClientSession() as session:

@@ -97,17 +97,14 @@ class ConversationContext:
         self.type = _type
 
         # 没有就算了
-            if config.sdwebui:
-                self.drawing_adapter = SDDrawing()
-            else:
-                try:
-                    self.drawing_adapter = BingAdapter()
-                except NoAvailableBotException:
-                    try:
-                        self.drawing_adapter = OpenAIDrawing()
-                    except NoAvailableBotException:
-                        pass
-
+        if config.sdwebui:
+            self.drawing_adapter = SDDrawing()
+        else:
+            try:
+                self.drawing_adapter = BingAdapter(self.session_id, ConversationStyle.creative)
+            except NoAvailableBotException:
+                with contextlib.suppress(NoAvailableBotException):
+                    self.drawing_adapter = OpenAIDrawing(self.session_id)
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
