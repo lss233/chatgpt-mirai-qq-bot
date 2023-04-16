@@ -3,6 +3,7 @@ import asyncio
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
 from config import OpenAIAuthBase
 from utils import QueueInfo
+from loguru import logger
 
 
 class ChatGPTBrowserChatbot(asyncio.Lock):
@@ -54,6 +55,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         self.bot.conversation_id = conversation_id
         self.bot.parent_id = parent_id
         self.bot.config['model'] = model
+        logger.debug(f"ChatGPTBrowserChatbot.ask: {prompt}")
         async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
             yield r
         self.update_accessed_at()

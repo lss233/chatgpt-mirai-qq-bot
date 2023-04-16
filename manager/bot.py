@@ -14,12 +14,13 @@ from httpx import ConnectTimeout
 from loguru import logger
 from poe import Client as PoeClient
 from requests.exceptions import SSLError, RequestException
-from revChatGPT import V1
-from revChatGPT.V1 import AsyncChatbot as V1Chatbot
+from chatbot import V1
+from chatbot.V1 import AsyncChatbot as V1Chatbot
 from revChatGPT.typings import Error as V1Error
 from tinydb import TinyDB, Query
 
 import utils.network as network
+from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
     PoeCookieAuth
@@ -256,7 +257,9 @@ class BotManager:
                     bot = await self.__login_V1(account)
                     self.bots["chatgpt-web"].append(bot)
                 elif account.mode == "browser":
-                    raise Exception("浏览器模式已移除，请使用 browserless 模式。")
+                    # 浏览器模式加回来
+                    bot = await self.__login_browser(account)
+                    self.bots["chatgpt-web"].append(bot)
                 else:
                     raise Exception(f"未定义的登录类型：{account.mode}")
                 bot.id = i
@@ -282,7 +285,7 @@ class BotManager:
             logger.error("所有 OpenAI 账号均登录失败！")
         logger.success(f"成功登录 {counter}/{len(self.openai)} 个 OpenAI 账号！")
 
-    def __login_browser(self, account) -> ChatGPTBrowserChatbot:
+    async def __login_browser(self, account) -> ChatGPTBrowserChatbot:
         logger.info("模式：浏览器登录")
         logger.info("这需要你拥有最新版的 Chrome 浏览器。")
         logger.info("即将打开浏览器窗口……")
@@ -291,9 +294,26 @@ class BotManager:
         if 'XPRA_PASSWORD' in os.environ:
             logger.info(
                 "检测到您正在使用 xpra 虚拟显示环境，请使用你自己的浏览器访问 http://你的IP:14500，密码：{XPRA_PASSWORD}以看见浏览器。",
-                XPRA_PASSWORD=os.environ.get('XPRA_PASSWORD'))
-        bot = BrowserChatbot(config=account.dict(exclude_none=True, by_alias=False))
-        return ChatGPTBrowserChatbot(bot, account.mode)
+                XPRA_PASSWORD=os.environ.get('XPRA_PASSWORD'))  
+        cached_account = dict(self.__load_login_cache(account), **account.dict())
+        config = {}
+        if cached_account.get("access_token"):
+            config["access_token"] = cached_account.get("access_token")
+        if cached_account.get("email") and cached_account.get("password"):
+            config["email"] = cached_account.get("email")
+            config["password"] = cached_account.get("password")
+        bot = BrowserChatbot(config=config)
+        bot2 = V1Chatbot(headers=bot.authheaders, config=config)
+        async def __V1_check_auth() -> bool:
+            try:
+                await bot2.get_conversations(0, 1)
+                logger.debug("V1chatbot auth success")
+                return True
+            except (V1Error, KeyError):
+                return False
+        if await __V1_check_auth():
+            account.mode = "browserless" # 这就是设计模式
+            return ChatGPTBrowserChatbot(bot2, account.mode) 
 
     def __setup_system_proxy(self):
 

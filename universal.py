@@ -105,6 +105,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
 
     async def request(_session_id, prompt: str, conversation_context, _respond):
         try:
+            logger.debug(f"Universal.py: Requesting: {prompt}")
             task = None
 
             # 不带前缀 - 正常初始化会话

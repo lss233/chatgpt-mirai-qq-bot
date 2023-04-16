@@ -36,3 +36,7 @@ httpx~=0.23.3
 Quart==0.17.0
 
 edge-tts
+
+selenium~=4.8.3
+janus~=1.0.0
+undetected_chromedriver
