@@ -97,7 +97,10 @@ class BingAdapter(BotAdapter, DrawingAPI):
     async def text_to_img(self, prompt: str):
         logger.debug(f"[Bing Image] Prompt: {prompt}")
 
-        async with ImageGenAsync(self.bot.cookies["_U"], False) as image_generator:
+        async with ImageGenAsync(
+                next((cookie['value'] for cookie in self.bot.cookies if cookie['name'] == '_U'), None),
+                False
+        ) as image_generator:
             images = await image_generator.get_images(prompt)
 
             logger.debug(f"[Bing Image] Response: {images}")
