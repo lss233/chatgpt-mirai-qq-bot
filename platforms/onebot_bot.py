@@ -216,6 +216,7 @@ async def _(event: Event):
     return await bot.send(event,
                           f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
+
 @bot.on_message()
 async def _(event: Event):
     pattern = ".预设列表"
@@ -251,6 +252,28 @@ async def _(event: Event):
         await bot.send(event, "消息发送失败！请在私聊中查看。")
 
 
+@bot.on_request
+async def _(event: Event):
+    if config.system.accept_friend_request:
+        await bot.call_action(
+            action='.handle_quick_operation_async',
+            self_id=event.self_id,
+            context=event,
+            operation={'approve': True}
+        )
+
+
+@bot.on_request
+async def _(event: Event):
+    if config.system.accept_group_invite:
+        await bot.call_action(
+            action='.handle_quick_operation_async',
+            self_id=event.self_id,
+            context=event,
+            operation={'approve': True}
+        )
+
+
 @bot.on_startup
 async def startup():
     logger.success("启动完毕，接收消息中……")
@@ -261,4 +284,3 @@ async def start_task():
     以异步方式启动
     """
     return await bot.run_task(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
-
