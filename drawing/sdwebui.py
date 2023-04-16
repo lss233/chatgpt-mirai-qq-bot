@@ -54,7 +54,4 @@ class SDWebUI(DrawingAPI):
         resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/img2img", json=payload)
         resp.raise_for_status()
         r = resp.json()
-        images = []
-        for i in r.get('images', []):
-            images.append(Image(base64=i))
-        return images
+        return [Image(base64=i) for i in r.get('images', [])]
