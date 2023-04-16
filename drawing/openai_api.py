@@ -11,7 +11,7 @@ from loguru import logger
 
 from config import OpenAIAPIKey
 from constants import botManager
-from base import DrawingAPI
+from .base import DrawingAPI
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
 
@@ -42,7 +42,7 @@ class OpenAI(DrawingAPI):
         logger.debug(f"[OpenAI Image] Response: {image_url}")
         return await self.__download_image(image_url)
 
-    async def img_to_img(self, init_images: List[Image], prompt=''):
+    async def img_to_img(self, init_images: List[GraiaImage], prompt=''):
         f = tempfile.mktemp(suffix='.png')
         raw_bytes = BytesIO(await init_images[0].get_bytes())
         raw_image = Image.open(raw_bytes)
