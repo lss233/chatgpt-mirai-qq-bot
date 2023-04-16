@@ -1,6 +1,6 @@
 import datetime
 import asyncio
-from revChatGPT.V1 import AsyncChatbot as V1Chatbot
+from chatbot.V1 import AsyncChatbot as V1Chatbot
 from config import OpenAIAuthBase
 from utils import QueueInfo
 from loguru import logger
