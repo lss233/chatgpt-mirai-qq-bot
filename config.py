@@ -426,6 +426,8 @@ class SDWebUI(BaseModel):
     """负面提示词"""
     sampler_index: str = 'DPM++ SDE Karras'
     filter_nsfw: bool = True
+    timeout: float = 10.0
+    """超时时间"""
 
 
 class Config(BaseModel):

@@ -26,7 +26,7 @@ class SDWebUI(DrawingAPI):
             'sampler_index': config.sdwebui.sampler_index,
             "filter_nsfw": 'true' if config.sdwebui.filter_nsfw else 'false',
         }
-        resp = await httpx.AsyncClient(timeout=5000).post(f"{config.sdwebui.api_url}sdapi/v1/txt2img", json=payload)
+        resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/txt2img", json=payload)
         resp.raise_for_status()
         r = resp.json()
 
@@ -51,7 +51,7 @@ class SDWebUI(DrawingAPI):
             'sampler_index': config.sdwebui.sampler_index,
             "filter_nsfw": 'true' if config.sdwebui.filter_nsfw else 'false',
         }
-        resp = await httpx.AsyncClient(timeout=500).post(f"{config.sdwebui.api_url}sdapi/v1/img2img", json=payload)
+        resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/img2img", json=payload)
         resp.raise_for_status()
         r = resp.json()
 
