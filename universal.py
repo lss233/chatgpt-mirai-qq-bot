@@ -20,13 +20,18 @@ from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
 from utils.text_to_speech import get_tts_voice
+from utils.edge_tts import supported_tts_info, EdgeTtsVoice
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
 def get_ping_response(conversation_context: ConversationContext):
-    return config.response.ping_response.format(current_ai=conversation_context.type,
-                                                supported_ai=botManager.bots_info())
+    response = config.response.ping_response.format(current_ai=conversation_context.type,
+                                                    current_voice=conversation_context.get_current_voice_info(),
+                                                    supported_ai=botManager.bots_info())
+    if config.text_to_speech.engine == "edge":
+        response += config.response.ping_edge_tts_response.format(supported_tts=supported_tts_info())
+    return response
 
 
 async def handle_message(_respond: Callable, session_id: str, message: str,
@@ -144,7 +149,6 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                     await respond("已关闭语音，让我们继续聊天吧！")
                 elif config.text_to_speech.engine == "vits":
                     from utils.vits_tts import vits_api_instance
-
                     try:
                         if conversation_context.conversation_voice != "None":
                             voice_id = conversation_context.conversation_voice
@@ -156,6 +160,13 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                         await respond("提供的语音ID无效，请输入一个有效的数字ID。")
                     except Exception as e:
                         await respond(str(e))
+                elif config.text_to_speech.engine == "edge":
+                    try:
+                        voice = getattr(EdgeTtsVoice, conversation_context.conversation_voice.lower())
+                        conversation_context.conversation_voice = voice.value
+                        await respond(f"已切换至 {voice.name} 语音，让我们继续聊天吧！")
+                    except AttributeError:
+                        await respond(f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
                 else:
                     await respond(f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
                 return
