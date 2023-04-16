@@ -1,10 +1,9 @@
-import io
+import contextlib
 from datetime import datetime
 from typing import List, Dict, Optional
 
 import httpx
 from EdgeGPT import ConversationStyle
-from PIL import Image
 from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
@@ -15,7 +14,7 @@ from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.google.bard import BardAdapter
 from adapter.ms.bing import BingAdapter
-from adapter.openai.api import OpenAIAPIAdapter
+from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
 from adapter.quora.poe import PoeBot, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
@@ -43,8 +42,9 @@ class ConversationContext:
     renderer: Renderer
     """消息渲染器"""
 
-    openai_api: OpenAIAPIAdapter = None
-    """OpenAI API适配器，提供聊天之外的功能"""
+    drawing_adapter: DrawingAPI = None
+    """绘图引擎"""
+
     preset: str = None
 
     preset_decoration_format: Optional[str] = "{prompt}"
@@ -96,10 +96,10 @@ class ConversationContext:
         self.type = _type
 
         # 没有就算了
-        try:
-            self.openai_api = OpenAIAPIAdapter(session_id)
-        except NoAvailableBotException:
-            pass
+        with contextlib.suppress(NoAvailableBotException):
+            self.drawing_adapter = (
+                SDDrawing() if config.sdwebui else OpenAIDrawing(session_id)
+            )
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
@@ -134,18 +134,13 @@ class ConversationContext:
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
             if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
-                if not self.openai_api:
-                    yield "没有 OpenAI API-key，无法使用画图功能！"
+                if not self.drawing_adapter:
+                    yield "未配置画图引擎，无法使用画图功能！"
                 prompt = prompt.removeprefix(prefix)
                 if chain.has(GraiaImage):
-                    image = chain.get_first(GraiaImage)
-                    raw_bytes = io.BytesIO(await image.get_bytes())
-                    raw_image = Image.open(raw_bytes)
-                    image_data = await self.openai_api.image_variation(src_img=raw_image)
+                    yield await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
                 else:
-                    image_data = await self.openai_api.image_creation(prompt)
-                logger.debug("[OpenAI Image] Downloaded")
-                yield GraiaImage(data_bytes=image_data)
+                    yield await self.drawing_adapter.text_to_img(prompt)
                 return
 
         if self.preset_decoration_format:
