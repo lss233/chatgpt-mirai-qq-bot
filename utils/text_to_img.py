@@ -7,6 +7,7 @@ import textwrap
 from io import BytesIO
 from io import StringIO
 from tempfile import NamedTemporaryFile
+from typing import Optional
 
 import aiohttp
 import asyncio
@@ -359,18 +360,18 @@ async def text_to_image(text):
 
 @dataclass
 class TextRenderedImage(GraiaImage, BaseModel):
-    text: str
+    text: Optional[str] = None
 
     def __init__(
             self,
             text: str,
             **kwargs,
     ) -> None:
-        self.text = text
         super().__init__(**kwargs)
+        self.text = text
 
     def __str__(self) -> str:
-        return self.text
+        return self.text or '[图片]'
 
 
 async def to_image(text) -> TextRenderedImage:

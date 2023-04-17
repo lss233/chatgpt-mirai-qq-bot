@@ -67,6 +67,16 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.__conversation_keep_from = 0
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
+        self.api_info = botManager.pick('openai-api')
+        self.bot.api_key = self.api_info.api_key
+        self.bot.proxy = self.api_info.proxy
+        self.bot.session.proxies.update(
+            {
+                "http": self.bot.proxy,
+                "https": self.bot.proxy,
+            },
+        )
+
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
