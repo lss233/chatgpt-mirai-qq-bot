@@ -107,6 +107,8 @@ class BotManager:
 
             if self.config.openai.api_endpoint:
                 openai.api_base = self.config.openai.api_endpoint or openai.api_base
+                if openai.api_base.endswith("/"):
+                    openai.api_base.removesuffix("/")
             logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
 
             await self.login_openai()
