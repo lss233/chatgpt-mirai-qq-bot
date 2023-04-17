@@ -85,7 +85,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         async for resp in self.bot.ask_stream_async(prompt=prompt, role=self.hashed_user_id, convo_id=self.session_id):
             full_response += resp
             yield full_response
-        logger.debug(f"[ChatGPT-API] 响应：{full_response}")
+        logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
         logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
 
     async def preset_ask(self, role: str, text: str):
