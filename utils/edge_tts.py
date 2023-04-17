@@ -17,16 +17,18 @@ class EdgeTtsVoice(Enum):
 
 
 def from_voice(value: str):
-    for voice in EdgeTtsVoice.__members__.values():
-        if voice.value.lower() == value.lower():
-            return voice
-    return None
+    return next(
+        (
+            voice
+            for voice in EdgeTtsVoice.__members__.values()
+            if voice.value.lower() == value.lower()
+        ),
+        None,
+    )
 
 
 def supported_tts_info():
-    names = []
-    for voice in EdgeTtsVoice.__members__.values():
-        names.append(voice.name)
+    names = [voice.name for voice in EdgeTtsVoice.__members__.values()]
     return ', '.join(names)
 
 

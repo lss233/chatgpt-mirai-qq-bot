@@ -68,8 +68,7 @@ class ConversationContext:
         if not self.conversation_voice:
             return "无"
         if config.text_to_speech.engine == "edge":
-            edge_voice = from_voice(self.conversation_voice)
-            if edge_voice:
+            if edge_voice := from_voice(self.conversation_voice):
                 return edge_voice.name
         return self.conversation_voice
 
