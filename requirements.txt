@@ -5,7 +5,7 @@ toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
 
-loguru~=0.6.0
+loguru~=0.7.0
 asyncio~=3.4.3
 pydantic~=1.10.7
 
