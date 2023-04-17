@@ -11,6 +11,8 @@ from tempfile import NamedTemporaryFile
 import aiohttp
 import asyncio
 import imgkit
+from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
 
 # Do not delete this line, it has be loaded **BEFORE** markdown
 from utils.zipimporter_patch import patch
@@ -355,7 +357,8 @@ async def text_to_image(text):
     return image
 
 
-class TextRenderedImage(GraiaImage):
+@dataclass
+class TextRenderedImage(GraiaImage, BaseModel):
     text: str
 
     def __init__(
@@ -363,8 +366,8 @@ class TextRenderedImage(GraiaImage):
             text: str,
             **kwargs,
     ) -> None:
-        self.text = text
         super().__init__(**kwargs)
+        self.text = text
 
     def __str__(self) -> str:
         return self.text
@@ -374,5 +377,4 @@ async def to_image(text) -> TextRenderedImage:
     img = await text_to_image(text=str(text))
     b = BytesIO()
     img.save(b, format="png")
-    graia_image = TextRenderedImage(text=text, data_bytes=b.getvalue())
-    return graia_image
+    return TextRenderedImage(text=text, data_bytes=b.getvalue())
