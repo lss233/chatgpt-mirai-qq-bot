@@ -25,11 +25,14 @@ from renderer import Renderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
+from middlewares.draw_ratelimit import MiddlewareRatelimit
 from utils import retry
 from constants import LlmName
 
 handlers = {}
 
+
+middlewares = MiddlewareRatelimit()
 
 class ConversationContext:
     type: str
@@ -139,8 +142,13 @@ class ConversationContext:
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
             if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
+                respond_str = middlewares.handle_draw_request(self.session_id, prompt)
+                if respond_str != "1":
+                    yield respond_str
+                    return
                 if not self.drawing_adapter:
                     yield "未配置画图引擎，无法使用画图功能！"
+                    return
                 prompt = prompt.removeprefix(prefix)
                 if chain.has(GraiaImage):
                     images = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
@@ -148,6 +156,9 @@ class ConversationContext:
                     images = await self.drawing_adapter.text_to_img(prompt)
                 for i in images:
                     yield i
+                respond_str = middlewares.handle_draw_respond_completed(self.session_id, prompt)
+                if respond_str != "1":
+                    yield respond_str
                 return
 
         if self.preset_decoration_format:
