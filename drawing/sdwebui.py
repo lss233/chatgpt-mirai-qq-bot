@@ -30,8 +30,8 @@ class SDWebUI(DrawingAPI):
         resp.raise_for_status()
         r = resp.json()
 
-        for i in r.get('images', []):
-            return Image(base64=i)
+        return [Image(base64=i) for i in r.get('images', [])]
+
 
     async def img_to_img(self, init_images: List[Image], prompt=''):
         payload = {
