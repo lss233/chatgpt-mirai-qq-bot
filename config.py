@@ -377,8 +377,12 @@ class Response(BaseModel):
     queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
     """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
 
-    ping_response: str = "当前AI：{current_ai}\n当前可用AI（输入此命令切换：切换AI XXX）：\n{supported_ai}"
+    ping_response: str = "当前AI：{current_ai} / 当前语音：{current_voice}\n切换指令：\n切换AI XXX / 切换语音 XXX" \
+                         "\n\n当前可用AI：\n{supported_ai}"
     """ping返回内容"""
+
+    ping_edge_tts_response: str = "\n当前可用语音：\n{supported_tts}"
+    """ping edge tts 返回"""
 
 
 class System(BaseModel):

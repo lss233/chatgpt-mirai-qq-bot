@@ -1,6 +1,33 @@
 from edge_tts.exceptions import NoAudioReceived
+from enum import Enum
+
 from loguru import logger
 import edge_tts
+
+
+class EdgeTtsVoice(Enum):
+    xiaoxiao = "zh-CN-XiaoxiaoNeural"
+    xiaoyi = "zh-CN-XiaoyiNeural"
+    yunjian = "zh-CN-YunjianNeural"
+    yunxi = "zh-CN-YunxiNeural"
+    yunxia = "zh-CN-YunxiaNeural"
+    yunyang = "zh-CN-YunyangNeural"
+    liaoning = "zh-CN-liaoning-XiaobeiNeural"
+    shanxi = "zh-CN-shaanxi-XiaoniNeural"
+
+
+def from_voice(value: str):
+    for voice in EdgeTtsVoice.__members__.values():
+        if voice.value.lower() == value.lower():
+            return voice
+    return None
+
+
+def supported_tts_info():
+    names = []
+    for voice in EdgeTtsVoice.__members__.values():
+        names.append(voice.name)
+    return ', '.join(names)
 
 
 async def edge_tts_speech(text: str, voice_name: str, path: str):

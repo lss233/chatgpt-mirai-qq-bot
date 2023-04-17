@@ -27,6 +27,7 @@ from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRen
 from renderer.splitter import MultipleSegmentSplitter
 from utils import retry
 from constants import LlmName
+from utils.edge_tts import from_voice
 
 handlers = {}
 
@@ -61,6 +62,16 @@ class ConversationContext:
     @property
     def supported_models(self):
         return self.adapter.supported_models
+
+    def get_current_voice_info(self):
+        """获取当前语音音色介绍"""
+        if not self.conversation_voice:
+            return "无"
+        if config.text_to_speech.engine == "edge":
+            edge_voice = from_voice(self.conversation_voice)
+            if edge_voice:
+                return edge_voice.name
+        return self.conversation_voice
 
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
