@@ -331,11 +331,12 @@ async def text_to_image(text):
             ok = False
             try:
                 # 调用imgkit将html转为图片
-                ok = await asyncio.get_event_loop().run_in_executor(None, imgkit.from_file, input_file, temp_jpg_filename, {
-                    "enable-local-file-access": "",
-                    "allow": asset_folder,
-                    "width": config.text_to_image.width,  # 图片宽度
-                }, None, None, None, imgkit_config)
+                ok = await asyncio.get_event_loop().run_in_executor(None, imgkit.from_file, input_file,
+                                                                    temp_jpg_filename, {
+                                                                        "enable-local-file-access": "",
+                                                                        "allow": asset_folder,
+                                                                        "width": config.text_to_image.width,  # 图片宽度
+                                                                    }, None, None, None, imgkit_config)
                 # 调用PIL将图片读取为 JPEG，RGB 格式
                 image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
                 ok = True
@@ -354,10 +355,24 @@ async def text_to_image(text):
     return image
 
 
-async def to_image(text) -> GraiaImage:
+class TextRenderedImage(GraiaImage):
+    text: str
+
+    def __init__(
+            self,
+            text: str,
+            **kwargs,
+    ) -> None:
+        self.text = text
+        super().__init__(**kwargs)
+
+    def __str__(self) -> str:
+        return self.text
+
+
+async def to_image(text) -> TextRenderedImage:
     img = await text_to_image(text=str(text))
     b = BytesIO()
     img.save(b, format="png")
-    graia_image = GraiaImage(data_bytes=b.getvalue())
-    graia_image.raw_text = text
+    graia_image = TextRenderedImage(text=text, data_bytes=b.getvalue())
     return graia_image
