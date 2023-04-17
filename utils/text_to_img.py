@@ -366,8 +366,8 @@ class TextRenderedImage(GraiaImage, BaseModel):
             text: str,
             **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
         self.text = text
+        super().__init__(**kwargs)
 
     def __str__(self) -> str:
         return self.text
