@@ -234,6 +234,23 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         raise ExecutionStop()
 
 
+@cmd.command(".设置 {msg_type: str} {msg_id: str} 画图额度为 {rate: int} 个/小时")
+async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member], msg_type: str, msg_id: str,
+                      rate: int):
+    try:
+        if sender.id != config.mirai.manager_qq:
+            return await app.send_message(event, "您没有权限执行这个操作")
+        if msg_type not in ["群组", "好友"]:
+            return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+        if msg_id != '默认' and not msg_id.isdecimal():
+            return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
+        ratelimit_manager.update_draw(msg_type, msg_id, rate)
+        return await app.send_message(event, "额度更新成功！")
+    finally:
+        raise ExecutionStop()
+
+
+
 @cmd.command(".查看 {msg_type: str} {msg_id: str} 的使用情况")
 async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: str):
     try:
@@ -252,6 +269,27 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
         raise ExecutionStop()
+
+
+@cmd.command(".查看 {msg_type: str} {msg_id: str} 的画图使用情况")
+async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: str):
+    try:
+        if isinstance(event, TempMessage):
+            return
+        if msg_type not in ["群组", "好友"]:
+            return await app.send_message(event, "类型异常，仅支持设定【群组】或【好友】的额度")
+        if msg_id != '默认' and not msg_id.isdecimal():
+            return await app.send_message(event, "目标异常，仅支持设定【默认】或【指定 QQ（群）号】的额度")
+        limit = ratelimit_manager.get_draw_limit(msg_type, msg_id)
+        if limit is None:
+            return await app.send_message(event, f"{msg_type} {msg_id} 没有额度限制。")
+        usage = ratelimit_manager.get_draw_usage(msg_type, msg_id)
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        return await app.send_message(event,
+                                      f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
+    finally:
+        raise ExecutionStop()
+
 
 
 @cmd.command(".预设列表")
