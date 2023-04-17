@@ -357,25 +357,8 @@ async def text_to_image(text):
 
     return image
 
-
-@dataclass
-class TextRenderedImage(GraiaImage, BaseModel):
-    text: Optional[str] = None
-
-    def __init__(
-            self,
-            text: str,
-            **kwargs,
-    ) -> None:
-        super().__init__(**kwargs)
-        self.text = text
-
-    def __str__(self) -> str:
-        return self.text or '[图片]'
-
-
-async def to_image(text) -> TextRenderedImage:
+async def to_image(text) -> GraiaImage:
     img = await text_to_image(text=str(text))
     b = BytesIO()
     img.save(b, format="png")
-    return TextRenderedImage(text=text, data_bytes=b.getvalue())
+    return GraiaImage(text=text, data_bytes=b.getvalue())

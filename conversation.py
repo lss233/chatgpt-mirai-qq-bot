@@ -134,7 +134,7 @@ class ConversationContext:
         self.last_resp = ''
         yield config.response.reset
 
-    @retry((httpx.ConnectError, httpx.ConnectTimeout))
+    @retry((httpx.ConnectError, httpx.ConnectTimeout, TimeoutError))
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:

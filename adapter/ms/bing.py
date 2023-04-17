@@ -86,7 +86,7 @@ class BingAdapter(BotAdapter, DrawingAPI):
 
                 yield parsed_content
             logger.debug(f"[Bing AI 响应] {parsed_content}")
-        except Union[asyncio.exceptions.TimeoutError, asyncio.exceptions.CancelledError] as e:
+        except (asyncio.exceptions.TimeoutError, asyncio.exceptions.CancelledError) as e:
             raise e
         except Exception as e:
             logger.exception(e)
