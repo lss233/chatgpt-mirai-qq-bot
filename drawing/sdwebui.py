@@ -26,7 +26,7 @@ class SDWebUI(DrawingAPI):
             'sampler_index': config.sdwebui.sampler_index
         }
 
-        for key, value in config.sdwebui.dict(exclude_none=True):
+        for key, value in config.sdwebui.dict(exclude_none=True).items():
             if isinstance(value, bool):
                 payload[key] = 'true' if value else 'false'
             else:
@@ -58,7 +58,7 @@ class SDWebUI(DrawingAPI):
             "filter_nsfw": 'true' if config.sdwebui.filter_nsfw else 'false',
         }
 
-        for key, value in config.sdwebui.dict(exclude=['api_url', 'timeout'], exclude_none=True):
+        for key, value in config.sdwebui.dict(exclude_none=True).items():
             if isinstance(value, bool):
                 payload[key] = 'true' if value else 'false'
             else:
