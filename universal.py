@@ -2,6 +2,7 @@ import asyncio
 import re
 from typing import Callable
 
+import httpcore
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
@@ -233,7 +234,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             await respond(respond_msg)
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout) as e:  # 网络异常
+        except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout, httpcore.ReadTimeout) as e:  # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
         except Exception as e:  # 未处理的异常
             logger.exception(e)
