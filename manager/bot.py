@@ -71,7 +71,7 @@ class BotManager:
             os.mkdir('data')
             logger.warning(
                 "警告：未检测到 data 目录，如果你通过 Docker 部署，请挂载此目录以实现登录缓存，否则可忽略此消息。")
-        except:
+        except Exception:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
 
@@ -93,18 +93,32 @@ class BotManager:
         if len(self.bard) > 0:
             self.login_bard()
         if len(self.openai) > 0:
+
+            # 考虑到有人会写错全局配置
+            for account in self.config.openai.accounts:
+                account = account.dict()
+                if 'browserless_endpoint' in account:
+                    logger.warning("警告： browserless_endpoint 配置位置有误，正在将其调整为全局配置")
+                    self.config.openai.browserless_endpoint = account['browserless_endpoint']
+                if 'api_endpoint' in account:
+                    logger.warning("警告： api_endpoint 配置位置有误，正在将其调整为全局配置")
+                    self.config.openai.api_endpoint = account['api_endpoint']
+
+            # 应用 browserless_endpoint 配置
             if self.config.openai.browserless_endpoint:
                 V1.BASE_URL = self.config.openai.browserless_endpoint or V1.BASE_URL
             logger.info(f"当前的 browserless_endpoint 为：{V1.BASE_URL}")
 
+            # 历史遗留问题 1
             if V1.BASE_URL == 'https://bypass.duti.tech/api/':
                 logger.error("检测到你还在使用旧的 browserless_endpoint，已为您切换。")
                 V1.BASE_URL = "https://bypass.churchless.tech/api/"
-
+            # 历史遗留问题 2
             if not V1.BASE_URL.endswith("api/"):
                 logger.warning(
                     f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
 
+            # 应用 api_endpoint 配置
             if self.config.openai.api_endpoint:
                 openai.api_base = self.config.openai.api_endpoint or openai.api_base
                 if openai.api_base.endswith("/"):
@@ -338,6 +352,7 @@ class BotManager:
         return cache['cache'] if cache is not None else {}
 
     async def __login_V1(self, account: OpenAIAuthBase) -> ChatGPTBrowserChatbot:
+        # sourcery skip: raise-specific-error
         logger.info("模式：无浏览器登录")
         cached_account = dict(self.__load_login_cache(account), **account.dict())
         config = {}
