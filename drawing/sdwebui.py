@@ -26,7 +26,7 @@ class SDWebUI(DrawingAPI):
             'sampler_index': config.sdwebui.sampler_index
         }
 
-        for key, value in config.sdwebui.dict(exclude=['api_url', 'timeout'], exclude_none=True):
+        for key, value in config.sdwebui.dict(exclude_none=True):
             if isinstance(value, bool):
                 payload[key] = 'true' if value else 'false'
             else:
