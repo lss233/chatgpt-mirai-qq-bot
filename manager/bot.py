@@ -246,7 +246,7 @@ class BotManager:
             logger.error("所有 ChatGLM 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['chatglm-api'])}/{len(self.chatglm)} 个 ChatGLM 账号！")
 
-    async def login_openai(self):
+    async def login_openai(self):  # sourcery skip: raise-specific-error
         counter = 0
         for i, account in enumerate(self.openai):
             logger.info("正在登录第 {i} 个 OpenAI 账号", i=i + 1)
@@ -310,7 +310,7 @@ class BotManager:
         if system_proxy is not None:
             openai.proxy = system_proxy
 
-    def __check_proxy(self, proxy):
+    def __check_proxy(self, proxy):  # sourcery skip: raise-specific-error
         if proxy is None:
             return openai.proxy
         logger.info(f"[代理测试] 正在检查代理配置：{proxy}")

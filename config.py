@@ -69,7 +69,7 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint: Optional[str] = None
+    browserless_endpoint: Optional[str] = "https://chatgpt-proxy.lss233.com/api/"
     """自定义无浏览器登录模式的接入点"""
     api_endpoint: Optional[str] = None
     """自定义 OpenAI API 的接入点"""
@@ -429,8 +429,20 @@ class SDWebUI(BaseModel):
     """负面提示词"""
     sampler_index: str = 'DPM++ SDE Karras'
     filter_nsfw: bool = True
+    denoising_strength: float = 0.45
+    steps: int = 25
+    enable_hr: bool = False
+    seed: int = -1
+    batch_size: int = 1
+    n_iter: int = 1
+    cfg_scale: float = 0.75
+    restore_faces: bool = False
+
     timeout: float = 10.0
     """超时时间"""
+    class Config(BaseConfig):
+        extra = Extra.allow
+
 
 
 class Config(BaseModel):

@@ -23,15 +23,21 @@ class SDWebUI(DrawingAPI):
             'tiling': 'false',
             'negative_prompt': config.sdwebui.negative_prompt,
             'eta': 0,
-            'sampler_index': config.sdwebui.sampler_index,
-            "filter_nsfw": 'true' if config.sdwebui.filter_nsfw else 'false',
+            'sampler_index': config.sdwebui.sampler_index
         }
-        resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/txt2img", json=payload)
+
+        for key, value in config.sdwebui.dict(exclude=['api_url', 'timeout'], exclude_none=True):
+            if isinstance(value, bool):
+                payload[key] = 'true' if value else 'false'
+            else:
+                payload[key] = value
+
+        resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/txt2img",
+                                                                            json=payload)
         resp.raise_for_status()
         r = resp.json()
 
         return [Image(base64=i) for i in r.get('images', [])]
-
 
     async def img_to_img(self, init_images: List[Image], prompt=''):
         payload = {
@@ -51,7 +57,15 @@ class SDWebUI(DrawingAPI):
             'sampler_index': config.sdwebui.sampler_index,
             "filter_nsfw": 'true' if config.sdwebui.filter_nsfw else 'false',
         }
-        resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/img2img", json=payload)
+
+        for key, value in config.sdwebui.dict(exclude=['api_url', 'timeout'], exclude_none=True):
+            if isinstance(value, bool):
+                payload[key] = 'true' if value else 'false'
+            else:
+                payload[key] = value
+
+        resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/img2img",
+                                                                            json=payload)
         resp.raise_for_status()
         r = resp.json()
         return [Image(base64=i) for i in r.get('images', [])]
