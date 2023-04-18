@@ -22,7 +22,8 @@ def retry(exceptions, tries=4, delay=3, backoff=2):
                         yield result
                     return
                 except exceptions as e:
-                    logger.error(f"遇到错误： {e}, 将在 {_delay} 秒后重试...")
+                    logger.exception(e)
+                    logger.error(f"处理请求时遇到错误, 将在 {_delay} 秒后重试...")
                     await asyncio.sleep(_delay)
                     _tries -= 1
                     _delay *= backoff
