@@ -1,3 +1,4 @@
+import time
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
@@ -5,6 +6,7 @@ from loguru import logger
 from telegram import Update, constants
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
 from telegram.request import HTTPXRequest
+from middlewares.ratelimit import manager as ratelimit_manager
 
 from constants import config
 from universal import handle_message
@@ -51,10 +53,11 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         nickname=update.message.from_user.full_name or "群友"
     )
 
+
 async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if (
-        config.presets.hide
-        and update.message.from_user.id != config.telegram.manager_chat
+            config.presets.hide
+            and update.message.from_user.id != config.telegram.manager_chat
     ):
         return await update.message.reply_text("您没有权限执行这个操作")
     for keyword, path in config.presets.keywords.items():
@@ -65,6 +68,36 @@ async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TY
             await update.message.reply_text(answer)
         except:
             pass
+
+
+async def on_limit_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if (
+            update.message.from_user.id != config.telegram.manager_chat
+    ):
+        return await update.message.reply_text("您没有权限执行这个操作")
+    msg_type, msg_id, rate = update.message.text.split(' ')
+    if msg_type not in ["群组", "好友"]:
+        return await update.message.reply_text("类型异常，仅支持设定【群组】或【好友】的额度")
+    if msg_id != '默认' and not msg_id.isdecimal():
+        return await update.message.reply_text("目标异常，仅支持设定【默认】或【指定 chat id】的额度")
+    ratelimit_manager.update(msg_type, msg_id, rate)
+    return await update.message.reply_text("额度更新成功！")
+
+
+async def on_query_chat_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg_type, msg_id, rate = update.message.text.split(' ')
+
+    if msg_type not in ["群组", "好友"]:
+        return await update.message.reply_text("类型异常，仅支持设定【群组】或【好友】的额度")
+    if msg_id != '默认' and not msg_id.isdecimal():
+        return await update.message.reply_text("目标异常，仅支持设定【默认】或【指定 chat id】的额度")
+    limit = ratelimit_manager.get_limit(msg_type, msg_id)
+    if limit is None:
+        return await update.message.reply_text(f"{msg_type} {msg_id} 没有额度限制。")
+    usage = ratelimit_manager.get_usage(msg_type, msg_id)
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    return await update.message.reply_text(
+        f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
 
 async def bootstrap() -> None:
@@ -81,6 +114,8 @@ async def bootstrap() -> None:
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
     app.add_handler(CommandHandler("presets", on_check_presets_list))
+    app.add_handler(CommandHandler("limit_chat", on_limit_chat))
+    app.add_handler(CommandHandler("query_limit", on_query_chat_limit))
     await app.initialize()
     await app.start()
     logger.info("启动完毕，接收消息中……")
