@@ -43,7 +43,7 @@ class TtsVoice:
         tts_voice.engine = engine
         tts_voice.full_name = voice
         tts_voice.gender = gender
-        if engine == "edge" or engine == "azure":
+        if engine in ["edge", "azure"]:
             """如：zh-CN-liaoning-XiaobeiNeural、uz-UZ-SardorNeural"""
             voice_info = voice.split("-")
             if len(voice_info) < 3:
@@ -62,11 +62,11 @@ class TtsVoice:
             tts_voice.name = name
             tts_voice.alias = alias
             tts_voice.sub_region = sub_region
-            return tts_voice
         else:
             tts_voice.lang = voice
             tts_voice.alias = voice
-            return tts_voice
+
+        return tts_voice
 
 
 class TtsVoiceManager:
@@ -74,19 +74,17 @@ class TtsVoiceManager:
 
     @staticmethod
     async def parse_tts_voice(tts_engine, voice_name) -> TtsVoice:
-        if tts_engine == "edge":
-            from utils.edge_tts import load_edge_tts_voices
-            if "edge" not in tts_voice_dic:
-                tts_voice_dic["edge"] = await load_edge_tts_voices()
-            _voice_dic = tts_voice_dic["edge"]
-            _voice = TtsVoice.parse(tts_engine, voice_name)
-            if _voice:
-                return _voice_dic.get(_voice.alias, None)
-            if voice_name in _voice_dic:
-                return _voice_dic[voice_name]
-        else:
+        if tts_engine != "edge":
             # todo support other engines
             return TtsVoice.parse(tts_engine, voice_name)
+        from utils.edge_tts import load_edge_tts_voices
+        if "edge" not in tts_voice_dic:
+            tts_voice_dic["edge"] = await load_edge_tts_voices()
+        _voice_dic = tts_voice_dic["edge"]
+        if _voice := TtsVoice.parse(tts_engine, voice_name):
+            return _voice_dic.get(_voice.alias, None)
+        if voice_name in _voice_dic:
+            return _voice_dic[voice_name]
 
     @staticmethod
     async def list_tts_voices(tts_engine, voice_prefix):
