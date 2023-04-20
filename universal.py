@@ -179,7 +179,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                     else:
                         await respond("提供的语音ID无效，请输入一个有效的语音ID。")
                 else:
-                    await respond("无可用的TTS配置。")
+                    await respond("未配置文字转语音引擎，无法使用语音功能。")
                 return
 
             elif prompt in config.trigger.mixed_only_command:
