@@ -156,14 +156,14 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                     from utils.vits_tts import vits_api_instance
                     try:
                         voice_name = await vits_api_instance.set_id(new_voice)
-                        conversation_context.conversation_voice = await TtsVoiceManager.parse_tts_voice("vits", voice_name)
+                        conversation_context.conversation_voice = TtsVoiceManager.parse_tts_voice("vits", voice_name)
                         await respond(f"已切换至 {voice_name} 语音，让我们继续聊天吧！")
                     except ValueError:
                         await respond("提供的语音ID无效，请输入一个有效的数字ID。")
                     except Exception as e:
                         await respond(str(e))
                 elif config.text_to_speech.engine == "edge":
-                    tts_voice = await TtsVoiceManager.parse_tts_voice("edge", new_voice)
+                    tts_voice = TtsVoiceManager.parse_tts_voice("edge", new_voice)
                     if tts_voice:
                         conversation_context.conversation_voice = tts_voice
                         await respond(f"已切换至 {tts_voice.alias} 语音，让我们继续聊天吧！")
@@ -173,7 +173,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                         await respond(f"提供的语音ID无效，请输入一个有效的语音ID。如：{available_voice}。")
                         conversation_context.conversation_voice = None
                 elif config.text_to_speech.engine == "azure":
-                    tts_voice = await TtsVoiceManager.parse_tts_voice("azure", new_voice)
+                    tts_voice = TtsVoiceManager.parse_tts_voice("azure", new_voice)
                     conversation_context.conversation_voice = tts_voice
                     if tts_voice:
                         await respond(f"已切换至 {tts_voice.full_name} 语音，让我们继续聊天吧！")

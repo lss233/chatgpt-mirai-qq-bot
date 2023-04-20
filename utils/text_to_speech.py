@@ -73,13 +73,13 @@ class TtsVoiceManager:
     """tts音色管理"""
 
     @staticmethod
-    async def parse_tts_voice(tts_engine, voice_name) -> TtsVoice:
+    def parse_tts_voice(tts_engine, voice_name) -> TtsVoice:
         if tts_engine != "edge":
             # todo support other engines
             return TtsVoice.parse(tts_engine, voice_name)
-        from utils.edge_tts import load_edge_tts_voices
+        from utils.edge_tts import edge_tts_voices
         if "edge" not in tts_voice_dic:
-            tts_voice_dic["edge"] = await load_edge_tts_voices()
+            tts_voice_dic["edge"] = edge_tts_voices
         _voice_dic = tts_voice_dic["edge"]
         if _voice := TtsVoice.parse(tts_engine, voice_name):
             return _voice_dic.get(_voice.alias, None)

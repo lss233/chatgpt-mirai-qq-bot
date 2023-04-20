@@ -130,7 +130,7 @@ async def _(event: Event):
             nickname=event.sender.get("nickname", "好友")
         )
     except Exception as e:
-        print(e)
+        logger.exception(e)
 
 
 GroupTrigger = [MentionMe(config.trigger.require_mention != "at"), DetectPrefix(

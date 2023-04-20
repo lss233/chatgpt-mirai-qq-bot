@@ -8,6 +8,7 @@ import asyncio
 from utils.exithooks import hook
 from loguru import logger
 from constants import config, botManager
+from utils.edge_tts import load_edge_tts_voices
 
 hook()
 
@@ -37,7 +38,7 @@ if config.mirai:
     logger.info("检测到 mirai 配置，将启动 mirai 模式……")
     from platforms.ariadne_bot import start_task
     bots.append(loop.create_task(start_task()))
-
+loop.run_until_complete(load_edge_tts_voices())
 loop.run_until_complete(asyncio.gather(*bots))
 loop.run_forever()
 

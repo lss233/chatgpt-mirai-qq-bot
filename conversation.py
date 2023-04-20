@@ -33,8 +33,8 @@ from utils.text_to_speech import TtsVoice, TtsVoiceManager
 
 handlers = {}
 
-
 middlewares = MiddlewareRatelimit()
+
 
 class ConversationContext:
     type: str
@@ -78,8 +78,7 @@ class ConversationContext:
             tts_engine = config.text_to_speech.engine
             tts_voice = config.text_to_speech.default
             try:
-                self.conversation_voice = asyncio.run(
-                    TtsVoiceManager.parse_tts_voice(tts_engine, tts_voice))
+                self.conversation_voice = TtsVoiceManager.parse_tts_voice(tts_engine, tts_voice)
             except KeyError as e:
                 logger.error(f"Failed to load {tts_engine} tts voice setting -> {tts_voice}")
         if _type == LlmName.ChatGPT_Web.value:
@@ -216,8 +215,8 @@ class ConversationContext:
                         continue
 
                     if role == 'voice':
-                        self.conversation_voice = await TtsVoiceManager.parse_tts_voice(config.text_to_speech.engine,
-                                                                                        text.strip())
+                        self.conversation_voice = TtsVoiceManager.parse_tts_voice(config.text_to_speech.engine,
+                                                                                  text.strip())
                         logger.debug(f"Set conversation voice to {self.conversation_voice.full_name}")
                         continue
 
