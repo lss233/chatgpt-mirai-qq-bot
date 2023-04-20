@@ -15,9 +15,7 @@ class MiddlewareRatelimit():
     def handle_draw_request(self, session_id: str, prompt: str):
         _id = session_id.split('-', 1)[1] if '-' in session_id else session_id
         rate_usage = manager.check_draw_exceed('好友' if session_id.startswith("friend-") else '群组', _id)
-        if rate_usage >= 1:
-            return config.ratelimit.draw_exceed
-        return "1"
+        return config.ratelimit.draw_exceed if rate_usage >= 1 else "1"
 
 
 
