@@ -534,8 +534,9 @@ class Config(BaseModel):
 
     @staticmethod
     def load_config() -> Config:
+        if env_config := os.environ['CHATGPT_FOR_BOT_FULL_CONFIG']:
+            return Config.parse_obj(toml.loads(env_config))
         try:
-            import os
             if (
                 not os.path.exists('config.cfg')
                 or os.path.getsize('config.cfg') <= 0
