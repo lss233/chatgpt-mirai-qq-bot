@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 import OpenAIAuth
 import openai
+import regex
 import requests
 import urllib3.exceptions
 from aiohttp import ClientConnectorError
@@ -203,6 +204,16 @@ class BotManager:
             if proxy := self.__check_proxy(account.proxy):
                 account.proxy = proxy
             try:
+                if account.cookie_content:
+                    logger.error("cookie_content 字段已弃用，请填写 BDUSS 和 BAIDUID！")
+                    account.BDUSS = regex.findall(r"BDUSS=(.*?);", account.cookie_content)
+                    account.BAIDUID = regex.findall(r"BAIDUID=(.*?);", account.cookie_content)
+                if not account.BAIDUID:
+                    logger.error("未填写 BAIDUID，可能会有较高封号风险！")
+                if not account.BDUSS:
+                    logger.error("未填写 BDUSS，无法使用！")
+                assert account.BDUSS
+
                 self.bots["yiyan-cookie"].append(account)
                 logger.success("解析成功！", i=i + 1)
             except Exception as e:
