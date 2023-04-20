@@ -1,7 +1,8 @@
+import asyncio
 import re
 from typing import Callable
 
-import asyncio
+import httpcore
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
@@ -12,7 +13,7 @@ from urllib3.exceptions import MaxRetryError
 
 from constants import botManager
 from constants import config
-from conversation import ConversationHandler
+from conversation import ConversationHandler, ConversationContext
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException
 from middlewares.baiducloud import MiddlewareBaiduCloud
@@ -22,6 +23,11 @@ from middlewares.timeout import MiddlewareTimeout
 from utils.text_to_speech import get_tts_voice
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
+
+
+def get_ping_response(conversation_context: ConversationContext):
+    return config.response.ping_response.format(current_ai=conversation_context.type,
+                                                supported_ai=botManager.bots_info())
 
 
 async def handle_message(_respond: Callable, session_id: str, message: str,
@@ -126,6 +132,9 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             elif prompt in config.trigger.rollback_command:
                 task = conversation_context.rollback()
 
+            elif prompt in config.trigger.ping_command:
+                await respond(get_ping_response(conversation_context))
+                return
 
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
                 if not config.azure.tts_speech_key and config.text_to_speech.engine == "azure":
@@ -221,28 +230,11 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
         except BotTypeNotFoundException as e:  # 预设不存在
             respond_msg = f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n"
-            if len(botManager.bots['chatgpt-web']) > 0:
-                respond_msg += "* chatgpt-web - OpenAI ChatGPT 网页版\n"
-            if len(botManager.bots['openai-api']) > 0:
-                respond_msg += "* chatgpt-api - OpenAI ChatGPT API版\n"
-            if len(botManager.bots['bing-cookie']) > 0:
-                respond_msg += "* bing-c - 微软 New Bing (创造力)\n"
-                respond_msg += "* bing-b - 微软 New Bing (平衡)\n"
-                respond_msg += "* bing-p - 微软 New Bing (精确)\n"
-            if len(botManager.bots['bard-cookie']) > 0:
-                respond_msg += "* bard   - Google Bard\n"
-            if len(botManager.bots['yiyan-cookie']) > 0:
-                respond_msg += "* yiyan  - 百度 文心一言\n"
-            if len(botManager.bots['chatglm-api']) > 0:
-                respond_msg += "* chatglm-api - 清华 ChatGLM-6B (本地)\n"
-            if len(botManager.bots['poe-web']) > 0:
-                respond_msg += "* sage   - POE Sage 模型\n"
-                respond_msg += "* claude - POE Claude 模型\n"
-                respond_msg += "* chinchilla - POE ChatGPT 模型\n"
+            respond_msg += botManager.bots_info()
             await respond(respond_msg)
         except PresetNotFoundException:  # 预设不存在
             await respond("预设不存在，请检查你的输入是否有问题！")
-        except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout) as e:  # 网络异常
+        except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout, httpcore.ReadTimeout) as e:  # 网络异常
             await respond(config.response.error_network_failure.format(exc=e))
         except Exception as e:  # 未处理的异常
             logger.exception(e)

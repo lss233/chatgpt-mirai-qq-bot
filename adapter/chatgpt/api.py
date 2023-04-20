@@ -67,6 +67,16 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.__conversation_keep_from = 0
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
+        self.api_info = botManager.pick('openai-api')
+        self.bot.api_key = self.api_info.api_key
+        self.bot.proxy = self.api_info.proxy
+        self.bot.session.proxies.update(
+            {
+                "http": self.bot.proxy,
+                "https": self.bot.proxy,
+            },
+        )
+
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
                 {"role": "system", "content": self.bot.system_prompt}
@@ -85,7 +95,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         async for resp in self.bot.ask_stream_async(prompt=prompt, role=self.hashed_user_id, convo_id=self.session_id):
             full_response += resp
             yield full_response
-        logger.debug(f"[ChatGPT-API] 响应：{full_response}")
+        logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
         logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
 
     async def preset_ask(self, role: str, text: str):

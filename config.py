@@ -69,7 +69,7 @@ class OpenAIGPT3Params(BaseModel):
 
 
 class OpenAIAuths(BaseModel):
-    browserless_endpoint: Optional[str] = None
+    browserless_endpoint: Optional[str] = "https://chatgpt-proxy.lss233.com/api/"
     """自定义无浏览器登录模式的接入点"""
     api_endpoint: Optional[str] = None
     """自定义 OpenAI API 的接入点"""
@@ -174,6 +174,9 @@ class BingAuths(BaseModel):
     show_remaining_count: bool = True
     """在 Bing 的回复后加上剩余次数"""
 
+    use_drawing: bool = False
+    """使用 Bing 画图"""
+
     wss_link: str = "wss://sydney.bing.com/sydney/ChatHub"
     """Bing 的 Websocket 接入点"""
     bing_endpoint: str = "https://edgeservices.bing.com/edgesvc/turing/conversation/create"
@@ -264,8 +267,6 @@ class VitsConfig(BaseModel):
     """语音生成超时时间"""
 
 
-
-
 class Trigger(BaseModel):
     prefix: List[str] = [""]
     """全局的触发响应前缀，同时适用于私聊和群聊，默认不需要"""
@@ -308,7 +309,8 @@ class Trigger(BaseModel):
     """允许普通用户切换的模型列表"""
     allow_switching_ai: bool = True
     """允许普通用户切换AI"""
-
+    ping_command: List[str] = ["ping"]
+    """获取服务状态"""
 
 
 class Response(BaseModel):
@@ -379,6 +381,9 @@ class Response(BaseModel):
     queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
     """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
 
+    ping_response: str = "当前AI：{current_ai}\n当前可用AI（输入此命令切换：切换AI XXX）：\n{supported_ai}"
+    """ping返回内容"""
+
 
 class System(BaseModel):
     accept_group_invite: bool = False
@@ -399,8 +404,6 @@ class BaiduCloud(BaseModel):
     """不合规消息自定义返回"""
 
 
-
-
 class Preset(BaseModel):
     command: str = r"加载预设 (\w+)"
     keywords: dict[str, str] = {}
@@ -408,7 +411,6 @@ class Preset(BaseModel):
     scan_dir: str = "./presets"
     hide: bool = False
     """是否禁止使用其他人 .预设列表 命令来查看预设"""
-
 
 
 class Ratelimit(BaseModel):
@@ -420,6 +422,37 @@ class Ratelimit(BaseModel):
 
     exceed: str = "已达到额度限制，请等待下一小时继续和我对话。"
     """超额消息"""
+
+    draw_warning_msg: str = "\n\n警告：额度即将耗尽！\n目前已画：{usage}个图，最大限制为{limit}个图/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
+    """警告消息"""
+
+    draw_exceed: str = "已达到额度限制，请等待下一小时再使用画图功能。"
+    """超额消息"""
+
+
+class SDWebUI(BaseModel):
+    api_url: str
+    """API 基地址，如：http://127.0.0.1:7890"""
+    prompt_prefix: str = 'masterpiece, best quality, illustration, extremely detailed 8K wallpaper'
+    """内置提示词，所有的画图内容都会加上这些提示词"""
+    negative_prompt: str = 'NG_DeepNegative_V1_75T, badhandv4, EasyNegative, bad hands, missing fingers, cropped legs, worst quality, low quality, normal quality, jpeg artifacts, blurry,missing arms, long neck, Humpbacked,multiple breasts, mutated hands and fingers, long body, mutation, poorly drawn , bad anatomy,bad shadow,unnatural body, fused breasts, bad breasts, more than one person,wings on halo,small wings, 2girls, lowres, bad anatomy, text, error, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, out of frame, lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, nsfw, nake, nude, blood'
+    """负面提示词"""
+    sampler_index: str = 'DPM++ SDE Karras'
+    filter_nsfw: bool = True
+    denoising_strength: float = 0.45
+    steps: int = 25
+    enable_hr: bool = False
+    seed: int = -1
+    batch_size: int = 1
+    n_iter: int = 1
+    cfg_scale: float = 0.75
+    restore_faces: bool = False
+
+    timeout: float = 10.0
+    """超时时间"""
+    class Config(BaseConfig):
+        extra = Extra.allow
+
 
 
 class Config(BaseModel):
@@ -450,6 +483,9 @@ class Config(BaseModel):
     baiducloud: BaiduCloud = BaiduCloud()
     vits: VitsConfig = VitsConfig()
 
+    # === External Utilities ===
+    sdwebui: Optional[SDWebUI] = None
+
     def scan_presets(self):
         for keyword, path in self.presets.keywords.items():
             if os.path.isfile(path):
@@ -476,10 +512,10 @@ class Config(BaseModel):
                 else:
                     raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
 
-        except KeyError:
-            raise ValueError("预设不存在！")
-        except FileNotFoundError:
-            raise ValueError("预设文件不存在！")
+        except KeyError as e:
+            raise ValueError("预设不存在！") from e
+        except FileNotFoundError as e:
+            raise ValueError("预设文件不存在！") from e
         except Exception as e:
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
@@ -502,8 +538,9 @@ class Config(BaseModel):
 
     @staticmethod
     def load_config() -> Config:
+        if env_config := os.environ.get('CHATGPT_FOR_BOT_FULL_CONFIG', ''):
+            return Config.parse_obj(toml.loads(env_config))
         try:
-            import os
             if (
                 not os.path.exists('config.cfg')
                 or os.path.getsize('config.cfg') <= 0

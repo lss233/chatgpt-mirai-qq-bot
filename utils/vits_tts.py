@@ -100,12 +100,9 @@ class VitsAPI:
         return save_path
 
     def linguistic_process(self, text):
-        if len(text) > 150:
-            text = "这句话太长了，抱歉"
-
         lang = self.lang
 
-        if lang == "auto":return text
+        if lang == "auto": return text
 
         patterns = {
             "mix": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff]+|[\u3040-\u309f\u30a0-\u30ff]+|\w+|[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
@@ -150,7 +147,8 @@ class VitsAPI:
 
 
 vits_api_instance = VitsAPI()
+
+
 async def vits_api(message: str, path: str):
     await vits_api_instance.initialize()
     return await vits_api_instance.process_message(message, path)
-

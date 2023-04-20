@@ -1,22 +1,22 @@
-# encoding:utf-8
-# OpenAI 对话模型API (可用)
 import ctypes
 import tempfile
-from typing import Generator
+from io import BytesIO
+from typing import List
 
 import aiohttp
 import openai
+from graia.ariadne.message.element import Image as GraiaImage
 from PIL import Image
 from loguru import logger
 
-from adapter.botservice import BotAdapter
 from config import OpenAIAPIKey
 from constants import botManager
+from .base import DrawingAPI
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
 
 
-class OpenAIAPIAdapter(BotAdapter):
+class OpenAI(DrawingAPI):
     api_info: OpenAIAPIKey = None
     """API Key"""
 
@@ -29,16 +29,7 @@ class OpenAIAPIAdapter(BotAdapter):
         openai.proxy = self.api_info.proxy
         super().__init__()
 
-    async def rollback(self):
-        return True
-
-    async def on_reset(self):
-        self.api_info = botManager.pick('openai-api')
-
-    async def ask(self, prompt: str) -> Generator[str, None, None]:
-        yield None
-
-    async def image_creation(self, prompt: str):
+    async def text_to_img(self, prompt: str):
         logger.debug(f"[OpenAI Image] Prompt: {prompt}")
         response = await openai.Image.acreate(
             api_key=self.api_info.api_key,
@@ -49,11 +40,14 @@ class OpenAIAPIAdapter(BotAdapter):
         )
         image_url = response['data'][0]['url']
         logger.debug(f"[OpenAI Image] Response: {image_url}")
-        return await self.__download_image(image_url)
+        return [await self.__download_image(image_url)]
 
-    async def image_variation(self, src_img: Image):
+    async def img_to_img(self, init_images: List[GraiaImage], prompt=''):
         f = tempfile.mktemp(suffix='.png')
-        src_img.save(f, format='PNG')
+        raw_bytes = BytesIO(await init_images[0].get_bytes())
+        raw_image = Image.open(raw_bytes)
+
+        raw_image.save(f, format='PNG')
         response = await openai.Image.acreate_variation(
             api_key=self.api_info.api_key,
             image=open(f, 'rb'),
@@ -63,10 +57,10 @@ class OpenAIAPIAdapter(BotAdapter):
         )
         image_url = response['data'][0]['url']
         logger.debug(f"[OpenAI Image] Response: {image_url}")
-        return await self.__download_image(image_url)
+        return [await self.__download_image(image_url)]
 
-    async def __download_image(self, url):
+    async def __download_image(self, url) -> GraiaImage:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, proxy=self.api_info.proxy) as resp:
                 if resp.status == 200:
-                    return await resp.read()
+                    return GraiaImage(data_bytes=await resp.read())

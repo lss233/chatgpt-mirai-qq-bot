@@ -7,3 +7,4 @@ data/*.json
 .chatgpt_cache.json
 Dockerfile.dev
 **/.DS_Store
+venv/

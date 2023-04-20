@@ -3,7 +3,7 @@ import os
 from tempfile import NamedTemporaryFile
 from typing import Optional
 
-from graia.ariadne.message.element import Plain, Voice
+from graia.ariadne.message.element import Plain, Voice, Image
 from loguru import logger
 
 from constants import config

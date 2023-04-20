@@ -43,8 +43,8 @@ class ChatGPTWebAdapter(BotAdapter):
 
     async def switch_model(self, model_name):
         if (
-            self.bot.account.auto_remove_old_conversations
-            and self.conversation_id is not None
+                self.bot.account.auto_remove_old_conversations
+                and self.conversation_id is not None
         ):
             await self.bot.delete_conversation(self.conversation_id)
         self.conversation_id = None
@@ -61,8 +61,8 @@ class ChatGPTWebAdapter(BotAdapter):
     async def on_reset(self):
         try:
             if (
-                self.bot.account.auto_remove_old_conversations
-                and self.conversation_id is not None
+                    self.bot.account.auto_remove_old_conversations
+                    and self.conversation_id is not None
             ):
                 await self.bot.delete_conversation(self.conversation_id)
         except:
@@ -103,7 +103,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 self.bot.refresh_accessed_at()
                 logger.debug(f"[ChatGPT-Web] accessed at: {str(self.bot.accessed_at)}")
                 first_accessed_at = self.bot.accessed_at[0] if len(self.bot.accessed_at) > 0 \
-                        else current_time - datetime.timedelta(hours=1)
+                    else current_time - datetime.timedelta(hours=1)
                 remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
                 minute = remaining[0]
                 second = remaining[1].seconds
