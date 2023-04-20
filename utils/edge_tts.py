@@ -12,8 +12,9 @@ async def load_edge_tts_voices():
     if edge_tts_voices:
         return edge_tts_voices
     for el in await edge_tts.list_voices():
-        tts_voice = TtsVoice.parse("edge", el.get('ShortName', ''), el.get('Gender', None))
-        if tts_voice:
+        if tts_voice := TtsVoice.parse(
+            "edge", el.get('ShortName', ''), el.get('Gender', None)
+        ):
             edge_tts_voices[tts_voice.alias] = tts_voice
     logger.info(f"{len(edge_tts_voices)} edge tts voices loaded.")
     return edge_tts_voices
