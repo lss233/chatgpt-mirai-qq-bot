@@ -96,7 +96,7 @@ class YiyanAdapter(BotAdapter):
             await self.new_conversation(prompt)
 
         req = await self.client.post(
-            url="https://yiyan.baidu.com/eb/chat/query",
+            url="https://yiyan.baidu.com/eb/chat/check",
             json={
                 "text": prompt,
                 "timestamp": get_ts(),
