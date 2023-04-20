@@ -38,7 +38,14 @@ if config.mirai:
     logger.info("检测到 mirai 配置，将启动 mirai 模式……")
     from platforms.ariadne_bot import start_task
     bots.append(loop.create_task(start_task()))
-loop.run_until_complete(load_edge_tts_voices())
+try:
+    logger.info("[Edge TTS] 读取 Edge TTS 可用音色列表……")
+    loop.run_until_complete(load_edge_tts_voices())
+    logger.info("[Edge TTS] 读取成功！")
+except Exception as e:
+    logger.exception(e)
+    logger.error("[Edge TTS] 读取失败！")
+
 loop.run_until_complete(asyncio.gather(*bots))
 loop.run_forever()
 

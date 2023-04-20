@@ -16,7 +16,6 @@ async def load_edge_tts_voices():
             "edge", el.get('ShortName', ''), el.get('Gender', None)
         ):
             edge_tts_voices[tts_voice.alias] = tts_voice
-    logger.info(f"{len(edge_tts_voices)} edge tts voices loaded.")
     return edge_tts_voices
 
 
