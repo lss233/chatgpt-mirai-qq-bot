@@ -21,7 +21,7 @@ from adapter.quora.poe import PoeBot, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
-    CommandRefusedException
+    CommandRefusedException, DrawingFailedException
 from renderer import Renderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
@@ -157,12 +157,15 @@ class ConversationContext:
                     yield "未配置画图引擎，无法使用画图功能！"
                     return
                 prompt = prompt.removeprefix(prefix)
-                if chain.has(GraiaImage):
-                    images = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
-                else:
-                    images = await self.drawing_adapter.text_to_img(prompt)
-                for i in images:
-                    yield i
+                try:
+                    if chain.has(GraiaImage):
+                        images = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
+                    else:
+                        images = await self.drawing_adapter.text_to_img(prompt)
+                    for i in images:
+                        yield i
+                except Exception as e:
+                    raise DrawingFailedException from e
                 respond_str = middlewares.handle_draw_respond_completed(self.session_id, prompt)
                 if respond_str != "1":
                     yield respond_str

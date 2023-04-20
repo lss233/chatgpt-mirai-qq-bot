@@ -6,7 +6,7 @@ import httpcore
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
-from httpx import HTTPStatusError, ConnectTimeout
+from httpx import ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
@@ -15,7 +15,8 @@ from constants import botManager
 from constants import config
 from conversation import ConversationHandler, ConversationContext
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
-    BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException
+    BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException, \
+    DrawingFailedException
 from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
@@ -237,15 +238,18 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                     await action(session_id, prompt, rendered, respond)
             for m in middlewares:
                 await m.handle_respond_completed(session_id, prompt, respond)
+        except DrawingFailedException as e:
+            logger.exception(e)
+            await respond(config.response.error_drawing.format(exc=e.__cause__  or '未知'))
         except CommandRefusedException as e:
             await respond(str(e))
         except openai.error.InvalidRequestError as e:
-            await respond(f"服务器拒绝了您的请求，原因是{str(e)}")
+            await respond(f"服务器拒绝了您的请求，原因是： {str(e)}")
         except BotOperationNotSupportedException:
             await respond("暂不支持此操作，抱歉！")
         except ConcurrentMessageException as e:  # Chatbot 账号同时收到多条消息
             await respond(config.response.error_request_concurrent_error)
-        except (BotRatelimitException, HTTPStatusError) as e:  # Chatbot 账号限流
+        except BotRatelimitException as e:  # Chatbot 账号限流
             await respond(config.response.error_request_too_many.format(exc=e))
         except NoAvailableBotException as e:  # 预设不存在
             await respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
