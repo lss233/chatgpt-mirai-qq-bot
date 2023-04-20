@@ -147,7 +147,7 @@ async def v2_chat_response():
         request_dic.pop(request_id)
     else:
         bot_request.result.pop_all()
-    logger.debug(f"Bot request {request_id} response -> \n{response}")
+    logger.debug(f"Bot request {request_id} response -> \n{response[:100]}")
     return response
 
 
