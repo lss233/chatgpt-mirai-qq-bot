@@ -25,7 +25,7 @@ try:
 
 
     async def synthesize_speech(text: str, output_file: str,
-                                voice):  # Singapore English, Wayne
+                                voice):
         if not config.azure.tts_speech_key:
             logger.warning("[Azure TTS] 没有检测到 tts_speech_key，不进行语音转换。")
             return False
