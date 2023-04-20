@@ -1,5 +1,5 @@
 import json
-from typing import Generator, Union, List
+from typing import Generator, List
 
 import aiohttp
 import asyncio
@@ -49,50 +49,42 @@ class BingAdapter(BotAdapter, DrawingAPI):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.count = self.count + 1
         parsed_content = ''
-        try:
-            async for final, response in self.bot.ask_stream(prompt=prompt,
-                                                             conversation_style=self.conversation_style,
-                                                             wss_link=config.bing.wss_link):
-                if not final:
-                    response = re.sub(r"\[\^\d+\^\]", "", response)
-                    if config.bing.show_references:
-                        response = re.sub(r"\[(\d+)\]: ", r"\1: ", response)
-                    else:
-                        response = re.sub(r"(\[\d+\]\: .+)+", "", response)
-                    parsed_content = response
 
+        async for final, response in self.bot.ask_stream(prompt=prompt,
+                                                         conversation_style=self.conversation_style,
+                                                         wss_link=config.bing.wss_link):
+            if not final:
+                response = re.sub(r"\[\^\d+\^\]", "", response)
+                if config.bing.show_references:
+                    response = re.sub(r"\[(\d+)\]: ", r"\1: ", response)
                 else:
-                    try:
-                        max_messages = response["item"]["throttling"]["maxNumUserMessagesInConversation"]
-                    except Exception:
-                        max_messages = config.bing.max_messages
-                    if config.bing.show_remaining_count:
-                        remaining_conversations = f'\n剩余回复数：{self.count} / {max_messages} '
-                    else:
-                        remaining_conversations = ''
-                    if len(response["item"].get('messages', [])) > 1 and config.bing.show_suggestions:
-                        suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
-                        if len(suggestions) > 0:
-                            parsed_content = parsed_content + '\n猜你想问：  \n'
-                            for suggestion in suggestions:
-                                parsed_content = f"{parsed_content}* {suggestion.get('text')}  \n"
-                        yield parsed_content
-                    parsed_content = parsed_content + remaining_conversations
-                    # not final的parsed_content已经yield走了，只能在末尾加剩余回复数，或者改用EdgeGPT自己封装的ask之后再正则替换
-                    if parsed_content == remaining_conversations:  # No content
-                        yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
-                        await self.on_reset()
-                        return
+                    response = re.sub(r"(\[\d+\]\: .+)+", "", response)
+                parsed_content = response
 
-                yield parsed_content
-            logger.debug(f"[Bing AI 响应] {parsed_content}")
-        except (asyncio.exceptions.TimeoutError, asyncio.exceptions.CancelledError) as e:
-            raise e
-        except Exception as e:
-            logger.exception(e)
-            yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
-            await self.on_reset()
-            return
+            else:
+                try:
+                    max_messages = response["item"]["throttling"]["maxNumUserMessagesInConversation"]
+                except Exception:
+                    max_messages = config.bing.max_messages
+                if config.bing.show_remaining_count:
+                    remaining_conversations = f'\n剩余回复数：{self.count} / {max_messages} '
+                else:
+                    remaining_conversations = ''
+                if len(response["item"].get('messages', [])) > 1 and config.bing.show_suggestions:
+                    suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
+                    if len(suggestions) > 0:
+                        parsed_content = parsed_content + '\n猜你想问：  \n'
+                        for suggestion in suggestions:
+                            parsed_content = f"{parsed_content}* {suggestion.get('text')}  \n"
+                    yield parsed_content
+                parsed_content = parsed_content + remaining_conversations
+                # not final的parsed_content已经yield走了，只能在末尾加剩余回复数，或者改用EdgeGPT自己封装的ask之后再正则替换
+                if parsed_content == remaining_conversations:  # No content
+                    yield "Bing 已结束本次会话。继续发送消息将重新开启一个新会话。"
+                    await self.on_reset()
+                    return
+            yield parsed_content
+        logger.debug(f"[Bing AI 响应] {parsed_content}")
 
     async def text_to_img(self, prompt: str):
         logger.debug(f"[Bing Image] Prompt: {prompt}")

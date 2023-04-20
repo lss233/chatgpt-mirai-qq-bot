@@ -193,8 +193,12 @@ class BardAuths(BaseModel):
 
 
 class YiyanCookiePath(BaseModel):
-    cookie_content: str
-    """"文心一言网站的 Cookie 内容"""
+    BDUSS: Optional[str] = None
+    """百度 Cookie 中的 BDUSS 字段"""
+    BAIDUID: Optional[str] = None
+    """百度 Cookie 中的 BAIDUID 字段"""
+    cookie_content: Optional[str] = None
+    """百度 Cookie （已弃用）"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
 
@@ -539,8 +543,9 @@ class Config(BaseModel):
 
     @staticmethod
     def load_config() -> Config:
+        if env_config := os.environ.get('CHATGPT_FOR_BOT_FULL_CONFIG', ''):
+            return Config.parse_obj(toml.loads(env_config))
         try:
-            import os
             if (
                 not os.path.exists('config.cfg')
                 or os.path.getsize('config.cfg') <= 0
