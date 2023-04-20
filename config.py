@@ -452,7 +452,7 @@ class SDWebUI(BaseModel):
     seed: int = -1
     batch_size: int = 1
     n_iter: int = 1
-    cfg_scale: float = 0.75
+    cfg_scale: float = 7.5
     restore_faces: bool = False
 
     timeout: float = 10.0
