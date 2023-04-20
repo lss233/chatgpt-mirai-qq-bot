@@ -70,7 +70,7 @@ class YiyanAdapter(BotAdapter):
         client.headers['Sec-Fetch-Mode'] = 'navigate'
         client.headers['Sec-Fetch-Site'] = 'none'
         client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
-        client.headers['Sec-Ch-Ua-Mobile'] = '	?0'
+        client.headers['Sec-Ch-Ua-Mobile'] = '?0'
         client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
 
     async def new_conversation(self, prompt: str):
