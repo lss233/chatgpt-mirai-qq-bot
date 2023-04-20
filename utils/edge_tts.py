@@ -2,10 +2,26 @@ from edge_tts.exceptions import NoAudioReceived
 from loguru import logger
 import edge_tts
 
+from constants import config
+from utils.text_to_speech import TtsVoice, TtsVoiceManager
 
-async def edge_tts_speech(text: str, voice_name: str, path: str):
+edge_tts_voices = {}
+
+
+async def load_edge_tts_voices():
+    if edge_tts_voices:
+        return edge_tts_voices
+    for el in await edge_tts.list_voices():
+        tts_voice = TtsVoice.parse("edge", el.get('ShortName', ''), el.get('Gender', None))
+        if tts_voice:
+            edge_tts_voices[tts_voice.alias] = tts_voice
+    logger.info(f"{len(edge_tts_voices)} edge tts voices loaded.")
+    return edge_tts_voices
+
+
+async def edge_tts_speech(text: str, tts_voice: TtsVoice, path: str):
     try:
-        communicate = edge_tts.Communicate(text, voice_name)
+        communicate = edge_tts.Communicate(text, tts_voice.full_name)
         await communicate.save(f"{path}.mp3")
         return True
     except NoAudioReceived:
@@ -13,9 +29,10 @@ async def edge_tts_speech(text: str, voice_name: str, path: str):
     except ValueError as e:
         if str(e).startswith("Invalid voice"):
             raise ValueError(
-                f"不支持的音色：{voice_name}"
-                + "\n音色列表："
-                + str([el.get('ShortName', '') for el in await edge_tts.list_voices()])
+                f"不支持的音色：{tts_voice.full_name}"
+                + "\n可用音色列表："
+                + str([v.alias for v in await TtsVoiceManager.list_tts_voices(
+                    "edge", config.text_to_speech.default_voice_prefix)])
             )
     except Exception as err:
         logger.exception(err)
