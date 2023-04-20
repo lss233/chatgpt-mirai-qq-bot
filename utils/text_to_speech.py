@@ -8,7 +8,107 @@ from loguru import logger
 
 from constants import config
 from utils.azure_tts import synthesize_speech, encode_to_silk
-from utils.edge_tts import edge_tts_speech
+
+tts_voice_dic = {}
+"""各引擎的音色列表"""
+
+
+class TtsVoice:
+
+    def __init__(self):
+        self.engine = None
+        """参考：edge, azure, vits"""
+        self.gender = None
+        """参考：Male, Female"""
+        self.full_name = None
+        """参考：zh-CN-liaoning-XiaobeiNeural, af-ZA-AdriNeural, am-ET-MekdesNeural"""
+        self.lang = None
+        """参考：zh, af, am"""
+        self.region = None
+        """参考：CN, ZA, ET"""
+        self.name = None
+        """参考：XiaobeiNeural, AdriNeural, MekdesNeural"""
+        self.alias = None
+        """参考：xiaobei, adri, mekdes"""
+        self.sub_region = None
+        """参考：liaoning"""
+
+    def description(self):
+        return f"{self.alias}: {self.full_name}{f' - {self.gender}' if self.gender else ''}"
+
+    @staticmethod
+    def parse(engine, voice: str, gender=None):
+        logger.debug(f"Parse tts voice {engine}: {voice} - {gender}")
+        tts_voice = TtsVoice()
+        tts_voice.engine = engine
+        tts_voice.full_name = voice
+        tts_voice.gender = gender
+        if engine == "edge" or engine == "azure":
+            """如：zh-CN-liaoning-XiaobeiNeural、uz-UZ-SardorNeural"""
+            voice_info = voice.split("-")
+            if len(voice_info) < 3:
+                return None
+            lang = voice_info[0]
+            region = voice_info[1]
+            if len(voice_info) == 4:
+                sub_region = voice_info[2]
+                name = voice_info[3]
+            else:
+                sub_region = None
+                name = voice_info[2]
+            alias = name.replace("Neural", "").lower()
+            tts_voice.lang = lang
+            tts_voice.region = region
+            tts_voice.name = name
+            tts_voice.alias = alias
+            tts_voice.sub_region = sub_region
+            return tts_voice
+        else:
+            tts_voice.lang = voice
+            tts_voice.alias = voice
+            return tts_voice
+
+
+class TtsVoiceManager:
+    """tts音色管理"""
+
+    @staticmethod
+    async def parse_tts_voice(tts_engine, voice_name) -> TtsVoice:
+        if tts_engine == "edge":
+            from utils.edge_tts import load_edge_tts_voices
+            if "edge" not in tts_voice_dic:
+                tts_voice_dic["edge"] = await load_edge_tts_voices()
+            _voice_dic = tts_voice_dic["edge"]
+            _voice = TtsVoice.parse(tts_engine, voice_name)
+            if _voice:
+                return _voice_dic.get(_voice.alias, None)
+            if voice_name in _voice_dic:
+                return _voice_dic[voice_name]
+        else:
+            # todo support other engines
+            return TtsVoice.parse(tts_engine, voice_name)
+
+    @staticmethod
+    async def list_tts_voices(tts_engine, voice_prefix):
+        """获取可用哪些音色"""
+
+        def match_voice_prefix(full_name):
+            if isinstance(voice_prefix, str):
+                return full_name.startswith(voice_prefix)
+            if isinstance(voice_prefix, list):
+                for _prefix in voice_prefix:
+                    if full_name.startswith(_prefix):
+                        return True
+                return False
+
+        if tts_engine == "edge":
+            from utils.edge_tts import load_edge_tts_voices
+            if "edge" not in tts_voice_dic:
+                tts_voice_dic["edge"] = await load_edge_tts_voices()
+            _voice_dic = tts_voice_dic["edge"]
+            return [v for v in _voice_dic.values() if voice_prefix is None or match_voice_prefix(v.full_name)]
+        # todo support other engines
+        return []
 
 
 async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
@@ -39,6 +139,7 @@ async def get_tts_voice(elem, conversation_context) -> Optional[Voice]:
             logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
             return voice
     elif config.text_to_speech.engine == "edge":
+        from utils.edge_tts import edge_tts_speech
         if await edge_tts_speech(str(elem), conversation_context.conversation_voice, output_file.name):
             output_file.name = f"{output_file.name}.mp3"
             voice = Voice(path=output_file.name)

@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -28,6 +29,7 @@ from renderer.splitter import MultipleSegmentSplitter
 from middlewares.draw_ratelimit import MiddlewareRatelimit
 from utils import retry
 from constants import LlmName
+from utils.text_to_speech import TtsVoice, TtsVoiceManager
 
 handlers = {}
 
@@ -54,7 +56,7 @@ class ConversationContext:
     preset_decoration_format: Optional[str] = "{prompt}"
     """预设装饰文本"""
 
-    conversation_voice: Optional[str] = None
+    conversation_voice: TtsVoice = None
     """语音音色"""
 
     @property
@@ -73,8 +75,13 @@ class ConversationContext:
         self.switch_renderer()
 
         if config.text_to_speech.always:
-            self.conversation_voice = config.text_to_speech.default
-
+            tts_engine = config.text_to_speech.engine
+            tts_voice = config.text_to_speech.default
+            try:
+                self.conversation_voice = asyncio.run(
+                    TtsVoiceManager.parse_tts_voice(tts_engine, tts_voice))
+            except KeyError as e:
+                logger.error(f"Failed to load {tts_engine} tts voice setting -> {tts_voice}")
         if _type == LlmName.ChatGPT_Web.value:
             self.adapter = ChatGPTWebAdapter(self.session_id)
         elif _type == LlmName.ChatGPT_Api.value:
@@ -206,8 +213,9 @@ class ConversationContext:
                         continue
 
                     if role == 'voice':
-                        self.conversation_voice = text.strip()
-                        logger.debug(f"Set conversation voice to {self.conversation_voice}")
+                        self.conversation_voice = await TtsVoiceManager.parse_tts_voice(config.text_to_speech.engine,
+                                                                                        text.strip())
+                        logger.debug(f"Set conversation voice to {self.conversation_voice.full_name}")
                         continue
 
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):

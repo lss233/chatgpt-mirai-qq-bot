@@ -20,14 +20,22 @@ from middlewares.baiducloud import MiddlewareBaiduCloud
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
-from utils.text_to_speech import get_tts_voice
+from utils.text_to_speech import get_tts_voice, TtsVoiceManager
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
 
-def get_ping_response(conversation_context: ConversationContext):
-    return config.response.ping_response.format(current_ai=conversation_context.type,
-                                                supported_ai=botManager.bots_info())
+async def get_ping_response(conversation_context: ConversationContext):
+    current_voice = conversation_context.conversation_voice.alias if conversation_context.conversation_voice else "无"
+    response = config.response.ping_response.format(current_ai=conversation_context.type,
+                                                    current_voice=current_voice,
+                                                    supported_ai=botManager.bots_info())
+    tts_voices = await TtsVoiceManager.list_tts_voices(
+        config.text_to_speech.engine, config.text_to_speech.default_voice_prefix)
+    if tts_voices:
+        supported_tts = ",".join([v.alias for v in tts_voices])
+        response += config.response.ping_tts_response.format(supported_tts=supported_tts)
+    return response
 
 
 async def handle_message(_respond: Callable, session_id: str, message: str,
@@ -133,32 +141,45 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                 task = conversation_context.rollback()
 
             elif prompt in config.trigger.ping_command:
-                await respond(get_ping_response(conversation_context))
+                await respond(await get_ping_response(conversation_context))
                 return
 
             elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
                 if not config.azure.tts_speech_key and config.text_to_speech.engine == "azure":
                     await respond("未配置 Azure TTS 账户，无法切换语音！")
-                conversation_context.conversation_voice = voice_type_search[1].strip()
-                if conversation_context.conversation_voice == '关闭':
+                new_voice = voice_type_search[1].strip()
+                if new_voice == '关闭' or new_voice == "None":
                     conversation_context.conversation_voice = None
                     await respond("已关闭语音，让我们继续聊天吧！")
                 elif config.text_to_speech.engine == "vits":
                     from utils.vits_tts import vits_api_instance
-
                     try:
-                        if conversation_context.conversation_voice != "None":
-                            voice_id = conversation_context.conversation_voice
-                            voice_name = await vits_api_instance.set_id(voice_id)
-                        else:
-                            voice_name = await vits_api_instance.set_id(None)
+                        voice_name = await vits_api_instance.set_id(new_voice)
+                        conversation_context.conversation_voice = TtsVoiceManager.parse_tts_voice("vits", voice_name)
                         await respond(f"已切换至 {voice_name} 语音，让我们继续聊天吧！")
                     except ValueError:
                         await respond("提供的语音ID无效，请输入一个有效的数字ID。")
                     except Exception as e:
                         await respond(str(e))
+                elif config.text_to_speech.engine == "edge":
+                    tts_voice = await TtsVoiceManager.parse_tts_voice("edge", new_voice)
+                    if tts_voice:
+                        conversation_context.conversation_voice = tts_voice
+                        await respond(f"已切换至 {tts_voice.alias} 语音，让我们继续聊天吧！")
+                    else:
+                        available_voice = ",".join([v.alias for v in await TtsVoiceManager.list_tts_voices(
+                            "edge", config.text_to_speech.default_voice_prefix)])
+                        await respond(f"提供的语音ID无效，请输入一个有效的语音ID。如：{available_voice}。")
+                        conversation_context.conversation_voice = None
+                elif config.text_to_speech.engine == "azure":
+                    tts_voice = await TtsVoiceManager.parse_tts_voice("azure", new_voice)
+                    conversation_context.conversation_voice = tts_voice
+                    if tts_voice:
+                        await respond(f"已切换至 {tts_voice.full_name} 语音，让我们继续聊天吧！")
+                    else:
+                        await respond("提供的语音ID无效，请输入一个有效的语音ID。")
                 else:
-                    await respond(f"已切换至 {conversation_context.conversation_voice} 语音，让我们继续聊天吧！")
+                    await respond("无可用的TTS配置。")
                 return
 
             elif prompt in config.trigger.mixed_only_command:
