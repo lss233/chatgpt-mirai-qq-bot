@@ -241,8 +241,10 @@ class TextToSpeech(BaseModel):
     """设置后所有的会话都会转语音再发一次"""
     engine: str = "azure"
     """文字转语音引擎选择，当前有azure和vits"""
-    default: str = "zh-CN-XiaoyanNeural"
+    default: str = "zh-CN-XiaoxiaoNeural"
     """默认设置为Azure语音音色"""
+    default_voice_prefix: List[str] = ["zh-CN", "zh-TW"]
+    """默认的提示音色前缀"""
 
 
 class AzureConfig(BaseModel):
@@ -377,8 +379,11 @@ class Response(BaseModel):
     queued_notice: str = "消息已收到！当前我还有{queue_size}条消息要回复，请您稍等。"
     """新消息进入队列时，发送的通知。 queue_size 是当前排队的消息数"""
 
-    ping_response: str = "当前AI：{current_ai}\n当前可用AI（输入此命令切换：切换AI XXX）：\n{supported_ai}"
+    ping_response: str = "当前AI：{current_ai} / 当前语音：{current_voice}\n指令：\n切换AI XXX / 切换语音 XXX" \
+                         "\n\n可用AI：\n{supported_ai}"
     """ping返回内容"""
+    ping_tts_response: str = "\n可用语音：\n{supported_tts}"
+    """ping tts 返回"""
 
 
 class System(BaseModel):
