@@ -241,8 +241,8 @@ class BotManager:
             try:
                 if account.cookie_content:
                     logger.error("cookie_content 字段已弃用，请填写 BDUSS 和 BAIDUID！")
-                    account.BDUSS = regex.findall(r"BDUSS=(.*?);", account.cookie_content)
-                    account.BAIDUID = regex.findall(r"BAIDUID=(.*?);", account.cookie_content)
+                    account.BDUSS = (regex.findall(r"BDUSS=(.*?);", account.cookie_content) or [None])[0]
+                    account.BAIDUID = (regex.findall(r"BAIDUID=(.*?);", account.cookie_content) or [None])[0]
                 if not account.BAIDUID:
                     logger.error("未填写 BAIDUID，可能会有较高封号风险！")
                 if not account.BDUSS:
