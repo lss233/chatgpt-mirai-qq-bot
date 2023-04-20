@@ -435,12 +435,12 @@ class BotManager:
         logger.warning("在查询 API 额度时遇到问题，请自行确认额度。")
         return account
 
-    def pick(self, type: str):
-        if type not in self.roundrobin:
-            self.roundrobin[type] = itertools.cycle(self.bots[type])
-        if len(self.bots[type]) == 0:
-            raise NoAvailableBotException(type)
-        return next(self.roundrobin[type])
+    def pick(self, llm: str):
+        if llm not in self.roundrobin:
+            self.roundrobin[llm] = itertools.cycle(self.bots[llm])
+        if len(self.bots[llm]) == 0:
+            raise NoAvailableBotException(llm)
+        return next(self.roundrobin[llm])
 
     def bots_info(self):
         from constants import LlmName
