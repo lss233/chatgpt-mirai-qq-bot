@@ -107,9 +107,9 @@ class ChatGPTWebAdapter(BotAdapter):
                 remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
                 minute = remaining[0]
                 second = remaining[1].seconds
-                raise BotRatelimitException(f"{minute}分{second}秒")
+                raise BotRatelimitException(f"{minute}分{second}秒") from e
             if e.code == 6:
-                raise ConcurrentMessageException()
+                raise ConcurrentMessageException() from e
             raise e
         except Exception as e:
             if "Only one message at a time" in str(e):

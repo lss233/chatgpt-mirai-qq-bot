@@ -24,3 +24,8 @@ class BotRatelimitException(Exception):
 
 
 class APIKeyNoFundsError(Exception): ...
+
+
+class DrawingFailedException:
+    def __init__(self):
+        self.__cause__ = None

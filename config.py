@@ -341,6 +341,8 @@ class Response(BaseModel):
     error_server_overloaded: str = "抱歉，当前服务器压力有点大，请稍后再找我吧！"
     """服务器提示 429 错误时的回复 """
 
+    error_drawing: str = "画图失败！原因： {exc}"
+
     placeholder: str = (
         "您好！我是 Assistant，一个由 OpenAI 训练的大型语言模型。我不是真正的人，而是一个计算机程序，可以通过文本聊天来帮助您解决问题。如果您有任何问题，请随时告诉我，我将尽力回答。\n"
         "如果您需要重置我们的会话，请回复`重置会话`。"
