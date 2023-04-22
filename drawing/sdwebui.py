@@ -8,10 +8,10 @@ from .base import DrawingAPI
 
 
 def basic_auth_encode(authorization: str) -> str:
-
     authorization_bytes = authorization.encode('utf-8')
     encoded_authorization = base64.b64encode(authorization_bytes).decode('utf-8')
     return f"Basic {encoded_authorization}"
+
 
 def init_authorization():
     if config.sdwebui.authorization != '':
@@ -19,12 +19,13 @@ def init_authorization():
     else:
         return ''
 
+
 class SDWebUI(DrawingAPI):
 
-
-    headers = {
-        "Authorization": f"{init_authorization()}"
-    }
+    def __init__(self):
+        self.headers = {
+            "Authorization": f"{init_authorization()}"
+        }
 
     async def text_to_img(self, prompt):
         payload = {
