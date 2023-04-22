@@ -58,7 +58,7 @@ class YiyanAdapter(BotAdapter):
     async def on_reset(self):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers()
+        self.__setup_headers(self.client)
         self.conversation_id = None
         self.parent_chat_id = 0
 
