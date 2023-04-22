@@ -454,6 +454,8 @@ class SDWebUI(BaseModel):
     n_iter: int = 1
     cfg_scale: float = 7.5
     restore_faces: bool = False
+    authorization: str = ''
+    """登录api的账号:密码"""
 
     timeout: float = 10.0
     """超时时间"""

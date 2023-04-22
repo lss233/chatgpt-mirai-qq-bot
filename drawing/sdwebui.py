@@ -1,5 +1,5 @@
 from typing import List
-
+import base64
 import httpx
 from graia.ariadne.message.element import Image
 
@@ -7,7 +7,24 @@ from constants import config
 from .base import DrawingAPI
 
 
+def basic_auth_encode(authorization: str) -> str:
+
+    authorization_bytes = authorization.encode('utf-8')
+    encoded_authorization = base64.b64encode(authorization_bytes).decode('utf-8')
+    return f"Basic {encoded_authorization}"
+
+def init_authorization():
+    if config.sdwebui.authorization != '':
+        return basic_auth_encode(config.sdwebui.authorization)
+    else:
+        return ''
+
 class SDWebUI(DrawingAPI):
+
+
+    headers = {
+        "Authorization": f"{init_authorization()}"
+    }
 
     async def text_to_img(self, prompt):
         payload = {
@@ -33,7 +50,7 @@ class SDWebUI(DrawingAPI):
                 payload[key] = value
 
         resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/txt2img",
-                                                                            json=payload)
+                                                                            json=payload, headers=self.headers)
         resp.raise_for_status()
         r = resp.json()
 
@@ -65,7 +82,7 @@ class SDWebUI(DrawingAPI):
                 payload[key] = value
 
         resp = await httpx.AsyncClient(timeout=config.sdwebui.timeout).post(f"{config.sdwebui.api_url}sdapi/v1/img2img",
-                                                                            json=payload)
+                                                                            json=payload, headers=self.headers)
         resp.raise_for_status()
         r = resp.json()
         return [Image(base64=i) for i in r.get('images', [])]
