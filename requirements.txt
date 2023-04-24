@@ -11,7 +11,7 @@ pydantic~=1.10.7
 
 markdown~=3.4.3
 python-markdown-math~=0.8
-pygments~=2.15.0
+pygments~=2.15.1
 imgkit~=1.2.3
 qrcode~=7.4.2
 openai~=0.27.4
