@@ -34,6 +34,10 @@ if config.http:
     logger.info("检测到 http 配置，将启动 http service 模式……")
     from platforms.http_service import start_task
     bots.append(loop.create_task(start_task()))
+if config.wecom:
+    logger.info("检测到 Wecom 配置，将启动 Wecom Bot 模式……")
+    from platforms.wecom_bot import start_task
+    bots.append(loop.create_task(start_task()))
 if config.mirai:
     logger.info("检测到 mirai 配置，将启动 mirai 模式……")
     from platforms.ariadne_bot import start_task

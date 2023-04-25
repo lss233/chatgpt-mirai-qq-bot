@@ -58,6 +58,24 @@ class HttpService(BaseModel):
     debug: bool = False
     """是否开启debug，错误时展示日志"""
 
+class WecomBot(BaseModel):
+    host: str = "0.0.0.0"
+    """企业微信回调地址，需要能够被公网访问，0.0.0.0则不限制访问地址"""
+    port: int = 5001
+    """Http service port, 默认5001"""
+    debug: bool = False
+    """是否开启debug，错误时展示日志"""
+    corp_id: str
+    """企业微信 的 企业 ID"""
+    agent_id: str
+    """企业微信应用 的 AgentId"""
+    secret: str
+    """企业微信应用 的 Secret"""
+    token: str
+    """企业微信应用 API 令牌 的 Token"""
+    encoding_aes_key: str
+    """企业微信应用 API 令牌 的 EncodingAESKey"""
+    
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -471,6 +489,7 @@ class Config(BaseModel):
     telegram: Optional[TelegramBot] = None
     discord: Optional[DiscordBot] = None
     http: Optional[HttpService] = None
+    wecom: Optional[WecomBot] = None
 
     # === Account Settings ===
     openai: OpenAIAuths = OpenAIAuths()
