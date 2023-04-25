@@ -131,8 +131,7 @@ async def wechat():
             return response
         else:
             reply = create_reply("Can not handle this for now", msg).render()
-        res = crypto.encrypt_message(reply, nonce, timestamp)
-        return res
+        return crypto.encrypt_message(reply, nonce, timestamp)
 
 
 async def reply(bot_request: BotRequest):
@@ -179,7 +178,7 @@ def clear_request_dict():
 
 
 def construct_bot_request(data):
-    session_id = "wecom-" + str(data.source) or "wecom-default_session"
+    session_id = f"wecom-{str(data.source)}" or "wecom-default_session"
     user_id = data.source
     username = client.user.get(user_id) or "某人"
     message = data.content
