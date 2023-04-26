@@ -6,6 +6,7 @@ import asyncio
 import base64
 from io import BytesIO
 from loguru import logger
+from pydub import AudioSegment
 from quart import Quart, request, abort, make_response
 
 from graia.ariadne.message.chain import MessageChain
@@ -150,8 +151,10 @@ async def reply(bot_request: BotRequest):
             logger.debug(f"Send message result -> {result}")
     if bot_request.result.voice:
         for voice in bot_request.result.voice:
+            # convert mp3 to amr
+            voice = convert_mp3_to_amr(voice)
             voice_id = client.media.upload(
-                "voice", BytesIO(base64.b64decode(voice)))["media_id"]
+                "voice", voice)["media_id"]
             result = client.message.send_voice(AgentId, UserId, voice_id)
             logger.debug(f"Send voice result -> {result}")
     if bot_request.result.image:
@@ -160,6 +163,13 @@ async def reply(bot_request: BotRequest):
                 "image", BytesIO(base64.b64decode(image)))["media_id"]
             result = client.message.send_image(AgentId, UserId, image_id)
             logger.debug(f"Send image result -> {result}")
+
+
+def convert_mp3_to_amr(mp3):
+    mp3 = BytesIO(base64.b64decode(mp3))
+    amr = BytesIO()
+    AudioSegment.from_file(mp3).export(amr, format="amr")
+    return amr
 
 
 def clear_request_dict():
@@ -232,6 +242,3 @@ async def start_task():
     """
     threading.Thread(target=clear_request_dict).start()
     return await app.run_task(host=config.wecom.host, port=config.wecom.port, debug=config.wecom.debug)
-
-if __name__ == "__main__":
-    app.run("127.0.0.1", 5001, debug=True)
