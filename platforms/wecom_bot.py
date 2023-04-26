@@ -168,7 +168,7 @@ async def reply(bot_request: BotRequest):
 def convert_mp3_to_amr(mp3):
     mp3 = BytesIO(base64.b64decode(mp3))
     amr = BytesIO()
-    AudioSegment.from_file(mp3).export(amr, format="amr")
+    AudioSegment.from_file(mp3,format="mp3").set_frame_rate(8000).set_channels(1).export(amr, format="amr", codec="libopencore_amrnb")
     return amr
 
 
