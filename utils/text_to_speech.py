@@ -38,7 +38,6 @@ class TtsVoice:
 
     @staticmethod
     def parse(engine, voice: str, gender=None):
-        logger.debug(f"Parse tts voice {engine}: {voice} - {gender}")
         tts_voice = TtsVoice()
         tts_voice.engine = engine
         tts_voice.full_name = voice
