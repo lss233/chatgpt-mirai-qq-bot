@@ -98,12 +98,13 @@ def transform_message_chain(text: str) -> MessageChain:
 def transform_from_message_chain(chain: MessageChain):
     result = ''
     for elem in chain:
-        if isinstance(elem, Image):
+        if isinstance(elem, (Image, GraiaImage)):
             result = result + MessageSegment.image(f"base64://{elem.base64}")
         elif isinstance(elem, Plain):
             result = result + MessageSegment.text(str(elem))
         elif isinstance(elem, Voice):
             result = result + MessageSegment.record(f"base64://{elem.base64}")
+    logger.debug(result)
     return result
 
 
