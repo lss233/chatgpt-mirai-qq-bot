@@ -53,6 +53,8 @@ class BingAdapter(BotAdapter, DrawingAPI):
             async for final, response in self.bot.ask_stream(prompt=prompt,
                                                              conversation_style=self.conversation_style,
                                                              wss_link=config.bing.wss_link):
+                if not response:
+                    continue
                 if not final:
                     response = re.sub(r"\[\^\d+\^\]", "", response)
                     if config.bing.show_references:
