@@ -118,20 +118,28 @@ class BingAdapter(BotAdapter, DrawingAPI):
             yield "出现错误：机器人的 Bing Cookie 可能已过期，或者机器人当前使用的 IP 无法使用 Bing AI。"
             return
         except Exception as e:
+            if str(e) == 'Redirect failed':
+                yield '画图失败(Redirect failed)：Bing 的画图提示词不支持中文，你可以用英文再试一下。'
+                return
             raise e
 
     async def text_to_img(self, prompt: str):
         logger.debug(f"[Bing Image] Prompt: {prompt}")
+        try:
+            async with ImageGenAsync(
+                    next((cookie['value'] for cookie in self.bot.cookies if cookie['name'] == '_U'), None),
+                    False
+            ) as image_generator:
+                images = await image_generator.get_images(prompt)
 
-        async with ImageGenAsync(
-                next((cookie['value'] for cookie in self.bot.cookies if cookie['name'] == '_U'), None),
-                False
-        ) as image_generator:
-            images = await image_generator.get_images(prompt)
+                logger.debug(f"[Bing Image] Response: {images}")
+                tasks = [asyncio.create_task(self.__download_image(image)) for image in images]
+                return await asyncio.gather(*tasks)
+        except Exception as e:
+            if str(e) == 'Redirect failed':
+                raise Exception('画图失败(Redirect failed)：Bing 的画图提示词不支持中文，你可以用英文再试一下。') from e
+            raise e
 
-            logger.debug(f"[Bing Image] Response: {images}")
-            tasks = [asyncio.create_task(self.__download_image(image)) for image in images]
-            return await asyncio.gather(*tasks)
 
     async def img_to_img(self, init_images: List[GraiaImage], prompt=''):
         return await self.text_to_img(prompt)
