@@ -148,7 +148,9 @@ class ConversationContext:
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
             if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
+                # TODO(lss233): 此部分可合并至 RateLimitMiddleware
                 respond_str = middlewares.handle_draw_request(self.session_id, prompt)
+                # TODO(lss233): 这什么玩意
                 if respond_str != "1":
                     yield respond_str
                     return
