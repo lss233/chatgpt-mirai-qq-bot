@@ -381,7 +381,8 @@ class BotManager:
             try:
                 await bot.get_conversations(0, 1)
                 return True
-            except (V1Error, KeyError):
+            except (V1Error, KeyError) as e:
+                logger.error(e)
                 return False
 
         def get_access_token():
