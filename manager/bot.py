@@ -23,7 +23,7 @@ from tinydb import TinyDB, Query
 import utils.network as network
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
-    PoeCookieAuth
+    PoeCookieAuth, SlackAuths, SlackAppAccessToken
 from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 
@@ -37,6 +37,7 @@ class BotManager:
         "bing-cookie": [],
         "bard-cookie": [],
         "yiyan-cookie": [],
+        "slack-accesstoken": [],
     }
     """Bot list"""
 
@@ -58,6 +59,8 @@ class BotManager:
     chatglm: List[ChatGLMAPI]
     """chatglm Account Infos"""
 
+    slack: List[SlackAppAccessToken]
+
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
@@ -68,6 +71,7 @@ class BotManager:
         self.poe = config.poe.accounts if config.poe else []
         self.yiyan = config.yiyan.accounts if config.yiyan else []
         self.chatglm = config.chatglm.accounts if config.chatglm else []
+        self.slack = config.slack.accounts if config.slack else []
         try:
             os.mkdir('data')
             logger.warning(
@@ -85,6 +89,7 @@ class BotManager:
             "bard-cookie": [],
             "yiyan-cookie": [],
             "chatglm-api": [],
+            "slack-accesstoken": [],
         }
         self.__setup_system_proxy()
         if len(self.bing) > 0:
@@ -93,8 +98,9 @@ class BotManager:
             self.login_poe()
         if len(self.bard) > 0:
             self.login_bard()
+        if len(self.slack) > 0:
+            self.login_slack()
         if len(self.openai) > 0:
-
             # 考虑到有人会写错全局配置
             for account in self.config.openai.accounts:
                 account = account.dict()
@@ -197,12 +203,8 @@ class BotManager:
             logger.info("正在解析第 {i} 个 Bard 账号", i=i + 1)
             if proxy := self.__check_proxy(account.proxy):
                 account.proxy = proxy
-            try:
-                self.bots["bard-cookie"].append(account)
-                logger.success("解析成功！", i=i + 1)
-            except Exception as e:
-                logger.error("解析失败：")
-                logger.exception(e)
+            self.bots["bard-cookie"].append(account)
+            logger.success("解析成功！", i=i + 1)
         if len(self.bots) < 1:
             logger.error("所有 Bard 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['bard-cookie'])}/{len(self.bing)} 个 Bard 账号！")
@@ -214,6 +216,21 @@ class BotManager:
             return True
         except KeyError:
             return False
+
+    def login_slack(self):
+        try:
+            for i, account in enumerate(self.slack):
+                logger.info("正在解析第 {i} 个 Claude (Slack) 账号", i=i + 1)
+                if proxy := self.__check_proxy(account.proxy):
+                    account.proxy = proxy
+                self.bots["slack-accesstoken"].append(account)
+                logger.success("解析成功！", i=i + 1)
+        except Exception as e:
+            logger.error("解析失败：")
+            logger.exception(e)
+        if len(self.bots["slack-accesstoken"]) < 1:
+            logger.error("所有 Claude (Slack) 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['slack-accesstoken'])}/{len(self.slack)} 个 Claude (Slack) 账号！")
 
     def login_poe(self):
         from adapter.quora.poe import PoeClientWrapper
@@ -381,7 +398,8 @@ class BotManager:
             try:
                 await bot.get_conversations(0, 1)
                 return True
-            except (V1Error, KeyError):
+            except (V1Error, KeyError) as e:
+                logger.error(e)
                 return False
 
         def get_access_token():

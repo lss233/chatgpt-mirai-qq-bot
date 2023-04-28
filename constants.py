@@ -10,6 +10,7 @@ botManager = BotManager(config)
 
 
 class LlmName(Enum):
+    SlackClaude = "slack-claude"
     PoeSage = "poe-sage"
     PoeGPT4 = "poe-gpt4"
     PoeClaude2 = "poe-claude2"

@@ -104,7 +104,6 @@ def transform_from_message_chain(chain: MessageChain):
             result = result + MessageSegment.text(str(elem))
         elif isinstance(elem, Voice):
             result = result + MessageSegment.record(f"base64://{elem.base64}")
-    logger.debug(result)
     return result
 
 
