@@ -64,6 +64,8 @@ class BaiduCloud:
             await self.get_access_token()
 
     async def get_conclusion(self, text: str):
+        await self.check_and_update_access_token()
+
         baidu_url = f"https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined" \
                     f"?access_token={self.access_token}"
         headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'}
