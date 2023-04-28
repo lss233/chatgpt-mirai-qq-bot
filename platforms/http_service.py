@@ -9,7 +9,7 @@ from graia.ariadne.message.element import Plain
 from loguru import logger
 from quart import Quart, request
 
-from constants import config
+from constants import config, BotPlatform
 from universal import handle_message
 
 app = Quart(__name__)
@@ -107,7 +107,8 @@ async def process_request(bot_request: BotRequest):
             response,
             bot_request.session_id,
             bot_request.message,
-            nickname=bot_request.username
+            nickname=bot_request.username,
+            request_from=BotPlatform.HttpService
         )
         bot_request.set_result_status(RESPONSE_DONE)
     bot_request.done = True

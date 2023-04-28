@@ -25,3 +25,11 @@ class LlmName(Enum):
     Bard = "bard"
     YiYan = "yiyan"
     ChatGLM = "chatglm-api"
+
+
+class BotPlatform(Enum):
+    AriadneBot = "mirai"
+    DiscordBot = "discord"
+    Onebot = "onebot"
+    TelegramBot = "telegram"
+    HttpService = "http"

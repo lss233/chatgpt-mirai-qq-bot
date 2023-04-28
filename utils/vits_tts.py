@@ -70,8 +70,8 @@ class VitsAPI:
 
         return integer_number
 
-    async def get_voice_data(self, text, lang, format):
-        url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={format}&length={config.vits.speed}"
+    async def get_voice_data(self, text, lang, voice_type):
+        url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={voice_type}&length={config.vits.speed}"
 
         async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             try:
@@ -129,26 +129,17 @@ class VitsAPI:
             else ''.join(matches)
         )
 
-    async def response(self, text, format, path):
+    async def response(self, text, voice_type, path):
         text = self.linguistic_process(text)
-        content = await self.get_voice_data(text, self.lang, format)
+        content = await self.get_voice_data(text, self.lang, voice_type)
         if content is not None:
             return self.save_voice_file(content, path)
 
-    async def process_message(self, message, path):
+    async def process_message(self, message, path, voice_type):
         if not self.initialized:
             await self.initialize()
 
-        return (
-            await self.response(message, "silk", path)
-            if config.mirai or config.onebot
-            else await self.response(message, "wav", path)
-        )
+        return await self.response(message, voice_type, path)
 
 
 vits_api_instance = VitsAPI()
-
-
-async def vits_api(message: str, path: str):
-    await vits_api_instance.initialize()
-    return await vits_api_instance.process_message(message, path)

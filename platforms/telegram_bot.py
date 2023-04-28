@@ -8,7 +8,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filte
 from telegram.request import HTTPXRequest
 from middlewares.ratelimit import manager as ratelimit_manager
 
-from constants import config
+from constants import config, BotPlatform
 from universal import handle_message
 
 
@@ -50,7 +50,8 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         f"{type}-{update.message.chat.id}",
         update.message.text.replace(f"@{bot_username}", '').strip(),
         is_manager=update.message.from_user.id == config.telegram.manager_chat,
-        nickname=update.message.from_user.full_name or "群友"
+        nickname=update.message.from_user.full_name or "群友",
+        request_from=BotPlatform.TelegramBot
     )
 
 
