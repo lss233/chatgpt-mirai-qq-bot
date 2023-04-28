@@ -3,6 +3,7 @@ import re
 from typing import Callable
 
 import httpcore
+import httpx
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
@@ -288,7 +289,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
     except PresetNotFoundException:  # 预设不存在
         await _respond("预设不存在，请检查你的输入是否有问题！")
     except (RequestException, SSLError, ProxyError, MaxRetryError, ConnectTimeout, ConnectTimeout,
-            httpcore.ReadTimeout) as e:  # 网络异常
+            httpcore.ReadTimeout, httpx.TimeoutException) as e:  # 网络异常
         await _respond(config.response.error_network_failure.format(exc=e))
     except Exception as e:  # 未处理的异常
         logger.exception(e)

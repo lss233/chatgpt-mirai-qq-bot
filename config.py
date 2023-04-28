@@ -58,6 +58,24 @@ class HttpService(BaseModel):
     debug: bool = False
     """是否开启debug，错误时展示日志"""
 
+class WecomBot(BaseModel):
+    host: str = "0.0.0.0"
+    """企业微信回调地址，需要能够被公网访问，0.0.0.0则不限制访问地址"""
+    port: int = 5001
+    """Http service port, 默认5001"""
+    debug: bool = False
+    """是否开启debug，错误时展示日志"""
+    corp_id: str
+    """企业微信 的 企业 ID"""
+    agent_id: str
+    """企业微信应用 的 AgentId"""
+    secret: str
+    """企业微信应用 的 Secret"""
+    token: str
+    """企业微信应用 API 令牌 的 Token"""
+    encoding_aes_key: str
+    """企业微信应用 API 令牌 的 EncodingAESKey"""
+    
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -347,7 +365,7 @@ class Response(BaseModel):
     error_format: str = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n原因：{exc}"
     """发生错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_network_failure: str = "网络故障！连接 OpenAI 服务器失败，我需要更好的网络才能服务！\n{exc}"
+    error_network_failure: str = "网络故障！连接服务器失败，我需要更好的网络才能服务！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
@@ -490,6 +508,7 @@ class Config(BaseModel):
     telegram: Optional[TelegramBot] = None
     discord: Optional[DiscordBot] = None
     http: Optional[HttpService] = None
+    wecom: Optional[WecomBot] = None
 
     # === Account Settings ===
     openai: OpenAIAuths = OpenAIAuths()
