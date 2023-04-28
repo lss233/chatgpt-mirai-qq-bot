@@ -11,7 +11,7 @@ from universal import handle_message
 
 sys.path.append(os.getcwd())
 
-from constants import config
+from constants import config, BotPlatform
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -64,7 +64,7 @@ async def on_message_event(message: discord.Message) -> None:
     await handle_message(response,
                          f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}",
                          message.content.replace(f"<@{bot_id}>", "").strip(), is_manager=False,
-                         nickname=message.author.name)
+                         nickname=message.author.name, request_from=BotPlatform.DiscordBot)
 
 @bot.event
 async def on_message(message):

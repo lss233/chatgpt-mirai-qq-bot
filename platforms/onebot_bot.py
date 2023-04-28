@@ -154,7 +154,8 @@ async def _(event: Event):
             msg.display,
             chain,
             is_manager=event.user_id == config.onebot.manager_qq,
-            nickname=event.sender.get("nickname", "好友")
+            nickname=event.sender.get("nickname", "好友"),
+            request_from=constants.BotPlatform.Onebot
         )
     except Exception as e:
         logger.exception(e)
@@ -184,7 +185,8 @@ async def _(event: Event):
         f"group-{event.group_id}",
         chain.display,
         is_manager=event.user_id == config.onebot.manager_qq,
-        nickname=event.sender.get("nickname", "群友")
+        nickname=event.sender.get("nickname", "群友"),
+        request_from=constants.BotPlatform.Onebot
     )
 
 

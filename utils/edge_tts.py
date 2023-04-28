@@ -22,8 +22,9 @@ async def load_edge_tts_voices():
 async def edge_tts_speech(text: str, tts_voice: TtsVoice, path: str):
     try:
         communicate = edge_tts.Communicate(text, tts_voice.full_name)
-        await communicate.save(f"{path}.mp3")
-        return True
+        output_path = path if path.endswith(".mp3") else f"{path}.mp3"
+        await communicate.save(output_path)
+        return output_path
     except NoAudioReceived:
         raise ValueError("语音生成失败，请检查音色设置是否正确。")
     except ValueError as e:
@@ -37,4 +38,4 @@ async def edge_tts_speech(text: str, tts_voice: TtsVoice, path: str):
     except Exception as err:
         logger.exception(err)
         logger.error("[Edge TTS] API error: ", err)
-        return False
+        return None
