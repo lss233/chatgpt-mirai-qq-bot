@@ -21,7 +21,7 @@
 
 ***
 
-* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [QQ 群](https://jq.qq.com/?_wv=1027&k=XbGuxdTu) 。  
+* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [QQ 群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=C7raxrDaH0AmsKkUBrwEU5gZG3Q6GZuY&authKey=ZdEfJ%2FHlhpJixuDhg6uo8O6O6075JgE5AX0PJU25SebElsgqd3GSP5ZHtSprnLdm&noverify=0&group_code=533109074) 。  
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
@@ -40,7 +40,7 @@
 * [x] 百度云内容审核
 * [x] 额度限制 
 * [x] 人格设定
-* [x] 支持 Mirai、 go-cqhttp、 Telegram、Discord  
+* [x] 支持 Mirai、 go-cqhttp、 Telegram、Discord、微信  
 * [x] 可作为 HTTP 服务端提供 Web API
 * [x] 支持 ChatGPT 网页版
 * [x] 支持 ChatGPT Plus
@@ -61,7 +61,8 @@
 | OneBot   | 支持   | 支持   | 支持   | 支持    | 支持  | 支持   |
 | Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持  | 支持   |
 | Discord  | 支持   | 支持   | 部分支持 | 不支持   | 支持  | 支持   |
-
+| 企业微信 | 支持   | 支持   | 支持 | 不支持  | 支持  | 支持   |
+| 个人微信 | 支持   | 支持   | 支持 | 不支持  | 支持  | 支持   |
 
 ## 🐎 命令
 
