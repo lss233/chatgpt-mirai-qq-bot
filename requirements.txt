@@ -37,3 +37,5 @@ httpx
 Quart==0.17.0
 
 edge-tts
+wechatpy~=2.0.0a26
+pydub~=0.25.1
