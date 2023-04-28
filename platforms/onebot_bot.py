@@ -1,11 +1,13 @@
 import re
 import time
+from base64 import b64decode, b64encode
 from typing import Union, Optional
 
+import aiohttp
 from aiocqhttp import CQHttp, Event, MessageSegment
 from charset_normalizer import from_bytes
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, At, Plain, Voice
+from graia.ariadne.message.element import Image as GraiaImage, At, Plain, Voice
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
 from loguru import logger
@@ -36,6 +38,28 @@ class MentionMe:
         raise ExecutionStop
 
 
+class Image(GraiaImage):
+    async def get_bytes(self) -> bytes:
+        """尝试获取消息元素的 bytes, 注意, 你无法获取并不包含 url 且不包含 base64 属性的本元素的 bytes.
+
+        Raises:
+            ValueError: 你尝试获取并不包含 url 属性的本元素的 bytes.
+
+        Returns:
+            bytes: 元素原始数据
+        """
+        if self.base64:
+            return b64decode(self.base64)
+        if not self.url:
+            raise ValueError("you should offer a url.")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url) as response:
+                response.raise_for_status()
+                data = await response.read()
+                self.base64 = b64encode(data).decode("ascii")
+                return data
+
+
 # TODO: use MessageSegment
 # https://github.com/nonebot/aiocqhttp/blob/master/docs/common-topics.md
 def transform_message_chain(text: str) -> MessageChain:
@@ -59,8 +83,11 @@ def transform_message_chain(text: str) -> MessageChain:
             if text_segment and not text_segment.startswith('[CQ:reply,'):
                 messages.append(Plain(text_segment))
             if cq_type == "at":
+                if params.get('qq') == 'all':
+                    continue
                 params["target"] = int(params.pop("qq"))
-            messages.append(message_class(**params))
+            elem = message_class(**params)
+            messages.append(elem)
             start = match.end()
     if text_segment := text[start:]:
         messages.append(Plain(text_segment))
@@ -71,7 +98,7 @@ def transform_message_chain(text: str) -> MessageChain:
 def transform_from_message_chain(chain: MessageChain):
     result = ''
     for elem in chain:
-        if isinstance(elem, Image):
+        if isinstance(elem, (Image, GraiaImage)):
             result = result + MessageSegment.image(f"base64://{elem.base64}")
         elif isinstance(elem, Plain):
             result = result + MessageSegment.text(str(elem))

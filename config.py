@@ -240,6 +240,25 @@ class ChatGLMAuths(BaseModel):
     """ChatGLM的账号列表"""
 
 
+class SlackAppAccessToken(BaseModel):
+    channel_id: str
+    """负责与机器人交互的 Channel ID"""
+
+    access_token: str
+    """安装 Slack App 时获得的 access_token"""
+
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
+    app_endpoint: str = "https://chatgpt-proxy.lss233.com/claude-in-slack/backend-api/"
+    """API 的接入点"""
+
+
+class SlackAuths(BaseModel):
+    accounts: List[SlackAppAccessToken] = []
+    """Slack App 账号信息"""
+
+
 class TextToImage(BaseModel):
     always: bool = False
     """强制开启，设置后所有的会话强制以图片发送"""
@@ -346,7 +365,7 @@ class Response(BaseModel):
     error_format: str = "出现故障！如果这个问题持续出现，请和我说“重置会话” 来开启一段新的会话，或者发送 “回滚对话” 来回溯到上一条对话，你上一条说的我就当作没看见。\n原因：{exc}"
     """发生错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_network_failure: str = "网络故障！连接 OpenAI 服务器失败，我需要更好的网络才能服务！\n{exc}"
+    error_network_failure: str = "网络故障！连接服务器失败，我需要更好的网络才能服务！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
@@ -477,9 +496,9 @@ class SDWebUI(BaseModel):
 
     timeout: float = 10.0
     """超时时间"""
+
     class Config(BaseConfig):
         extra = Extra.allow
-
 
 
 class Config(BaseModel):
@@ -499,6 +518,7 @@ class Config(BaseModel):
     yiyan: YiyanAuths = YiyanAuths()
     chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
+    slack: SlackAuths = SlackAuths()
 
     # === Response Settings ===
     text_to_image: TextToImage = TextToImage()
@@ -570,8 +590,8 @@ class Config(BaseModel):
             return Config.parse_obj(toml.loads(env_config))
         try:
             if (
-                not os.path.exists('config.cfg')
-                or os.path.getsize('config.cfg') <= 0
+                    not os.path.exists('config.cfg')
+                    or os.path.getsize('config.cfg') <= 0
             ) and os.path.exists('config.json'):
                 logger.info("正在转换旧版配置文件……")
                 Config.save_config(Config.__load_json_config())

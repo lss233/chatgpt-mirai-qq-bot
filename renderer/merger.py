@@ -31,8 +31,9 @@ class BufferedContentMerger(Renderer):
         rendered = await self.parent.render(msg)
         if not rendered:
             return None
-        else:
-            self.hold.append(Plain(rendered + '\n'))
+        if not self.hold:
+            self.hold = []
+        self.hold.append(Plain(rendered + '\n'))
         if time_delta < config.response.buffer_delay:
             return None
         elif self.hold:
