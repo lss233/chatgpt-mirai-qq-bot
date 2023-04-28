@@ -21,6 +21,13 @@ class ClaudeInSlackAdapter(BotAdapter):
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
         self.__setup_headers(self.client)
         self.conversation_id = None
+        self.current_model = "claude"
+        self.supported_models = [
+            "claude"
+        ]
+
+    async def switch_model(self, model_name):
+        self.current_model = model_name
 
     async def rollback(self):
         raise BotOperationNotSupportedException()
@@ -34,7 +41,8 @@ class ClaudeInSlackAdapter(BotAdapter):
     def __setup_headers(self, client):
         client.headers['Authorization'] = f"Bearer {self.account.channel_id}@{self.account.access_token}"
         client.headers['Content-Type'] = 'application/json;charset=UTF-8'
-        client.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+        client.headers[
+            'User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
         client.headers['Sec-Fetch-User'] = '?1'
         client.headers['Sec-Fetch-Mode'] = 'navigate'
         client.headers['Sec-Fetch-Site'] = 'none'
@@ -63,13 +71,14 @@ class ClaudeInSlackAdapter(BotAdapter):
             ],
             "conversation_id": self.conversation_id,
             "parent_message_id": str(uuid.uuid4()),
-            "model": "text-davinci-002-render-sha"
+            "model": self.current_model
         }
 
         async with self.client.stream(
                 method="POST",
                 url=f"{self.account.app_endpoint}conversation",
-                json=payload
+                json=payload,
+                timeout=60
         ) as response:
             response.raise_for_status()
             async for line in response.aiter_lines():

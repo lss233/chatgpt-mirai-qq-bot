@@ -66,7 +66,7 @@ class ChatGPTWebAdapter(BotAdapter):
                     and self.conversation_id is not None
             ):
                 await self.bot.delete_conversation(self.conversation_id)
-        except:
+        except Exception:
             logger.warning("删除会话记录失败。")
         self.conversation_id = None
         self.parent_id = None
@@ -104,7 +104,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 self.bot.refresh_accessed_at()
                 logger.debug(f"[ChatGPT-Web] accessed at: {str(self.bot.accessed_at)}")
                 first_accessed_at = self.bot.accessed_at[0] if len(self.bot.accessed_at) > 0 \
-                    else current_time - datetime.timedelta(hours=1)
+                        else current_time - datetime.timedelta(hours=1)
                 remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
                 minute = remaining[0]
                 second = remaining[1].seconds
@@ -114,7 +114,7 @@ class ChatGPTWebAdapter(BotAdapter):
             raise e
         except Exception as e:
             if "Only one message at a time" in str(e):
-                raise ConcurrentMessageException()
+                raise ConcurrentMessageException() from e
             raise e
 
     def get_queue_info(self):
