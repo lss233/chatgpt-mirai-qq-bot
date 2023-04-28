@@ -14,6 +14,7 @@ from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
+from adapter.claude.slack import ClaudeInSlackAdapter
 from adapter.google.bard import BardAdapter
 from adapter.ms.bing import BingAdapter
 from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
@@ -101,6 +102,8 @@ class ConversationContext:
             self.adapter = YiyanAdapter(self.session_id)
         elif _type == LlmName.ChatGLM.value:
             self.adapter = ChatGLM6BAdapter(self.session_id)
+        elif _type == LlmName.SlackClaude.value:
+            self.adapter = ClaudeInSlackAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
