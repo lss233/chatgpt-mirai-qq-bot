@@ -34,3 +34,4 @@ class BotPlatform(Enum):
     Onebot = "onebot"
     TelegramBot = "telegram"
     HttpService = "http"
+    WecomBot = "wecom"

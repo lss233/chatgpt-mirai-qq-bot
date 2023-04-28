@@ -19,6 +19,7 @@ from wechatpy.exceptions import InvalidSignatureException
 from wechatpy.work.exceptions import InvalidCorpIdException
 from wechatpy.work import parse_message, create_reply
 
+import constants
 from constants import config
 from universal import handle_message
 
@@ -228,7 +229,8 @@ async def process_request(bot_request: BotRequest):
             response,
             bot_request.session_id,
             bot_request.message,
-            nickname=bot_request.username
+            nickname=bot_request.username,
+            request_from=constants.BotPlatform.WecomBot
         )
         bot_request.set_result_status(RESPONSE_DONE)
     bot_request.done = True
