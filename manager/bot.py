@@ -164,6 +164,8 @@ class BotManager:
                 self.config.response.default_ai = 'yiyan'
             elif len(self.bots['chatglm-api']) > 0:
                 self.config.response.default_ai = 'chatglm-api'
+            elif len(self.bots['slack-accesstoken']) > 0:
+                self.config.response.default_ai = 'slack-claude'
             else:
                 self.config.response.default_ai = 'chatgpt-web'
 
