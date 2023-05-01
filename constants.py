@@ -1,12 +1,13 @@
 from enum import Enum
+from typing import Optional
 
 from config import Config
-from manager.bot import BotManager
 
-config = Config.load_config()
-config.scan_presets()
+# config = Config.load_config()
+# config.scan_presets()
+config: Optional[Config] = None
 
-botManager = BotManager(config)
+# botManager = BotManager(config)
 
 
 class LlmName(Enum):

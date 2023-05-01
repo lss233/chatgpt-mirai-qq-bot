@@ -1,25 +1,70 @@
 import uuid
 
 import json
-from typing import Generator
+from typing import Generator, Any
+
+from accounts import account_manager, AccountInfoBaseModel
 from adapter.botservice import BotAdapter
-from config import SlackAppAccessToken
-from constants import botManager
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
 import httpx
 
 
+class SlackAccessTokenAuth(AccountInfoBaseModel):
+    channel_id: str
+    """负责与机器人交互的 Channel ID"""
+
+    access_token: str
+    """安装 Slack App 时获得的 access_token"""
+
+    app_endpoint: str = "https://chatgpt-proxy.lss233.com/claude-in-slack/backend-api/"
+    """API 的接入点"""
+
+    _client: httpx.AsyncClient = httpx.AsyncClient(trust_env=True)
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        self._client.headers['Authorization'] = f"Bearer {self.channel_id}@{self.access_token}"
+        self._client.headers['Content-Type'] = 'application/json;charset=UTF-8'
+        self._client.headers[
+            'User-Agent'
+        ] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+        self._client.headers['Sec-Fetch-User'] = '?1'
+        self._client.headers['Sec-Fetch-Mode'] = 'navigate'
+        self._client.headers['Sec-Fetch-Site'] = 'none'
+        self._client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
+        self._client.headers['Sec-Ch-Ua-Mobile'] = '?0'
+        self._client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
+
+    def get_client(self) -> httpx.AsyncClient:
+        return self._client
+
+    async def check_alive(self) -> bool:
+        """
+
+        Successful response:
+        ```
+        ```
+        {
+            "items": []
+        }
+        ```
+        ```
+        Unsuccessful response: variety
+        """
+        req = await self._client.get(f"{self.app_endpoint}/conversations")
+        return "items" in req.json()
+
+
 class ClaudeInSlackAdapter(BotAdapter):
-    account: SlackAppAccessToken
+    account: SlackAccessTokenAuth
     client: httpx.AsyncClient
 
     def __init__(self, session_id: str = ""):
         super().__init__(session_id)
         self.session_id = session_id
-        self.account = botManager.pick('slack-accesstoken')
-        self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers(self.client)
+        self.account = account_manager.pick('slack-accesstoken')
+        self.client = self.account.get_client()
         self.conversation_id = None
         self.current_model = "claude"
         self.supported_models = [
@@ -32,23 +77,9 @@ class ClaudeInSlackAdapter(BotAdapter):
     async def rollback(self):
         raise BotOperationNotSupportedException()
 
-    async def on_reset(self):
-        await self.client.aclose()
-        self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers(self.client)
-        self.conversation_id = None
-
-    def __setup_headers(self, client):
-        client.headers['Authorization'] = f"Bearer {self.account.channel_id}@{self.account.access_token}"
-        client.headers['Content-Type'] = 'application/json;charset=UTF-8'
-        client.headers[
-            'User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
-        client.headers['Sec-Fetch-User'] = '?1'
-        client.headers['Sec-Fetch-Mode'] = 'navigate'
-        client.headers['Sec-Fetch-Site'] = 'none'
-        client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
-        client.headers['Sec-Ch-Ua-Mobile'] = '?0'
-        client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
+    async def on_destoryed(self):
+        """重置会话"""
+        ...
 
     async def ask(self, prompt) -> Generator[str, None, None]:
 
@@ -104,7 +135,10 @@ class ClaudeInSlackAdapter(BotAdapter):
             yield text
         else:
             logger.debug(f"[预设] 发送：{text}")
-            item = None
-            async for item in self.ask(text): ...
-            if item:
-                logger.debug(f"[预设] Chatbot 回应：{item}")
+            async for item in self.ask(text):
+                if item:
+                    logger.debug(f"[预设] Chatbot 回应：{item}")
+
+    @classmethod
+    def register(cls):
+        account_manager.register_type("slack", SlackAccessTokenAuth)

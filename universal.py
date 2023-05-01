@@ -12,7 +12,7 @@ from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
 
-from constants import botManager, BotPlatform
+from constants import BotPlatform
 from constants import config
 from conversation import ConversationHandler, ConversationContext
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
@@ -284,7 +284,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         await _respond(f"当前没有可用的{e}账号，不支持使用此 AI！")
     except BotTypeNotFoundException as e:  # 预设不存在
         respond_msg = f"AI类型{e}不存在，请检查你的输入是否有问题！目前仅支持：\n"
-        respond_msg += botManager.bots_info()
+        # TODO: show supported bot types
         await _respond(respond_msg)
     except PresetNotFoundException:  # 预设不存在
         await _respond("预设不存在，请检查你的输入是否有问题！")
