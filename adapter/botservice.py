@@ -21,7 +21,7 @@ class BotAdapter:
     async def rollback(self): ...
     """回滚对话"""
 
-    async def on_reset(self): ...
+    async def on_destoryed(self): ...
     """当会话被重置时，此函数被调用"""
 
     async def preset_ask(self, role: str, text: str):
@@ -38,3 +38,9 @@ class BotAdapter:
 
     async def switch_model(self, model_name): ...
     """切换模型"""
+
+    @classmethod
+    def register(cls):
+        pass
+
+
