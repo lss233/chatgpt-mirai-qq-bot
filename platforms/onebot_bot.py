@@ -13,8 +13,7 @@ from graia.broadcast import ExecutionStop
 from loguru import logger
 
 import constants
-from constants import config, botManager
-from manager.bot import BotManager
+from constants import config
 from middlewares.ratelimit import manager as ratelimit_manager
 from universal import handle_message
 
@@ -188,21 +187,6 @@ async def _(event: Event):
         nickname=event.sender.get("nickname", "群友"),
         request_from=constants.BotPlatform.Onebot
     )
-
-
-@bot.on_message()
-async def _(event: Event):
-    if event.message != ".重新加载配置文件":
-        return
-    if event.user_id != config.onebot.manager_qq:
-        return await bot.send(event, "您没有权限执行这个操作")
-    constants.config = config.load_config()
-    config.scan_presets()
-    await bot.send(event, "配置文件重新载入完毕！")
-    await bot.send(event, "重新登录账号中，详情请看控制台日志……")
-    constants.botManager = BotManager(config)
-    await botManager.login()
-    await bot.send(event, "登录结束")
 
 
 @bot.on_message()

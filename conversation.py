@@ -17,8 +17,8 @@ from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.claude.slack import ClaudeInSlackAdapter
 from adapter.google.bard import BardAdapter
 from adapter.ms.bing import BingAdapter
-from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
-from adapter.quora.poe import PoeBot, PoeAdapter
+from drawing import DrawingAPI, SDWebUI as SDDrawing
+from adapter.quora.poe_web import BotType as PoeBotType, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
@@ -86,8 +86,8 @@ class ConversationContext:
             self.adapter = ChatGPTWebAdapter(self.session_id)
         elif _type == LlmName.ChatGPT_Api.value:
             self.adapter = ChatGPTAPIAdapter(self.session_id)
-        elif PoeBot.parse(_type):
-            self.adapter = PoeAdapter(self.session_id, PoeBot.parse(_type))
+        elif bot_type :=PoeBotType.parse(_type):
+            self.adapter = PoeAdapter(self.session_id, bot_type)
         elif _type == LlmName.Bing.value:
             self.adapter = BingAdapter(self.session_id)
         elif _type == LlmName.BingC.value:
@@ -116,7 +116,7 @@ class ConversationContext:
                 self.drawing_adapter = BingAdapter(self.session_id, ConversationStyle.creative)
         else:
             with contextlib.suppress(NoAvailableBotException):
-                self.drawing_adapter = OpenAIDrawing(self.session_id)
+                self.drawing_adapter = ChatGPTAPIAdapter(self.session_id)
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
@@ -142,7 +142,7 @@ class ConversationContext:
             raise CommandRefusedException("不要！由于配置文件设置强制开了图片模式，我不会切换到其他任何模式。")
 
     async def reset(self):
-        await self.adapter.on_reset()
+        await self.adapter.on_destoryed()
         self.last_resp = ''
         yield config.response.reset
 

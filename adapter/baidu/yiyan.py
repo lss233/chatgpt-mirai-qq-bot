@@ -1,17 +1,93 @@
+import re
+import time
 from io import BytesIO
+from typing import Generator, Any, Optional
 
 import asyncio
-import time
-from typing import Generator
-from graia.ariadne.message.element import Image as GraiaImage
-from adapter.botservice import BotAdapter
-from config import YiyanCookiePath
-from constants import botManager
-from exceptions import BotOperationNotSupportedException
-from loguru import logger
 import httpx
-import re
 from PIL import Image
+from graia.ariadne.message.element import Image as GraiaImage
+from loguru import logger
+
+from accounts import AccountInfoBaseModel, account_manager
+from adapter.botservice import BotAdapter
+# from constants import botManager
+from exceptions import BotOperationNotSupportedException
+
+
+class BaiduCookieAuth(AccountInfoBaseModel):
+    BDUSS: str
+    """百度 Cookie 中的 BDUSS 字段"""
+    BAIDUID: str
+    """百度 Cookie 中的 BAIDUID 字段"""
+
+    _client: httpx.AsyncClient = httpx.AsyncClient(trust_env=True)
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        self._client.headers['Cookie'] = f"BDUSS={self.BDUSS};"
+        self._client.headers['Content-Type'] = 'application/json;charset=UTF-8'
+        self._client.headers[
+            'User-Agent'
+        ] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+        self._client.headers['Sec-Fetch-User'] = '?1'
+        self._client.headers['Sec-Fetch-Mode'] = 'navigate'
+        self._client.headers['Sec-Fetch-Site'] = 'none'
+        self._client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
+        self._client.headers['Sec-Ch-Ua-Mobile'] = '?0'
+        self._client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
+
+    def get_client(self) -> httpx.AsyncClient:
+        return self._client
+
+    async def check_alive(self) -> bool:
+        """
+
+        Successful response:
+        ```
+        {
+            "ret": 0,
+            "content": {
+                "isHasPhoneNumber": true,
+                "firstShowAT": true,
+                "isForeignPhoneNumber": false,
+                "agreement": 0,
+                "watermark": "___",
+                "uname": "__",
+                "firstPrompt": 1,
+                "authStatus": 0,
+                "showWatermark": true,
+                "hasATAuthority": false,
+                "portrait": "___",
+                "isLogin": true,
+                "protocol": 1,
+                "fuzzyName": "___",
+                "isBanned": false,
+                "applyStatus": 1,
+                "status": 1
+            },
+            "logId": "___"
+        }
+        ```
+        Unsuccessful response:
+        ```
+        {
+            "ret": 0,
+            "content": {
+                "isLogin": false,
+                "isHasPhoneNumber": true,
+                "isForeignPhoneNumber": false,
+                "authStatus": 0,
+                "portrait": ""
+            },
+            "logId": "___"
+        }
+        ```
+        """
+        req = await self._client.post("https://yiyan.baidu.com/eb/user/info")
+        return req.json() \
+            .get("content", {"isLogin": False}) \
+            .get("isLogin", False)
 
 
 def get_ts():
@@ -26,22 +102,34 @@ def extract_image(html):
         return None, html
 
 
+def check_response(resp):
+    if int(resp['code']) != 0:
+        raise Exception(resp['msg'])
+
+
 class YiyanAdapter(BotAdapter):
-    account: YiyanCookiePath
+    """
+    百度文心一言大模型
+    https://yiyan.baidu.com
+    """
+    account: BaiduCookieAuth
     client: httpx.AsyncClient
 
     def __init__(self, session_id: str = ""):
         super().__init__(session_id)
         self.session_id = session_id
-        self.account = botManager.pick('yiyan-cookie')
-        self.acs_client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers(self.acs_client)
-        self.__setup_headers(self.client)
+        self.acs_client = httpx.AsyncClient(trust_env=True)
+        self.account = account_manager.pick("baidu")
+        self.client = self.account.get_client()
         self.conversation_id = None
         self.parent_chat_id = ''
 
+    async def rollback(self):
+        """回滚会话"""
+        raise BotOperationNotSupportedException()
+
     async def delete_conversation(self, session_id):
+        """删除会话"""
         req = await self.client.post(
             url="https://yiyan.baidu.com/eb/session/delete",
             json={
@@ -52,28 +140,12 @@ class YiyanAdapter(BotAdapter):
         )
         req.raise_for_status()
 
-    async def rollback(self):
-        raise BotOperationNotSupportedException()
-
-    async def on_reset(self):
-        await self.client.aclose()
-        self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers(self.client)
-        self.conversation_id = None
-        self.parent_chat_id = 0
-
-    def __setup_headers(self, client):
-        client.headers['Cookie'] = f"BDUSS={self.account.BDUSS};"
-        client.headers['Content-Type'] = 'application/json;charset=UTF-8'
-        client.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
-        client.headers['Sec-Fetch-User'] = '?1'
-        client.headers['Sec-Fetch-Mode'] = 'navigate'
-        client.headers['Sec-Fetch-Site'] = 'none'
-        client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
-        client.headers['Sec-Ch-Ua-Mobile'] = '?0'
-        client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
+    async def on_destoryed(self):
+        """重置会话"""
+        ...
 
     async def new_conversation(self, prompt: str):
+        """创建新会话"""
         self.client.headers['Acs-Token'] = await self.get_sign()
 
         req = await self.client.post(
@@ -85,15 +157,15 @@ class YiyanAdapter(BotAdapter):
             }
         )
         req.raise_for_status()
-        self.__check_response(req.json())
-        self.conversation_id = req.json()['data']['sessionId']
-        self.parent_chat_id = 0
+        check_response(req.json())
+        return req.json()['data']['sessionId']
 
     async def ask(self, prompt) -> Generator[str, None, None]:
         self.client.headers['Acs-Token'] = await self.get_sign()
 
         if not self.conversation_id:
-            await self.new_conversation(prompt)
+            self.conversation_id = await self.new_conversation(prompt)
+            self.parent_chat_id = 0
 
         req = await self.client.post(
             url="https://yiyan.baidu.com/eb/chat/check",
@@ -105,7 +177,7 @@ class YiyanAdapter(BotAdapter):
         )
 
         req.raise_for_status()
-        self.__check_response(req.json())
+        check_response(req.json())
 
         req = await self.client.post(
             url="https://yiyan.baidu.com/eb/chat/new",
@@ -123,7 +195,7 @@ class YiyanAdapter(BotAdapter):
         )
 
         req.raise_for_status()
-        self.__check_response(req.json())
+        check_response(req.json())
 
         chat_id = req.json()["data"]["botChat"]["id"]
         self.parent_chat_id = chat_id
@@ -147,7 +219,7 @@ class YiyanAdapter(BotAdapter):
                 }
             )
             req.raise_for_status()
-            self.__check_response(req.json())
+            check_response(req.json())
 
             sentence_id = req.json()["data"]["sent_id"]
 
@@ -177,10 +249,6 @@ class YiyanAdapter(BotAdapter):
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 
-    def __check_response(self, resp):
-        if int(resp['code']) != 0:
-            raise Exception(resp['msg'])
-
     async def get_sign(self):
         # 目前只需要这一个参数来计算 Acs-Token
         self.acs_client.headers['Cookie'] = f"BAIDUID={self.account.BAIDUID};"
@@ -194,3 +262,7 @@ class YiyanAdapter(BotAdapter):
         to_format = BytesIO()
         Image.open(from_format).save(to_format, format='png')
         return to_format.getvalue()
+
+    @classmethod
+    def register(cls):
+        account_manager.register_type("baidu", BaiduCookieAuth)

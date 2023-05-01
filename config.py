@@ -7,6 +7,8 @@ import os
 import sys
 import toml
 
+from accounts import AccountInfoBaseModel
+
 
 class Onebot(BaseModel):
     qq: int
@@ -58,6 +60,7 @@ class HttpService(BaseModel):
     debug: bool = False
     """是否开启debug，错误时展示日志"""
 
+
 class WecomBot(BaseModel):
     host: str = "0.0.0.0"
     """企业微信回调地址，需要能够被公网访问，0.0.0.0则不限制访问地址"""
@@ -75,7 +78,7 @@ class WecomBot(BaseModel):
     """企业微信应用 API 令牌 的 Token"""
     encoding_aes_key: str
     """企业微信应用 API 令牌 的 EncodingAESKey"""
-    
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -500,6 +503,10 @@ class SDWebUI(BaseModel):
     class Config(BaseConfig):
         extra = Extra.allow
 
+class AccountsModel(BaseModel):
+    """记录各种账号信息"""
+    pass
+
 
 class Config(BaseModel):
     # === Platform Settings ===
@@ -511,6 +518,8 @@ class Config(BaseModel):
     wecom: Optional[WecomBot] = None
 
     # === Account Settings ===
+    accounts: AccountsModel = AccountsModel()
+
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
