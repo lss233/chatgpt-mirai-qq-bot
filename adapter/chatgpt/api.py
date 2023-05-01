@@ -129,6 +129,7 @@ class ChatGPTAPIAdapter(BotAdapter, DrawingAPI):
             self.__conversation_keep_from = 0
         self.bot.conversation[self.session_id].append({"role": role, "content": text})
         self.__conversation_keep_from = len(self.bot.conversation[self.session_id])
+
     async def text_to_img(self, prompt: str):
         logger.debug(f"[OpenAI Image] Prompt: {prompt}")
         response = await openai.Image.acreate(
