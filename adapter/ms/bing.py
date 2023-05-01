@@ -67,13 +67,13 @@ class BingAdapter(BotAdapter, DrawingAPI):
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
                                                              conversation_style=self.conversation_style,
-                                                             wss_link=config.bing.wss_link):
+                                                             wss_link=constants.config.bing.wss_link):
                 if not response:
                     continue
 
                 if final:
                     # 最后一条消息
-                    max_messages = config.bing.max_messages
+                    max_messages = constants.config.bing.max_messages
                     with suppress(KeyError):
                         max_messages = response["item"]["throttling"]["maxNumUserMessagesInConversation"]
 
@@ -82,9 +82,9 @@ class BingAdapter(BotAdapter, DrawingAPI):
                         image_urls = re.findall(image_pattern, raw_text)
 
                     remaining_conversations = f'\n剩余回复数：{self.count} / {max_messages} ' \
-                        if config.bing.show_remaining_count else ''
+                        if constants.config.bing.show_remaining_count else ''
 
-                    if len(response["item"].get('messages', [])) > 1 and config.bing.show_suggestions:
+                    if len(response["item"].get('messages', [])) > 1 and constants.config.bing.show_suggestions:
                         suggestions = response["item"]["messages"][-1].get("suggestedResponses", [])
                         if len(suggestions) > 0:
                             parsed_content = parsed_content + '\n猜你想问：  \n'
@@ -101,7 +101,7 @@ class BingAdapter(BotAdapter, DrawingAPI):
                 else:
                     # 生成中的消息
                     parsed_content = re.sub(r"\[\^\d+\^]", "", response)
-                    if config.bing.show_references:
+                    if constants.config.bing.show_references:
                         parsed_content = re.sub(r"\[(\d+)]: ", r"\1: ", parsed_content)
                     else:
                         parsed_content = re.sub(r"(\[\d+]: .+)+", "", parsed_content)
