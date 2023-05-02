@@ -6,7 +6,7 @@ from config import Config
 # config = Config.load_config()
 # config.scan_presets()
 config: Optional[Config] = None
-
+proxy: Optional[str] = None
 # botManager = BotManager(config)
 
 

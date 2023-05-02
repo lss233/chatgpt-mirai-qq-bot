@@ -1,23 +1,19 @@
-import os
 from enum import Enum
 
 from tempfile import NamedTemporaryFile
 from typing import Optional
 
-from graia.ariadne.message.element import Plain, Voice, Image
+from graia.ariadne.message.element import Plain, Voice
 from loguru import logger
 
 from constants import config
-from utils.azure_tts import synthesize_speech, encode_to_silk
+from tts.azure_tts import synthesize_speech, encode_to_silk
 
 tts_voice_dic = {}
 """各引擎的音色列表"""
 
 
-class VoiceType(Enum):
-    Wav = "wav"
-    Mp3 = "mp3"
-    Silk = "silk"
+
 
 
 class TtsVoice:
@@ -83,7 +79,7 @@ class TtsVoiceManager:
         if tts_engine != "edge":
             # todo support other engines
             return TtsVoice.parse(tts_engine, voice_name)
-        from utils.edge_tts import edge_tts_voices
+        from tts.edge import edge_tts_voices
         if "edge" not in tts_voice_dic:
             tts_voice_dic["edge"] = edge_tts_voices
         _voice_dic = tts_voice_dic["edge"]
@@ -106,7 +102,7 @@ class TtsVoiceManager:
                 return False
 
         if tts_engine == "edge":
-            from utils.edge_tts import load_edge_tts_voices
+            from tts.edge import load_edge_tts_voices
             if "edge" not in tts_voice_dic:
                 tts_voice_dic["edge"] = await load_edge_tts_voices()
             _voice_dic = tts_voice_dic["edge"]
@@ -126,7 +122,7 @@ async def get_tts_voice(elem, conversation_context, voice_type=VoiceType.Wav) ->
 
     logger.debug(f"[TextToSpeech] 开始转换语音 - {conversation_context.session_id}")
     if config.text_to_speech.engine == "vits":
-        from utils.vits_tts import vits_api_instance
+        from tts.vits_tts import vits_api_instance
         if await vits_api_instance.process_message(str(elem), output_file.name, voice_type.value):
             logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
             return Voice(path=output_file.name)
@@ -145,7 +141,7 @@ async def get_tts_voice(elem, conversation_context, voice_type=VoiceType.Wav) ->
             logger.debug(f"[TextToSpeech] 语音转换完成 - {output_file.name} - {conversation_context.session_id}")
             return voice
     elif config.text_to_speech.engine == "edge":
-        from utils.edge_tts import edge_tts_speech
+        from tts.edge import edge_tts_speech
         tts_output_file_name = await edge_tts_speech(
             str(elem), conversation_context.conversation_voice, output_file.name)
         if tts_output_file_name:
