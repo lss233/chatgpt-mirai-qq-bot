@@ -20,11 +20,11 @@ from revChatGPT.V1 import AsyncChatbot as V1Chatbot
 from revChatGPT.typings import Error as V1Error
 from tinydb import TinyDB, Query
 
-import utils.network as network
-from chatbot.chatgpt import ChatGPTBrowserChatbot
+from framework import utils as network
+from framework.chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
-    PoeCookieAuth, SlackAuths, SlackAppAccessToken
-from exceptions import NoAvailableBotException, APIKeyNoFundsError
+    PoeCookieAuth, SlackAppAccessToken
+from framework.exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 T = TypeVar("T")
 
