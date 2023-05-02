@@ -41,7 +41,7 @@ class TTSResponse:
             logger.warning("警告：Silk 转码模块无法加载，语音可能无法正常播放，请安装最新的 vc_redist 运行库。")
             raise TTSEncodingFailedException(src_format, VoiceFormat.Silk) from e
 
-    def transcode(self, to_format: VoiceFormat) -> bytes:
+    async def transcode(self, to_format: VoiceFormat) -> bytes:
         """音频转码"""
         if to_format in self.data_bytes:
             return self.data_bytes[to_format]
@@ -55,6 +55,10 @@ class EmotionMarkupText:
     """情绪标注数据格式"""
 
     texts: List[Tuple[str, str]] = []
+
+    def __init__(self, begin: List[Tuple[str, str]] = None):
+        if begin:
+            self.texts = begin
 
     def __str__(self):
         """获取原始字符串"""
@@ -88,7 +92,12 @@ class TTSVoice(metaclass=abc.ABCMeta):
         self.full_name = full_name
         self.lang = lang
         self.aliases = aliases
-
+        
+    def __eq__(self, other):
+        if isinstance(other, TTSVoice):
+            return self.engine == other.engine and self.full_name == other.full_name and self.lang == other.lang and self.codename == other.codename and self.aliases == other.aliases
+        return False
+    
 
 class TTSEngine(metaclass=abc.ABCMeta):
     """语音引擎"""

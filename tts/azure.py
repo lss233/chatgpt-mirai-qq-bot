@@ -3,7 +3,7 @@ from typing import Dict, List
 import httpx
 
 import constants
-from constants import config
+from config import AzureConfig
 from exceptions import TTSSpeakFailedException
 from tts.tts import TTSEngine, TTSVoice, EmotionMarkupText, TTSResponse, VoiceFormat
 
@@ -11,25 +11,25 @@ from tts.tts import TTSEngine, TTSVoice, EmotionMarkupText, TTSResponse, VoiceFo
 class AzureTTSEngine(TTSEngine):
     client: httpx.AsyncClient
 
-    def __init__(self):
+    def __init__(self, config: AzureConfig):
         self.client = httpx.AsyncClient(trust_env=True, proxies=constants.proxy)
         self.client.headers = {
-            'Ocp-Apim-Subscription-Key': config.azure.tts_speech_key
+            'Ocp-Apim-Subscription-Key': config.tts_speech_key
         }
-        self.base_endpoint = f"https://{config.azure.tts_speech_service_region}.tts.speech.microsoft.com/cognitiveservices"
+        self.base_endpoint = f"https://{config.tts_speech_service_region}.tts.speech.microsoft.com/cognitiveservices"
 
     async def get_voice_list(self) -> List[TTSVoice]:
-        voices = []
         response = await self.client.get(f"{self.base_endpoint}/voices/list")
-        for voice in response.json():
-            voices[voice.get('ShortName')] = TTSVoice(
-                engine="edge",
+        return [
+            TTSVoice(
+                engine="azure",
                 codename=voice.get('ShortName'),
-                full_name=voice.get('DisplayName'),
+                full_name=voice.get('LocalName'),
                 lang=[voice.get('Locale')],
-                aliases=[voice.get('LocalName'), voice.get('DisplayName').lower()]
+                aliases=[voice.get('DisplayName')],
             )
-        return voices
+            for voice in await response.json()
+        ]
 
     async def speak(self, text: EmotionMarkupText, voice: TTSVoice) -> TTSResponse:
         # Convert text into SSML
@@ -54,3 +54,5 @@ class AzureTTSEngine(TTSEngine):
         支持的风格: https://learn.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup-voice#speaking-styles-and-roles
         """
         return ["advertisement_upbeat", "affectionate", "angry", "assistant", "calm", "chat", "cheerful", "customerservice", "depressed", "disgruntled", "documentary-narration", "embarrassed", "empathetic", "envious", "excited", "fearful", "friendly", "gentle", "hopeful", "lyrical", "narration-professional", "narration-relaxed", "newscast", "newscast-casual", "newscast-formal", "poetry-reading", "sad", "serious", "shouting", "sports_commentary", "sports_commentary_excited", "whispering", "terrified", "unfriendly"]
+
+
