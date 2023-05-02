@@ -13,26 +13,39 @@ edge_tts_voices = {}
 class EdgeTTSEngine(TTSEngine):
 
     async def get_voice_list(self) -> List[TTSVoice]:
-        voices = []
-        for voice in await edge_tts.list_voices(proxy=constants.proxy):
-            voices[voice.get('ShortName')] = TTSVoice(
+        return [
+            TTSVoice(
                 engine="edge",
                 codename=voice.get('ShortName'),
-                full_name=voice.get('DisplayName'),
+                full_name=voice.get('FriendlyName'),
                 lang=[voice.get('Locale')],
-                aliases=[voice.get('LocalName'), voice.get('DisplayName').lower()]
+                aliases=[
+                    voice.get(
+                        'Name',
+                        f'Microsoft Server Speech Text to Speech Voice ({voice.get("Locale")}, {voice.get("FriendlyName")}Neural)',
+                    )
+                    .split(',')[1]
+                    .split('Neural')[0]
+                ],
             )
-        return voices
+            for voice in await edge_tts.list_voices(proxy=constants.proxy)
+        ]
 
     async def speak(self, text: EmotionMarkupText, voice: TTSVoice) -> TTSResponse:
-        try:
-            communicate = edge_tts.Communicate(str(text), voice.codename)
-            output = BytesIO()
-            await communicate.save(output)
-            output.seek(0)
-            return TTSResponse(VoiceFormat.Mp3, output.read(), str(text))
-        except NoAudioReceived as e:
-            raise TTSSpeakFailedException() from e
+        communicate = edge_tts.Communicate(str(text), voice.codename)
+        output = BytesIO()
+        written_audio = False
+        with BytesIO() as audio:
+            async for message in communicate.stream():
+                if message["type"] == "audio":
+                    audio.write(message["data"])
+                    written_audio = True
+        if not written_audio:
+            raise TTSSpeakFailedException(
+                "No audio was received from the service, so the file is empty."
+            )
+        output.seek(0)
+        return TTSResponse(VoiceFormat.Mp3, output.read(), str(text))
 
     async def get_supported_styles(self) -> List[str]:
         """
