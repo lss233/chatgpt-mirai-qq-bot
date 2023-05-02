@@ -7,8 +7,6 @@ import os
 import sys
 import toml
 
-from accounts import AccountInfoBaseModel
-
 
 class Onebot(BaseModel):
     qq: int
