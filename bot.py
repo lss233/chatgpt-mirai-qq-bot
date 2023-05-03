@@ -32,7 +32,7 @@ tasks.extend(
         ),
     )
 )
-loop.run_until_complete(asyncio.gather(*tasks))
+loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 
 bots = []
 
@@ -40,33 +40,33 @@ if constants.config.mirai:
     logger.info("检测到 mirai 配置，将启动 mirai 模式……")
     from framework.platforms.ariadne_bot import start_task
 
-    bots.append(loop.create_task(start_task()))
+    bots.append(start_task())
 
 if constants.config.onebot:
     logger.info("检测到 Onebot 配置，将启动 Onebot 模式……")
     from framework.platforms.onebot_bot import start_task
 
-    bots.append(loop.create_task(start_task()))
+    bots.append(start_task())
 if constants.config.telegram:
     logger.info("检测到 telegram 配置，将启动 telegram bot 模式……")
     from framework.platforms.telegram_bot import start_task
 
-    bots.append(loop.create_task(start_task()))
+    bots.append(start_task())
 if constants.config.discord:
     logger.info("检测到 discord 配置，将启动 discord bot 模式……")
     from framework.platforms.discord_bot import start_task
 
-    bots.append(loop.create_task(start_task()))
+    bots.append(start_task())
 if constants.config.http:
     logger.info("检测到 http 配置，将启动 http service 模式……")
     from framework.platforms.http_service import start_task
 
-    bots.append(loop.create_task(start_task()))
+    bots.append(start_task())
 if constants.config.wecom:
     logger.info("检测到 Wecom 配置，将启动 Wecom Bot 模式……")
     from framework.platforms.wecom_bot import start_task
 
-    bots.append(loop.create_task(start_task()))
+    bots.append(start_task())
 
 loop.run_until_complete(asyncio.gather(*bots))
 loop.run_forever()

@@ -1,11 +1,13 @@
 from typing import Generator, Any
 
+import httpx
+
 from framework.accounts import account_manager
 from framework.llm.llm import Llm
-from framework.exceptions import BotOperationNotSupportedException
+from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \
+    LlmRequestFailedException
 from loguru import logger
 import json
-import httpx
 from urllib.parse import quote
 
 from framework.llm.google.models import BardCookieAuth
@@ -33,15 +35,15 @@ class BardAdapter(Llm):
         self.at = quote(response.text.split('"SNlM0e":"')[1].split('","')[0])
 
     async def rollback(self):
-        raise BotOperationNotSupportedException()
+        raise LlmOperationNotSupportedException()
 
     async def on_destoryed(self):
         ...
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        if not self.at:
-            await self.get_at_token()
         try:
+            if not self.at:
+                await self.get_at_token()
             url = "https://bard.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate"
             # Goolge's RPC style: https://kovatch.medium.com/deciphering-google-batchexecute-74991e4e446c
             response = await self.client.post(
@@ -52,15 +54,10 @@ class BardAdapter(Llm):
                     "at": self.at
                 }
             )
-            if response.status_code != 200:
-                logger.error(f"[Bard] 请求出现错误，状态码: {response.status_code}")
-                logger.error(f"[Bard] {response.text}")
-                # TODO: 细分这个错误
-                raise Exception("Authentication failed")
+            response.raise_for_status()
             res = response.text.split("\n")
             for lines in res:
                 if "wrb.fr" in lines:
-                    txt = ""
                     data = json.loads(json.loads(lines)[0][2])
                     result = data[0][0]
                     self.bard_session_id = data[1][0]
@@ -74,16 +71,15 @@ class BardAdapter(Llm):
                                 if "rc_" in element:
                                     self.rc = element
                                     break
-                        except Exception:
+                        except (KeyError, ValueError):
                             continue
                     logger.debug(f"[Bard] {self.bard_session_id} - {self.r} - {self.rc} - {result}")
                     yield result
                     break
-
-        except Exception as e:
-            logger.exception(e)
-            yield "[Bard] 出现了些错误"
-            return
+        except httpx.TimeoutException as e:
+            raise LlmRequestTimeoutException("bard") from e
+        except httpx.HTTPStatusError as e:
+            raise LlmRequestFailedException("bard") from e
 
     @classmethod
     def register(cls):

@@ -15,10 +15,11 @@ class BufferedContentMerger(Renderer):
     def __init__(self, parent: Renderer):
         self.parent = parent
 
-    async def __aenter__(self) -> None:
+    async def __aenter__(self) -> "BufferedContentMerger":
         self.hold = []
         self.last_arrived = time.time()
         await self.parent.__aenter__()
+        return self
 
     async def __aexit__(self, exc_type: type[BaseException], exc: BaseException, tb) -> None:
         self.hold = None
@@ -58,10 +59,11 @@ class LengthContentMerger(Renderer):
     def __init__(self, parent: Renderer):
         self.parent = parent
 
-    async def __aenter__(self) -> None:
+    async def __aenter__(self) -> "LengthContentMerger":
         self.hold = MessageChain([])
         self.last_arrived = time.time()
         await self.parent.__aenter__()
+        return self
 
     async def __aexit__(self, exc_type: type[BaseException], exc: BaseException, tb) -> None:
         self.hold = None

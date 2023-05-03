@@ -1,28 +1,105 @@
-from datetime import datetime
-from typing import List, Dict, Optional
-
+from typing import List, Dict, Optional, Callable, Any
+import re
 import httpx
 from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
-from loguru import logger
+from functools import partial
 
 import constants
 from framework.drawing import DrawAI, DrawingAIFactory
-from framework.exceptions import PresetNotFoundException, CommandRefusedException, DrawingFailedException
+from framework.exceptions import PresetNotFoundException, CommandRefusedException, DrawingFailedException, \
+    BotTypeNotFoundException, NoAvailableBotException
 from framework.llm import LlmFactory
 from framework.llm.baidu.yiyan import YiyanAdapter
 from framework.llm.llm import Llm
 from framework.middlewares.draw_ratelimit import MiddlewareRatelimit
+from framework.prompt_engine import PromptFlowBaseModel, PromptFlowUnsupportedException, load_prompt, \
+    execute_action_block
 from framework.renderer import Renderer
 from framework.renderer.merger import BufferedContentMerger, LengthContentMerger
 from framework.renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from framework.renderer.splitter import MultipleSegmentSplitter
 from framework.tts import TTSEngine, TTSVoice
 from framework.utils import retry
+from loguru import logger
 
 handlers = {}
 
 middlewares = MiddlewareRatelimit()
+
+
+class AsyncPromptExecutionContext:
+    conversation: "ConversationContext"
+
+    actions: Dict[str, Callable] = {}
+    """操作"""
+
+    variables: Dict[str, Any] = {}
+    """变量"""
+
+    flow: PromptFlowBaseModel
+
+    def __init__(self, conversation: "ConversationContext", variables: Dict[str, Any], actions: Dict[str, Callable]):
+        self.conversation = conversation
+        self.actions = actions.copy()
+        self.variables = variables.copy()
+        self.flow = conversation.prompt_flow
+        self.actions['system/use-tts-engine'] = lambda engine, voice: self.conversation.switch_tts_engine(engine, voice)
+        self.actions['system/prompt'] = lambda role, prompt: self.conversation.llm_adapter.preset_ask(role, prompt)
+        self.actions['system/text'] = lambda text: text
+        self.actions['system/text-extraction'] = lambda text, pattern: [m.groupdict() for m in re.finditer(pattern, text, re.RegexFlag.M)]
+        self.actions['system/instant-ask'] = partial(AsyncPromptExecutionContext.instant_ask, self)
+        self.actions['tts/parse_emotion_text'] = TTSEngine.parse_emotion_text
+        self.actions['tts/speak'] = lambda text: self.conversation.tts_engine.speak(text, self.conversation.conversation_voice)
+
+    async def init(self):
+        await execute_action_block(self.flow.init, self.variables, self.actions)
+
+    async def input(self, prompt):
+        self.variables["input"] = {
+            "message": prompt
+        }
+        await execute_action_block(self.flow.input, self.variables, self.actions)
+        async with self.conversation.merger as merger:
+            async for item in self.conversation.llm_adapter.ask(self.variables["input"]["message"]):
+                if not item:
+                    continue
+                if isinstance(item, Element):
+                    await self.actions["system/user_message"](item)
+                    continue
+                if merged := await merger.render(item):
+                    self.variables["output"] = {
+                        "message": str(merged),
+                        "finished": False
+                    }
+                    await execute_action_block(self.flow.output, self.variables, self.actions)
+                    await self.actions["system/user_message"](self.variables["output"]["message"])
+
+            merged = await merger.result()
+            self.variables["output"] = {
+                "message": str(merged),
+                "finished": True
+            }
+            await execute_action_block(self.flow.output, self.variables, self.actions)
+            await self.actions["system/user_message"](self.variables["output"]["message"])
+
+    async def instant_ask(self, supported_llms, prompt):
+        logger.info(f"[Instant ask] session_id={self.conversation.session_id}, prompt={prompt}")
+        exc = None
+        for llm_name in supported_llms:
+            try:
+                llm_instance = LlmFactory.create(name=llm_name, session_id=self.conversation.session_id)
+                break
+            except (BotTypeNotFoundException, NoAvailableBotException) as e:
+                exc = e
+                continue
+        else:
+            raise NoAvailableBotException(supported_llms) from exc
+        everything = ''
+        async for item in llm_instance.ask(prompt):
+            everything = item
+        logger.info(f'[Instant ask] response = {everything}')
+        return everything
 
 
 class ConversationContext:
@@ -50,6 +127,18 @@ class ConversationContext:
     preset: str = None
     """预设"""
 
+    prompt_flow: Optional[PromptFlowBaseModel] = PromptFlowBaseModel(name="default", author="lss233")
+    """交互流"""
+
+    execution_variables: Dict[str, Any] = {
+        "input": {},
+        "user": {},
+        "output": {},
+        "tts_engine": {}
+    }
+
+    execution_actions: Dict[str, Callable] = {}
+
     preset_decoration_format: Optional[str] = "{prompt}"
     """预设装饰文本"""
 
@@ -62,6 +151,7 @@ class ConversationContext:
         return self.llm_adapter.supported_models
 
     def __init__(self, _type: str, session_id: str):
+
         self.session_id = session_id
         self.type = _type
         self.last_resp = ''
@@ -74,9 +164,13 @@ class ConversationContext:
     def switch_drawing_ai(self, name: Optional[str] = None):
         self.drawing_adapter = DrawingAIFactory.create(name)
 
-    def switch_tts_engine(self, name: Optional[str] = None):
+    def switch_tts_engine(self, name: Optional[str] = None, voice = None):
         self.tts_engine = TTSEngine.get_engine(name)
-        self.conversation_voice = self.tts_engine.choose_voice(config.text_to_speech.default)
+        self.conversation_voice = self.tts_engine.choose_voice(voice or constants.config.text_to_speech.default)
+        self.execution_variables["tts_engine"] = {
+            "emotions": self.tts_engine.get_supported_styles(),
+            "voice": self.conversation_voice.codename
+        }
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
@@ -107,7 +201,6 @@ class ConversationContext:
         await self.llm_adapter.on_destoryed()
         self.llm_adapter = LlmFactory.create(name=self.type, session_id=self.session_id)
         self.last_resp = ''
-        yield constants.config.response.reset
 
     @retry((httpx.ConnectError, httpx.ConnectTimeout, TimeoutError))
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
@@ -138,21 +231,12 @@ class ConversationContext:
                     yield respond_str
                 return
 
-        if self.preset_decoration_format:
-            prompt = (
-                self.preset_decoration_format.replace("{prompt}", prompt)
-                .replace("{nickname}", name)
-                .replace("{last_resp}", self.last_resp)
-                .replace("{date}", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-            )
-
         async with self.renderer:
             async for item in self.llm_adapter.ask(prompt):
                 if isinstance(item, Element):
                     yield item
                 else:
                     yield await self.renderer.render(item)
-                self.last_resp = item or ''
             yield await self.renderer.result()
 
     async def rollback(self):
@@ -161,29 +245,17 @@ class ConversationContext:
     async def switch_model(self, model_name):
         return await self.llm_adapter.switch_model(model_name)
 
+    async def load_prompt(self, prompt_flow: PromptFlowBaseModel):
+        if self.type not in prompt_flow.supported_llms:
+            raise PromptFlowUnsupportedException(self.type, prompt_flow.supported_llms)
+        await self.reset()
+        self.prompt_flow = prompt_flow
+
     async def load_preset(self, keyword: str):
         self.preset_decoration_format = None
-        if keyword in constants.config.presets.keywords:
-            presets = constants.config.load_preset(keyword)
-            for text in presets:
-                if not text.strip() or not text.startswith('#'):
-                    # 判断格式是否为 role: 文本
-                    if ':' in text:
-                        role, text = text.split(':', 1)
-                    else:
-                        role = 'system'
-
-                    if role == 'user_send':
-                        self.preset_decoration_format = text
-                        continue
-
-                    if role == 'voice' and self.tts_engine:
-                        self.conversation_voice = await self.tts_engine.choose_voice(text.strip())
-                        logger.debug(f"Set conversation voice to {self.conversation_voice.full_name}")
-                        continue
-
-                    async for item in self.llm_adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
-                        yield item
+        if keyword in constants.config.prompts.keywords:
+            prompt_flow = load_prompt(constants.config.prompts.keywords[keyword])
+            await self.load_prompt(prompt_flow)
         elif keyword != 'default':
             raise PresetNotFoundException(keyword)
         self.preset = keyword
@@ -192,7 +264,10 @@ class ConversationContext:
         # TODO: adapt to all platforms
         pass
 
-    async def init(self):
+    async def __aenter__(self):
+        return AsyncPromptExecutionContext(self, self.execution_variables, self.execution_actions)
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         pass
 
 
@@ -226,7 +301,6 @@ class ConversationHandler:
             return self.conversations[_type]
         conversation = ConversationContext(_type, self.session_id)
         self.conversations[_type] = conversation
-        await conversation.init()
         return conversation
 
     """创建新的上下文"""

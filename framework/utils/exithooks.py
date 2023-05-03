@@ -43,10 +43,12 @@ def foo():
 atexit.register(foo)
 
 
-def exit_gracefully(signal, frame):
-    print("Received signal {}, exiting...".format(signal))
+def exit_gracefully(sig, frame):
+    print(f"Received signal {sig}, exiting...")
     sys.exit(0)
 
 
 def hook():
     signal.signal(signal.SIGINT, exit_gracefully)
+    signal.signal(signal.SIGTERM, exit_gracefully)
+    signal.signal(signal.SIGABRT, exit_gracefully)

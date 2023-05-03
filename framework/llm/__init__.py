@@ -1,6 +1,5 @@
 from typing import Type, Dict, Tuple
 
-from EdgeGPT import ConversationStyle
 
 from .llm import Llm
 from ..exceptions import BotTypeNotFoundException

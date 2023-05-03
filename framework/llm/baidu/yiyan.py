@@ -1,7 +1,7 @@
 import re
 import time
 from io import BytesIO
-from typing import Generator, Any
+from typing import Generator
 
 import asyncio
 import httpx
@@ -10,9 +10,10 @@ from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
 
 from framework.accounts import account_manager
+from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \
+    LlmRequestFailedException
 from framework.llm.baidu.models import BaiduCookieAuth
 from framework.llm.llm import Llm
-from framework.exceptions import BotOperationNotSupportedException
 
 
 def get_ts():
@@ -52,7 +53,7 @@ class YiyanAdapter(Llm):
 
     async def rollback(self):
         """回滚会话"""
-        raise BotOperationNotSupportedException()
+        raise LlmOperationNotSupportedException()
 
     async def delete_conversation(self, session_id):
         """删除会话"""
@@ -87,91 +88,96 @@ class YiyanAdapter(Llm):
         return req.json()['data']['sessionId']
 
     async def ask(self, prompt) -> Generator[str, None, None]:
-        self.client.headers['Acs-Token'] = await self.get_sign()
-
-        if not self.conversation_id:
-            self.conversation_id = await self.new_conversation(prompt)
-            self.parent_chat_id = 0
-
-        req = await self.client.post(
-            url="https://yiyan.baidu.com/eb/chat/check",
-            json={
-                "text": prompt,
-                "timestamp": get_ts(),
-                "deviceType": "pc",
-            }
-        )
-
-        req.raise_for_status()
-        check_response(req.json())
-
-        req = await self.client.post(
-            url="https://yiyan.baidu.com/eb/chat/new",
-            json={
-                "sessionId": self.conversation_id,
-                "text": prompt,
-                "parentChatId": self.parent_chat_id,
-                "type": 10,
-                "timestamp": get_ts(),
-                "deviceType": "pc",
-                "code": 0,
-                "msg": "",
-                "sign": self.client.headers['Acs-Token']
-            }
-        )
-
-        req.raise_for_status()
-        check_response(req.json())
-
-        chat_id = req.json()["data"]["botChat"]["id"]
-        self.parent_chat_id = chat_id
-        chat_parent_id = req.json()["data"]["botChat"]["parent"]
-
-        sentence_id = 0
-        full_response = ''
-        while True:
+        try:
             self.client.headers['Acs-Token'] = await self.get_sign()
 
+            if not self.conversation_id:
+                self.conversation_id = await self.new_conversation(prompt)
+                self.parent_chat_id = 0
+
             req = await self.client.post(
-                url="https://yiyan.baidu.com/eb/chat/query",
+                url="https://yiyan.baidu.com/eb/chat/check",
                 json={
-                    "chatId": chat_id,
-                    "parentChatId": chat_parent_id,
-                    "sentenceId": sentence_id,
-                    "stop": 0,
+                    "text": prompt,
                     "timestamp": get_ts(),
                     "deviceType": "pc",
-                    "sign": self.client.headers['Acs-Token']
                 }
             )
+
             req.raise_for_status()
             check_response(req.json())
 
-            sentence_id = req.json()["data"]["sent_id"]
+            req = await self.client.post(
+                url="https://yiyan.baidu.com/eb/chat/new",
+                json={
+                    "sessionId": self.conversation_id,
+                    "text": prompt,
+                    "parentChatId": self.parent_chat_id,
+                    "type": 10,
+                    "timestamp": get_ts(),
+                    "deviceType": "pc",
+                    "code": 0,
+                    "msg": "",
+                    "sign": self.client.headers['Acs-Token']
+                }
+            )
 
-            if content := req.json()["data"]["content"]:
-                url, content = extract_image(content)
-                if url:
-                    yield GraiaImage(data_bytes=await self.__download_image(url))
-                full_response = full_response + content.replace('<br>', '\n')
+            req.raise_for_status()
+            check_response(req.json())
 
-            logger.debug(f"[Yiyan] {self.conversation_id} - {full_response}")
+            chat_id = req.json()["data"]["botChat"]["id"]
+            self.parent_chat_id = chat_id
+            chat_parent_id = req.json()["data"]["botChat"]["parent"]
 
-            yield full_response
+            sentence_id = 0
+            full_response = ''
+            while True:
+                self.client.headers['Acs-Token'] = await self.get_sign()
 
-            await asyncio.sleep(1)
+                req = await self.client.post(
+                    url="https://yiyan.baidu.com/eb/chat/query",
+                    json={
+                        "chatId": chat_id,
+                        "parentChatId": chat_parent_id,
+                        "sentenceId": sentence_id,
+                        "stop": 0,
+                        "timestamp": get_ts(),
+                        "deviceType": "pc",
+                        "sign": self.client.headers['Acs-Token']
+                    }
+                )
+                req.raise_for_status()
+                check_response(req.json())
 
-            if req.json()["data"]["is_end"] != 0 or req.json()["data"]["stop"] != 0:
-                break
+                sentence_id = req.json()["data"]["sent_id"]
 
-    async def preset_ask(self, role: str, text: str):
+                if content := req.json()["data"]["content"]:
+                    url, content = extract_image(content)
+                    if url:
+                        yield GraiaImage(data_bytes=await self.__download_image(url))
+                    full_response = full_response + content.replace('<br>', '\n')
+
+                logger.debug(f"[Yiyan] {self.conversation_id} - {full_response}")
+
+                yield full_response
+
+                await asyncio.sleep(1)
+
+                if req.json()["data"]["is_end"] != 0 or req.json()["data"]["stop"] != 0:
+                    break
+        except httpx.TimeoutException as e:
+            raise LlmRequestTimeoutException("yiyan") from e
+        except httpx.HTTPStatusError as e:
+            raise LlmRequestFailedException("yiyan") from e
+
+    async def preset_ask(self, role: str, prompt: str):
         if role.endswith('bot') or role in {'assistant', 'yiyan'}:
-            logger.debug(f"[预设] 响应：{text}")
-            yield text
+            logger.debug(f"[预设] 响应：{prompt}")
+            yield prompt
         else:
-            logger.debug(f"[预设] 发送：{text}")
+            logger.debug(f"[预设] 发送：{prompt}")
             item = None
-            async for item in self.ask(text): ...
+            async for item in self.ask(prompt): ...
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 
