@@ -46,7 +46,7 @@ class EdgeTTSEngine(TTSEngine):
         output.seek(0)
         return TTSResponse(VoiceFormat.Mp3, output.read(), str(text))
 
-    async def get_supported_styles(self) -> List[str]:
+    def get_supported_styles(self) -> List[str]:
         """
         不支持任何风格
         """

@@ -9,7 +9,7 @@ from framework.accounts import account_manager
 from framework.llm.openai.models import OpenAIAccessTokenAuth
 from framework.llm.llm import Llm
 from framework.chatbot.chatgpt import ChatGPTBrowserChatbot
-from framework.exceptions import BotRatelimitException, ConcurrentMessageException
+from framework.exceptions import LlmRateLimitException, LlmConcurrentMessageException
 
 
 class ChatGPTWebAdapter(Llm):
@@ -96,7 +96,7 @@ class ChatGPTWebAdapter(Llm):
             if last_response:
                 logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")
         except V1Error as e:
-            if e.code == 2:
+            if e.code == 2 or e.code == 429:
                 current_time = datetime.datetime.now()
                 self.bot.refresh_accessed_at()
                 logger.debug(f"[ChatGPT-Web] accessed at: {str(self.bot.accessed_at)}")
@@ -105,13 +105,13 @@ class ChatGPTWebAdapter(Llm):
                 remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
                 minute = remaining[0]
                 second = remaining[1].seconds
-                raise BotRatelimitException(f"{minute}分{second}秒") from e
+                raise LlmRateLimitException(f"{minute}分{second}秒") from e
             if e.code == 6:
-                raise ConcurrentMessageException() from e
+                raise LlmConcurrentMessageException() from e
             raise e
         except Exception as e:
-            if "Only one message at a time" in str(e):
-                raise ConcurrentMessageException() from e
+            if "one message" in str(e):
+                raise LlmConcurrentMessageException() from e
             raise e
 
     def get_queue_info(self):

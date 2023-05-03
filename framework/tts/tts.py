@@ -1,4 +1,6 @@
 import abc
+import base64
+import json
 from enum import Enum
 from typing import List, Tuple, Dict
 from loguru import logger
@@ -37,7 +39,7 @@ class TTSResponse:
                 self.data_bytes[src_format],
                 audio_format=None,
                 ios_adaptive=True,
-                tencent=True
+                tencent=True,
             )
         except ImportError as e:
             logger.warning("警告：Silk 转码模块无法加载，语音可能无法正常播放，请安装最新的 vc_redist 运行库。")
@@ -51,6 +53,9 @@ class TTSResponse:
             self.data_bytes[to_format] = await self.__to_silk()
 
         return self.data_bytes[to_format]
+
+    async def get_base64(self, to_format: VoiceFormat) -> str:
+        return base64.b64encode(await self.transcode(to_format)).decode('ascii')
 
 
 class EmotionMarkupText:
@@ -94,12 +99,12 @@ class TTSVoice(metaclass=abc.ABCMeta):
         self.full_name = full_name
         self.lang = lang
         self.aliases = aliases
-        
+
     def __eq__(self, other):
         if isinstance(other, TTSVoice):
             return self.engine == other.engine and self.full_name == other.full_name and self.lang == other.lang and self.codename == other.codename and self.aliases == other.aliases
         return False
-    
+
 
 class TTSEngine(metaclass=abc.ABCMeta):
     """语音引擎"""
@@ -117,7 +122,7 @@ class TTSEngine(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def get_supported_styles(self) -> List[str]:
+    def get_supported_styles(self) -> List[str]:
         """
         获取支持的风格
         风格的名称本身应该表达出含义，这样我们交给 LLM 进行标注的时候就不需要另外再介绍，节约 token。
@@ -138,9 +143,9 @@ class TTSEngine(metaclass=abc.ABCMeta):
                 (
                     voice
                     for voice in self.voices
-                    if voice_name in voice.aliases
-                       or voice_name == voice.full_name
-                       or voice_name == voice.codename
+                    if voice_name.lower() == voice.full_name.lower()
+                       or voice_name.lower() == voice.codename.lower()
+                       or voice_name.lower() in [t.lower() for t in voice.aliases]
                 )
             )
         except StopIteration as e:
@@ -159,3 +164,16 @@ class TTSEngine(metaclass=abc.ABCMeta):
     @staticmethod
     def get_engine(name: str):
         return registered_engines[name]
+
+    @staticmethod
+    def parse_emotion_text(text: str) -> EmotionMarkupText:
+        """
+        从文本中解析出情绪标注数据格式
+        :param text: 带有情绪标注的文本
+        :return: EmotionMarkupText
+        """
+        emotion = EmotionMarkupText()
+        parsed = json.loads(text)
+        for item in parsed:
+            emotion.append(item.get('text'), item.get('emotion'))
+        return emotion

@@ -49,15 +49,20 @@ class AccountManager:
 
     async def login_account(self, type_: str, account: CT):
         """登录单个账号"""
-        if await account.check_alive():
-            if type_ not in self.loaded_accounts:
-                self.loaded_accounts[type_] = []
-            account.ok = True
-            self.loaded_accounts[type_].append(account)
-            logger.success(f"[AccountManager] 登录成功: {type_}")
-        else:
+        try:
+            if await account.check_alive():
+                if type_ not in self.loaded_accounts:
+                    self.loaded_accounts[type_] = []
+                account.ok = True
+                self.loaded_accounts[type_].append(account)
+                logger.success(f"[AccountManager] 登录成功: {type_}")
+            else:
+                account.ok = False
+                logger.error(f"[AccountManager] 登录失败: {type_}")
+        except Exception as e:
             account.ok = False
-            logger.error(f"[AccountManager] 登录失败: {type_}")
+            logger.error(f"[AccountManager] 登录失败: {type_} with exception: {e}")
+
 
     async def load_accounts(self, accounts_model: AccountsModel):
         """从配置文件中加载所有账号"""

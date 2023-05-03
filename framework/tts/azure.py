@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 import httpx
 
@@ -6,7 +6,9 @@ import constants
 from config import AzureConfig
 from framework.exceptions import TTSSpeakFailedException
 from framework.tts.tts import TTSEngine, TTSVoice, EmotionMarkupText, TTSResponse, VoiceFormat
+from xml.dom.minidom import getDOMImplementation, Document, Element, Text
 
+impl = getDOMImplementation()
 
 class AzureTTSEngine(TTSEngine):
     client: httpx.AsyncClient
@@ -34,25 +36,42 @@ class AzureTTSEngine(TTSEngine):
             for voice in response.json()
         ]
 
-    async def speak(self, text: EmotionMarkupText, voice: TTSVoice) -> TTSResponse:
-        # Convert text into SSML
-        ssml_text = f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{voice.lang[0]}'> <voice name='{voice.codename}'>"
-        for style, text in text.texts:
-            ssml_text += f"<mstts:express-as style='{style}'>{text}</mstts:express-as>"
-        ssml_text += "</voice></speak>"
+    async def speak(self, text: Union[str, EmotionMarkupText], voice: TTSVoice) -> TTSResponse:
+        ssml_doc: Document = impl.createDocument("http://www.w3.org/2001/10/synthesis", "speak", None)
+        speak_element: Element = ssml_doc.documentElement
+        speak_element.setAttribute("xmlns", "http://www.w3.org/2001/10/synthesis")
+        speak_element.setAttribute("xmlns:mstts", "https://www.w3.org/2001/mstts")
+        speak_element.setAttribute("version", "1.0")
+        speak_element.setAttribute("xml:lang", voice.lang[0])
+        voice_document: Element = ssml_doc.createElement("voice")
+        voice_document.setAttribute("name", voice.codename)
+
+        if isinstance(text, str):
+            voice_text = ssml_doc.createTextNode(text)
+            voice_document.appendChild(voice_text)
+        else:
+            for style, text in text.texts:
+                express_as_document = ssml_doc.createElement("mstts:express-as")
+                express_as_document.setAttribute("style", style)
+                express_as_text = ssml_doc.createTextNode(text)
+                express_as_document.appendChild(express_as_text)
+                voice_document.appendChild(express_as_document)
+
+        speak_element.appendChild(voice_document)
 
         headers = {
             'Content-Type': 'application/ssml+xml',
             'X-Microsoft-OutputFormat': 'riff-24khz-16bit-mono-pcm'
         }
         try:
-            response = await self.client.post(f"{self.base_endpoint}/v1", headers=headers, content=ssml_text)
+            response = await self.client.post(f"{self.base_endpoint}/v1", headers=headers, content=ssml_doc.toxml())
+            print(ssml_doc.toxml())
             response.raise_for_status()
         except Exception as e:
             raise TTSSpeakFailedException() from e
-        return TTSResponse(VoiceFormat.Wav, response.content, str(text))
+        return TTSResponse(VoiceFormat.Wav, await response.aread(), str(text))
 
-    async def get_supported_styles(self) -> List[str]:
+    def get_supported_styles(self) -> List[str]:
         """
         支持的风格: https://learn.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup-voice#speaking-styles-and-roles
         """

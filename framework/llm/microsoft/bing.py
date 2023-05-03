@@ -14,7 +14,8 @@ from loguru import logger
 import constants
 from framework.accounts import account_manager
 from framework.drawing import DrawAI
-from framework.exceptions import BotOperationNotSupportedException
+from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \
+    LLmAuthenticationFailedException, DrawingFailedException
 from framework.llm.microsoft.models import BingCookieAuth
 
 image_pattern = r"!\[.*\]\((.*)\)"
@@ -38,7 +39,7 @@ class BingAdapter(Llm, DrawAI):
         self.bot = EdgeChatbot(cookies=self.cookieData, proxy=constants.proxy)
 
     async def rollback(self):
-        raise BotOperationNotSupportedException()
+        raise LlmOperationNotSupportedException()
 
     async def on_destoryed(self):
         ...
@@ -104,14 +105,12 @@ class BingAdapter(Llm, DrawAI):
             for image in await asyncio.gather(*image_tasks):
                 yield image
         except (asyncio.exceptions.TimeoutError, asyncio.exceptions.CancelledError) as e:
-            raise e
-        except NotAllowedToAccess:
-            yield "出现错误：机器人的 Bing Cookie 可能已过期，或者机器人当前使用的 IP 无法使用 Bing AI。"
-            return
+            raise LlmRequestTimeoutException("bing") from e
+        except NotAllowedToAccess as e:
+            raise LLmAuthenticationFailedException("bing") from e
         except Exception as e:
             if str(e) == 'Redirect failed':
-                yield '画图失败(Redirect failed)：Bing 的画图提示词不支持中文，你可以用英文再试一下。'
-                return
+                raise DrawingFailedException() from e
             raise e
 
     async def text_to_img(self, prompt: str):
@@ -128,7 +127,7 @@ class BingAdapter(Llm, DrawAI):
                 return await asyncio.gather(*tasks)
         except Exception as e:
             if str(e) == 'Redirect failed':
-                raise Exception('画图失败(Redirect failed)：Bing 的画图提示词不支持中文，你可以用英文再试一下。') from e
+                raise DrawingFailedException() from e
             raise e
 
     async def img_to_img(self, init_images: List[GraiaImage], prompt=''):
@@ -143,7 +142,7 @@ class BingAdapter(Llm, DrawAI):
                 logger.debug(f"[Bing AI] 下载完成：{resp.content_type} {url}")
                 return GraiaImage(data_bytes=await resp.read())
 
-    async def preset_ask(self, role: str, text: str):
+    async def preset_ask(self, role: str, prompt: str):
         yield None  # Bing 不使用预设功能
 
     @classmethod

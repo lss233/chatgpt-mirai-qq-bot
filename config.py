@@ -462,11 +462,11 @@ class BaiduCloud(BaseModel):
     """不合规消息自定义返回"""
 
 
-class Preset(BaseModel):
+class Prompt(BaseModel):
     command: str = r"加载预设 (\w+)"
     keywords: dict[str, str] = {}
     loaded_successful: str = "预设加载成功！"
-    scan_dir: str = "./presets"
+    scan_dir: str = "./prompts"
     hide: bool = False
     """是否禁止使用其他人 .预设列表 命令来查看预设"""
 
@@ -547,7 +547,7 @@ class Config(BaseModel):
     trigger: Trigger = Trigger()
     response: Response = Response()
     system: System = System()
-    presets: Preset = Preset()
+    prompts: Prompt = Prompt()
     ratelimit: Ratelimit = Ratelimit()
     baiducloud: BaiduCloud = BaiduCloud()
     vits: VitsConfig = VitsConfig()
@@ -555,27 +555,27 @@ class Config(BaseModel):
     # === External Utilities ===
     sdwebui: Optional[SDWebUIParams] = None
 
-    def scan_presets(self):
-        for keyword, path in self.presets.keywords.items():
+    def scan_prompts(self):
+        for keyword, path in self.prompts.keywords.items():
             if os.path.isfile(path):
                 logger.success(f"检查预设：{keyword} <==> {path} [成功]")
             else:
                 logger.error(f"检查预设：{keyword} <==> {path} [失败：文件不存在]")
-        for root, _, files in os.walk(self.presets.scan_dir, topdown=False):
+        for root, _, files in os.walk(self.prompts.scan_dir, topdown=False):
             for name in files:
-                if not name.endswith(".txt"):
+                if not name.endswith(".yml") and not name.endswith(".yaml"):
                     continue
                 path = os.path.join(root, name)
-                name = name.removesuffix('.txt')
-                if name in self.presets.keywords:
+                name = name.removesuffix('.yml').removesuffix(".yaml")
+                if name in self.prompts.keywords:
                     logger.error(f"注册预设：{name} <==> {path} [失败：关键词已存在]")
                     continue
-                self.presets.keywords[name] = path
+                self.prompts.keywords[name] = path
                 logger.success(f"注册预设：{name} <==> {path} [成功]")
 
     def load_preset(self, keyword):
         try:
-            with open(self.presets.keywords[keyword], "rb") as f:
+            with open(self.prompts.keywords[keyword], "rb") as f:
                 if guessed_str := from_bytes(f.read()).best():
                     return str(guessed_str).replace('<|im_end|>', '').replace('\r', '').split('\n\n')
                 else:
