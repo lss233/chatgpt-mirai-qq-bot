@@ -1,6 +1,7 @@
 from typing import Generator
 
 from framework.accounts import account_manager
+from framework.exceptions import LlmRequestTimeoutException, LlmRequestFailedException
 from framework.llm.llm import Llm
 import httpx
 
@@ -30,16 +31,21 @@ class ChatGLM6BAdapter(Llm):
         self.client = httpx.AsyncClient()
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        response = await self.client.post(
-            self.account.api_endpoint,
-            timeout=self.account.timeout,
-            headers={"Content-Type": "application/json"},
-            json={"prompt": prompt, "history": self.conversation_history}
-        )
-        response.raise_for_status()
-        ret = response.json()
-        self.conversation_history = ret['history'][- self.account.max_turns:]
-        yield ret['response']
+        try:
+            response = await self.client.post(
+                self.account.api_endpoint,
+                timeout=self.account.timeout,
+                headers={"Content-Type": "application/json"},
+                json={"prompt": prompt, "history": self.conversation_history}
+            )
+            response.raise_for_status()
+            ret = response.json()
+            self.conversation_history = ret['history'][- self.account.max_turns:]
+            yield ret['response']
+        except httpx.TimeoutException as e:
+            raise LlmRequestTimeoutException("chatglm-api") from e
+        except httpx.HTTPStatusError as e:
+            raise LlmRequestFailedException("chatglm-api") from e
 
     @classmethod
     def register(cls):

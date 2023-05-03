@@ -25,15 +25,15 @@ class Llm:
     async def on_destoryed(self): ...
     """当会话被重置时，此函数被调用"""
 
-    async def preset_ask(self, role: str, text: str):
+    async def preset_ask(self, role: str, prompt: str):
         """以预设方式进行提问"""
         if role.endswith('bot') or role in {'assistant', 'chatgpt'}:
-            logger.debug(f"[预设] 响应：{text}")
-            yield text
+            logger.debug(f"[预设] 响应：{prompt}")
+            yield prompt
         else:
-            logger.debug(f"[预设] 发送：{text}")
+            logger.debug(f"[预设] 发送：{prompt}")
             item = None
-            async for item in self.ask(text): ...
+            async for item in self.ask(prompt): ...
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 

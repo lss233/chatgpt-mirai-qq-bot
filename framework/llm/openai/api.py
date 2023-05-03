@@ -2,6 +2,7 @@ import ctypes
 import os
 from typing import Generator
 
+import httpx
 import openai
 import tempfile
 from io import BytesIO
@@ -12,9 +13,12 @@ from graia.ariadne.message.element import Image as GraiaImage
 from PIL import Image
 from loguru import logger
 from revChatGPT.V3 import Chatbot as OpenAIChatbot
+from revChatGPT.typings import APIConnectionError
 
+import constants
 from config import OpenAIGPT3Params
 from framework.accounts import account_manager
+from framework.exceptions import LlmRequestTimeoutException, LlmRequestFailedException
 from framework.llm.openai.models import OpenAIAPIKeyAuth
 from framework.llm.llm import Llm
 from framework.drawing import DrawAI
@@ -37,7 +41,7 @@ class ChatGPTAPIAdapter(Llm, DrawAI):
         self.params = params
         self.bot = OpenAIChatbot(
             api_key=self.api_info.api_key,
-            proxy=self.api_info.proxy,
+            proxy=constants.proxy,
             presence_penalty=params.presence_penalty,
             frequency_penalty=params.frequency_penalty,
             top_p=params.top_p,
@@ -75,7 +79,7 @@ class ChatGPTAPIAdapter(Llm, DrawAI):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.api_info = account_manager.pick('openai-api')
         self.bot.api_key = self.api_info.api_key
-        self.bot.proxy = self.api_info.proxy
+        self.bot.proxy = constants.proxy
         self.bot.session.proxies.update(
             {
                 "http": self.bot.proxy,
@@ -98,23 +102,28 @@ class ChatGPTAPIAdapter(Llm, DrawAI):
 
         os.environ['API_URL'] = f'{openai.api_base}/chat/completions'
         full_response = ''
-        async for resp in self.bot.ask_stream_async(prompt=prompt, role=self.hashed_user_id, convo_id=self.session_id):
-            full_response += resp
-            yield full_response
-        logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
-        logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
+        try:
+            async for resp in self.bot.ask_stream_async(prompt=prompt, role=self.hashed_user_id, convo_id=self.session_id):
+                full_response += resp
+                yield full_response
+            logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
+            logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
+        except httpx.TimeoutException as e:
+            raise LlmRequestTimeoutException("chatgpt-api") from e
+        except APIConnectionError as e:
+            raise LlmRequestFailedException("chatgpt-api") from e
 
-    async def preset_ask(self, role: str, text: str):
+    async def preset_ask(self, role: str, prompt: str):
         if role.endswith('bot') or role in {'assistant', 'chatgpt'}:
-            logger.debug(f"[预设] 响应：{text}")
-            yield text
+            logger.debug(f"[预设] 响应：{prompt}")
+            yield prompt
             role = 'assistant'
         if role not in ['assistant', 'user', 'system']:
             raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = []
             self.__conversation_keep_from = 0
-        self.bot.conversation[self.session_id].append({"role": role, "content": text})
+        self.bot.conversation[self.session_id].append({"role": role, "content": prompt})
         self.__conversation_keep_from = len(self.bot.conversation[self.session_id])
 
     async def text_to_img(self, prompt: str):
@@ -149,7 +158,7 @@ class ChatGPTAPIAdapter(Llm, DrawAI):
 
     async def __download_image(self, url) -> GraiaImage:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=self.api_info.proxy) as resp:
+            async with session.get(url, proxy=constants.proxy) as resp:
                 if resp.status == 200:
                     return GraiaImage(data_bytes=await resp.read())
 

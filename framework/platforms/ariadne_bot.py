@@ -199,7 +199,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         if sender.id != config.mirai.manager_qq:
             return await app.send_message(event, "您没有权限执行这个操作")
         constants.config = config.load_config()
-        config.scan_presets()
+        config.scan_prompts()
         await app.send_message(event, "配置文件重新载入完毕！")
         await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
         constants.botManager = BotManager(config)
@@ -286,10 +286,10 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
 @cmd.command(".预设列表")
 async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
     try:
-        if config.presets.hide and sender.id != config.mirai.manager_qq:
+        if config.prompts.hide and sender.id != config.mirai.manager_qq:
             return await app.send_message(event, "您没有权限执行这个操作")
         nodes = []
-        for keyword, path in config.presets.keywords.items():
+        for keyword, path in config.prompts.keywords.items():
             try:
                 with open(path, 'rb') as f:
                     guessed_str = from_bytes(f.read()).best()

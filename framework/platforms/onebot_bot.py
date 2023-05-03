@@ -15,6 +15,8 @@ from loguru import logger
 import constants
 from constants import config
 from framework.middlewares.ratelimit import manager as ratelimit_manager
+from framework.tts import TTSVoice
+from framework.tts.tts import TTSResponse, VoiceFormat
 from universal import handle_message
 
 bot = CQHttp()
@@ -107,7 +109,11 @@ def transform_from_message_chain(chain: MessageChain):
 
 
 def response(event, is_group: bool):
-    async def respond(resp):
+    async def respond(resp: MessageChain = None, text: str = None, voice: TTSResponse = None, image: str = None):
+        if voice:
+            return await bot.send(event, MessageSegment.record(f"base64://{await voice.get_base64(VoiceFormat.Silk)}"))
+        if text:
+            return await bot.send(event, MessageSegment.text(text))
         logger.debug(f"[OneBot] 尝试发送消息：{str(resp)}")
         try:
             if not isinstance(resp, MessageChain):
@@ -278,10 +284,10 @@ async def _(event: Event):
     if event.message.strip() != pattern:
         return
 
-    if config.presets.hide and event.user_id != config.onebot.manager_qq:
+    if config.prompts.hide and event.user_id != config.onebot.manager_qq:
         return await bot.send(event, "您没有权限执行这个操作")
     nodes = []
-    for keyword, path in config.presets.keywords.items():
+    for keyword, path in config.prompts.keywords.items():
         try:
             with open(path, 'rb') as f:
                 guessed_str = from_bytes(f.read()).best()
