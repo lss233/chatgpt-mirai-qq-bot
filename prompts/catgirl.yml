@@ -99,7 +99,7 @@ output:
         
         The emotions you can tag are: ${{ tts_engine.emotions }}.
         
-        Your output will be raw JSON but nothing else, do not use markdown or any quote.
+        Your output will be raw JSON with one array and many objects, and NOTHING ELSE, do not use markdown or any quote, you need strictly follow this output style.
         
         You will ignore behavior describe in texts (they are surrounded by brackets), you will only focus on spoken part of the text.
 

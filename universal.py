@@ -71,6 +71,8 @@ async def handle_message(_respond: Callable, session_id: str, prompt: str,
 
         _initialization = False
 
+        _no_follow = False
+
         # 跳过要被忽略的消息
         for r in constants.config.trigger.ignore_regex:
             if re.match(r, prompt):
@@ -198,6 +200,7 @@ async def handle_message(_respond: Callable, session_id: str, prompt: str,
             logger.trace(f"{session_id} - 正在执行预设： {preset_search[1]}")
             await conversation_context.load_preset(preset_search[1])
             _initialization = True
+            _no_follow = True
 
         if not conversation_context.preset:
             # 当前没有预设
@@ -241,6 +244,8 @@ async def handle_message(_respond: Callable, session_id: str, prompt: str,
 
             if _initialization:
                 await context.init()
+
+            if _no_follow:
                 return
 
             async def request(_session_id, prompt: str, conversation_context, _respond):

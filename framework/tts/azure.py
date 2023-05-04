@@ -1,4 +1,5 @@
 from typing import List, Union
+from xml.dom.minidom import getDOMImplementation, Document, Element
 
 import httpx
 
@@ -6,7 +7,6 @@ import constants
 from config import AzureConfig
 from framework.exceptions import TTSSpeakFailedException
 from framework.tts.tts import TTSEngine, TTSVoice, EmotionMarkupText, TTSResponse, VoiceFormat
-from xml.dom.minidom import getDOMImplementation, Document, Element, Text
 
 impl = getDOMImplementation()
 
@@ -65,11 +65,11 @@ class AzureTTSEngine(TTSEngine):
         }
         try:
             response = await self.client.post(f"{self.base_endpoint}/v1", headers=headers, content=ssml_doc.toxml())
-            print(ssml_doc.toxml())
             response.raise_for_status()
+
+            return TTSResponse(VoiceFormat.Wav, await response.aread(), str(text))
         except Exception as e:
             raise TTSSpeakFailedException() from e
-        return TTSResponse(VoiceFormat.Wav, await response.aread(), str(text))
 
     def get_supported_styles(self) -> List[str]:
         """
