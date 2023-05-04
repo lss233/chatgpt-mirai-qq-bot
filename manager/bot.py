@@ -481,4 +481,6 @@ class BotManager:
             bot_info += f"* {LlmName.PoeSage.value} : POE Sage 模型\n"
             bot_info += f"* {LlmName.PoeClaude.value} : POE Claude 模型\n"
             bot_info += f"* {LlmName.PoeChatGPT.value} : POE ChatGPT 模型\n"
+        if len(self.bots['slack-accesstoken']) > 0:
+            bot_info += f"* {LlmName.SlackClaude.value} : Slack Claude 模型\n"
         return bot_info
