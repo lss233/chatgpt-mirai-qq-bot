@@ -21,14 +21,14 @@ class TTSResponse:
     """
     TTS引擎响应内容
     """
-    data_bytes: Dict[VoiceFormat, bytes] = {}
+    data_bytes: Dict[VoiceFormat, bytes]
     """语音的 格式:数据"""
 
     text: str
     """原文"""
 
     def __init__(self, format_: VoiceFormat, data_bytes: bytes, text: str):
-        self.data_bytes[format_] = data_bytes
+        self.data_bytes = {format_: data_bytes}
         self.text = text
 
     async def __to_silk(self) -> bytes:
@@ -61,9 +61,10 @@ class TTSResponse:
 class EmotionMarkupText:
     """情绪标注数据格式"""
 
-    texts: List[Tuple[str, str]] = []
+    texts: List[Tuple[str, str]]
 
     def __init__(self, begin: List[Tuple[str, str]] = None):
+        self.texts = []
         if begin:
             self.texts = begin
 
