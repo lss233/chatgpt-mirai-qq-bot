@@ -31,6 +31,8 @@ class ActionBlockBaseModel(BaseModel):
     name: Optional[str]
     output: Optional[str]
     when: Optional[str]
+    fail_continue: bool = True
+    retry: int = 3
 
 
 class PromptFlowBaseModel(BaseModel):
@@ -108,22 +110,28 @@ async def execute_action_block(action_flow: List[ActionBlockBaseModel], context:
                     args[key] = variable
                 else:
                     args[key] = replace_variables(value, context)
+            elif params[key].annotation != inspect.Parameter.empty and isinstance(value, dict):
+                args[key] = params[key].annotation(**value)
             else:
                 args[key] = value
 
-        try:
-            result = action_callable(**args)
-            if result and inspect.iscoroutine(result):
-                result = await result
+        for i in range(block.retry + 1):
+            try:
+                result = action_callable(**args)
+                if result and inspect.iscoroutine(result):
+                    result = await result
 
-            if block.name:
-                context[block.name] = result
+                if block.name:
+                    context[block.name] = result
 
-            if block.output:
-                set_variable_value(context, block.output, result)
+                if block.output:
+                    set_variable_value(context, block.output, result)
 
-            logger.debug(
-                f"[Prompt execution] completed \naction: {block.action}, \nname: {block.name}, \nresult: {result}, \ncontext: {context}")
-        except Exception as e:
-            logger.exception(e)
-            logger.error(f"[Prompt execution] failed\naction: {block.action}, \nname:{block.name}")
+                logger.debug(
+                    f"[Prompt execution] completed \naction: {block.action}, \nname: {block.name}, \nresult: {result}")
+                break
+            except Exception as e:
+                logger.exception(e)
+                logger.error(f"[Prompt execution] failed\naction: {block.action}, \nname:{block.name}")
+                if i == block.retry and not block.fail_continue:
+                    raise e
