@@ -111,15 +111,19 @@ async def execute_action_block(action_flow: List[ActionBlockBaseModel], context:
             else:
                 args[key] = value
 
-        result = action_callable(**args)
-        if result and inspect.iscoroutine(result):
-            result = await result
+        try:
+            result = action_callable(**args)
+            if result and inspect.iscoroutine(result):
+                result = await result
 
-        if block.name:
-            context[block.name] = result
+            if block.name:
+                context[block.name] = result
 
-        if block.output:
-            set_variable_value(context, block.output, result)
+            if block.output:
+                set_variable_value(context, block.output, result)
 
-        logger.debug(
-            f"[Prompt execution] completed \naction: {block.action}, \nname: {block.name}, \nresult: {result}, \ncontext: {context}")
+            logger.debug(
+                f"[Prompt execution] completed \naction: {block.action}, \nname: {block.name}, \nresult: {result}, \ncontext: {context}")
+        except Exception as e:
+            logger.exception(e)
+            logger.error(f"[Prompt execution] failed\naction: {block.action}, \nname:{block.name}")
