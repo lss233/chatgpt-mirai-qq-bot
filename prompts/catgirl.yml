@@ -70,7 +70,7 @@ output:
     name: affinity_extraction
     args:
       text: ${{ output.message }}
-      pattern: ^(?P<true_name>.+)♡\[(?P<from_value>\d+)-(?:>|&gt;)(?P<to_value>\d+)\]$
+      pattern: ^(?P<true_name>.+)♡\[(?P<from_value>-?\d+)-(?:>|&gt;)(?P<to_value>-?\d+)\]$
   - action: system/user_message
     # 判断匹配成功，并且好感值降低
     when: "len(affinity_extraction) >= 1 and int(affinity_extraction[0]['from_value']) > int(affinity_extraction[0]['to_value'])"
