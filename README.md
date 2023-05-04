@@ -21,7 +21,7 @@
 
 ***
 
-* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [QQ 群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=C7raxrDaH0AmsKkUBrwEU5gZG3Q6GZuY&authKey=ZdEfJ%2FHlhpJixuDhg6uo8O6O6075JgE5AX0PJU25SebElsgqd3GSP5ZHtSprnLdm&noverify=0&group_code=533109074) 。  
+* [交流群（Discord）](https://discord.gg/cc3S2R6RQV)会发布最新的项目动态、问题答疑和交流 [QQ 群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Ibiu6EmXof30Fa7MJ5j8nJFwaUGTf5bM&authKey=YKx5a%2BK5qnWkk5VlsxxDfYl0nCrKSekQm%2FoLQVqr%2FcO%2FQY2S6N24XdI23XugBrF0&noverify=0&group_code=799737883) 。  
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
