@@ -73,7 +73,7 @@ class AsyncPromptExecutionContext:
                         "finished": False
                     }
                     await execute_action_block(self.flow.output, self.variables, self.actions)
-                    await self.actions["system/user_message"](self.variables["output"]["message"])
+                    await self.actions["system/user_message"](text=self.variables["output"]["message"])
 
             merged = await merger.result()
             self.variables["output"] = {
@@ -81,7 +81,7 @@ class AsyncPromptExecutionContext:
                 "finished": True
             }
             await execute_action_block(self.flow.output, self.variables, self.actions)
-            await self.actions["system/user_message"](self.variables["output"]["message"])
+            await self.actions["system/user_message"](text=self.variables["output"]["message"])
 
     async def instant_ask(self, supported_llms, prompt):
         logger.info(f"[Instant ask] session_id={self.conversation.session_id}, prompt={prompt}")

@@ -1,3 +1,5 @@
+import functools
+
 import asyncio
 import re
 from typing import Callable, Optional
@@ -17,10 +19,12 @@ from framework.conversation import ConversationHandler, ConversationContext
 from framework.exceptions import PresetNotFoundException, LlmRateLimitException, LlmConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, LlmOperationNotSupportedException, CommandRefusedException, \
     DrawingFailedException
+from framework.messages import ImageElement
 from framework.middlewares.baiducloud import MiddlewareBaiduCloud
 from framework.middlewares.concurrentlock import MiddlewareConcurrentLock
 from framework.middlewares.ratelimit import MiddlewareRatelimit
 from framework.middlewares.timeout import MiddlewareTimeout
+from framework.tts.tts import TTSResponse
 
 middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
 
@@ -47,8 +51,11 @@ def __wrap_respond(next_, middleware):
     return call
 
 
-class IhaveNoIdeaWhatThisShouldBe:
-    pass
+async def reply(bind: Callable, chain: MessageChain = None, text: str = None, voice: TTSResponse = None, image: ImageElement = None):
+    """
+    Trick: 将方法重定向
+    """
+    await bind(chain, text, voice, image)
 
 
 async def handle_message(_respond: Callable, session_id: str, prompt: str,
@@ -240,7 +247,7 @@ async def handle_message(_respond: Callable, session_id: str, prompt: str,
 
         async with conversation_context as context:
             context.variables['user']['nickname'] = nickname
-            context.actions['system/user_message'] = _respond
+            context.actions['system/user_message'] = functools.partial(reply, bind=_respond)
 
             if _initialization:
                 await context.init()
