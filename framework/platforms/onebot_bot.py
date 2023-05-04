@@ -1,9 +1,9 @@
+import functools
 import re
 import time
-from base64 import b64decode, b64encode
 from typing import Union, Optional
 
-import aiohttp
+import aiocqhttp
 from aiocqhttp import CQHttp, Event, MessageSegment
 from charset_normalizer import from_bytes
 from graia.ariadne.message.chain import MessageChain
@@ -14,9 +14,10 @@ from loguru import logger
 
 import constants
 from constants import config
+from framework.messages import ImageElement
 from framework.middlewares.ratelimit import manager as ratelimit_manager
-from framework.tts import TTSVoice
 from framework.tts.tts import TTSResponse, VoiceFormat
+from framework.utils.text_to_img import to_image
 from universal import handle_message
 
 bot = CQHttp()
@@ -39,28 +40,6 @@ class MentionMe:
         raise ExecutionStop
 
 
-class Image(GraiaImage):
-    async def get_bytes(self) -> bytes:
-        """尝试获取消息元素的 bytes, 注意, 你无法获取并不包含 url 且不包含 base64 属性的本元素的 bytes.
-
-        Raises:
-            ValueError: 你尝试获取并不包含 url 属性的本元素的 bytes.
-
-        Returns:
-            bytes: 元素原始数据
-        """
-        if self.base64:
-            return b64decode(self.base64)
-        if not self.url:
-            raise ValueError("you should offer a url.")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.url) as response:
-                response.raise_for_status()
-                data = await response.read()
-                self.base64 = b64encode(data).decode("ascii")
-                return data
-
-
 # TODO: use MessageSegment
 # https://github.com/nonebot/aiocqhttp/blob/master/docs/common-topics.md
 def transform_message_chain(text: str) -> MessageChain:
@@ -69,7 +48,7 @@ def transform_message_chain(text: str) -> MessageChain:
 
     message_classes = {
         "text": Plain,
-        "image": Image,
+        "image": GraiaImage,
         "at": At,
         # Add more message classes here
     }
@@ -99,7 +78,7 @@ def transform_message_chain(text: str) -> MessageChain:
 def transform_from_message_chain(chain: MessageChain):
     result = ''
     for elem in chain:
-        if isinstance(elem, (Image, GraiaImage)):
+        if isinstance(elem, (ImageElement, GraiaImage)):
             result = result + MessageSegment.image(f"base64://{elem.base64}")
         elif isinstance(elem, Plain):
             result = result + MessageSegment.text(str(elem))
@@ -108,12 +87,43 @@ def transform_from_message_chain(chain: MessageChain):
     return result
 
 
-def response(event, is_group: bool):
-    async def respond(resp: MessageChain = None, text: str = None, voice: TTSResponse = None, image: str = None):
-        if voice:
-            return await bot.send(event, MessageSegment.record(f"base64://{await voice.get_base64(VoiceFormat.Silk)}"))
-        if text:
-            return await bot.send(event, MessageSegment.text(text))
+async def safe_send(event, resp: MessageChain, is_group):
+    resp = transform_from_message_chain(resp)
+    try:
+        message = resp
+        if config.response.quote:
+            message = MessageSegment.reply(event.message_id) + message
+        return await bot.send(event, message)
+    except:
+        logger.error("文本消息发送失败，正在尝试使用转发消息发送……")
+        try:
+            return await bot.call_action(
+                "send_group_forward_msg" if is_group else "send_private_forward_msg",
+                group_id=event.group_id,
+                messages=[
+                    MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
+                ]
+            )
+        except:
+            logger.error("转发消息发送失败，正在尝试图片发送……")
+            try:
+                return await bot.send(event, MessageSegment.image(f"base64://{(await to_image(str(resp))).base64}"))
+            except Exception as e:
+                return await bot.send(event, "消息发送失败，可能是遇到风控。" + str(e))
+
+
+async def respond(event: aiocqhttp.Event, is_group: bool, resp: MessageChain = None, text: str = None,
+                  voice: TTSResponse = None,
+                  image: ImageElement = None):
+    message_ids = {}
+    if voice:
+        message_ids["voice"] = await bot.send(event, MessageSegment.record(
+            f"base64://{await voice.get_base64(VoiceFormat.Silk)}"))
+    if text:
+        message_ids["text"] = await safe_send(event, MessageChain([Plain(text)]), is_group)
+    if image:
+        message_ids["image"] = await safe_send(event, MessageChain([image]), is_group)
+    if resp:
         logger.debug(f"[OneBot] 尝试发送消息：{str(resp)}")
         try:
             if not isinstance(resp, MessageChain):
@@ -133,8 +143,6 @@ def response(event, is_group: bool):
                 ]
             )
 
-    return respond
-
 
 FriendTrigger = DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)
 
@@ -146,7 +154,7 @@ async def _(event: Event):
     chain = transform_message_chain(event.message)
     try:
         msg = await FriendTrigger(chain, None)
-    except:
+    except ExecutionStop:
         logger.debug(f"丢弃私聊消息：{event.message}（原因：不符合触发前缀）")
         return
 
@@ -154,7 +162,7 @@ async def _(event: Event):
 
     try:
         await handle_message(
-            response(event, False),
+            functools.partial(respond, event, False),
             f"friend-{event.user_id}",
             msg.display,
             chain,
@@ -179,14 +187,14 @@ async def _(event: Event):
     try:
         for it in GroupTrigger:
             chain = await it(chain, event)
-    except:
+    except ExecutionStop:
         logger.debug(f"丢弃群聊消息：{event.message}（原因：不符合触发前缀）")
         return
 
     logger.debug(f"群聊消息：{event.message}")
 
     await handle_message(
-        response(event, True),
+        functools.partial(respond, event, True),
         f"group-{event.group_id}",
         chain.display,
         is_manager=event.user_id == config.onebot.manager_qq,
