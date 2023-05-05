@@ -8,11 +8,10 @@ from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain, Image
 from loguru import logger
 
-from universal import handle_message
+from framework.universal import handle_message
 
 import constants
 from framework.accounts import account_manager
-from config import Config
 import asyncio
 
 if __name__ == '__main__':

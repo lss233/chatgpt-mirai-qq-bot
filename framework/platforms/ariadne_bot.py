@@ -27,7 +27,7 @@ import constants
 from constants import config, botManager
 from manager.bot import BotManager
 from framework.middlewares.ratelimit import manager as ratelimit_manager
-from universal import handle_message
+from framework.universal import handle_message
 from framework.utils.text_to_img import to_image
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/

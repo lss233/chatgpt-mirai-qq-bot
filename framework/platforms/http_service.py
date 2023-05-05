@@ -10,7 +10,7 @@ from loguru import logger
 from quart import Quart, request
 
 from constants import config, BotPlatform
-from universal import handle_message
+from framework.universal import handle_message
 
 app = Quart(__name__)
 

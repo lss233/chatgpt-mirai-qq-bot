@@ -1,15 +1,17 @@
-from typing import Callable, Optional
+from typing import Callable
 
-from framework.conversation import ConversationContext
+from framework.request import Response, Request
 
 
 class Middleware:
-    async def handle_request(self, session_id: str, prompt: str, respond: Callable,
-                             conversation_context: Optional[ConversationContext], action: Callable):
-        await action(session_id, prompt, conversation_context, respond)
+    async def handle_request(self, request: Request, response: Response, _next: Callable):
+        pass
 
-    async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
-        await action(session_id, prompt, rendered, respond)
+    async def handle_respond(self, request: Request, response: Response, _next: Callable):
+        pass
 
-    async def on_respond(self, session_id: str, prompt: str, rendered: str): ...
-    async def handle_respond_completed(self, session_id: str, prompt: str, respond: Callable): ...
+    async def on_respond(self, *args, **kwargs):
+        pass
+
+    async def handle_respond_completed(self, *args, **kwargs):
+        pass

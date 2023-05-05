@@ -9,7 +9,7 @@ from telegram.request import HTTPXRequest
 from framework.middlewares.ratelimit import manager as ratelimit_manager
 
 from constants import config, BotPlatform
-from universal import handle_message
+from framework.universal import handle_message
 
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
