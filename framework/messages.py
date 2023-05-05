@@ -12,9 +12,7 @@ class ImageElement(GraiaImage):
         super().__init__(**kwargs)
 
     def __str__(self):
-        if self.alt:
-            return f"[图: {self.alt}]"
-        return super().__str__()
+        return f"[图: {self.alt}]" if self.alt else super().__str__()
 
     async def get_bytes(self) -> bytes:
         """尝试获取消息元素的 bytes, 注意, 你无法获取并不包含 url 且不包含 base64 属性的本元素的 bytes.
