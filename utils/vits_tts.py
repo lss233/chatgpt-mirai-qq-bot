@@ -1,7 +1,7 @@
 import regex as re
 from loguru import logger
 from constants import config
-from aiohttp import ClientSession, ClientTimeout
+from aiohttp import ClientSession, ClientTimeout, FormData
 
 __all__ = ['VitsAPI']
 
@@ -21,14 +21,15 @@ class VitsAPI:
         self.initialized = True
 
     def check_id_exists(self, json_list, given_id):
-        for item in json_list:
-            for key, value in item.items():
-                if str(given_id) in [key, value]:
-                    return key, value
+        if json_list["status"] == "success":
+            id = json_list["id"]
+            name = json_list["name"]
+            if str(given_id) == str(id):
+                return id, name
         return None, None
 
     async def set_id(self, new_id):
-        json_array = await self.get_json_array()
+        json_array = await self.get_json_data(new_id)
         id_found, voice_name = self.check_id_exists(json_array, new_id)
 
         if not voice_name:
@@ -36,6 +37,22 @@ class VitsAPI:
 
         self.id = id_found
         return voice_name
+
+    async def get_json_data(self, new_id):
+        url = f"{config.vits.api_url}/check"
+
+        try:
+            async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
+                form_data = FormData()
+                form_data.add_field("model", "vits")
+                form_data.add_field("id", new_id)
+                async with session.post(url=url, data=form_data) as res:
+                    json_array = await res.json()
+                    return json_array
+
+        except Exception as e:
+            logger.error(f"获取语音音色列表失败: {str(e)}")
+            raise Exception("获取语音音色列表失败，请检查网络连接和API设置")
 
     async def get_json_array(self):
         url = f"{config.vits.api_url}/speakers"
@@ -51,8 +68,6 @@ class VitsAPI:
             raise Exception("获取语音音色列表失败，请检查网络连接和API设置")
 
     async def voice_speakers_check(self, new_id=None):
-        json_array = await self.get_json_array()
-
         try:
             if new_id is not None:
                 integer_number = int(new_id)
@@ -60,7 +75,9 @@ class VitsAPI:
                 integer_number = int(config.text_to_speech.default)
             else:
                 raise ValueError("默认语音音色未设置，请检查配置文件")
-            voice_name = self.check_id_exists(json_array, integer_number)
+
+            json_data = await self.get_json_data(integer_number)
+            _, voice_name = self.check_id_exists(json_data, integer_number)
         except ValueError:
             logger.error("vits引擎中音色只能为纯数字")
             return None
