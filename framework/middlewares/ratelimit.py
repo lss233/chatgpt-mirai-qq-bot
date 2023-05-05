@@ -3,6 +3,7 @@ from typing import Callable, Optional
 
 from constants import config
 from framework.conversation import ConversationContext
+from framework.request import Request, Response
 from manager.ratelimit import RateLimitManager
 from framework.middlewares.middleware import Middleware
 
@@ -13,14 +14,13 @@ class MiddlewareRatelimit(Middleware):
     def __init__(self):
         ...
 
-    async def handle_request(self, session_id: str, prompt: str, respond: Callable,
-                             conversation_context: Optional[ConversationContext], action: Callable):
-        _id = session_id.split('-', 1)[1] if '-' in session_id else session_id
-        rate_usage = manager.check_exceed('好友' if session_id.startswith("friend-") else '群组', _id)
+    async def handle_request(self, request: Request, response: Response, _next: Callable):
+        _id = request.session_id.split('-', 1)[1] if '-' in request.session_id else request.session_id
+        rate_usage = manager.check_exceed('好友' if request.session_id.startswith("friend-") else '群组', _id)
         if rate_usage >= 1:
-            await respond(config.ratelimit.exceed)
+            await response.send(text=config.ratelimit.exceed)
             return
-        await action(session_id, prompt, conversation_context, respond)
+        await _next(request, response)
 
     async def handle_respond_completed(self, session_id: str, prompt: str, respond: Callable):
         key = '好友' if session_id.startswith("friend-") else '群组'

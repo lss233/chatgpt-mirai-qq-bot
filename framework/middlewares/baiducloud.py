@@ -2,11 +2,13 @@ import os
 import json
 import time
 import aiohttp
+from graia.ariadne.message import MessageChain
 from loguru import logger
 from config import Config
 from typing import Callable
-from graia.ariadne.message.element import Image
+from graia.ariadne.message.element import Image, Plain
 from framework.middlewares.middleware import Middleware
+from framework.request import Request, Response
 
 config = Config.load_config()
 
@@ -82,43 +84,38 @@ class MiddlewareBaiduCloud(Middleware):
     def __init__(self):
         self.baidu_cloud = BaiduCloud()
 
-    async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
+    async def handle_respond(self, request: Request, response: Response, _next: Callable):
         # 未审核消息路径
         if not config.baiducloud.check:
-            return await action(session_id, prompt, rendered, respond)
-        # 不处理图片信息
-        if isinstance(rendered, Image):
-            return await action(session_id, prompt, rendered, respond)
-
-        should_pass = False
+            return await _next(request, response)
+        # 不处理没有文字的信息
+        if not response.body or not response.body.has(Plain) or not str(response.body):
+            return await _next(request, response)
 
         try:
             if not self.baidu_cloud.access_token:
                 logger.debug("[百度云文本审核] 正在获取access_token，请稍等")
                 self.baidu_cloud.access_token = await self.baidu_cloud.get_access_token()
 
-            response_dict = await self.baidu_cloud.get_conclusion(rendered)
+            response_dict = await self.baidu_cloud.get_conclusion(str(response.body))
 
             # 处理百度云审核结果
             conclusion = response_dict["conclusion"]
             if conclusion in "合规":
                 logger.success(f"[百度云文本审核] 判定结果：{conclusion}")
-                should_pass = True
             else:
                 msg = response_dict['data'][0]['msg']
                 logger.error(f"[百度云文本审核] 判定结果：{conclusion}")
-                conclusion = f"{config.baiducloud.prompt_message}\n原因：{msg}"
-                return await action(session_id, prompt, conclusion, respond)
+                response.body = MessageChain([Plain(f"{config.baiducloud.prompt_message}\n原因：{msg}")])
+                return await _next(request, response)
 
         except aiohttp.ClientError as e:
             logger.error(f"HTTP error occurred: {e}")
 
-            await respond("[百度云文本审核] 判定出错\n以下是原消息：")
-            should_pass = True
+            await response.send(text="[百度云文本审核] 判定出错\n以下是原消息：")
 
         except json.JSONDecodeError as e:
             logger.error(f"[百度云文本审核] JSON decode error occurred: {e}")
         except StopIteration as e:
             logger.error(f"[百度云文本审核] StopIteration exception occurred: {e}")
-        if should_pass:
-            return await action(session_id, prompt, rendered, respond)
+        return await _next(request, response)

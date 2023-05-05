@@ -7,7 +7,7 @@ from discord.ext import commands
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
 
-from universal import handle_message
+from framework.universal import handle_message
 
 sys.path.append(os.getcwd())
 

@@ -16,9 +16,10 @@ import constants
 from constants import config
 from framework.messages import ImageElement
 from framework.middlewares.ratelimit import manager as ratelimit_manager
+from framework.request import Request, Response
 from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.utils.text_to_img import to_image
-from universal import handle_message
+from framework.universal import handle_message
 
 bot = CQHttp()
 
@@ -160,16 +161,20 @@ async def _(event: Event):
 
     logger.debug(f"私聊消息：{event.message}")
 
+    request = Request()
+    request.user_id = event.user_id
+    request.group_id = event.group_id
+    request.session_id = f"friend-{event.user_id}"
+    request.message = msg
+    request.platform = constants.BotPlatform.Onebot
+    request.is_manager = event.user_id == config.onebot.manager_qq
+    request.nickname = event.sender.get("nickname", "好友"),
+
+    response = Response()
+    response.send = functools.partial(respond, event, False)
+
     try:
-        await handle_message(
-            functools.partial(respond, event, False),
-            f"friend-{event.user_id}",
-            msg.display,
-            chain,
-            is_manager=event.user_id == config.onebot.manager_qq,
-            nickname=event.sender.get("nickname", "好友"),
-            request_from=constants.BotPlatform.Onebot
-        )
+        await handle_message(request, response)
     except Exception as e:
         logger.exception(e)
 
@@ -193,14 +198,22 @@ async def _(event: Event):
 
     logger.debug(f"群聊消息：{event.message}")
 
-    await handle_message(
-        functools.partial(respond, event, True),
-        f"group-{event.group_id}",
-        chain.display,
-        is_manager=event.user_id == config.onebot.manager_qq,
-        nickname=event.sender.get("nickname", "群友"),
-        request_from=constants.BotPlatform.Onebot
-    )
+    request = Request()
+    request.user_id = event.user_id
+    request.group_id = event.group_id
+    request.session_id = f"group-{event.group_id}"
+    request.message = chain
+    request.platform = constants.BotPlatform.Onebot
+    request.is_manager = event.user_id == config.onebot.manager_qq
+    request.nickname = event.sender.get("nickname", "群友")
+
+    response = Response()
+    response.send = functools.partial(respond, event, False)
+
+    try:
+        await handle_message(request, response)
+    except Exception as e:
+        logger.exception(e)
 
 
 @bot.on_message()
