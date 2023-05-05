@@ -21,7 +21,7 @@ from wechatpy.work import parse_message, create_reply
 
 import constants
 from constants import config
-from universal import handle_message
+from framework.universal import handle_message
 
 CorpId = config.wecom.corp_id
 AgentId = config.wecom.agent_id

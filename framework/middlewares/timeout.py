@@ -17,11 +17,11 @@ class MiddlewareTimeout(Middleware):
         ...
 
     async def handle_request(self, session_id: str, prompt: str, respond: Callable,
-                             conversation_context: Optional[ConversationContext], action: Callable):
+                             conversation_context: Optional[ConversationContext], next_: Callable):
         if session_id in self.timeout_task:
             self.timeout_task[session_id].cancel()
         self.timeout_task[session_id] = asyncio.create_task(self.create_timeout_task(respond, session_id))
-        coro_task = asyncio.create_task(action(session_id, prompt, conversation_context, respond))
+        coro_task = asyncio.create_task(next_(session_id, prompt, conversation_context, respond))
         self.request_task[session_id] = coro_task
         try:
             await asyncio.wait_for(coro_task, config.response.max_timeout)
@@ -39,13 +39,13 @@ class MiddlewareTimeout(Middleware):
             del self.timeout_task[session_id]
             logger.debug("[Timeout] 取消计时……")
 
-    async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, action: Callable):
+    async def handle_respond(self, session_id: str, prompt: str, rendered: str, respond: Callable, next_: Callable):
         if rendered and session_id in self.timeout_task:
             self.timeout_task[session_id].cancel()
             del self.timeout_task[session_id]
             logger.debug("[Timeout] 取消计时……")
 
-        await action(session_id, prompt, rendered, respond)
+        await next_(session_id, prompt, rendered, respond)
 
         if not self.request_task[session_id].done():
             # Create the task again
