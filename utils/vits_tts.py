@@ -23,8 +23,8 @@ class VitsAPI:
     def check_id_exists(self, json_list, given_id):
         if json_list["status"] == "success":
             id = json_list["id"]
-            name = json_list["name"]
             if str(given_id) == str(id):
+                name = json_list["name"]
                 return id, name
         return None, None
 
@@ -47,9 +47,7 @@ class VitsAPI:
                 form_data.add_field("model", "vits")
                 form_data.add_field("id", new_id)
                 async with session.post(url=url, data=form_data) as res:
-                    json_array = await res.json()
-                    return json_array
-
+                    return await res.json()
         except Exception as e:
             logger.error(f"获取语音音色列表失败: {str(e)}")
             raise Exception("获取语音音色列表失败，请检查网络连接和API设置")
