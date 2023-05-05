@@ -73,9 +73,6 @@ class PoeAdapter(Llm):
     async def on_destoryed(self):
         """当会话被重置时，此函数被调用"""
         self.client.send_chat_break(self.bot_name.value)
-        if self.custom_bot:
-            # TODO: delete the bot
-            pass
 
     async def preset_ask(self, role: str, prompt: str):
         if role.endswith('bot') or role in {'assistant', 'poe'}:
