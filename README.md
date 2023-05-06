@@ -84,7 +84,7 @@
 它会为你安装 Docker、 Docker Compose 和编写配置文件。  
 
 ```bash
-bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665768b1bdcbed837fd/raw/chatgpt-mirai-installer-154-16RC3.sh)"
+bash -c "$(wget -O- https://gist.githubusercontent.com/lss233/2fdd75be3f0724739368d0dcd9d1367d/raw/62a790da4a391af096074b3355c2c2b7ecab3c28/chatgpt-mirai-installer-gocqhttp.sh)"
 ```
 
 </details>
@@ -108,22 +108,19 @@ bash -c "$(curl -fsSL https://gist.githubusercontent.com/lss233/54f0f794f2157665
 # 修改 /path/to/config.cfg 为你 config.cfg 的位置
 # XPRA_PASSWORD=123456 中的 123456 是你的 Xpra 密码，建议修改
 docker run --name mirai-chatgpt-bot \
-    -e XPRA_PASSWORD=123456 \
     -v /path/to/config.cfg:/app/config.cfg \
     --network host \
     lss233/chatgpt-mirai-qq-bot:browser-version
 ```
 
-3. 启动后，在浏览器访问 `http://你的服务器IP:14500` 可以访问到登录 ChatGPT 的浏览器页面  
-
 </details>
 
 <details>
-    <summary>Windows: 快速部署包 (自带 Mirai，新人推荐）</summary>
+    <summary>Windows: 快速部署包 (自带 Mirai/go-cqhttp，新人推荐）</summary>
 
 我们为 Windows 用户制作了一个快速启动包，可以在 [Release](https://github.com/lss233/chatgpt-mirai-qq-bot/releases) 中找到。    
 
-文件名为：`quickstart-windows-amd64.zip`  或者 `Windows快速部署包.zip`
+文件名为：`quickstart-windows-go-cqhttp-amd64.zip`（推荐） 或者 `quickstart-windows-mirai-amd64.zip`
 
 </details>
 

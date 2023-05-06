@@ -1,18 +1,14 @@
-name: Windows Quickstart Dev (Mirai)
+name: Windows Quickstart (go-cqhttp)
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - 'browser-version-dev'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    tags:
+      - '**'
 
 jobs:
   build:
-    name: Quickstart
+    name: Quickstart (GO-CQHTTP)
     runs-on: Windows-latest
 
     steps:
@@ -24,30 +20,12 @@ jobs:
         mkdir C:/tmp_files
         echo "Creating folders..."
         cd C:/generated_files
-        mkdir mirai
+        echo "Downloading go-cqhttp..."
+        mkdir go-cqhttp
         mkdir chatgpt
         mkdir ffmpeg
-        mkdir mirai/plugins
-        echo "Downloading JRE..."
-        Invoke-WebRequest -URI https://download.bell-sw.com/java/17.0.6+10/bellsoft-jre17.0.6+10-windows-amd64.zip -OutFile C:/tmp_files/jre.zip
-        7z x C:/tmp_files/jre.zip -r -oC:/generated_files/mirai/jre/
+        Invoke-WebRequest -URI https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.1/go-cqhttp_windows_amd64.exe -OutFile C:/generated_files/go-cqhttp/go-cqhttp.exe
         
-        echo "Downloading mcl..."
-        Invoke-WebRequest -URI https://github.com/iTXTech/mirai-console-loader/releases/download/v2.1.2/mcl-2.1.2.zip -OutFile C:/tmp_files/mcl.zip
-        7z x C:/tmp_files/mcl.zip -r -oC:/generated_files/mirai/
-        cd C:/generated_files/mirai/
-        $search  = [Regex]::Escape('set JAVA_BINARY=java')
-        $replace = 'set JAVA_BINARY=jre\jre-17.0.6\bin\java.exe'
-
-        (Get-Content -Path 'C:/generated_files/mirai/mcl.cmd' -Raw) -replace $search, $replace | Set-Content -Path 'C:/generated_files/mirai/mcl.cmd'
-
-        Invoke-WebRequest -URI https://github.com/cssxsh/fix-protocol-version/releases/download/v1.3.0/fix-protocol-version-1.3.0.mirai2.jar -OutFile C:/generated_files/mirai/plugins/fix-protocol-version-1.3.0.mirai2.jar
-
-        ./mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
-        ./mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
-        ./mcl.cmd --update-package xyz.cssxsh.mirai:fix-protocol-version --channel stable --type plugin
-        ./mcl.cmd --dry-run
-
         cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
         
         echo "Downloading ffmpeg ..."
@@ -66,7 +44,7 @@ jobs:
         mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
 
         echo "Replacing..."
-        cp C:/generated_files/files/mirai/scripts/初始化.cmd C:/generated_files/
+        cp C:/generated_files/files/go-cqhttp/scripts/初始化.cmd C:/generated_files/
         
         Invoke-WebRequest -URI https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -OutFile C:/tmp_files/presets.zip
         7z x C:/tmp_files/presets.zip -oC:/tmp_files/
@@ -88,11 +66,19 @@ jobs:
         
         echo "Packing..." 
         cd C:/generated_files
-        7z a quickstart-windows-mirai-amd64.zip C:\generated_files\*
+        7z a quickstart-windows-go-cqhttp-amd64.zip C:\generated_files\*
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: quickstart-windows-mirai-amd64.zip
+        name: quickstart-windows-go-cqhttp-amd64.zip
         path: |
-          C:\generated_files\quickstart-windows-mirai-amd64.zip
-
+          C:\generated_files\quickstart-windows-go-cqhttp-amd64.zip
+    - name: Upload compressed files to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: C:\generated_files\quickstart-windows-go-cqhttp-amd64.zip
+        asset_name: Windows-quickstart-go-cqhttp-${{ github.ref }}.zip
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: "quickstart-windows-amd64.zip is to quickstart go-cqhttp for Windows x64 user"
