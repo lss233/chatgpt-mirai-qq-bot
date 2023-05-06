@@ -56,8 +56,8 @@ jobs:
         
         echo "Downloading packages..."
         cd C:/generated_files/chatgpt
-        python3.11\python.exe C:/generated_files/python3.11/get-pip.py
-        python3.11\python.exe -m pip install -r requirements.txt
+        ..\python3.11\python.exe C:/generated_files/python3.11/get-pip.py
+        ..\python3.11\python.exe -m pip install -r requirements.txt
         
         echo "Packing..." 
         cd C:/generated_files
