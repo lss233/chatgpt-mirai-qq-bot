@@ -39,7 +39,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.parent_id = None
         super().__init__()
         self.bot.conversation[self.session_id] = []
-        self.current_model = "gpt-3.5-turbo"
+        self.current_model = self.api_info.model or "gpt-3.5-turbo"
         self.supported_models = [
             "gpt-3.5-turbo",
             "gpt-3.5-turbo-0301",
