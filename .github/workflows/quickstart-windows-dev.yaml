@@ -1,7 +1,6 @@
 name: Windows Quickstart Dev (Mirai)
 
 on:
-  pull_request:
   workflow_dispatch:
   push:
     branches:
@@ -27,6 +26,7 @@ jobs:
         cd C:/generated_files
         mkdir mirai
         mkdir chatgpt
+        mkdir ffmpeg
         mkdir mirai/plugins
         echo "Downloading JRE..."
         Invoke-WebRequest -URI https://download.bell-sw.com/java/17.0.6+10/bellsoft-jre17.0.6+10-windows-amd64.zip -OutFile C:/tmp_files/jre.zip
@@ -49,6 +49,11 @@ jobs:
         ./mcl.cmd --dry-run
 
         cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
+        
+        echo "Downloading ffmpeg ..."
+        Invoke-WebRequest  https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-full_build.7z  C:/tmp_files/ffmpeg.7z
+        7z x C:/tmp_files/ffmpeg.zip -r -oC:/generated_files/ffmpeg
+        
         echo "Downloading Python3.11 ..."
         Invoke-WebRequest https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip -OutFile C:/tmp_files/python.zip
         7z x C:/tmp_files/python.zip -r -oC:/generated_files/python3.11
