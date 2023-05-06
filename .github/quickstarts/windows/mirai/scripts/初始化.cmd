@@ -2,58 +2,58 @@
 @CHCP 65001
 SET BASE_DIR=%cd%
 
-ECHO ÕıÔÚ³õÊ¼»¯ Mirai...
+ECHO æ­£åœ¨åˆå§‹åŒ– Mirai...
 ECHO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ECHO !!
-ECHO !! Èç¹ûÄúÊÇĞÂÊÖ£¬Ã»ÓĞÌØÊâĞèÇó¡£Ò»Â·»Ø³µ¼´¿É°²×°      !!!!
-ECHO !! Èç¹ûÄúÔÚÖ´ĞĞµÄ¹ı³Ì³öÏÖ´íÎó£¬¿ÉÒÔÖØĞÂÆô¶¯´Ë½Å±¾    !!!!
-ECHO !! Èç¹ûÄúÓöµ½ÎÊÌâ£¬¿ÉÒÔÌá½» issue£¬»òÕßÔÚ½»Á÷ÈºÑ¯ÎÊ  !!!!
+ECHO !! å¦‚æœæ‚¨æ˜¯æ–°æ‰‹ï¼Œæ²¡æœ‰ç‰¹æ®Šéœ€æ±‚ã€‚ä¸€è·¯å›è½¦å³å¯å®‰è£…      !!!!
+ECHO !! å¦‚æœæ‚¨åœ¨æ‰§è¡Œçš„è¿‡ç¨‹å‡ºç°é”™è¯¯ï¼Œå¯ä»¥é‡æ–°å¯åŠ¨æ­¤è„šæœ¬    !!!!
+ECHO !! å¦‚æœæ‚¨é‡åˆ°é—®é¢˜ï¼Œå¯ä»¥æäº¤ issueï¼Œæˆ–è€…åœ¨äº¤æµç¾¤è¯¢é—®  !!!!
 ECHO !!
 ECHO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-ECHO µ±Ç°µÄ°²×°Â·¾¶Îª %BASE_DIR%
-ECHO ÌáÊ¾£ºÇë×¢Òâ°²×°Â·¾¶ÖĞ²»ÒªÓĞ¿Õ¸ñ£¬·ñÔò¿ÉÄÜ»áµ¼ÖÂ°²×°Ê§°Ü
-ECHO ÌáÊ¾£º°²×°Ç°ÏÈ½âÑ¹³ÌĞò£¬²»ÒªÔÚÑ¹Ëõ°üÖĞÖ±½ÓÔËĞĞ
+ECHO å½“å‰çš„å®‰è£…è·¯å¾„ä¸º %BASE_DIR%
+ECHO æç¤ºï¼šè¯·æ³¨æ„å®‰è£…è·¯å¾„ä¸­ä¸è¦æœ‰ç©ºæ ¼ï¼Œå¦åˆ™å¯èƒ½ä¼šå¯¼è‡´å®‰è£…å¤±è´¥
+ECHO æç¤ºï¼šå®‰è£…å‰å…ˆè§£å‹ç¨‹åºï¼Œä¸è¦åœ¨å‹ç¼©åŒ…ä¸­ç›´æ¥è¿è¡Œ
 pause
 
 cd "%BASE_DIR%\mirai"
 @REM mcl-installer.exe
 
-@REM ECHO °²×° mirai-api-http ²å¼ş...
-@REM ECHO ²å¼ş½éÉÜ£ºhttps://github.com/project-mirai/mirai-api-http
+@REM ECHO å®‰è£… mirai-api-http æ’ä»¶...
+@REM ECHO æ’ä»¶ä»‹ç»ï¼šhttps://github.com/project-mirai/mirai-api-http
 @REM cmd /c mcl.cmd --update-package net.mamoe:mirai-api-http --channel stable-v2 --type plugin
 @REM
-@REM ECHO °²×° mirai-device-generator ²å¼ş...
-@REM ECHO ²å¼ş½éÉÜ£ºhttps://github.com/cssxsh/mirai-device-generator
+@REM ECHO å®‰è£… mirai-device-generator æ’ä»¶...
+@REM ECHO æ’ä»¶ä»‹ç»ï¼šhttps://github.com/cssxsh/mirai-device-generator
 @REM cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:mirai-device-generator --channel stable --type plugin
 @REM
-@REM ECHO °²×° fix-protocol-version ²å¼ş...
-@REM ECHO ²å¼ş½éÉÜ£ºhttps://github.com/cssxsh/fix-protocol-version
+@REM ECHO å®‰è£… fix-protocol-version æ’ä»¶...
+@REM ECHO æ’ä»¶ä»‹ç»ï¼šhttps://github.com/cssxsh/fix-protocol-version
 @REM cmd /c mcl.cmd --update-package xyz.cssxsh.mirai:fix-protocol-version --channel stable --type plugin
 
 cd "%BASE_DIR%"
-ECHO ¸´ÖÆ mirai-http-api ÅäÖÃĞÅÏ¢...
+ECHO å¤åˆ¶ mirai-http-api é…ç½®ä¿¡æ¯...
 mkdir "%BASE_DIR%\mirai\config\net.mamoe.mirai-api-http"
 copy "%BASE_DIR%\files\mirai-http-api-settings.yml" "%BASE_DIR%\mirai\config\net.mamoe.mirai-api-http\setting.yml"
 
-ECHO Mirai ³õÊ¼»¯Íê±Ï¡£
+ECHO Mirai åˆå§‹åŒ–å®Œæ¯•ã€‚
 cd "%BASE_DIR%\chatgpt"
 
-ECHO ½ÓÏÂÀ´¿ªÊ¼³õÊ¼»¯ ChatGPT
-ECHO ³õÊ¼»¯ pip...
+ECHO æ¥ä¸‹æ¥å¼€å§‹åˆå§‹åŒ– ChatGPT
+ECHO åˆå§‹åŒ– pip...
 set PYTHON_EXECUTABLE="%BASE_DIR%\python3.11\python.exe"
 cd "%BASE_DIR%\python3.11"
 @REM %PYTHON_EXECUTABLE% get-pip.py
 
-ECHO °²×°ÒÀÀµ...
+ECHO å®‰è£…ä¾èµ–...
 cd "%BASE_DIR%\chatgpt"
 
-REM Èç¹ûÏÂÔØµÄÒÀÀµ²»ÊÇ×îĞÂ°æ
-REM ÇëĞŞ¸Ä https://mirrors.aliyun.com/pypi/simple/ Îª https://pypi.org/simple/
-REM È»ºóÖØĞÂÖ´ĞĞ
+REM å¦‚æœä¸‹è½½çš„ä¾èµ–ä¸æ˜¯æœ€æ–°ç‰ˆ
+REM è¯·ä¿®æ”¹ https://mirrors.aliyun.com/pypi/simple/ ä¸º https://pypi.org/simple/
+REM ç„¶åé‡æ–°æ‰§è¡Œ
 
 %PYTHON_EXECUTABLE% -m pip install -i https://mirrors.aliyun.com/pypi/simple/ --extra-index-url https://pypi.org/simple/ -r requirements.txt
 
-ECHO ½ÓÏÂÀ´½«»á´ò¿ª config.cfg£¬ÇëĞŞ¸ÄÀïÃæµÄĞÅÏ¢¡£
+ECHO æ¥ä¸‹æ¥å°†ä¼šæ‰“å¼€ config.cfgï¼Œè¯·ä¿®æ”¹é‡Œé¢çš„ä¿¡æ¯ã€‚
 
 cd "%BASE_DIR%\chatgpt"
 COPY config.example.cfg config.cfg
@@ -62,9 +62,9 @@ cd "%BASE_DIR%"
 
 cls
 
-COPY "%BASE_DIR%\files\scripts\Æô¶¯ChatGPT.cmd" .
-COPY "%BASE_DIR%\files\scripts\Æô¶¯Mirai.cmd" .
-ECHO "½ÓÏÂÀ´ÇëÏÈÖ´ĞĞ ¡¾Æô¶¯ChatGPT.cmd¡¿£¬Æô¶¯³ÌĞò¡£"
-ECHO "È»ºóÖ´ĞĞ ¡¾Æô¶¯Mirai.cmd¡¿ ²¢µÇÂ¼»úÆ÷ÈË QQ£¬È»ºó¾Í¿ÉÒÔ¿ªÊ¼Ê¹ÓÃÁË£¡"
+COPY "%BASE_DIR%\files\mirai\scripts\å¯åŠ¨ChatGPT.cmd" .
+COPY "%BASE_DIR%\files\mirai\scripts\å¯åŠ¨Mirai.cmd" .
+ECHO "æ¥ä¸‹æ¥è¯·å…ˆæ‰§è¡Œ ã€å¯åŠ¨ChatGPT.cmdã€‘ï¼Œå¯åŠ¨ç¨‹åºã€‚"
+ECHO "ç„¶åæ‰§è¡Œ ã€å¯åŠ¨Mirai.cmdã€‘ å¹¶ç™»å½•æœºå™¨äºº QQï¼Œç„¶åå°±å¯ä»¥å¼€å§‹ä½¿ç”¨äº†ï¼"
 
 pause

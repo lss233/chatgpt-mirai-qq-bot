@@ -1,8 +1,10 @@
 @ECHO OFF
-TITLE [ChatGPT for QQ] Mirai ╤куЩтзткпп...
+@CHCP 65001
+
+TITLE [ChatGPT for QQ] Mirai Г╚╞Ф╜ёЕ°╗Х©░Х║▄...
 
 cd mirai && mcl
-TITLE [ChatGPT for QQ] Mirai ╤крямёж╧ткпп
+TITLE [ChatGPT for QQ] Mirai Г╚╞Е╥╡Е│°Ф╜╒Х©░Х║▄
 
-echo ЁлпРрямёж╧ткпп
+echo Г╗▀Е╨▐Е╥╡Е│°Ф╜╒Х©░Х║▄
 PAUSE

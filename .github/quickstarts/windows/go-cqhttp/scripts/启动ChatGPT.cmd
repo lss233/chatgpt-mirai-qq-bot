@@ -1,6 +1,8 @@
 @ECHO OFF
-TITLE [ChatGPT for QQ] ChatGPT ╤куЩтзткпп...
+@CHCP 65001
+
+TITLE [ChatGPT for QQ] ChatGPT Г╚╞Ф╜ёЕ°╗Х©░Х║▄...
 cd chatgpt && ..\python3.11\python.exe bot.py
-TITLE [ChatGPT for QQ] ChatGPT ╤крямёж╧ткпп
-ECHO ЁлпРрямёж╧ткпп║ё
+TITLE [ChatGPT for QQ] ChatGPT Г╚╞Е╥╡Е│°Ф╜╒Х©░Х║▄
+ECHO Г╗▀Е╨▐Е╥╡Е│°Ф╜╒Х©░Х║▄Ц─┌
 PAUSE
