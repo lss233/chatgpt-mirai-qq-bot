@@ -18,10 +18,12 @@ jobs:
     - name: Generate files
       run: |
         mkdir C:/generated_files
+        mkdir C:/tmp_files
         echo "Creating folders..."
         cd C:/generated_files
         echo "Downloading go-cqhttp..."
-        mkdir C:/generated_files/go-cqhttp/
+        mkdir go-cqhttp
+        mkdir chatgpt
         Invoke-WebRequest -URI https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.1/go-cqhttp_windows_amd64.exe -OutFile C:/generated_files/go-cqhttp/go-cqhttp.exe
         
         cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
