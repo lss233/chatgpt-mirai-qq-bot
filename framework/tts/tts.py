@@ -2,8 +2,10 @@ import abc
 import base64
 import json
 from enum import Enum
+from io import BytesIO
 from typing import List, Tuple, Dict
 from loguru import logger
+from pydub import AudioSegment
 
 from framework.exceptions import TTSNoVoiceFoundException, TTSEncodingFailedException
 
@@ -15,6 +17,7 @@ class VoiceFormat(Enum):
     Wav = "wav"
     Mp3 = "mp3"
     Silk = "silk"
+    Amr = "amr"
 
 
 class TTSResponse:
@@ -31,6 +34,13 @@ class TTSResponse:
         self.data_bytes = {format_: data_bytes}
         self.text = text
 
+    async def __to_mp3(self):
+        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(self.data_bytes.keys())[0]
+        output_bytes = BytesIO()
+        AudioSegment.from_file(BytesIO(self.data_bytes[src_format])).export(output_bytes, format='mp3')
+        output_bytes.seek(0)
+        return output_bytes.read()
+
     async def __to_silk(self) -> bytes:
         src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(self.data_bytes.keys())[0]
         try:
@@ -45,12 +55,29 @@ class TTSResponse:
             logger.warning("警告：Silk 转码模块无法加载，语音可能无法正常播放，请安装最新的 vc_redist 运行库。")
             raise TTSEncodingFailedException(src_format, VoiceFormat.Silk) from e
 
+    async def __to_amr(self) -> bytes:
+        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(self.data_bytes.keys())[0]
+        output_bytes = BytesIO()
+        AudioSegment.from_file(BytesIO(self.data_bytes[src_format])) \
+            .set_frame_rate(8000)\
+            .set_channels(1)\
+            .export(output_bytes, format="amr", codec="libopencore_amrnb")
+        output_bytes.seek(0)
+        return output_bytes.read()
+
     async def transcode(self, to_format: VoiceFormat) -> bytes:
         """音频转码"""
         if to_format in self.data_bytes:
             return self.data_bytes[to_format]
+
         if to_format == VoiceFormat.Silk:
             self.data_bytes[to_format] = await self.__to_silk()
+
+        if to_format == VoiceFormat.Mp3:
+            self.data_bytes[to_format] = await self.__to_mp3()
+
+        if to_format == VoiceFormat.Amr:
+            self.data_bytes[to_format] = await self.__to_amr()
 
         return self.data_bytes[to_format]
 
