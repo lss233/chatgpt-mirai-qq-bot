@@ -1,4 +1,4 @@
-name: Create Quickstart for Windows 64 (go-cqhttp)
+name: Windows Quickstart (go-cqhttp)
 
 on:
   pull_request:

@@ -1,6 +1,7 @@
-name: Create Quickstart for Windows 64 on dev
+name: Windows Quickstart Dev (Mirai)
 
 on:
+  pull_request:
   workflow_dispatch:
   push:
     branches:
