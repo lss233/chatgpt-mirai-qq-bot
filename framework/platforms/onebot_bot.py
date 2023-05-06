@@ -113,7 +113,7 @@ async def safe_send(event, resp: MessageChain, is_group):
                 return await bot.send(event, "消息发送失败，可能是遇到风控。" + str(e))
 
 
-async def respond(event: aiocqhttp.Event, is_group: bool, resp: MessageChain = None, text: str = None,
+async def respond(event: aiocqhttp.Event, is_group: bool, chain: MessageChain = None, text: str = None,
                   voice: TTSResponse = None,
                   image: ImageElement = None):
     message_ids = {}
@@ -124,15 +124,15 @@ async def respond(event: aiocqhttp.Event, is_group: bool, resp: MessageChain = N
         message_ids["text"] = await safe_send(event, MessageChain([Plain(text)]), is_group)
     if image:
         message_ids["image"] = await safe_send(event, MessageChain([image]), is_group)
-    if resp:
-        logger.debug(f"[OneBot] 尝试发送消息：{str(resp)}")
+    if chain:
+        logger.debug(f"[OneBot] 尝试发送消息：{str(chain)}")
         try:
-            if not isinstance(resp, MessageChain):
-                resp = MessageChain(resp)
-            resp = transform_from_message_chain(resp)
-            if config.response.quote and '[CQ:record,file=' not in str(resp):  # skip voice
-                resp = MessageSegment.reply(event.message_id) + resp
-            return await bot.send(event, resp)
+            if not isinstance(chain, MessageChain):
+                chain = MessageChain(chain)
+            chain = transform_from_message_chain(chain)
+            if config.response.quote and '[CQ:record,file=' not in str(chain):  # skip voice
+                chain = MessageSegment.reply(event.message_id) + chain
+            return await bot.send(event, chain)
         except Exception as e:
             logger.exception(e)
             logger.warning("原始消息发送失败，尝试通过转发发送")
@@ -140,7 +140,7 @@ async def respond(event: aiocqhttp.Event, is_group: bool, resp: MessageChain = N
                 "send_group_forward_msg" if is_group else "send_private_forward_msg",
                 group_id=event.group_id,
                 messages=[
-                    MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
+                    MessageSegment.node_custom(event.self_id, "ChatGPT", chain)
                 ]
             )
 
@@ -170,8 +170,7 @@ async def _(event: Event):
     request.is_manager = event.user_id == config.onebot.manager_qq
     request.nickname = event.sender.get("nickname", "好友"),
 
-    response = Response()
-    response.send = functools.partial(respond, event, False)
+    response = Response(functools.partial(respond, event, False))
 
     try:
         await handle_message(request, response)
@@ -207,8 +206,7 @@ async def _(event: Event):
     request.is_manager = event.user_id == config.onebot.manager_qq
     request.nickname = event.sender.get("nickname", "群友")
 
-    response = Response()
-    response.send = functools.partial(respond, event, False)
+    response = Response(functools.partial(respond, event, False))
 
     try:
         await handle_message(request, response)
