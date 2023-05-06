@@ -41,7 +41,7 @@ class MiddlewareTimeout(Middleware):
 
         await _next(request, response)
 
-        if not self.request_task[request.session_id].done():
+        if request.session_id in self.request_task and not self.request_task[request.session_id].done():
             # Create the task again
             self.timeout_task[request.session_id] = asyncio.create_task(self.create_timeout_task(response.send, request.session_id))
 
