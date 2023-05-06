@@ -150,7 +150,7 @@ class BotManager:
         if not self.config.response.default_ai:
             if len(self.bots['poe-web']) > 0:
                 self.config.response.default_ai = 'poe-chatgpt'
-            elif self.config.openai and len(self.bots['slack-accesstoken']) > 0:
+            elif len(self.bots['slack-accesstoken']) > 0:
                 self.config.response.default_ai = 'slack-claude'
             elif len(self.bots['chatgpt-web']) > 0:
                 self.config.response.default_ai = 'chatgpt-web'
