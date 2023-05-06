@@ -1,14 +1,21 @@
 import time
+from typing import Dict, Optional, Union
+
 import openai
+import telegram.helpers
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, Plain, Voice
+from graia.ariadne.message.element import Plain
 from loguru import logger
-from telegram import Update, constants
+from telegram import Update, constants, Message
+from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
 from telegram.request import HTTPXRequest
-from framework.middlewares.ratelimit import manager as ratelimit_manager
 
 from constants import config, BotPlatform
+from framework.messages import ImageElement
+from framework.middlewares.ratelimit import manager as ratelimit_manager
+from framework.request import Response, Request
+from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.universal import handle_message
 
 
@@ -27,32 +34,55 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         logger.debug(f"忽略消息（未满足匹配规则）: {update.message.text} ")
         return
 
-    async def response(msg):
-        if isinstance(msg, MessageChain):
-            for elem in msg:
-                if isinstance(elem, Plain):
-                    await update.message.reply_text(str(elem))
-                if isinstance(elem, Image):
-                    await update.message.reply_photo(photo=await elem.get_bytes())
-                if isinstance(elem, Voice):
-                    await update.message.reply_audio(audio=await elem.get_bytes())
-            return
-        if isinstance(msg, str):
-            return await update.message.reply_text(msg)
-        if isinstance(msg, Image):
-            return await update.message.reply_photo(photo=await msg.get_bytes())
-        if isinstance(msg, Voice):
-            await update.message.reply_audio(audio=await msg.get_bytes(), title="Voice")
-            return
+    last_message_item: Optional[Message] = None
+    last_send_text: str = ''
 
-    await handle_message(
-        response,
-        f"{type}-{update.message.chat.id}",
-        update.message.text.replace(f"@{bot_username}", '').strip(),
-        is_manager=update.message.from_user.id == config.telegram.manager_chat,
-        nickname=update.message.from_user.full_name or "群友",
-        request_from=BotPlatform.TelegramBot
-    )
+    async def _response_func(chain: MessageChain, text: str, voice: TTSResponse, image: ImageElement):
+        nonlocal last_message_item, last_send_text
+        if text:
+            last_send_text += telegram.helpers.escape_markdown(text, 2)
+        if voice:
+            await update.message.reply_chat_action(action=telegram.constants.ChatAction.UPLOAD_VOICE)
+            last_message_item = await update.message.reply_audio(audio=await voice.transcode(VoiceFormat.Wav),
+                                                            title="Voice Message",
+                                                            caption=last_send_text)
+        if image:
+            await update.message.reply_chat_action(action=telegram.constants.ChatAction.UPLOAD_PHOTO)
+            last_message_item = await update.message.reply_photo(photo=await image.get_bytes(),
+                                                            caption=last_send_text,
+                                                            parse_mode=ParseMode.MARKDOWN_V2)
+
+        elif text:
+            await update.message.reply_chat_action(action=telegram.constants.ChatAction.TYPING)
+            if last_message_item:
+                if last_message_item.text:
+                    last_message_item = await last_message_item.edit_text(
+                        text=last_send_text,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+                else:
+                    last_message_item = await last_message_item.edit_caption(
+                        caption=last_send_text,
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
+            else:
+                last_message_item = await update.message.reply_text(
+                    text=last_send_text,
+                    parse_mode=ParseMode.MARKDOWN_V2
+                )
+        last_send_text = ''
+
+    request = Request()
+    request.session_id = f"{type}-{update.message.chat.id}"
+    request.user_id = update.message.from_user.id
+    request.group_id = update.message.chat_id
+    request.nickname = update.message.from_user.full_name or "路人甲"
+    request.message = MessageChain([Plain(update.message.text.replace(f"@{bot_username}", '').strip())])
+
+    response = Response(_response_func)
+
+    await update.message.reply_chat_action(action=telegram.constants.ChatAction.TYPING)
+    await handle_message(request, response)
 
 
 async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
