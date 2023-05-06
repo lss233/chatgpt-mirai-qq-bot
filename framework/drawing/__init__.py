@@ -2,7 +2,7 @@ from typing import Tuple, Dict, Type, Optional
 
 from .base import DrawAI
 from .sdwebui import SDWebUI
-from ..exceptions import NoAvailableBotException
+from ..exceptions import NoAvailableBotException, LLmAuthenticationFailedException
 
 registered_ai: Dict[str, Tuple[Type[DrawAI], Tuple]] = {}
 
@@ -15,7 +15,7 @@ class DrawingAIFactory:
                 try:
                     entry = registered_ai[key]
                     return entry[0](*entry[1])
-                except NoAvailableBotException:
+                except (NoAvailableBotException, LLmAuthenticationFailedException):
                     pass
             return None
         if name not in registered_ai:
