@@ -43,8 +43,10 @@ class BingAdapter(BotAdapter, DrawingAPI):
             for line in account.cookie_content.split("; "):
                 name, value = line.split("=", 1)
                 self.cookieData.append({"name": name, "value": value})
-
-        self.bot = EdgeChatbot(cookies=self.cookieData, proxy=account.proxy)
+        try:
+            self.bot = EdgeChatbot(cookies=self.cookieData, proxy=account.proxy)
+        except NotAllowedToAccess as e:
+            raise Exception("Bing 账号 Cookie 已过期，请联系管理员更新！") from e
 
     async def rollback(self):
         raise BotOperationNotSupportedException()
@@ -119,7 +121,7 @@ class BingAdapter(BotAdapter, DrawingAPI):
             return
         except Exception as e:
             if str(e) == 'Redirect failed':
-                yield '画图失败(Redirect failed)：Bing 的画图提示词不支持中文，你可以用英文再试一下。'
+                yield '画图失败：Redirect failed'
                 return
             raise e
 
@@ -137,7 +139,7 @@ class BingAdapter(BotAdapter, DrawingAPI):
                 return await asyncio.gather(*tasks)
         except Exception as e:
             if str(e) == 'Redirect failed':
-                raise Exception('画图失败(Redirect failed)：Bing 的画图提示词不支持中文，你可以用英文再试一下。') from e
+                raise Exception('画图失败：Redirect failed') from e
             raise e
 
 
