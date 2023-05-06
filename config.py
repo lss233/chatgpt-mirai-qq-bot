@@ -53,6 +53,8 @@ class TelegramBot(BaseModel):
 class DiscordBot(BaseModel):
     bot_token: str
     """Discord Bot 的 token"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
 
 
 class HttpService(BaseModel):
