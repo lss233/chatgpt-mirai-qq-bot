@@ -17,7 +17,7 @@ intents = discord.Intents.default()
 intents.typing = False
 intents.presences = False
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, proxy=config.discord.proxy)
 
 
 async def on_message_event(message: discord.Message) -> None:
