@@ -36,7 +36,10 @@ class BingAdapter(Llm, DrawAI):
         self.conversation_style = conversation_style
         account = account_manager.pick('bing')
         self.cookieData = json.loads(account.cookie_content)
-        self.bot = EdgeChatbot(cookies=self.cookieData, proxy=constants.proxy)
+        try:
+            self.bot = EdgeChatbot(cookies=self.cookieData, proxy=constants.proxy)
+        except NotAllowedToAccess as e:
+            raise LLmAuthenticationFailedException("bing") from e
 
     async def rollback(self):
         raise LlmOperationNotSupportedException()
