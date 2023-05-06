@@ -1,12 +1,14 @@
-import os
 import json
+import os
 import time
-import aiohttp
-from graia.ariadne.message import MessageChain
-from loguru import logger
-from config import Config
 from typing import Callable
-from graia.ariadne.message.element import Image, Plain
+
+import aiohttp
+from graia.ariadne.message.chain import MessageChain
+from graia.ariadne.message.element import Plain
+from loguru import logger
+
+from config import Config
 from framework.middlewares.middleware import Middleware
 from framework.request import Request, Response
 
@@ -89,7 +91,7 @@ class MiddlewareBaiduCloud(Middleware):
         if not config.baiducloud.check:
             return await _next(request, response)
         # 不处理没有文字的信息
-        if not response.body or not response.body.has(Plain) or not str(response.body):
+        if not response.body.has(Plain) or not response.text:
             return await _next(request, response)
 
         try:
@@ -97,7 +99,7 @@ class MiddlewareBaiduCloud(Middleware):
                 logger.debug("[百度云文本审核] 正在获取access_token，请稍等")
                 self.baidu_cloud.access_token = await self.baidu_cloud.get_access_token()
 
-            response_dict = await self.baidu_cloud.get_conclusion(str(response.body))
+            response_dict = await self.baidu_cloud.get_conclusion(response.text or str(response.body))
 
             # 处理百度云审核结果
             conclusion = response_dict["conclusion"]

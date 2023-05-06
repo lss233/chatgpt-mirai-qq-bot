@@ -8,6 +8,7 @@ import httpcore
 import httpx
 import openai
 from graia.ariadne.message.chain import MessageChain
+from graia.ariadne.message.element import Plain
 from httpx import ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
@@ -179,8 +180,10 @@ async def handle_message(request: Request, response: Response):
                 await response.send(text="已关闭语音功能！")
                 return
 
-            request.conversation_context.conversation_voice = request.conversation_context.tts_engine.choose_voice(new_voice)
-            await response.send(text=f"已切换至 {request.conversation_context.conversation_voice.full_name} 语音，让我们继续聊天吧！")
+            request.conversation_context.conversation_voice = request.conversation_context.tts_engine.choose_voice(
+                new_voice)
+            await response.send(
+                text=f"已切换至 {request.conversation_context.conversation_voice.full_name} 语音，让我们继续聊天吧！")
             return
 
         # 加载预设
@@ -197,19 +200,31 @@ async def handle_message(request: Request, response: Response):
             await request.conversation_context.load_preset('catgirl')
             _initialization = True
 
-        async def respond(msg: Optional[MessageChain]):
+        async def _respond_func(chain: MessageChain = None, text: str = None, voice: TTSResponse = None,
+                               image: ImageElement = None):
             """
             Respond method
             """
-            ret = await response.send(text=msg)
+            response.chain = chain
+            response.text = text
+            response.voice = voice
+            response.image = image
+
+            async def _action(_, _response: Response):
+                await _response.send(chain=_response.chain, text=_response.text, image=_response.image, voice=_response.voice)
+
             for _m in middlewares:
-                await _m.on_respond(session_id=request.session_id, prompt=request.text, msg=msg)
+                _action = functools.partial(_m.handle_respond, _next=_action)
+            ret = await _action(request, response)
+
+            for _m in middlewares:
+                await _m.on_respond(request, response)
 
             return ret
 
         async with request.conversation_context as context:
             context.variables['user']['nickname'] = request.nickname
-            context.actions['system/user_message'] = response.send
+            context.actions['system/user_message'] = _respond_func
 
             if _initialization:
                 await context.init()
@@ -217,15 +232,15 @@ async def handle_message(request: Request, response: Response):
             if _no_follow:
                 return
 
-            async def request(*args, **kwargs):
+            async def _request_func(*args, **kwargs):
                 """
                 Request method
                 """
                 await context.input(prompt=request.message)
                 for _m in middlewares:
-                    await _m.handle_respond_completed(session_id, prompt, respond)
+                    await _m.handle_respond_completed(request, response)
 
-            action = request
+            action = _request_func
             for m in middlewares:
                 action = functools.partial(m.handle_request, _next=action)
 
