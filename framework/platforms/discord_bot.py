@@ -1,17 +1,22 @@
 import os
 import sys
 from io import BytesIO
+from typing import Optional
 
 import discord
+from discord import Message
 from discord.ext import commands
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, Plain, Voice
+from graia.ariadne.message.element import Plain
 
+from framework.messages import ImageElement
+from framework.request import Request, Response
+from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.universal import handle_message
 
 sys.path.append(os.getcwd())
 
-from constants import config, BotPlatform
+from constants import config
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -38,33 +43,39 @@ async def on_message_event(message: discord.Message) -> None:
     if not is_reply_to_bot and not message.content.startswith(f"<@{bot_id}>"):
         return
 
-    async def response(msg):
-        if isinstance(msg, MessageChain):
-            for elem in msg:
-                if isinstance(elem, Plain) and str(elem):
-                    chunks = [str(elem)[i:i + 1500] for i in range(0, len(str(elem)), 1500)]
-                    for chunk in chunks:
-                        await message.reply(chunk)
-                if isinstance(elem, Image):
-                    await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename='image.png'))
-                if isinstance(elem, Voice):
-                    await message.reply(file=discord.File(BytesIO(await elem.get_bytes()), filename="voice.wav"))
-            return
-        if isinstance(msg, str):
-            chunks = [str(msg)[i:i + 1500] for i in range(0, len(str(msg)), 1500)]
-            for chunk in chunks:
-                await message.reply(chunk)
-            return
-        if isinstance(msg, Image):
-            return await message.reply(file=discord.File(BytesIO(await msg.get_bytes()), filename='image.png'))
-        if isinstance(msg, Voice):
-            await message.reply(file=discord.File(BytesIO(await msg.get_bytes()), filename="voice.wav"))
-            return
+    last_message_item: Optional[Message] = None
+    last_send_text: str = ''
 
-    await handle_message(response,
-                         f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}",
-                         message.content.replace(f"<@{bot_id}>", "").strip(), is_manager=False,
-                         nickname=message.author.name, request_from=BotPlatform.DiscordBot)
+    async def _response_func(chain: MessageChain, text: str, voice: TTSResponse, image: ImageElement):
+        nonlocal last_message_item, last_send_text
+        if text:
+            last_send_text += text
+        if voice:
+            last_message_item = await message.reply(file=discord.File(BytesIO(await voice.transcode(VoiceFormat.Wav)),
+                                                  filename="voice.wav"),
+                                content=last_send_text)
+        if image:
+            last_message_item = await message.reply(file=discord.File(BytesIO(await image.get_bytes()),
+                                                  filename="image.png"),
+                                content=last_send_text)
+
+        elif text:
+            if last_message_item:
+                last_message_item = await last_message_item.edit(content=last_send_text)
+            else:
+                last_message_item = await message.reply(content=last_send_text)
+        last_send_text = ''
+
+    request = Request()
+    request.session_id = f"{'friend' if isinstance(message.channel, discord.DMChannel) else 'group'}-{message.channel.id}"
+    request.user_id = message.author.id
+    request.group_id = message.channel.id
+    request.nickname = message.author.name
+    request.message = MessageChain([Plain(message.content.replace(f"<@{bot_id}>", "").strip())])
+
+    response = Response(_response_func)
+
+    await handle_message(request, response)
 
 @bot.event
 async def on_message(message):
