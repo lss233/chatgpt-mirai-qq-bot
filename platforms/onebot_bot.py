@@ -29,10 +29,10 @@ class MentionMe:
 
     async def __call__(self, chain: MessageChain, event: Event) -> Optional[MessageChain]:
         first = chain[0]
-        if isinstance(first, At) and first.target == config.onebot.qq:
+        if isinstance(first, At) and first.target == event.self_id:
             return MessageChain(chain.__root__[1:], inline=True).removeprefix(" ")
         elif isinstance(first, Plain):
-            member_info = await bot.get_group_member_info(group_id=event.group_id, user_id=config.onebot.qq)
+            member_info = await bot.get_group_member_info(group_id=event.group_id, user_id=event.self_id)
             if member_info.get("nickname") and chain.startswith(member_info.get("nickname")):
                 return chain.removeprefix(" ")
         raise ExecutionStop

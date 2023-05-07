@@ -9,8 +9,6 @@ import toml
 
 
 class Onebot(BaseModel):
-    qq: int
-    """Bot 的 QQ 号"""
     manager_qq: int = 0
     """机器人管理员的 QQ 号"""
     reverse_ws_host: str = "0.0.0.0"
