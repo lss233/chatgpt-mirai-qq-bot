@@ -25,8 +25,9 @@
   [QQ 二群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=S1R4eIlODtyKZsEKfWxb2-nOIHELbeJY&authKey=kAftCAALE8OJgwQnArrD6zPtncCAaY456QgUXT3l2OMJ57NwRXRkhv4KL7DzOLzs&noverify=0&group_code=373254418)、
   [QQ 三群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=urlhCH8y7Ro2S-iXt63X4s5eILUny4Iw&authKey=ejiwoNa4Yez6IMLyf2vj%2FeRiC1frdFrNNekbRfaPnSQbcD7bgebo5y5A7rPaRKBq&noverify=0&group_code=533109074)、
   [QQ 四群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Ibiu6EmXof30Fa7MJ5j8nJFwaUGTf5bM&authKey=YKx5a%2BK5qnWkk5VlsxxDfYl0nCrKSekQm%2FoLQVqr%2FcO%2FQY2S6N24XdI23XugBrF0&noverify=0&group_code=799737883)、
+  [QQ 五群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=lDkVPDAeiz6M-ig9cdS9tqhSH6_topox&authKey=B%2FRPYVUjk3dYPw5D4o6C2TpqeoKTG0nXEiKDCG%2Bh4JYY2RPqDQGt37SGl32j0hHw&noverify=0&group_code=805081636)、
   [QQ 开发群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=lisyXibhUj93DgIZptQu3VZ4ka3F5-rW&authKey=PBCzRQX4Zei%2BB6n5Tdyp9p5bqcF0tLBlfGANT4dSSKQIFYR66WwaZSMEDahWo%2FzZ&noverify=0&group_code=701933732)  
-  会发布最新的项目动态、问题答疑和交流。 
+  会发布最新的项目动态、视频教程、问题答疑和交流。 
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
