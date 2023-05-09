@@ -1,185 +1,167 @@
+import base64
 import json
-import threading
-import time
+import typing
 import asyncio
 
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, Voice
 from graia.ariadne.message.element import Plain
-from loguru import logger
-from quart import Quart, request
+from quart import Quart, request, make_response
 
-from constants import config, BotPlatform
+import constants
+from framework.accounts import account_manager
+from framework.messages import ImageElement
+from framework.request import Request, Response
+from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.universal import handle_message
 
-app = Quart(__name__)
 
-lock = threading.Lock()
-
-request_dic = {}
-
-RESPONSE_SUCCESS = "SUCCESS"
-RESPONSE_FAILED = "FAILED"
-RESPONSE_DONE = "DONE"
-
-
-class BotRequest:
-    def __init__(self, session_id, username, message, request_time):
-        self.session_id: str = session_id
-        self.username: str = username
-        self.message: str = message
-        self.result: ResponseResult = ResponseResult()
-        self.request_time = request_time
-        self.done: bool = False
-        """请求是否处理完毕"""
-
-    def set_result_status(self, result_status):
-        if not self.result:
-            self.result = ResponseResult()
-        self.result.result_status = result_status
-
-    def append_result(self, result_type, result):
-        with lock:
-            if result_type == "message":
-                self.result.message.append(result)
-            elif result_type == "voice":
-                self.result.voice.append(result)
-            elif result_type == "image":
-                self.result.image.append(result)
+def route(app: Quart):
+    @app.get('/backend-api/v1/config')
+    async def get_config():
+        type = request.args.get("type", "schema")
+        constants.config.json()
+        if type == "value":
+            if key := request.args.get("key", ''):
+                return obj.json() if (obj := constants.config.__getattribute__(key)) else '{}'
+            return constants.config.json()
+        if key := request.args.get("key", ''):
+            if not (type_ := typing.get_type_hints(constants.Config).get(key)):
+                return ''
+            if typing.get_origin(type_) is typing.Union:
+                return typing.get_args(type_)[0].schema_json()
+            else:
+                return type_.schema_json()
+        return constants.config.schema_json()
 
 
-class ResponseResult:
-    def __init__(self, message=None, voice=None, image=None, result_status=RESPONSE_SUCCESS):
-        self.result_status = result_status
-        self.message = self._ensure_list(message)
-        self.voice = self._ensure_list(voice)
-        self.image = self._ensure_list(image)
+    @app.post('/backend-api/v1/config')
+    async def post_config():
+        key = request.args.get("key", '')
+        data = await request.get_json()
+        parsed = json.loads(constants.config.json())
+        parsed[key] = data
+        parsed = constants.config.parse_obj(parsed)
+        constants.config.save_config(parsed)
+        constants.config = parsed
 
-    def _ensure_list(self, value):
-        if value is None:
-            return []
-        elif isinstance(value, list):
-            return value
-        else:
-            return [value]
-
-    def is_empty(self):
-        return not self.message and not self.voice and not self.image
-
-    def pop_all(self):
-        with lock:
-            self.message = []
-            self.voice = []
-            self.image = []
-
-    def to_json(self):
-        return json.dumps({
-            'result': self.result_status,
-            'message': self.message,
-            'voice': self.voice,
-            'image': self.image
+        return json.dump({
+            "ok": True
         })
 
 
-async def process_request(bot_request: BotRequest):
-    async def response(msg):
-        logger.info(f"Got response msg -> {type(msg)} -> {msg}")
-        _resp = msg
-        if not isinstance(msg, MessageChain):
-            _resp = MessageChain(msg)
-        for ele in _resp:
-            if isinstance(ele, Plain) and str(ele):
-                bot_request.append_result("message", str(ele))
-            elif isinstance(ele, Image):
-                bot_request.append_result("image", f"data:image/png;base64,{ele.base64}")
-            elif isinstance(ele, Voice):
-                # mp3
-                bot_request.append_result("voice", f"data:audio/mpeg;base64,{ele.base64}")
-            else:
-                logger.warning(f"Unsupported message -> {type(ele)} -> {str(ele)}")
-                bot_request.append_result("message", str(ele))
-    logger.debug(f"Start to process bot request {bot_request.request_time}.")
-    if bot_request.message is None or not str(bot_request.message).strip():
-        await response("message 不能为空!")
-        bot_request.set_result_status(RESPONSE_FAILED)
-    else:
-        await handle_message(
-            response,
-            bot_request.session_id,
-            bot_request.message,
-            nickname=bot_request.username,
-            request_from=BotPlatform.HttpService
+    @app.get("/backend-api/v1/accounts/list")
+    async def get_accounts():
+        return {
+            key: [item.dict() for item in value]
+            for key, value in account_manager.loaded_accounts.items()
+        }
+
+
+    @app.get("/backend-api/v1/accounts/model")
+    async def get_account_model():
+        key = request.args.get("key", "chatgpt-web")
+        return account_manager.registered_models[key].schema_json()
+
+
+    @app.post("/backend-api/v1/accounts/<key>/<index>")
+    async def update_account_model(key: str, index: str):
+        data = await request.get_json()
+        account = account_manager.registered_models[key].parse_obj(data)
+        account_manager.loaded_accounts[key][int(index)] = account
+        result = await account_manager.login_account(key, account)
+        constants.config.accounts.__getattribute__(key)[int(index)] = account
+        constants.config.save_config(constants.config)
+        return json.dumps({
+            "ok": result
+        })
+
+
+    @app.delete("/backend-api/v1/accounts/<key>/<index>")
+    async def delete_account_model(key: str, index: str):
+        del account_manager.loaded_accounts[key][int(index)]
+        del constants.config.accounts.__getattribute__(key)[int(index)]
+        constants.config.save_config(constants.config)
+        return json.dumps({
+            "ok": True
+        })
+
+
+    @app.post("/backend-api/v1/accounts/<key>")
+    async def add_new_account(key: str):
+        data = await request.get_json()
+        account = account_manager.registered_models[key].parse_obj(data)
+        account_manager.loaded_accounts[key].append(account)
+        result = await account_manager.login_account(key, account)
+        constants.config.accounts.__getattribute__(key).append(account)
+        constants.config.save_config(constants.config)
+        return json.dumps({
+            "ok": result
+        })
+
+
+    @app.post('/v1/conversation')
+    async def conversation():
+        data = await request.get_json()
+
+        _req = Request()
+        _req.session_id = data.get("session_id")
+        _req.user_id = data.get("user_id", "")
+        _req.group_id = data.get("group_id", "")
+        _req.nickname = data.get("nickname", "Bob")
+        _req.is_manager = data.get("is_manager", False)
+        prefered_format = data.get("prefered_format", VoiceFormat.Wav)
+        message_chain = []
+        for item in data.get("messages", []):
+            type_ = item.get('type', 'text')
+            if type_ == 'text':
+                message_chain.append(Plain(item.get('value')))
+            elif type_ == 'image':
+                message_chain.append(ImageElement(base64=item.get('value')))
+            elif type_ == 'voice':
+                message_chain.append(TTSResponse(format_=item.get('format'), data_bytes=base64.b64decode(item.get('value')),
+                                                 text=item.get('text', '')))
+        _req.message = MessageChain(message_chain)
+
+        response_chain = []
+
+        q = asyncio.Queue()
+
+        async def _response_func(chain: MessageChain, text: str, voice: TTSResponse, image: ImageElement):
+            if text:
+                response_chain.append({
+                    "type": "text",
+                    "value": text
+                })
+            if voice:
+                response_chain.append({
+                    "type": "voice",
+                    "value": voice.get_base64(prefered_format),
+                    "format": prefered_format
+                })
+            if image:
+                response_chain.append({
+                    "type": "image",
+                    "value": image.base64
+                })
+            await q.put(response_chain.copy())
+
+        _res = Response(_response_func)
+
+        task = asyncio.create_task(handle_message(_req, _res))
+
+        async def send_events():
+            while not task.done():
+                message = f"data: {await q.get()}\r\n\r\n"
+                yield message.encode('utf-8')
+                q.task_done()
+
+        response = await make_response(
+            send_events(),
+            {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Transfer-Encoding': 'chunked',
+            },
         )
-        bot_request.set_result_status(RESPONSE_DONE)
-    bot_request.done = True
-    logger.debug(f"Bot request {bot_request.request_time} done.")
-
-
-@app.route('/v1/chat', methods=['POST'])
-async def v1_chat():
-    """同步请求，等待处理完毕返回结果"""
-    data = await request.get_json()
-    bot_request = construct_bot_request(data)
-    await process_request(bot_request)
-    # Return the result as JSON
-    return bot_request.result.to_json()
-
-
-@app.route('/v2/chat', methods=['POST'])
-async def v2_chat():
-    """异步请求，立即返回，通过/v2/chat/response获取内容"""
-    data = await request.get_json()
-    bot_request = construct_bot_request(data)
-    asyncio.create_task(process_request(bot_request))
-    request_dic[bot_request.request_time] = bot_request
-    # Return the result time as request_id
-    return bot_request.request_time
-
-
-@app.route('/v2/chat/response', methods=['GET'])
-async def v2_chat_response():
-    """异步请求时，配合/v2/chat获取内容"""
-    request_id = request.args.get("request_id")
-    bot_request: BotRequest = request_dic.get(request_id, None)
-    if bot_request is None:
-        return ResponseResult(message="没有更多了！", result_status=RESPONSE_FAILED).to_json()
-    response = bot_request.result.to_json()
-    if bot_request.done:
-        request_dic.pop(request_id)
-    else:
-        bot_request.result.pop_all()
-    logger.debug(f"Bot request {request_id} response -> \n{response[:100]}")
-    return response
-
-
-def clear_request_dict():
-    logger.debug("Watch and clean request_dic.")
-    while True:
-        now = time.time()
-        keys_to_delete = []
-        for key, bot_request in request_dic.items():
-            if now - int(key)/1000 > 600:
-                logger.debug(f"Remove time out request -> {key}|{bot_request.session_id}|{bot_request.username}"
-                             f"|{bot_request.message}")
-                keys_to_delete.append(key)
-        for key in keys_to_delete:
-            request_dic.pop(key)
-        time.sleep(60)
-
-
-def construct_bot_request(data):
-    session_id = data.get('session_id') or "friend-default_session"
-    username = data.get('username') or "某人"
-    message = data.get('message')
-    logger.info(f"Get message from {session_id}[{username}]:\n{message}")
-    with lock:
-        bot_request = BotRequest(session_id, username, message, str(int(time.time() * 1000)))
-    return bot_request
-
-
-async def start_task():
-    """|coro|
-    以异步方式启动
-    """
-    threading.Thread(target=clear_request_dict).start()
-    return await app.run_task(host=config.http.host, port=config.http.port, debug=config.http.debug)
+        response.timeout = None
+        return response

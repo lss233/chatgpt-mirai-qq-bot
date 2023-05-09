@@ -26,7 +26,6 @@ TOKEN = config.wecom.token
 EncodingAESKey = config.wecom.encoding_aes_key
 crypto = WeChatCrypto(TOKEN, EncodingAESKey, CorpId)
 client = WeChatClient(CorpId, Secret)
-app = Quart(__name__)
 
 
 async def _response_func(UserId: str, chain: MessageChain, text: str, voice: TTSResponse, image: ImageElement):
@@ -42,55 +41,49 @@ async def _response_func(UserId: str, chain: MessageChain, text: str, voice: TTS
         client.message.send_voice(AgentId, UserId, voice_id)
 
 
-@app.get("/wechat")
-async def echo_str():
-    signature = request.args.get("msg_signature", "")
-    timestamp = request.args.get("timestamp", "")
-    nonce = request.args.get("nonce", "")
-    try:
-        return crypto.check_signature(
-            signature, timestamp, nonce, request.args.get("echostr", ""))
-    except InvalidSignatureException:
-        logger.error("签名检查失败，请检查配置是否正确。")
-        return abort(403)
+def route(app: Quart):
+    """注册 HTTP 路由"""
+    @app.get("/wechat")
+    async def echo_str():
+        signature = request.args.get("msg_signature", "")
+        timestamp = request.args.get("timestamp", "")
+        nonce = request.args.get("nonce", "")
+        try:
+            return crypto.check_signature(
+                signature, timestamp, nonce, request.args.get("echostr", ""))
+        except InvalidSignatureException:
+            logger.error("签名检查失败，请检查配置是否正确。")
+            return abort(403)
 
+    @app.post("/wechat")
+    async def wechat():
+        signature = request.args.get("msg_signature", "")
+        timestamp = request.args.get("timestamp", "")
+        nonce = request.args.get("nonce", "")
+        try:
+            msg = crypto.decrypt_message(await request.data, signature, timestamp, nonce)
+        except (InvalidSignatureException, InvalidCorpIdException):
+            logger.error("消息解密失败，请检查配置是否正确。")
+            return abort(403)
+        msg = parse_message(msg)
+        logger.debug(msg)
+        if msg.type == "text":
+            _reply = create_reply(msg.content, msg).render()
 
-@app.post("/wechat")
-async def wechat():
-    signature = request.args.get("msg_signature", "")
-    timestamp = request.args.get("timestamp", "")
-    nonce = request.args.get("nonce", "")
-    try:
-        msg = crypto.decrypt_message(await request.data, signature, timestamp, nonce)
-    except (InvalidSignatureException, InvalidCorpIdException):
-        logger.error("消息解密失败，请检查配置是否正确。")
-        return abort(403)
-    msg = parse_message(msg)
-    logger.debug(msg)
-    if msg.type == "text":
-        _reply = create_reply(msg.content, msg).render()
+            _request = Request()
+            _request.session_id = f"wecom-{str(msg.source)}"
+            _request.user_id = msg.source
+            _request.nickname = client.user.get(msg.source) or "某人"
+            _request.message = MessageChain([Plain(msg.content)])
+            logger.info(f"Get message from {_request.session_id}:\n{_request.message}")
 
-        _request = Request()
-        _request.session_id = f"wecom-{str(msg.source)}"
-        _request.user_id = msg.source
-        _request.nickname = client.user.get(msg.source) or "某人"
-        _request.message = MessageChain([Plain(msg.content)])
-        logger.info(f"Get message from {_request.session_id}:\n{_request.message}")
+            _response = Response(functools.partial(_response_func, UserId=msg.source))
 
-        _response = Response(functools.partial(_response_func, UserId=msg.source))
+            asyncio.create_task(handle_message(_request, _response))
 
-        asyncio.create_task(handle_message(_request, _response))
-
-        response = await make_response("ok")
-        response.status_code = 200
-        return response
-    else:
-        _reply = create_reply("Can not handle this for now", msg).render()
-    return crypto.encrypt_message(_reply, nonce, timestamp)
-
-
-async def start_task():
-    """|coro|
-    以异步方式启动
-    """
-    return await app.run_task(host=config.wecom.host, port=config.wecom.port, debug=config.wecom.debug)
+            response = await make_response("ok")
+            response.status_code = 200
+            return response
+        else:
+            _reply = create_reply("Can not handle this for now", msg).render()
+        return crypto.encrypt_message(_reply, nonce, timestamp)
