@@ -2,6 +2,7 @@ import functools
 import re
 import time
 from typing import Union, Optional
+import logging
 
 import aiocqhttp
 from aiocqhttp import CQHttp, Event, MessageSegment
@@ -11,6 +12,7 @@ from graia.ariadne.message.element import Image as GraiaImage, At, Plain, Voice
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
 from loguru import logger
+from quart import Quart
 
 import constants
 from constants import config
@@ -22,6 +24,16 @@ from framework.utils.text_to_img import to_image
 from framework.universal import handle_message
 
 bot = CQHttp()
+
+
+class InterceptHandler(logging.Handler):
+    def emit(self, record):
+        logger_opt = logger.opt(depth=6, exception=record.exc_info)
+        logger_opt.log(record.levelname, record.getMessage())
+
+
+logging.getLogger('quart.serving').handlers = [InterceptHandler()]
+logging.getLogger('quart.app').handlers = [InterceptHandler()]
 
 
 class MentionMe:
@@ -355,11 +367,9 @@ async def _(event: Event):
 
 @bot.on_startup
 async def startup():
-    logger.success("启动完毕，接收消息中……")
+    logger.success("OneBot 服务启动完毕，接收消息中……")
 
 
-async def start_task():
-    """|coro|
-    以异步方式启动
-    """
-    return await bot.run_task(host=config.onebot.reverse_ws_host, port=config.onebot.reverse_ws_port)
+async def start_http_app() -> Quart:
+    await bot.run_task(host=config.http.host, port=config.http.port)
+    return bot.server_app
