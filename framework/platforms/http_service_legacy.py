@@ -11,6 +11,9 @@ from quart import Quart, request
 
 import constants
 from constants import config, BotPlatform
+from framework.messages import ImageElement
+from framework.request import Request, Response
+from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.universal import handle_message
 
 lock = threading.Lock()
@@ -22,11 +25,15 @@ RESPONSE_FAILED = "FAILED"
 RESPONSE_DONE = "DONE"
 
 
-class BotRequest:
+class BotRequest(Request):
     def __init__(self, session_id, username, message, request_time):
-        self.session_id: str = session_id
-        self.username: str = username
-        self.message: str = message
+        self.session_id = session_id
+        self.nickname = username
+        self.is_manager = True
+        self.group_id = ''
+        self.user_id = session_id
+
+        self.message = MessageChain([Plain(message)])
         self.result: ResponseResult = ResponseResult()
         self.request_time = request_time
         self.done: bool = False
@@ -81,34 +88,21 @@ class ResponseResult:
 
 
 async def process_request(bot_request: BotRequest):
-    async def response(msg):
-        logger.info(f"Got response msg -> {type(msg)} -> {msg}")
-        _resp = msg
-        if not isinstance(msg, MessageChain):
-            _resp = MessageChain(msg)
-        for ele in _resp:
-            if isinstance(ele, Plain) and str(ele):
-                bot_request.append_result("message", str(ele))
-            elif isinstance(ele, Image):
-                bot_request.append_result("image", f"data:image/png;base64,{ele.base64}")
-            elif isinstance(ele, Voice):
-                # mp3
-                bot_request.append_result("voice", f"data:audio/mpeg;base64,{ele.base64}")
-            else:
-                logger.warning(f"Unsupported message -> {type(ele)} -> {str(ele)}")
-                bot_request.append_result("message", str(ele))
+    async def _response_func(chain: MessageChain, text: str, voice: TTSResponse, image: ImageElement):
+        if text:
+            bot_request.append_result("message", text)
+        if voice:
+            bot_request.append_result("voice", f"data:audio/wav;base64,{await voice.get_base64(VoiceFormat.Wav)}")
+        if image:
+            bot_request.append_result("image", f"data:image/png;base64,{image.base64}")
 
     logger.debug(f"Start to process bot request {bot_request.request_time}.")
     if bot_request.message is None or not str(bot_request.message).strip():
-        await response("message 不能为空!")
+        await _response_func(text="message 不能为空!")
         bot_request.set_result_status(RESPONSE_FAILED)
     else:
         await handle_message(
-            response,
-            bot_request.session_id,
-            bot_request.message,
-            nickname=bot_request.username,
-            request_from=BotPlatform.HttpService
+            bot_request, Response(_response_func),
         )
         bot_request.set_result_status(RESPONSE_DONE)
     bot_request.done = True
