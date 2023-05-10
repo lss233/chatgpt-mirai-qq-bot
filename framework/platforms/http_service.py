@@ -109,7 +109,7 @@ def route(app: Quart):
         _req.group_id = data.get("group_id", "")
         _req.nickname = data.get("nickname", "Bob")
         _req.is_manager = data.get("is_manager", False)
-        prefered_format = data.get("prefered_format", VoiceFormat.Wav)
+        prefered_format: VoiceFormat = data.get("prefered_format", VoiceFormat.Wav)
         message_chain = []
         for item in data.get("messages", []):
             type_ = item.get('type', 'text')
@@ -122,11 +122,11 @@ def route(app: Quart):
                                                  text=item.get('text', '')))
         _req.message = MessageChain(message_chain)
 
-        response_chain = []
 
         q = asyncio.Queue()
 
         async def _response_func(chain: MessageChain, text: str, voice: TTSResponse, image: ImageElement):
+            response_chain = []
             if text:
                 response_chain.append({
                     "type": "text",
@@ -135,15 +135,15 @@ def route(app: Quart):
             if voice:
                 response_chain.append({
                     "type": "voice",
-                    "value": voice.get_base64(prefered_format),
-                    "format": prefered_format
+                    "value": await voice.get_base64(prefered_format),
+                    "format": prefered_format.value
                 })
             if image:
                 response_chain.append({
                     "type": "image",
                     "value": image.base64
                 })
-            await q.put(response_chain.copy())
+            await q.put(response_chain)
 
         _res = Response(_response_func)
 
