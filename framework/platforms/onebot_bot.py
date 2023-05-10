@@ -122,7 +122,7 @@ async def safe_send(event, resp: MessageChain, is_group):
             try:
                 return await bot.send(event, MessageSegment.image(f"base64://{(await to_image(str(resp))).base64}"))
             except Exception as e:
-                return await bot.send(event, "消息发送失败，可能是遇到风控。" + str(e))
+                return await bot.send(event, f"消息发送失败，可能是遇到风控。{str(e)}")
 
 
 async def respond(event: aiocqhttp.Event, is_group: bool, chain: MessageChain = None, text: str = None,
