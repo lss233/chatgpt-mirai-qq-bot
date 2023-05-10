@@ -85,6 +85,11 @@ class HttpService(BaseModel):
         description="是否开启debug，错误时展示日志",
         default=False
     )
+    password: Optional[str] = Field(
+        title="登录密码",
+        description="密码使用 SHA-512 哈希保存，如果未指定，则会在启动时随机生成一个密码。",
+        default=None
+    )
 
 
 class WecomBot(BaseModel):
