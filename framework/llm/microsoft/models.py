@@ -1,12 +1,23 @@
 import httpx
+from pydantic import Field
 
 import constants
 from framework.accounts import AccountInfoBaseModel
 
 
 class BingCookieAuth(AccountInfoBaseModel):
-    cookie_content: str
-    """Bing 的 Cookie"""
+    cookie_content: str = Field(
+        title="cookie_content",
+        description="Bing 的 Cookie"
+    )
+
+    _client: httpx.AsyncClient = httpx.AsyncClient(trust_env=True)
+
+    class Config:
+        title = 'Bing 账号设置'
+        schema_extra = {
+            "description": "配置教程：[Wiki](https://chatgpt-qq.lss233.com/pei-zhi-wen-jian-jiao-cheng/jie-ru-ai-ping-tai/jie-ru-new-bing-sydney)"
+        }
 
     async def check_alive(self) -> bool:
         async with httpx.AsyncClient(

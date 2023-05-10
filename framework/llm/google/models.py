@@ -1,15 +1,24 @@
 from typing import Any
 
 import httpx
+from pydantic import Field
 
 from framework.accounts import AccountInfoBaseModel
 
 
 class BardCookieAuth(AccountInfoBaseModel):
-    cookie_content: str
-    """Bard 的 Cookie"""
+    cookie_content: str = Field(
+        title="cookie_content",
+        description="Bard 的 Cookie"
+    )
 
     _client: httpx.AsyncClient = httpx.AsyncClient(trust_env=True)
+
+    class Config:
+        title = 'Bard 账号设置'
+        schema_extra = {
+            "description": "配置教程：[Wiki](https://chatgpt-qq.lss233.com/pei-zhi-wen-jian-jiao-cheng/jie-ru-ai-ping-tai/jie-ru-google-bard)"
+        }
 
     def __init__(self, **data: Any):
         super().__init__(**data)
