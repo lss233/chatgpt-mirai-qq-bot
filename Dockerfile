@@ -16,7 +16,9 @@ RUN mkdir -p /app
 WORKDIR /app
 
 COPY requirements.txt /app
-RUN pip install --no-cache-dir -r requirements.txt && pip cache purge
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip cache purge && \
+    python -c "from pycloudflared import try_cloudflare; try_cloudflare(-1)" || true
 
 COPY . /app
 

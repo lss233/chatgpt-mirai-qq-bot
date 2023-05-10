@@ -90,6 +90,11 @@ class HttpService(BaseModel):
         description="密码使用 SHA-512 哈希保存，如果未指定，则会在启动时随机生成一个密码。",
         default=None
     )
+    cloudflared: bool = Field(
+        title="开启 Cloudflare 转发",
+        description="开启后 HTTP 服务会通过 Cloudflare Tunnel 转发到公网，请确保你的密码足够安全",
+        default=False
+    )
 
 
 class WecomBot(BaseModel):
@@ -699,7 +704,7 @@ class System(BaseModel):
     use_system_proxy: bool = Field(
         title="使用系统代理设置",
         description="",
-        default=False
+        default=True
     )
     accept_group_invite: bool = Field(
         title="自动接收邀请入群请求",
@@ -1005,7 +1010,7 @@ class Config(BaseModel):
 
     def check_proxy(self):
         if self.system.proxy is None and self.system.use_system_proxy:
-            self.__setup_system_proxy()
+            self.system.proxy = self.__setup_system_proxy()
 
         if self.system.proxy is None:
             return None
@@ -1019,4 +1024,6 @@ class Config(BaseModel):
             "http": self.system.proxy
         })
         logger.success("[代理测试] 连接成功！")
+        os.environ['HTTPS_PROXY'] = self.system.proxy
+        os.environ['HTTP_PROXY'] = self.system.proxy
         return self.system.proxy

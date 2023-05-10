@@ -12,11 +12,24 @@ import asyncio
 from framework.utils.exithooks import hook
 from loguru import logger
 import constants
+import threading
 
 hook()
 
 loop = creart.create(AbstractEventLoop)
 
+
+def setup_cloudflared():
+    logger.info("尝试开启 Cloudflare Tunnel……")
+    try:
+        from pycloudflared import try_cloudflare, remove_executable
+        cloudflared_url = try_cloudflare(port=constants.config.http.port)
+        logger.success(f"外部网络访问地址：{cloudflared_url.tunnel}")
+    except OSError as e:
+        logger.error(f"Cloudflared 开启失败：{e}")
+        remove_executable()
+    except Exception as e:
+        logger.error(f"Cloudflared 开启失败：{e}")
 tasks = []
 if constants.config.azure:
     tasks.append(loop.create_task(TTSEngine.register("azure", AzureTTSEngine(constants.config.azure))))
@@ -59,14 +72,18 @@ async def setup_web_service():
     from framework.platforms.http_service_legacy import route as routes_http_legacy
     routes_http(bot.server_app)
     routes_http_legacy(bot.server_app)
-    logger.info("启动 HTTP API……")
-    app = await start_http_app()
+
 
     if constants.config.wecom:
         logger.info("检测到 Wecom 配置，将注册 Wecom 路由……")
         from framework.platforms.wecom_bot import route as routes_wecom
-        routes_wecom(app)
+        routes_wecom(bot.server_app)
 
+    if constants.config.http.cloudflared:
+        threading.Thread(target=setup_cloudflared).start()
+
+    logger.info("启动 HTTP API 中……")
+    await start_http_app()
 
 bots.append(setup_web_service())
 

@@ -370,6 +370,5 @@ async def startup():
     logger.success("OneBot 服务启动完毕，接收消息中……")
 
 
-async def start_http_app() -> Quart:
-    await bot.run_task(host=config.http.host, port=config.http.port)
-    return bot.server_app
+async def start_http_app():
+    return await bot.run_task(host=config.http.host, port=config.http.port)
