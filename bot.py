@@ -54,13 +54,13 @@ if constants.config.discord:
 
 
 async def setup_web_service():
-    from framework.platforms.onebot_bot import start_http_app
+    from framework.platforms.onebot_bot import bot, start_http_app
     from framework.platforms.http_service import route as routes_http
     from framework.platforms.http_service_legacy import route as routes_http_legacy
+    routes_http(bot.server_app)
+    routes_http_legacy(bot.server_app)
     logger.info("启动 HTTP API……")
     app = await start_http_app()
-    routes_http(app)
-    routes_http_legacy(app)
 
     if constants.config.wecom:
         logger.info("检测到 Wecom 配置，将注册 Wecom 路由……")
