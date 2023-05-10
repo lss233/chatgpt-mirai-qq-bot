@@ -26,15 +26,14 @@ LlmFactory.register("bing-c", BingAdapter, (ConversationStyle.creative,))
 LlmFactory.register("bing-p", BingAdapter, (ConversationStyle.precise,))
 LlmFactory.register("bing-b", BingAdapter, (ConversationStyle.balanced,))
 LlmFactory.register("chatglm-api", ChatGLM6BAdapter, ())
-LlmFactory.register("poe-capybara", PoeAdapter, (PoeBotType.Sage, ))
-LlmFactory.register("poe-beaver", PoeAdapter, (PoeBotType.GPT4, ))
-LlmFactory.register("poe-a2_2", PoeAdapter, (PoeBotType.Claude2, ))
-LlmFactory.register("poe-a2", PoeAdapter, (PoeBotType.Claude, ))
-LlmFactory.register("poe-claude", PoeAdapter, (PoeBotType.Claude, ))
-LlmFactory.register("poe-chinchilla", PoeAdapter, (PoeBotType.ChatGPT, ))
-LlmFactory.register("poe-chatgpt", PoeAdapter, (PoeBotType.ChatGPT, ))
-LlmFactory.register("poe-nutria", PoeAdapter, (PoeBotType.Dragonfly, ))
-
+LlmFactory.register("poe-capybara", PoeAdapter, (PoeBotType.Sage,))
+LlmFactory.register("poe-beaver", PoeAdapter, (PoeBotType.GPT4,))
+LlmFactory.register("poe-a2_2", PoeAdapter, (PoeBotType.Claude2,))
+LlmFactory.register("poe-a2", PoeAdapter, (PoeBotType.Claude,))
+LlmFactory.register("poe-claude", PoeAdapter, (PoeBotType.Claude,))
+LlmFactory.register("poe-chinchilla", PoeAdapter, (PoeBotType.ChatGPT,))
+LlmFactory.register("poe-chatgpt", PoeAdapter, (PoeBotType.ChatGPT,))
+LlmFactory.register("poe-nutria", PoeAdapter, (PoeBotType.Dragonfly,))
 
 # TODO: DrawingAIFactory.register_ai("yiyan", YiyanAdapter, ("drawing", ))
 
@@ -45,9 +44,10 @@ proxy: Optional[str] = config.check_proxy()
 # botManager = BotManager(config)
 
 if config.sdwebui:
-    DrawingAIFactory.register("sd", SDWebUI, (config.sdwebui, ))
+    DrawingAIFactory.register("sd", SDWebUI, (config.sdwebui,))
 DrawingAIFactory.register("bing", BingAdapter, ("drawing", ConversationStyle.creative))
 DrawingAIFactory.register("openai", ChatGPTAPIAdapter, ("drawing",))
+
 
 class BotPlatform(Enum):
     AriadneBot = "mirai"
