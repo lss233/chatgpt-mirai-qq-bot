@@ -3,6 +3,7 @@ import json
 import typing
 import asyncio
 
+import contextlib
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
 from quart import Quart, request, make_response
@@ -33,7 +34,6 @@ def route(app: Quart):
                 return type_.schema_json()
         return constants.config.schema_json()
 
-
     @app.post('/backend-api/v1/config')
     async def post_config():
         key = request.args.get("key", '')
@@ -48,7 +48,6 @@ def route(app: Quart):
             "ok": True
         })
 
-
     @app.get("/backend-api/v1/accounts/list")
     async def get_accounts():
         return {
@@ -56,12 +55,10 @@ def route(app: Quart):
             for key, value in account_manager.loaded_accounts.items()
         }
 
-
     @app.get("/backend-api/v1/accounts/model")
     async def get_account_model():
         key = request.args.get("key", "chatgpt-web")
         return account_manager.registered_models[key].schema_json()
-
 
     @app.post("/backend-api/v1/accounts/<key>/<index>")
     async def update_account_model(key: str, index: str):
@@ -75,7 +72,6 @@ def route(app: Quart):
             "ok": result
         })
 
-
     @app.delete("/backend-api/v1/accounts/<key>/<index>")
     async def delete_account_model(key: str, index: str):
         del account_manager.loaded_accounts[key][int(index)]
@@ -84,7 +80,6 @@ def route(app: Quart):
         return json.dumps({
             "ok": True
         })
-
 
     @app.post("/backend-api/v1/accounts/<key>")
     async def add_new_account(key: str):
@@ -97,7 +92,6 @@ def route(app: Quart):
         return json.dumps({
             "ok": result
         })
-
 
     @app.post('/v1/conversation')
     async def conversation():
@@ -118,10 +112,10 @@ def route(app: Quart):
             elif type_ == 'image':
                 message_chain.append(ImageElement(base64=item.get('value')))
             elif type_ == 'voice':
-                message_chain.append(TTSResponse(format_=item.get('format'), data_bytes=base64.b64decode(item.get('value')),
-                                                 text=item.get('text', '')))
+                message_chain.append(
+                    TTSResponse(format_=item.get('format'), data_bytes=base64.b64decode(item.get('value')),
+                                text=item.get('text', '')))
         _req.message = MessageChain(message_chain)
-
 
         q = asyncio.Queue()
 
@@ -150,10 +144,13 @@ def route(app: Quart):
         task = asyncio.create_task(handle_message(_req, _res))
 
         async def send_events():
-            while not task.done():
-                message = f"data: {await q.get()}\r\n\r\n"
-                yield message.encode('utf-8')
-                q.task_done()
+
+            while not task.done() and not task.cancelled():
+                with contextlib.suppress(asyncio.TimeoutError):
+                    message = json.dumps(await asyncio.wait_for(q.get(), 1), ensure_ascii=False)
+                    message = f"data: {message}\r\n\r\n"
+                    yield message.encode('utf-8')
+                    q.task_done()
 
         response = await make_response(
             send_events(),
