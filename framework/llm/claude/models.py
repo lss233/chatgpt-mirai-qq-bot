@@ -1,21 +1,35 @@
 from typing import Any
 
 import httpx
+from pydantic import Field
 
 from framework.accounts import AccountInfoBaseModel
 
 
 class SlackAccessTokenAuth(AccountInfoBaseModel):
-    channel_id: str
-    """负责与机器人交互的 Channel ID"""
+    channel_id: str = Field(
+        title="channel_id",
+        description="负责与机器人交互的 Channel ID"
+    )
 
-    access_token: str
-    """安装 Slack App 时获得的 access_token"""
+    access_token: str = Field(
+        title="access_token",
+        description="安装 Slack App 时获得的 access_token"
+    )
 
-    app_endpoint: str = "https://chatgpt-proxy.lss233.com/claude-in-slack/backend-api/"
-    """API 的接入点"""
+    app_endpoint: str = Field(
+        title="app_endpoint",
+        default="https://chatgpt-proxy.lss233.com/claude-in-slack/backend-api/",
+        description="API 的接入点（保持默认）"
+    )
 
     _client: httpx.AsyncClient = httpx.AsyncClient(trust_env=True)
+
+    class Config:
+        title = 'Slack 账号设置'
+        schema_extra = {
+            "description": "配置教程：[Wiki](https://chatgpt-qq.lss233.com/pei-zhi-wen-jian-jiao-cheng/jie-ru-ai-ping-tai/jie-ru-claude)"
+        }
 
     def __init__(self, **data: Any):
         super().__init__(**data)
@@ -49,4 +63,3 @@ class SlackAccessTokenAuth(AccountInfoBaseModel):
         """
         req = await self._client.get(f"{self.app_endpoint}/conversations")
         return "items" in req.json()
-

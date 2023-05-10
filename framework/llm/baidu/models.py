@@ -1,15 +1,26 @@
 from typing import Any
 
 import httpx
+from pydantic import Field
 
 from framework.accounts import AccountInfoBaseModel
 
 
 class BaiduCookieAuth(AccountInfoBaseModel):
-    BDUSS: str
-    """百度 Cookie 中的 BDUSS 字段"""
-    BAIDUID: str
-    """百度 Cookie 中的 BAIDUID 字段"""
+    BDUSS: str = Field(
+        title="BDUSS",
+        description="百度 Cookie 中的 BDUSS 字段"
+    )
+    BAIDUID: str = Field(
+        title="BAIDUID",
+        description="百度 Cookie 中的 BAIDUID 字段"
+    )
+
+    class Config:
+        title = '百度 Cookie'
+        schema_extra = {
+            "description": "配置教程：[Wiki](https://github.com/lss233/chatgpt-mirai-qq-bot/wiki/%E6%96%87%E5%BF%83%E4%B8%80%E8%A8%80-Cookie-%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B)"
+        }
 
     _client: httpx.AsyncClient = httpx.AsyncClient(trust_env=True)
 
