@@ -1,12 +1,16 @@
 import base64
 import json
 import typing
+import random
+from functools import wraps
+
 import asyncio
 
 import contextlib
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
-from quart import Quart, request, make_response
+from quart import Quart, request, make_response, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
 
 import constants
 from framework.accounts import account_manager
@@ -14,10 +18,95 @@ from framework.messages import ImageElement
 from framework.request import Request, Response
 from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.universal import handle_message
+import hashlib
+from loguru import logger
+from datetime import datetime, timedelta
+import jwt
+import time
+
+from datetime import timezone
+
+login_attempts = {}
+
+if not constants.config.http.password:
+    password = "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=10))
+    logger.warning("=====================================")
+    logger.warning(" ")
+    logger.warning(" 警告：未设置 HTTP 控制台密码")
+    logger.warning(f" 已为您生成密码：{password}")
+    logger.warning(" 请妥善保存")
+    logger.warning(" ")
+    logger.warning("=====================================")
+    constants.config.http.password = generate_password_hash(password, method="sha512", salt_length=6)
+    constants.Config.save_config(constants.config)
+
+jwt_secret_key = hashlib.sha256(constants.config.http.password.encode('utf-8')).digest()
+
+
+def generate_token():
+    """生成 JWT 令牌"""
+    # 令牌有效期为 3 天
+    expiration_time = datetime.now(timezone.utc) + timedelta(days=3)
+    # 令牌的 payload 包含过期时间和密码哈希
+    payload = {"exp": expiration_time}
+    return jwt.encode(payload, jwt_secret_key, algorithm="HS256")
+
+
+def authenticate(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        # 检查 Authorization 头
+        token = request.headers.get("Authorization", '').removeprefix("Bearer ")
+        if not token:
+            return jsonify({"error": "认证失败"}), 401
+
+        # 验证 JWT 令牌
+        try:
+            jwt.decode(token, jwt_secret_key, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "令牌已过期"}), 401
+        except Exception:
+            return jsonify({"error": "无效的令牌"}), 401
+
+        # 如果认证成功，则调用原始函数
+        return await func(*args, **kwargs)
+
+    return wrapper
 
 
 def route(app: Quart):
+    @app.post("/backend-api/v1/login")
+    async def login():
+        # 获取请求中的密码
+        data = await request.get_json()
+        if not data:
+            return jsonify({"error": "密码不正确"}), 401
+
+        # 防止暴力破解，限制登录尝试次数
+        ip = request.remote_addr
+        if ip in login_attempts:
+            wait_time = min(2 ** login_attempts[ip], 3600)
+            seconds_since_last_attempt = int(time.time() - login_attempts[ip])
+            remaining_wait_time = wait_time - seconds_since_last_attempt
+            if remaining_wait_time > 0:
+                return jsonify({"error": f"登录失败次数过多，请在 {remaining_wait_time} 秒后重试"}), 429
+
+        password_hash = constants.config.http.password
+        # 检查密码
+        if check_password_hash(password_hash, data.get("password", "")):
+            # 生成 JWT 令牌
+            token = generate_token()
+            return jsonify({"token": token}), 200
+
+        # 如果认证失败，则增加登录尝试次数并返回错误响应
+        if ip in login_attempts:
+            login_attempts[ip] += 1
+        else:
+            login_attempts[ip] = 1
+        return jsonify({"error": "密码不正确"}), 401
+
     @app.get('/backend-api/v1/config')
+    @authenticate
     async def get_config():
         type = request.args.get("type", "schema")
         constants.config.json()
@@ -35,6 +124,7 @@ def route(app: Quart):
         return constants.config.schema_json()
 
     @app.post('/backend-api/v1/config')
+    @authenticate
     async def post_config():
         key = request.args.get("key", '')
         data = await request.get_json()
@@ -49,6 +139,7 @@ def route(app: Quart):
         })
 
     @app.get("/backend-api/v1/accounts/list")
+    @authenticate
     async def get_accounts():
         return {
             key: [item.dict() for item in value]
@@ -56,11 +147,13 @@ def route(app: Quart):
         }
 
     @app.get("/backend-api/v1/accounts/model")
+    @authenticate
     async def get_account_model():
         key = request.args.get("key", "chatgpt-web")
         return account_manager.registered_models[key].schema_json()
 
     @app.post("/backend-api/v1/accounts/<key>/<index>")
+    @authenticate
     async def update_account_model(key: str, index: str):
         data = await request.get_json()
         account = account_manager.registered_models[key].parse_obj(data)
@@ -73,6 +166,7 @@ def route(app: Quart):
         })
 
     @app.delete("/backend-api/v1/accounts/<key>/<index>")
+    @authenticate
     async def delete_account_model(key: str, index: str):
         del account_manager.loaded_accounts[key][int(index)]
         del constants.config.accounts.__getattribute__(key)[int(index)]
@@ -82,6 +176,7 @@ def route(app: Quart):
         })
 
     @app.post("/backend-api/v1/accounts/<key>")
+    @authenticate
     async def add_new_account(key: str):
         data = await request.get_json()
         account = account_manager.registered_models[key].parse_obj(data)
