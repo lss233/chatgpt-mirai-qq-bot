@@ -2,6 +2,7 @@ import base64
 import json
 import typing
 import random
+import os.path
 from functools import wraps
 
 import asyncio
@@ -9,7 +10,7 @@ import asyncio
 import contextlib
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
-from quart import Quart, request, make_response, jsonify
+from quart import Quart, request, make_response, jsonify, send_from_directory, safe_join
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import constants
@@ -41,6 +42,8 @@ if not constants.config.http.password:
     constants.Config.save_config(constants.config)
 
 jwt_secret_key = hashlib.sha256(constants.config.http.password.encode('utf-8')).digest()
+
+webui_static = safe_join(os.path.dirname(os.path.pardir), 'assets/webui')
 
 
 def generate_token():
@@ -84,12 +87,19 @@ def route(app: Quart):
 
         # 防止暴力破解，限制登录尝试次数
         ip = request.remote_addr
+        now = time.monotonic()
         if ip in login_attempts:
-            wait_time = min(2 ** login_attempts[ip], 3600)
-            seconds_since_last_attempt = int(time.time() - login_attempts[ip])
-            remaining_wait_time = wait_time - seconds_since_last_attempt
-            if remaining_wait_time > 0:
-                return jsonify({"error": f"登录失败次数过多，请在 {remaining_wait_time} 秒后重试"}), 429
+            failed_attempts, last_attempt_time = login_attempts[ip]
+            if failed_attempts >= 6:
+                wait_time = 600  # set wait time to 10 minutes
+                seconds_since_last_attempt = int(now - last_attempt_time)
+                remaining_wait_time = wait_time - seconds_since_last_attempt
+                if remaining_wait_time > 0:
+                    return jsonify({"error": f"登录失败次数过多，请在 {remaining_wait_time} 秒后重试"}), 429
+            else:
+                login_attempts[ip] = (failed_attempts + 1, now)
+        else:
+            login_attempts[ip] = (1, now)
 
         password_hash = constants.config.http.password
         # 检查密码
@@ -99,10 +109,8 @@ def route(app: Quart):
             return jsonify({"token": token}), 200
 
         # 如果认证失败，则增加登录尝试次数并返回错误响应
-        if ip in login_attempts:
-            login_attempts[ip] += 1
-        else:
-            login_attempts[ip] = 1
+        login_attempts[ip] = login_attempts.get(ip, (0, 0))
+        login_attempts[ip] = (login_attempts[ip][0] + 1, now)
         return jsonify({"error": "密码不正确"}), 401
 
     @app.get('/backend-api/v1/config')
@@ -257,3 +265,13 @@ def route(app: Quart):
         )
         response.timeout = None
         return response
+
+    @app.route('/')
+    async def _home():
+        return await send_from_directory(webui_static, 'index.html')
+
+    @app.route('/<path:path>')
+    async def _static(path):
+        if os.path.isdir(safe_join(webui_static, path)):
+            path = os.path.join(path, 'index.html')
+        return await send_from_directory(webui_static, path)
