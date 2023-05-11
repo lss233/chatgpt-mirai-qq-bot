@@ -67,12 +67,6 @@ jobs:
         echo "Packing..." 
         cd C:/generated_files
         7z a quickstart-windows-go-cqhttp-amd64.zip C:\generated_files\*
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: quickstart-windows-go-cqhttp-amd64.zip
-        path: |
-          C:\generated_files\quickstart-windows-go-cqhttp-amd64.zip
     - name: Upload compressed files to release
       uses: svenstaro/upload-release-action@v2
       with:
