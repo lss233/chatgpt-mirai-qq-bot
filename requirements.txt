@@ -44,3 +44,4 @@ PyJWT~=2.7.0
 Werkzeug~=2.2.3
 httpcore~=0.16.3
 PyYAML~=6.0
+pycloudflared
