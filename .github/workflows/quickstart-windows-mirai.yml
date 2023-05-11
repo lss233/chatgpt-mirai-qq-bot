@@ -81,7 +81,7 @@ jobs:
         cd C:/generated_files/chatgpt
         ..\python3.11\python.exe C:/generated_files/python3.11/get-pip.py
         ..\python3.11\python.exe -m pip install -r requirements.txt
-        ..\python3.11\python.exe -c "from pycloudflared import try_cloudflare; try_cloudflare(-1)"
+        ..\python3.11\python.exe -c exec("""from pycloudflared import try_cloudflare \ntry: try_cloudflare(-1)\nexcept:... """)
         
         echo "Packing..." 
         cd C:/generated_files
