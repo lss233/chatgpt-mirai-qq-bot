@@ -1,8 +1,7 @@
 import time
-from typing import Callable, Optional
 
 from constants import config
-from manager.ratelimit import RateLimitManager
+from framework.utils.ratelimit import RateLimitManager
 
 manager = RateLimitManager()
 

@@ -24,8 +24,8 @@ from loguru import logger
 from typing_extensions import Annotated
 
 import constants
-from constants import config, botManager
-from manager.bot import BotManager
+from constants import config
+from framework.accounts import account_manager
 from framework.middlewares.ratelimit import manager as ratelimit_manager
 from framework.universal import handle_message
 from framework.utils.text_to_img import to_image
@@ -194,7 +194,7 @@ cmd = Commander(app.broadcast)
 
 
 @cmd.command(".重新加载配置文件")
-async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
+async def configuration_reload(app: Ariadne, event: MessageEvent, sender: Union[Friend, Member]):
     try:
         if sender.id != config.mirai.manager_qq:
             return await app.send_message(event, "您没有权限执行这个操作")
@@ -202,8 +202,7 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         config.scan_prompts()
         await app.send_message(event, "配置文件重新载入完毕！")
         await app.send_message(event, "重新登录账号中，详情请看控制台日志……")
-        constants.botManager = BotManager(config)
-        await botManager.login()
+        await account_manager.load_accounts(constants.config.accounts)
         await app.send_message(event, "登录结束")
     finally:
         raise ExecutionStop()
