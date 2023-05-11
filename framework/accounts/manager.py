@@ -64,6 +64,8 @@ class AccountManager:
 
     async def load_accounts(self, accounts_model: AccountsModel):
         """从配置文件中加载所有账号"""
+        self.loaded_accounts = {}
+
         for field in accounts_model.__fields__.keys():
             if field not in self.loaded_accounts:
                 self.loaded_accounts[field] = []
