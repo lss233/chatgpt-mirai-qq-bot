@@ -883,11 +883,11 @@ class AccountsModel(BaseModel):
 
 class Config(BaseModel):
     # === Platform Settings ===
-    onebot: Optional[Onebot] = None
+    onebot: Optional[Onebot] = Onebot()
     mirai: Optional[Mirai] = None
     telegram: Optional[TelegramBot] = None
     discord: Optional[DiscordBot] = None
-    http: Optional[HttpService] = None
+    http: Optional[HttpService] = HttpService()
     wecom: Optional[WecomBot] = None
 
     # === Account Settings ===
@@ -896,7 +896,7 @@ class Config(BaseModel):
     openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
     bard: BardAuths = BardAuths()
-    azure: AzureConfig = AzureConfig()
+    azure: Optional[AzureConfig]
     yiyan: YiyanAuths = YiyanAuths()
     chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
