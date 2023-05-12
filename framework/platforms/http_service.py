@@ -142,17 +142,17 @@ def route(app: Quart):
         constants.config.save_config(parsed)
         constants.config = parsed
 
-        return json.dump({
+        return json.dumps({
             "ok": True
         })
 
     @app.get("/backend-api/v1/accounts/list")
     @authenticate
     async def get_accounts():
-        return {
+        return json.dumps({
             key: [item.dict() for item in value]
             for key, value in account_manager.loaded_accounts.items()
-        }
+        })
 
     @app.get("/backend-api/v1/accounts/model")
     @authenticate
