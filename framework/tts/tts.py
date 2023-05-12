@@ -187,7 +187,7 @@ class TTSEngine(metaclass=abc.ABCMeta):
             registered_engines[name] = engine
         except Exception as e:
             logger.exception(e)
-            logger.error("初始化失败，请检查日志！")
+            logger.error(f"TTS 引擎 {name} 初始化失败，请检查日志！")
 
     @staticmethod
     def get_engine(name: str):
