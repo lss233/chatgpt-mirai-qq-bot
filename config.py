@@ -928,11 +928,12 @@ class Config(BaseModel):
                     continue
                 path = os.path.join(root, name)
                 name = name.removesuffix('.yml').removesuffix(".yaml")
-                if name in self.prompts.keywords:
-                    logger.error(f"注册预设：{name} <==> {path} [失败：关键词已存在]")
-                    continue
-                self.prompts.keywords[name] = path
-                logger.success(f"注册预设：{name} <==> {path} [成功]")
+                if path not in self.prompts.keywords.values():
+                    if name in self.prompts.keywords:
+                        logger.error(f"注册预设：{name} <==> {path} [失败：关键词已存在]")
+                        continue
+                    self.prompts.keywords[name] = path
+                    logger.success(f"注册预设：{name} <==> {path} [成功]")
 
     def load_preset(self, keyword):
         try:
