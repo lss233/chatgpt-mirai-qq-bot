@@ -2,18 +2,7 @@
 name: default
 author: Edward Wang <@WangEdward>
 supported_llms:
-  # please also add new llms here
-  - chatgpt-api
-  - chatglm-api
-  - chatgpt-web
-  - poe-claude
-  - poe-chatgpt
-  - slack-claude
-  - bing-c
-  - bing-p
-  - bing-b
-  - bard
-  - yiyan
+  - all
 init:
   - action: system/use-tts-engine
     args:
