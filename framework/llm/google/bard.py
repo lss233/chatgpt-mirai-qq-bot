@@ -20,7 +20,7 @@ class BardAdapter(Llm):
         super().__init__(session_id)
         self.at = None
         self.session_id = session_id
-        self.account = account_manager.pick('bard-cookie')
+        self.account = account_manager.pick('bard')
         self.client = self.account.get_client()
         self.bard_session_id = ""
         self.r = ""
@@ -49,9 +49,9 @@ class BardAdapter(Llm):
             response = await self.client.post(
                 url,
                 timeout=30,
-                params={
-                    "f.req": json.dumps([None, json.dumps([[prompt], None, [self.bard_session_id, self.r, self.rc]])]),
-                    "at": self.at
+                data={
+                    "f.req": json.dumps([None, json.dumps([[prompt], None, [self.bard_session_id, self.r, self.rc]])]).replace(" ", ""),
+                    "at": self.at.replace("%3A", ":")
                 }
             )
             response.raise_for_status()
@@ -63,16 +63,22 @@ class BardAdapter(Llm):
                     self.bard_session_id = data[1][0]
                     self.r = data[1][1]  # 用于下一次请求, 这个位置是固定的
                     # self.rc = data[4][1][0]
+                    rc_found = False
                     for check in data:
-                        if not check:
+                        if not check or not isinstance(check, list):
                             continue
-                        try:
-                            for element in [element for row in check for element in row]:
-                                if "rc_" in element:
+                        for row in check:
+                            if not row or not isinstance(row, list):
+                                continue
+                            for element in row:
+                                if "rc_" in str(element):
                                     self.rc = element
+                                    rc_found = True
                                     break
-                        except (KeyError, ValueError):
-                            continue
+                            if rc_found:
+                                break
+                        if rc_found:
+                            break
                     logger.debug(f"[Bard] {self.bard_session_id} - {self.r} - {self.rc} - {result}")
                     yield result
                     break
