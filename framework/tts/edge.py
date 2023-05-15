@@ -32,19 +32,18 @@ class EdgeTTSEngine(TTSEngine):
 
     async def speak(self, text: EmotionMarkupText, voice: TTSVoice) -> TTSResponse:
         communicate = edge_tts.Communicate(str(text), voice.codename)
-        output = BytesIO()
         written_audio = False
-        with BytesIO() as audio:
+        with BytesIO() as output:
             async for message in communicate.stream():
                 if message["type"] == "audio":
-                    audio.write(message["data"])
+                    output.write(message["data"])
                     written_audio = True
-        if not written_audio:
-            raise TTSSpeakFailedException(
-                "No audio was received from the service, so the file is empty."
-            )
-        output.seek(0)
-        return TTSResponse(VoiceFormat.Mp3, output.read(), str(text))
+            if not written_audio:
+                raise TTSSpeakFailedException(
+                    "No audio was received from the service, so the file is empty."
+                )
+            output.seek(0)
+            return TTSResponse(VoiceFormat.Mp3, output.read(), str(text))
 
     def get_supported_styles(self) -> List[str]:
         """
