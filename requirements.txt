@@ -24,7 +24,7 @@ BingImageCreator~=0.1.5
 requests~=2.28.2
 uuid~=1.30
 
-python-telegram-bot==20.2
+python-telegram-bot==20.3
 aiocqhttp~=1.4.3
 tls-client
 python-dateutil~=2.8.2
