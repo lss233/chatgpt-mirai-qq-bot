@@ -37,7 +37,7 @@ async def _response_func(UserId: str, chain: MessageChain, text: str, voice: TTS
         client.message.send_image(AgentId, UserId, image_id)
     if voice:
         voice_id = client.media.upload(
-            "voice", voice.get_base64(VoiceFormat.Amr))["media_id"]
+            "voice", await voice.transcode(VoiceFormat.Amr))["media_id"]
         client.message.send_voice(AgentId, UserId, voice_id)
 
 
