@@ -1,6 +1,6 @@
 ---
 name: default
-author: WangEdward
+author: Edward Wang <@WangEdward>
 supported_llms:
   # please also add new llms here
   - chatgpt-api
@@ -21,6 +21,6 @@ input:
     output: input.message
 output:
   - action: system/text
-    name: affinity_extraction
+    name: send_message
     args:
       text: ${{ output.message }}
