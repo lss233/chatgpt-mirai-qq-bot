@@ -165,6 +165,8 @@ class ConversationContext:
         self.drawing_adapter = DrawingAIFactory.create(name)
 
     def switch_tts_engine(self, name: Optional[str] = None, voice = None):
+        if not name and not voice and not constants.config.text_to_speech.always:
+            return
         self.tts_engine = TTSEngine.get_engine(name or constants.config.text_to_speech.engine)
         self.conversation_voice = self.tts_engine.choose_voice(voice or constants.config.text_to_speech.default)
         self.execution_variables["tts_engine"] = {
@@ -198,7 +200,10 @@ class ConversationContext:
 
     def speak_text(self, text: str):
         if not self.tts_engine:
-            raise CommandRefusedException("未定义 TTS 引擎，请检查预设和配置文件。")
+            if constants.config.text_to_speech.always:
+                raise CommandRefusedException("未定义 TTS 引擎，请检查预设和配置文件。")
+            else:
+                return
         else:
             if type(text) is EmotionMarkupText:
                 text_to_speak = text
