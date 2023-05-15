@@ -50,7 +50,7 @@ class AsyncPromptExecutionContext:
         self.actions['system/text-extraction'] = lambda text, pattern: [m.groupdict() for m in re.finditer(pattern, text, re.RegexFlag.M)]
         self.actions['system/instant-ask'] = partial(AsyncPromptExecutionContext.instant_ask, self)
         self.actions['tts/parse_emotion_text'] = TTSEngine.parse_emotion_text
-        self.actions['tts/speak'] = lambda text: self.conversation.tts_engine.speak(text if type(text) is EmotionMarkupText else EmotionMarkupText([("neutral", text)]), self.conversation.conversation_voice)
+        self.actions['tts/speak'] = lambda text: self.conversation.speak_text(text)
 
     async def init(self):
         await execute_action_block(self.flow.init, self.variables, self.actions)
@@ -195,6 +195,17 @@ class ConversationContext:
         if mode != "image" and constants.config.text_to_image.always:
             # TODO: export to config
             raise CommandRefusedException("不要！由于配置文件设置强制开了图片模式，我不会切换到其他任何模式。")
+
+    def speak_text(self, text: str):
+        if not self.tts_engine:
+            raise CommandRefusedException("未定义 TTS 引擎，请检查预设和配置文件。")
+        else:
+            if type(text) is EmotionMarkupText:
+                text_to_speak = text
+            else:
+                text_to_speak = EmotionMarkupText([("neutral", text)])
+            
+            tts_response = self.tts_engine.speak(text_to_speak, self.voice)
 
     async def reset(self):
         # 重建一个新的 LLM 实例
