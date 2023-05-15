@@ -19,7 +19,7 @@ from framework.renderer import Renderer
 from framework.renderer.merger import BufferedContentMerger, LengthContentMerger
 from framework.renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from framework.renderer.splitter import MultipleSegmentSplitter
-from framework.tts import TTSEngine, TTSVoice
+from framework.tts import TTSEngine, TTSVoice, EmotionMarkupText
 from framework.utils import retry
 from loguru import logger
 
@@ -50,7 +50,7 @@ class AsyncPromptExecutionContext:
         self.actions['system/text-extraction'] = lambda text, pattern: [m.groupdict() for m in re.finditer(pattern, text, re.RegexFlag.M)]
         self.actions['system/instant-ask'] = partial(AsyncPromptExecutionContext.instant_ask, self)
         self.actions['tts/parse_emotion_text'] = TTSEngine.parse_emotion_text
-        self.actions['tts/speak'] = lambda text: self.conversation.tts_engine.speak(text, self.conversation.conversation_voice)
+        self.actions['tts/speak'] = lambda text: self.conversation.tts_engine.speak(text if type(text) is EmotionMarkupText else EmotionMarkupText([("neutral", text)]), self.conversation.conversation_voice)
 
     async def init(self):
         await execute_action_block(self.flow.init, self.variables, self.actions)
@@ -165,7 +165,7 @@ class ConversationContext:
         self.drawing_adapter = DrawingAIFactory.create(name)
 
     def switch_tts_engine(self, name: Optional[str] = None, voice = None):
-        self.tts_engine = TTSEngine.get_engine(name)
+        self.tts_engine = TTSEngine.get_engine(name or constants.config.text_to_speech.engine)
         self.conversation_voice = self.tts_engine.choose_voice(voice or constants.config.text_to_speech.default)
         self.execution_variables["tts_engine"] = {
             "emotions": self.tts_engine.get_supported_styles(),
