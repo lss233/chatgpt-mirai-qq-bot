@@ -22,17 +22,12 @@ class BingCookieAuth(AccountInfoBaseModel):
         }
 
     async def check_alive(self) -> bool:
-        bot = None
-        bot = await EdgeChatbot.create(cookies=json.loads(self.cookie_content))
-        return bot is not None
-        # cookie_content 的格式不可以直接作为 header，所以不能直接用 httpx 来测试
-        # async with httpx.AsyncClient(
-        #         trust_env=True,
-        #         headers={
-        #             # "Cookie": self.cookie_content,
-        #             "sec-ch-ua": r'"Chromium";v="112", "Microsoft Edge";v="112", "Not:A-Brand";v="99"',
-        #             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.64'
-        #         }
-        # ) as client:
-        #     response = await client.get(f"{constants.config.bing.bing_endpoint}")
-        #     return "Success" in response.text
+        async with httpx.AsyncClient(
+                headers={
+                    "Cookie": ';'.join(f"{cookie['name']}=cookie['value'])" for cookie in json.loads(self.cookie_content)),
+                    "sec-ch-ua": r'"Chromium";v="112", "Microsoft Edge";v="112", "Not:A-Brand";v="99"',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.64'
+                }
+        ) as client:
+            response = await client.get(f"{constants.config.bing.bing_endpoint}")
+            return "Success" in response.text
