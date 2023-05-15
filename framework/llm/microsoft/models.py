@@ -2,7 +2,6 @@ import httpx
 import json
 from pydantic import Field
 
-from EdgeGPT import Chatbot as EdgeChatbot
 import constants
 from framework.accounts import AccountInfoBaseModel
 
