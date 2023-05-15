@@ -197,7 +197,11 @@ async def handle_message(request: Request, response: Response):
             # 当前没有预设
             logger.trace(f"{request.session_id} - 未检测到预设，正在执行默认预设……")
             # 隐式加载不回复预设内容
-            await request.conversation_context.load_preset('default')
+            if constants.config.text_to_speech.always:
+                _prompt_name = 'default_speak'
+            else:
+                _prompt_name = 'default'
+            await request.conversation_context.load_preset(_prompt_name)
             _initialization = True
 
         async def _respond_func(chain: MessageChain = None, text: str = None, voice: TTSResponse = None,
