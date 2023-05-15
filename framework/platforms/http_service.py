@@ -41,7 +41,10 @@ if not constants.config.http.password:
     constants.config.http.password = generate_password_hash(password, method="sha512", salt_length=6)
     constants.Config.save_config(constants.config)
 
-jwt_secret_key = hashlib.sha256(constants.config.http.password.encode('utf-8')).digest()
+
+def get_jwt_secret_key():
+    return hashlib.sha256(constants.config.http.password.encode('utf-8')).digest()
+
 
 webui_static = safe_join(os.path.dirname(os.path.pardir), 'assets/webui')
 
@@ -52,7 +55,7 @@ def generate_token():
     expiration_time = datetime.now(timezone.utc) + timedelta(days=3)
     # 令牌的 payload 包含过期时间和密码哈希
     payload = {"exp": expiration_time}
-    return jwt.encode(payload, jwt_secret_key, algorithm="HS256")
+    return jwt.encode(payload, get_jwt_secret_key(), algorithm="HS256")
 
 
 def authenticate(func):
@@ -65,7 +68,7 @@ def authenticate(func):
 
         # 验证 JWT 令牌
         try:
-            jwt.decode(token, jwt_secret_key, algorithms=["HS256"])
+            jwt.decode(token, get_jwt_secret_key(), algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "令牌已过期"}), 401
         except Exception:
