@@ -72,23 +72,25 @@ class DiscordBot(BaseModel):
 class HttpService(BaseModel):
     host: str = Field(
         title="Host",
-        description="0.0.0.0则不限制访问地址",
+        description="HTTP 服务绑定的 IP 地址，0.0.0.0 表示绑定于所有 IP 地址",
         default="0.0.0.0"
     )
     port: int = Field(
         title="Port",
-        description="Http service port, 默认8080",
+        description="HTTP 服务绑定的端口号",
         default=8080
     )
     debug: bool = Field(
         title="Debug",
-        description="是否开启debug，错误时展示日志",
+        description="是否开启 debug ，错误时展示日志",
         default=False
     )
     password: Optional[str] = Field(
         title="登录密码",
         description="密码使用 SHA-512 哈希保存，如果未指定，则会在启动时随机生成一个密码。",
-        default=None
+        default=None,
+        form_type="password",
+        password="HmacSHA512"
     )
     cloudflared: bool = Field(
         title="开启 Cloudflare 转发",
@@ -98,21 +100,6 @@ class HttpService(BaseModel):
 
 
 class WecomBot(BaseModel):
-    host: str = Field(
-        title="Host",
-        description="企业微信回调地址，需要能够被公网访问，0.0.0.0则不限制访问地址",
-        default="0.0.0.0"
-    )
-    port: int = Field(
-        title="Port",
-        description="Http service port, 默认5001",
-        default=5001
-    )
-    debug: bool = Field(
-        title="Debug",
-        description="是否开启debug，错误时展示日志",
-        default=False
-    )
     corp_id: str = Field(
         title="企业 ID",
         description="企业微信 的 企业 ID",
