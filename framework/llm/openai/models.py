@@ -92,6 +92,12 @@ class OpenAIAPIKeyAuth(AccountInfoBaseModel):
         description="OpenAI 的 api_key",
     )
 
+    model: str = Field(
+        default='gpt-3.5-turbo',
+        description="使用的默认模型",
+    )
+
+
     class Config:
         title = 'OpenAI API 账号设置'
         schema_extra = {
