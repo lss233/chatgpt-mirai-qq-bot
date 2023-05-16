@@ -22,6 +22,7 @@ class BingCookieAuth(AccountInfoBaseModel):
 
     async def check_alive(self) -> bool:
         async with httpx.AsyncClient(
+                trust_env=True,
                 headers={
                     "Cookie": ';'.join(f"{cookie['name']}=cookie['value'])" for cookie in json.loads(self.cookie_content)),
                     "sec-ch-ua": r'"Chromium";v="112", "Microsoft Edge";v="112", "Not:A-Brand";v="99"',
