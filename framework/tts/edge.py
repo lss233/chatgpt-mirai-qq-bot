@@ -30,7 +30,7 @@ class EdgeTTSEngine(TTSEngine):
             for voice in await edge_tts.list_voices(proxy=constants.proxy)
         ]
 
-    async def speak(self, text: EmotionMarkupText, voice: TTSVoice) -> TTSResponse:
+    async def speak(self, text: Union[str, EmotionMarkupText], voice: TTSVoice) -> TTSResponse:
         communicate = edge_tts.Communicate(str(text), voice.codename)
         written_audio = False
         with BytesIO() as output:
