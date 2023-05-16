@@ -1,7 +1,7 @@
 @ECHO OFF
 @CHCP 65001
 
-setx /M PATH "%cd%\ffmpeg\bin;%PATH%"
+SET PATH="%cd%\ffmpeg\bin;%PATH%"
 
 TITLE [ChatGPT for QQ] ChatGPT 端正在运行...
 cd chatgpt && ..\python3.11\python.exe bot.py
