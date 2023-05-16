@@ -81,6 +81,8 @@ def authenticate(func):
 
 
 def route(app: Quart):
+    app.service_routes.append(("Web 管理页面", "http", "/"))
+
     @app.post("/backend-api/v1/login")
     async def login():
         # 获取请求中的密码
