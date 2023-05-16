@@ -11,13 +11,15 @@ from constants import botManager
 
 
 class PoeBot(Enum):
-    """Poe 支持的机器人：{'capybara': 'Sage', 'beaver': 'GPT-4', 'a2_2': 'Claude+','a2': 'Claude', 'chinchilla': 'ChatGPT',
+    """Poe 支持的机器人：{'capybara': 'Sage', 'beaver': 'GPT-4', 'a2_2': 'Claude+','a2': 'Claude','a2_100k': 'Claude100k', 'chinchilla': 'ChatGPT', 'hutia': 'NeevaAI',
     'nutria': 'Dragonfly'} """
     Sage = "capybara"
     GPT4 = "beaver"
     Claude2 = "a2_2"
     Claude = "a2"
+    Claude100k = "a2_100k"
     ChatGPT = "chinchilla"
+    NeevaAI = "hutia"
     Dragonfly = "nutria"
 
     @staticmethod
