@@ -484,8 +484,13 @@ class BotManager:
             bot_info += f"* {LlmName.ChatGLM.value} : 清华 ChatGLM-6B (本地)\n"
         if len(self.bots['poe-web']) > 0:
             bot_info += f"* {LlmName.PoeSage.value} : POE Sage 模型\n"
+            bot_info += f"* {LlmName.PoeGPT4.value} : POE ChatGPT4 模型\n"
             bot_info += f"* {LlmName.PoeClaude.value} : POE Claude 模型\n"
+            bot_info += f"* {LlmName.PoeClaude2.value} : POE Claude+ 模型\n"
+            bot_info += f"* {LlmName.PoeClaude100k.value} : POE Claude 100k 模型\n"
             bot_info += f"* {LlmName.PoeChatGPT.value} : POE ChatGPT 模型\n"
+            bot_info += f"* {LlmName.PoeDragonfly.value} : POE Dragonfly 模型\n"
+            bot_info += f"* {LlmName.PoeNeevaAI.value} : POE NeevaAI 模型\n"
         if len(self.bots['slack-accesstoken']) > 0:
             bot_info += f"* {LlmName.SlackClaude.value} : Slack Claude 模型\n"
         return bot_info
