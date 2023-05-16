@@ -262,7 +262,7 @@ class ConversationContext:
         return await self.llm_adapter.switch_model(model_name)
 
     async def load_prompt(self, prompt_flow: PromptFlowBaseModel):
-        if self.type not in prompt_flow.supported_llms and 'all' not in prompt_flow.supported_llms:
+        if self.type not in prompt_flow.supported_llms and '*' not in prompt_flow.supported_llms:
             raise PromptFlowUnsupportedException(self.type, prompt_flow.supported_llms)
         await self.reset()
         self.prompt_flow = prompt_flow
