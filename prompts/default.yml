@@ -2,7 +2,8 @@
 name: default
 author: Edward Wang <@WangEdward>
 supported_llms:
-  - all
+# Please make sure that the wildcard is quoted
+  - '*'
 init:
   - action: system/use-tts-engine
     args:
