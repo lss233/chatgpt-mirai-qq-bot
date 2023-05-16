@@ -6,7 +6,7 @@ import revChatGPT.V1 as ChatGPTV1
 from revChatGPT.typings import Error as V1Error
 
 from framework.accounts import account_manager
-from framework.llm.openai.models import OpenAIAccessTokenAuth
+from framework.llm.openai.models import OpenAIAccessTokenAuth, OpenAIWebAuthBaseModel
 from framework.llm.llm import Llm
 from framework.chatbot.chatgpt import ChatGPTBrowserChatbot
 from framework.exceptions import LlmRateLimitException, LlmConcurrentMessageException
@@ -22,28 +22,32 @@ class ChatGPTWebAdapter(Llm):
     conversation_id_prev_queue = []
     parent_id_prev_queue = []
 
+    account: OpenAIWebAuthBaseModel
+
     bot: ChatGPTBrowserChatbot = None
-    """实例"""
+    """底层实现"""
 
     def __init__(self, session_id: str = "unknown"):
         self.session_id = session_id
-        self.bot = account_manager.pick("chatgpt-web")
+        self.account = account_manager.pick("chatgpt-web")
+        self.bot = self.account.get_client()
         self.conversation_id = None
         self.parent_id = None
         super().__init__()
-        self.current_model = self.bot.account.model or (
+        self.current_model = self.account.model or (
             'text-davinci-002-render-paid'
-            if self.bot.account.paid else
+            if self.account.paid else
             'text-davinci-002-render-sha'
         )
         self.supported_models = ['text-davinci-002-render-sha']
-        if self.bot.account.paid:
+        if self.account.paid:
             self.supported_models.append('text-davinci-002-render-paid')
             self.supported_models.append('gpt-4')
+            self.supported_models.append('gpt-4-browsing')
 
     async def switch_model(self, model_name):
         if (
-                self.bot.account.auto_remove_old_conversations
+                self.account.auto_remove_old_conversations
                 and self.conversation_id is not None
         ):
             await self.bot.delete_conversation(self.conversation_id)
@@ -62,7 +66,7 @@ class ChatGPTWebAdapter(Llm):
     async def on_destoryed(self):
         try:
             if (
-                    self.bot.account.auto_remove_old_conversations
+                    self.account.auto_remove_old_conversations
                     and self.conversation_id is not None
             ):
                 await self.bot.delete_conversation(self.conversation_id)
@@ -85,8 +89,8 @@ class ChatGPTWebAdapter(Llm):
                 # 初始化会话 ID
                 if not self.conversation_id:
                     self.conversation_id = resp["conversation_id"]
-                    if self.bot.account.title_pattern:
-                        await self.bot.rename_conversation(self.conversation_id, self.bot.account.title_pattern
+                    if self.account.title_pattern:
+                        await self.bot.rename_conversation(self.conversation_id, self.account.title_pattern
                                                            .format(session_id=self.session_id))
 
                 # 确保是当前的会话，才更新 parent_id

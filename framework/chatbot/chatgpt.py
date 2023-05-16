@@ -12,8 +12,6 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     bot: V1Chatbot
 
-    mode: str
-
     queue: QueueInfo
 
     unused_conversations_pools = {}
@@ -24,9 +22,8 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
     last_rate_limited = None
     """上一次遇到限流的时间"""
 
-    def __init__(self, bot, mode):
+    def __init__(self, bot):
         self.bot = bot
-        self.mode = mode
         self.queue = QueueInfo()
         super().__init__()
 

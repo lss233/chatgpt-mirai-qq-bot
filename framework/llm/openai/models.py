@@ -1,9 +1,15 @@
+from typing import Any
+
 import httpx
 import openai
 from pydantic import Field
 
+import constants
 from framework.accounts import AccountInfoBaseModel
 import revChatGPT.V1 as ChatGPTV1
+from revChatGPT.V1 import AsyncChatbot
+
+from framework.chatbot.chatgpt import ChatGPTBrowserChatbot
 
 
 class OpenAIWebAuthBaseModel(AccountInfoBaseModel):
@@ -28,14 +34,27 @@ class OpenAIWebAuthBaseModel(AccountInfoBaseModel):
         description="自动删除旧的对话",
     )
 
+    _client: ChatGPTBrowserChatbot = None
+
     async def check_alive(self) -> bool:
         raise NotImplemented("check_alive() for this method is not implemented")
+
+    def get_client(self) -> ChatGPTBrowserChatbot:
+        return self._client
 
 
 class OpenAIAccessTokenAuth(OpenAIWebAuthBaseModel):
     access_token: str = Field(
         description="OpenAI 的 access_token",
     )
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        self._client = ChatGPTBrowserChatbot(AsyncChatbot(config={
+            "access_token": self.access_token,
+            "proxy": constants.proxy,
+            "paid": self.paid
+        }))
 
     class Config:
         title = 'ChatGPT 网页版 账号设置'
