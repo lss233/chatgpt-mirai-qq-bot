@@ -15,10 +15,6 @@ input:
       text: ${{ input.message }}
     output: input.message
 output:
-  - action: system/text
-    name: send_message
-    args:
-      text: ${{ output.message }}
   - action: tts/speak
     when: tts_engine
     name: tts_speak
