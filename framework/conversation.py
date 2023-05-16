@@ -205,7 +205,7 @@ class ConversationContext:
             else:
                 return
         else:
-            if type(text) is EmotionMarkupText:
+            if isinstance(text, EmotionMarkupText):
                 text_to_speak = text
             else:
                 text_to_speak = EmotionMarkupText([("neutral", text)])
