@@ -19,7 +19,7 @@ output:
     args:
       text: ${{ output.message }}
   - action: tts/speak
-    when: send_message
+    when: tts_engine
     name: tts_speak
     args:
       text: ${{ output.message }}
