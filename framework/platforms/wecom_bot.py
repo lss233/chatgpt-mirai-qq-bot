@@ -43,6 +43,8 @@ async def _response_func(UserId: str, chain: MessageChain, text: str, voice: TTS
 
 def route(app: Quart):
     """注册 HTTP 路由"""
+    app.service_routes.append(("企业微信", "http", "/wechat"))
+
     @app.get("/wechat")
     async def echo_str():
         signature = request.args.get("msg_signature", "")

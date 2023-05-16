@@ -24,7 +24,7 @@ from framework.utils.text_to_img import to_image
 from framework.universal import handle_message
 
 bot = CQHttp()
-
+bot.server_app.service_routes = [("OneBot", "ws", "/ws")]
 
 class InterceptHandler(logging.Handler):
     def emit(self, record):

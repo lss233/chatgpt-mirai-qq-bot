@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 import edge_tts
 from io import BytesIO
