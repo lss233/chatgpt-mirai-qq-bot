@@ -209,9 +209,8 @@ class ConversationContext:
                 text_to_speak = text
             else:
                 text_to_speak = EmotionMarkupText([("neutral", text)])
-            
-            tts_response = self.tts_engine.speak(text_to_speak, self.conversation_voice)
-            return tts_response
+
+            return self.tts_engine.speak(text_to_speak, self.conversation_voice)
 
     async def reset(self):
         # 重建一个新的 LLM 实例
