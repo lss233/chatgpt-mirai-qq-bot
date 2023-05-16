@@ -4,7 +4,7 @@ from pydantic import Field
 
 import constants
 from framework.accounts import AccountInfoBaseModel
-
+from framework.exceptions import LLmAuthenticationFailedException
 
 class BingCookieAuth(AccountInfoBaseModel):
     cookie_content: str = Field(
@@ -30,4 +30,6 @@ class BingCookieAuth(AccountInfoBaseModel):
                 }
         ) as client:
             response = await client.get(f"{constants.config.bing.bing_endpoint}")
+            if response.json()["result"]["value"] == "UnauthorizedRequest":
+                raise LLmAuthenticationFailedException(response.json()["result"]["message"])
             return "Success" in response.text
