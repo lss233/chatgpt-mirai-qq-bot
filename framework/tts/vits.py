@@ -8,7 +8,7 @@ class VITSTTSEngine(TTSEngine):
     async def get_voice_list(self) -> List[TTSVoice]:
         pass
 
-    async def speak(self, text: EmotionMarkupText, voice: TTSVoice) -> TTSResponse:
+    async def speak(self, text: Union[str, EmotionMarkupText], voice: TTSVoice) -> TTSResponse:
         pass
 
     async def get_supported_styles(self) -> List[str]:
