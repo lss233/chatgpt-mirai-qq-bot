@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   gocqhttp:
-    image: ghcr.io/mrs4s/go-cqhttp:master
+    image: silicer/go-cqhttp:latest
     restart: always
     environment:
       LANG: 'C.UTF-8'
