@@ -434,6 +434,9 @@ class System(BaseModel):
     accept_friend_request: bool = False
     """自动接收好友请求"""
 
+    auto_reset_timeout_seconds: int = 8 * 3600
+    """会话闲置多长时间后会重置， -1 不重置"""
+
 
 class BaiduCloud(BaseModel):
     check: bool = False

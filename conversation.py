@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import time
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -73,6 +74,8 @@ class ConversationContext:
 
         self.last_resp = ''
 
+        self.last_resp_time = -1
+
         self.switch_renderer()
 
         if config.text_to_speech.always:
@@ -144,10 +147,12 @@ class ConversationContext:
     async def reset(self):
         await self.adapter.on_reset()
         self.last_resp = ''
+        self.last_resp_time = -1
         yield config.response.reset
 
     @retry((httpx.ConnectError, httpx.ConnectTimeout, TimeoutError))
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
+        await self.check_and_reset()
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
             if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
@@ -190,6 +195,7 @@ class ConversationContext:
                 else:
                     yield await self.renderer.render(item)
                 self.last_resp = item or ''
+                self.last_resp_time = int(time.time())
             yield await self.renderer.result()
 
     async def rollback(self):
@@ -234,6 +240,15 @@ class ConversationContext:
     def delete_message(self, respond_msg):
         # TODO: adapt to all platforms
         pass
+
+    async def check_and_reset(self):
+        timeout_seconds = config.system.auto_reset_timeout_seconds
+        current_time = time.time()
+        if timeout_seconds == -1 or self.last_resp_time == -1 or current_time - self.last_resp_time < timeout_seconds:
+            return
+        logger.debug(f"Reset conversation({self.session_id}) after {current_time - self.last_resp_time} seconds.")
+        async for _resp in self.reset():
+            logger.debug(_resp)
 
 
 class ConversationHandler:
