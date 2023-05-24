@@ -83,10 +83,10 @@
 
 <details>
     <summary>Linux模拟器（使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
-在终端中执行下面这行命令启动自动部署脚本。  
-```bash
+在终端中执行下面这行命令启动自动部署脚本。 
+  ```bash
 bash -c "$(wget -O- https://gist.githubusercontent.com/B17w153/f77c2726c4eca4e05b488f9af58823a5/raw/4410356eba091d3259c48506fb68112e68db729b/install_bot_aidlux.sh)"
-```
+  ```
 这个脚本是后来乱写的懒人脚本，可能与教程的目录有些出入，但总体的思想是一样的。
   go-cqhttp 安装目录为 /home/onebot
   chatgpt-mirai-qq-bot目录为/ home/GPT/chatgpt-mirai-qq-bot
