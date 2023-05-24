@@ -82,7 +82,7 @@
 如果你深得图吧真传，可以看这个真·纯用旧手机的部署教程（使用AidLux）： https://m.acfun.cn/v/?ac=41422759
 
 <details>
-    <summary>Linux：通过安卓Linux模拟器部署（教程使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
+    <summary>Linux：通过安卓Linux模拟器部署（使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
 执行下面这行命令启动自动部署脚本。  
 
 ```bash
