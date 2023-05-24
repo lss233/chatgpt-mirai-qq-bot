@@ -82,7 +82,7 @@
 如果你深得图吧真传，可以看这个真·纯用旧手机的部署教程（使用AidLux）： https://m.acfun.cn/v/?ac=41422759
 
 <details>
-    <summary>Linux： 垃圾佬首选，通过安卓Linux模拟器部署（教程使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
+    <summary>Linux：通过安卓Linux模拟器部署（教程使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
 执行下面这行命令启动自动部署脚本。  
 
 ```bash
@@ -92,7 +92,7 @@ bash -c "$(wget -O- https://gist.githubusercontent.com/B17w153/f77c2726c4eca4e05
   go-cqhttp 安装目录为 /home/onebot
   chatgpt-mirai-qq-bot目录为/ home/GPT/chatgpt-mirai-qq-bot
   需要自己配置文件！
-  这是教程 https://m.acfun.cn/v/?ac=41422759
+  这是教程 https://m.acfun.cn/v/?ac=41422759 ，讲的很清楚，新人推荐
   ```bash
   # 优点：低功耗，环保，废物利用？
   ```
