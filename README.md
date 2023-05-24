@@ -79,30 +79,17 @@
 
 如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
 
-如果你深得图吧真传，可以看这个真·纯用旧手机的部署教程（使用AidLux）： https://m.acfun.cn/v/?ac=41422759
 
 <details>
-    <summary>Linux：通过安卓Linux模拟器部署（使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
-如果你是aidlux
-
-执行下面这行命令启动自动部署脚本。  
+    <summary>AidLux: 仅使用旧安卓手机进行部署</summary>
+执行下面这行命令启动自动安装脚本。  
 
 ```bash
 bash -c "$(wget -O- https://gist.githubusercontent.com/B17w153/f77c2726c4eca4e05b488f9af58823a5/raw/4410356eba091d3259c48506fb68112e68db729b/install_bot_aidlux.sh)"
 ```
-  这个脚本是后来乱写的懒人脚本，可能与教程的目录设置上有些出入，但总体的思想是一样的。
+[部署教程](https://github.com/lss233/chatgpt-for-bot-docs/tree/main/bu-shu-jiao-cheng/kuai-su-bu-shu-jiao-cheng/linux-yi-jian-bu-shu-jiao-cheng.md)
   
-  go-cqhttp 安装目录为 /home/onebot 
-  
-  chatgpt-mirai-qq-bot目录为/ home/GPT/chatgpt-mirai-qq-bot 
-  
-  需要自己配置文件！ 
-  
-  这是教程 https://m.acfun.cn/v/?ac=41422759 ，讲的很清楚，新人推荐
-  
-  ```bash
-  # 优点：低功耗，环保，废物利用？
-  ```
+
 </details>
 
 
