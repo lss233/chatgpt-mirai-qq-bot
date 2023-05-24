@@ -83,6 +83,8 @@
 
 <details>
     <summary>Linux：通过安卓Linux模拟器部署（使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
+如果你是aidlux
+
 执行下面这行命令启动自动部署脚本。  
 
 ```bash
