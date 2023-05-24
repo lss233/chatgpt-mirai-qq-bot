@@ -93,6 +93,9 @@ bash -c "$(wget -O- https://gist.githubusercontent.com/B17w153/f77c2726c4eca4e05
   chatgpt-mirai-qq-bot目录为/ home/GPT/chatgpt-mirai-qq-bot
   需要自己配置文件！
   这是教程 https://m.acfun.cn/v/?ac=41422759
+  ```bash
+  优点：低功耗，环保，废物利用？
+  ```
 </details>
 
 
