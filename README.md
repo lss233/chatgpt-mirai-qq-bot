@@ -78,7 +78,9 @@
 ## 🔧 搭建
 
 如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
+
 如果你深得图吧真传，可以看这个真·纯用旧手机的部署教程（使用AidLux）： https://m.acfun.cn/v/?ac=41422759
+
 <details>
     <summary>Linux模拟器（使用AidLux，理论上Termux也行，自带go-cqhttp）</summary>
 在终端中执行下面这行命令启动自动部署脚本。  
