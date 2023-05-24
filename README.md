@@ -98,7 +98,7 @@ bash -c "$(wget -O- https://gist.githubusercontent.com/B17w153/f77c2726c4eca4e05
   
   需要自己配置文件！ 
   
-  这是教程 https://m.acfun.cn/v/?ac=41422759 ，讲的很清楚，新人推荐
+  [教程地址](https://github.com/lss233/chatgpt-for-bot-docs/tree/main/bu-shu-jiao-cheng/kuai-su-bu-shu-jiao-cheng/aidlux-bu-shu-jiao-cheng) ，讲的很清楚，新人推荐
   
   ```bash
   # 优点：低功耗，环保，废物利用？
