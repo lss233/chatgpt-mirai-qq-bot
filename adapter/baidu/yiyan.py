@@ -20,9 +20,8 @@ def get_ts():
 
 def extract_image(html):
     pattern = r'<img src="(.*?)" /><br>'
-    match = re.search(pattern, html)
-    if match:
-        return match.group(1), re.sub(pattern, '', html)
+    if match := re.search(pattern, html):
+        return match[1], re.sub(pattern, '', html)
     else:
         return None, html
 
@@ -35,8 +34,10 @@ class YiyanAdapter(BotAdapter):
         super().__init__(session_id)
         self.session_id = session_id
         self.account = botManager.pick('yiyan-cookie')
+        self.acs_client = httpx.AsyncClient(proxies=self.account.proxy)
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers()
+        self.__setup_headers(self.acs_client)
+        self.__setup_headers(self.client)
         self.conversation_id = None
         self.parent_chat_id = ''
 
@@ -57,14 +58,20 @@ class YiyanAdapter(BotAdapter):
     async def on_reset(self):
         await self.client.aclose()
         self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers()
+        self.__setup_headers(self.client)
         self.conversation_id = None
         self.parent_chat_id = 0
 
-    def __setup_headers(self):
-        self.client.headers['Cookie'] = self.account.cookie_content
-        self.client.headers['Content-Type'] = 'application/json;charset=UTF-8'
-        self.client.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
+    def __setup_headers(self, client):
+        client.headers['Cookie'] = f"BDUSS={self.account.BDUSS};"
+        client.headers['Content-Type'] = 'application/json;charset=UTF-8'
+        client.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+        client.headers['Sec-Fetch-User'] = '?1'
+        client.headers['Sec-Fetch-Mode'] = 'navigate'
+        client.headers['Sec-Fetch-Site'] = 'none'
+        client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
+        client.headers['Sec-Ch-Ua-Mobile'] = '?0'
+        client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
 
     async def new_conversation(self, prompt: str):
         self.client.headers['Acs-Token'] = await self.get_sign()
@@ -89,6 +96,18 @@ class YiyanAdapter(BotAdapter):
             await self.new_conversation(prompt)
 
         req = await self.client.post(
+            url="https://yiyan.baidu.com/eb/chat/check",
+            json={
+                "text": prompt,
+                "timestamp": get_ts(),
+                "deviceType": "pc",
+            }
+        )
+
+        req.raise_for_status()
+        self.__check_response(req.json())
+
+        req = await self.client.post(
             url="https://yiyan.baidu.com/eb/chat/new",
             json={
                 "sessionId": self.conversation_id,
@@ -99,7 +118,7 @@ class YiyanAdapter(BotAdapter):
                 "deviceType": "pc",
                 "code": 0,
                 "msg": "",
-                "sign": await self.get_sign()
+                "sign": self.client.headers['Acs-Token']
             }
         )
 
@@ -124,7 +143,7 @@ class YiyanAdapter(BotAdapter):
                     "stop": 0,
                     "timestamp": get_ts(),
                     "deviceType": "pc",
-                    "sign": await self.get_sign()
+                    "sign": self.client.headers['Acs-Token']
                 }
             )
             req.raise_for_status()
@@ -132,9 +151,7 @@ class YiyanAdapter(BotAdapter):
 
             sentence_id = req.json()["data"]["sent_id"]
 
-            content = req.json()["data"]["content"]
-
-            if content:
+            if content := req.json()["data"]["content"]:
                 url, content = extract_image(content)
                 if url:
                     yield GraiaImage(data_bytes=await self.__download_image(url))
@@ -150,7 +167,7 @@ class YiyanAdapter(BotAdapter):
                 break
 
     async def preset_ask(self, role: str, text: str):
-        if role.endswith('bot') or role in ['assistant', 'yiyan']:
+        if role.endswith('bot') or role in {'assistant', 'yiyan'}:
             logger.debug(f"[预设] 响应：{text}")
             yield text
         else:
@@ -159,14 +176,15 @@ class YiyanAdapter(BotAdapter):
             async for item in self.ask(text): ...
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
-            pass  # 不发送 AI 的回应，免得串台
 
     def __check_response(self, resp):
         if int(resp['code']) != 0:
             raise Exception(resp['msg'])
 
     async def get_sign(self):
-        req = await self.client.get("https://chatgpt-proxy.lss233.com/yiyan-api/acs")
+        # 目前只需要这一个参数来计算 Acs-Token
+        self.acs_client.headers['Cookie'] = f"BAIDUID={self.account.BAIDUID};"
+        req = await self.acs_client.get("https://chatgpt-proxy.lss233.com/yiyan-api/acs")
         return req.json()['acs']
 
     async def __download_image(self, url: str) -> bytes:

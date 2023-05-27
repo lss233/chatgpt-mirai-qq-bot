@@ -1,6 +1,7 @@
 import re
 
 from renderer import Renderer
+from utils.asyncutils import evaluate_array
 from utils.text_to_img import to_image
 
 from typing import Optional
@@ -28,9 +29,7 @@ class PlainTextRenderer(Renderer):
             if not str(rendered).strip():
                 continue
             everything = everything + str(rendered)
-        if everything:
-            return MessageChain([Plain(everything)])
-        return None
+        return MessageChain([Plain(everything)]) if everything else None
 
     async def render(self, msg: str) -> Optional[MessageChain]:
         return await self.parse(await self.parent.render(msg))
@@ -57,10 +56,8 @@ class MarkdownImageRenderer(Renderer):
         for rendered in groups:
             if not str(rendered).strip():
                 continue
-            everything = everything + str(rendered) + '  '
-        if everything:
-            return MessageChain([await to_image(everything)])
-        return None
+            everything = everything + str(rendered) + '  \n'
+        return MessageChain([await to_image(everything)]) if everything else None
 
     async def render(self, msg: str) -> Optional[MessageChain]:
         return await self.parse(await self.parent.render(msg))
@@ -86,10 +83,10 @@ class MixedContentMessageChainRenderer(Renderer):
         latex_pattern = r"\$(.*?)\$"
 
         # Search for Markdown or LaTeX patterns in the input string
-        if re.search(markdown_pattern, input_str) or re.search(latex_pattern, input_str):
-            return True
-        else:
-            return False
+        return bool(
+            re.search(markdown_pattern, input_str)
+            or re.search(latex_pattern, input_str)
+        )
 
     async def parse(self, groups: Optional[MessageChain]) -> Optional[MessageChain]:
         if not groups:
@@ -116,9 +113,8 @@ class MixedContentMessageChainRenderer(Renderer):
             holds.append(await to_image(rich_blocks))
         if plain_blocks.strip():
             holds.append(Plain(plain_blocks))
-        if holds:
-            return MessageChain(holds)
-        return None
+        await evaluate_array(holds)
+        return MessageChain(holds) if holds else None
 
     async def render(self, msg: str) -> Optional[MessageChain]:
         return await self.parse(await self.parent.render(msg))

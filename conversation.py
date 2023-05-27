@@ -1,31 +1,41 @@
-import io
+import asyncio
+import contextlib
+import time
 from datetime import datetime
 from typing import List, Dict, Optional
 
+import httpx
 from EdgeGPT import ConversationStyle
-from PIL import Image
 from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
 
+import constants
 from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
+from adapter.claude.slack import ClaudeInSlackAdapter
 from adapter.google.bard import BardAdapter
 from adapter.ms.bing import BingAdapter
-from adapter.openai.api import OpenAIAPIAdapter
+from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
 from adapter.quora.poe import PoeBot, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from constants import config
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
-    CommandRefusedException
+    CommandRefusedException, DrawingFailedException
 from renderer import Renderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
+from middlewares.draw_ratelimit import MiddlewareRatelimit
+from utils import retry
+from constants import LlmName
+from utils.text_to_speech import TtsVoice, TtsVoiceManager
 
-handlers = dict()
+handlers = {}
+
+middlewares = MiddlewareRatelimit()
 
 
 class ConversationContext:
@@ -40,14 +50,15 @@ class ConversationContext:
     renderer: Renderer
     """消息渲染器"""
 
-    openai_api: OpenAIAPIAdapter = None
-    """OpenAI API适配器，提供聊天之外的功能"""
+    drawing_adapter: DrawingAPI = None
+    """绘图引擎"""
+
     preset: str = None
 
     preset_decoration_format: Optional[str] = "{prompt}"
     """预设装饰文本"""
 
-    conversation_voice: Optional[str] = None
+    conversation_voice: TtsVoice = None
     """语音音色"""
 
     @property
@@ -61,40 +72,54 @@ class ConversationContext:
     def __init__(self, _type: str, session_id: str):
         self.session_id = session_id
 
+        self.last_resp = ''
+
+        self.last_resp_time = -1
+
         self.switch_renderer()
 
         if config.text_to_speech.always:
-            self.conversation_voice = config.text_to_speech.default
-
-        if _type == 'chatgpt-web':
+            tts_engine = config.text_to_speech.engine
+            tts_voice = config.text_to_speech.default
+            try:
+                self.conversation_voice = TtsVoiceManager.parse_tts_voice(tts_engine, tts_voice)
+            except KeyError as e:
+                logger.error(f"Failed to load {tts_engine} tts voice setting -> {tts_voice}")
+        if _type == LlmName.ChatGPT_Web.value:
             self.adapter = ChatGPTWebAdapter(self.session_id)
-        elif _type == 'chatgpt-api':
+        elif _type == LlmName.ChatGPT_Api.value:
             self.adapter = ChatGPTAPIAdapter(self.session_id)
         elif PoeBot.parse(_type):
             self.adapter = PoeAdapter(self.session_id, PoeBot.parse(_type))
-        elif _type == 'bing':
+        elif _type == LlmName.Bing.value:
             self.adapter = BingAdapter(self.session_id)
-        elif _type == 'bing-c':
+        elif _type == LlmName.BingC.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.creative)
-        elif _type == 'bing-b':
+        elif _type == LlmName.BingB.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.balanced)
-        elif _type == 'bing-p':
+        elif _type == LlmName.BingP.value:
             self.adapter = BingAdapter(self.session_id, ConversationStyle.precise)
-        elif _type == 'bard':
+        elif _type == LlmName.Bard.value:
             self.adapter = BardAdapter(self.session_id)
-        elif _type == 'yiyan':
+        elif _type == LlmName.YiYan.value:
             self.adapter = YiyanAdapter(self.session_id)
-        elif _type == 'chatglm-api':
+        elif _type == LlmName.ChatGLM.value:
             self.adapter = ChatGLM6BAdapter(self.session_id)
+        elif _type == LlmName.SlackClaude.value:
+            self.adapter = ClaudeInSlackAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
 
         # 没有就算了
-        try:
-            self.openai_api = OpenAIAPIAdapter(session_id)
-        except NoAvailableBotException:
-            pass
+        if config.sdwebui:
+            self.drawing_adapter = SDDrawing()
+        elif config.bing.use_drawing:
+            with contextlib.suppress(NoAvailableBotException):
+                self.drawing_adapter = BingAdapter(self.session_id, ConversationStyle.creative)
+        else:
+            with contextlib.suppress(NoAvailableBotException):
+                self.drawing_adapter = OpenAIDrawing(self.session_id)
 
     def switch_renderer(self, mode: Optional[str] = None):
         # 目前只有这一款
@@ -121,31 +146,47 @@ class ConversationContext:
 
     async def reset(self):
         await self.adapter.on_reset()
+        self.last_resp = ''
+        self.last_resp_time = -1
         yield config.response.reset
 
+    @retry((httpx.ConnectError, httpx.ConnectTimeout, TimeoutError))
     async def ask(self, prompt: str, chain: MessageChain = None, name: str = None):
+        await self.check_and_reset()
         # 检查是否为 画图指令
         for prefix in config.trigger.prefix_image:
             if prompt.startswith(prefix) and not isinstance(self.adapter, YiyanAdapter):
-                if not self.openai_api:
-                    yield "没有 OpenAI API-key，无法使用画图功能！"
+                # TODO(lss233): 此部分可合并至 RateLimitMiddleware
+                respond_str = middlewares.handle_draw_request(self.session_id, prompt)
+                # TODO(lss233): 这什么玩意
+                if respond_str != "1":
+                    yield respond_str
+                    return
+                if not self.drawing_adapter:
+                    yield "未配置画图引擎，无法使用画图功能！"
+                    return
                 prompt = prompt.removeprefix(prefix)
-                if chain.has(GraiaImage):
-                    image = chain.get_first(GraiaImage)
-                    raw_bytes = io.BytesIO(await image.get_bytes())
-                    raw_image = Image.open(raw_bytes)
-                    image_data = await self.openai_api.image_variation(src_img=raw_image)
-                else:
-                    image_data = await self.openai_api.image_creation(prompt)
-                logger.debug("[OpenAI Image] Downloaded")
-                yield GraiaImage(data_bytes=image_data)
+                try:
+                    if chain.has(GraiaImage):
+                        images = await self.drawing_adapter.img_to_img(chain.get(GraiaImage), prompt)
+                    else:
+                        images = await self.drawing_adapter.text_to_img(prompt)
+                    for i in images:
+                        yield i
+                except Exception as e:
+                    raise DrawingFailedException from e
+                respond_str = middlewares.handle_draw_respond_completed(self.session_id, prompt)
+                if respond_str != "1":
+                    yield respond_str
                 return
 
         if self.preset_decoration_format:
-            prompt = self.preset_decoration_format\
-                .replace("{prompt}", prompt)\
-                .replace("{nickname}", name)\
-                .replace("{date}", datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+            prompt = (
+                self.preset_decoration_format.replace("{prompt}", prompt)
+                .replace("{nickname}", name)
+                .replace("{last_resp}", self.last_resp)
+                .replace("{date}", datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            )
 
         async with self.renderer:
             async for item in self.adapter.ask(prompt):
@@ -153,6 +194,8 @@ class ConversationContext:
                     yield item
                 else:
                     yield await self.renderer.render(item)
+                self.last_resp = item or ''
+                self.last_resp_time = int(time.time())
             yield await self.renderer.result()
 
     async def rollback(self):
@@ -168,15 +211,10 @@ class ConversationContext:
 
     async def load_preset(self, keyword: str):
         self.preset_decoration_format = None
-        if keyword not in config.presets.keywords:
-            if not keyword == 'default':
-                raise PresetNotFoundException(keyword)
-        else:
+        if keyword in config.presets.keywords:
             presets = config.load_preset(keyword)
             for text in presets:
-                if text.strip() and text.startswith('#'):
-                    continue
-                else:
+                if not text.strip() or not text.startswith('#'):
                     # 判断格式是否为 role: 文本
                     if ':' in text:
                         role, text = text.split(':', 1)
@@ -188,17 +226,29 @@ class ConversationContext:
                         continue
 
                     if role == 'voice':
-                        self.conversation_voice = text.strip()
-                        logger.debug(f"Set conversation voice to {self.conversation_voice}")
+                        self.conversation_voice = TtsVoiceManager.parse_tts_voice(config.text_to_speech.engine,
+                                                                                  text.strip())
+                        logger.debug(f"Set conversation voice to {self.conversation_voice.full_name}")
                         continue
 
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
                         yield item
+        elif keyword != 'default':
+            raise PresetNotFoundException(keyword)
         self.preset = keyword
 
     def delete_message(self, respond_msg):
         # TODO: adapt to all platforms
         pass
+
+    async def check_and_reset(self):
+        timeout_seconds = config.system.auto_reset_timeout_seconds
+        current_time = time.time()
+        if timeout_seconds == -1 or self.last_resp_time == -1 or current_time - self.last_resp_time < timeout_seconds:
+            return
+        logger.debug(f"Reset conversation({self.session_id}) after {current_time - self.last_resp_time} seconds.")
+        async for _resp in self.reset():
+            logger.debug(_resp)
 
 
 class ConversationHandler:
@@ -214,7 +264,7 @@ class ConversationHandler:
     session_id: str = 'unknown'
 
     def __init__(self, session_id: str):
-        self.conversations = dict()
+        self.conversations = {}
         self.session_id = session_id
 
     def list(self) -> List[ConversationContext]:
@@ -229,20 +279,18 @@ class ConversationHandler:
     async def first_or_create(self, _type: str):
         if _type in self.conversations:
             return self.conversations[_type]
-        else:
-            conversation = ConversationContext(_type, self.session_id)
-            self.conversations[_type] = conversation
-            return conversation
+        conversation = ConversationContext(_type, self.session_id)
+        self.conversations[_type] = conversation
+        return conversation
 
     """创建新的上下文"""
 
     async def create(self, _type: str):
         if _type in self.conversations:
             return self.conversations[_type]
-        else:
-            conversation = ConversationContext(_type, self.session_id)
-            self.conversations[_type] = conversation
-            return conversation
+        conversation = ConversationContext(_type, self.session_id)
+        self.conversations[_type] = conversation
+        return conversation
 
     """切换对话上下文"""
 

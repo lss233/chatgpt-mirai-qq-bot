@@ -1,6 +1,9 @@
 import atexit
 import sys
+
 from loguru import logger
+import signal
+import sys
 
 
 class ExitHooks(object):
@@ -28,16 +31,22 @@ hooks.hook()
 
 def foo():
     if hooks.exit_code is not None or hooks.exception is not None:
-        if type(hooks.exception) is KeyboardInterrupt:
+        if isinstance(hooks.exception, (KeyboardInterrupt, type(None))):
             return
         logger.error("看样子程序似乎没有正常退出。")
         logger.exception(hooks.exception)
         logger.error("你可以在这里阅读常见问题的解决方案：")
         logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85")
+        raise hooks.exception
 
 
 atexit.register(foo)
 
+
+def exit_gracefully(signal, frame):
+    print("Received signal {}, exiting...".format(signal))
+    sys.exit(0)
+
+
 def hook():
-    # 仅仅是为了防止 IDE 自动优化掉 import
-    pass
+    signal.signal(signal.SIGINT, exit_gracefully)

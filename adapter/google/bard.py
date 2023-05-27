@@ -28,13 +28,17 @@ class BardAdapter(BotAdapter):
         self.headers = {
             "Cookie": self.account.cookie_content,
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-language': 'zh-CN,zh;q=0.9',
         }
 
     async def get_at_token(self):
+        
         response = await self.client.get(
-            "https://bard.google.com/",
+            "https://bard.google.com/?hl=en",
             timeout=30,
             headers=self.headers,
+            follow_redirects=True,
         )
         self.at = quote(response.text.split('"SNlM0e":"')[1].split('","')[0])
 
@@ -78,10 +82,13 @@ class BardAdapter(BotAdapter):
                     for check in data:
                         if not check:
                             continue
-                        for element in [element for row in check for element in row]:
-                            if "rc_" in element:
-                                self.rc = element
-                                break
+                        try:
+                            for element in [element for row in check for element in row]:
+                                if "rc_" in element:
+                                    self.rc = element
+                                    break
+                        except:
+                            continue
                     logger.debug(f"[Bard] {self.bard_session_id} - {self.r} - {self.rc} - {result}")
                     yield result
                     break

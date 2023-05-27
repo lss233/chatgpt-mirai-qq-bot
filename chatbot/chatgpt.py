@@ -1,8 +1,6 @@
 import datetime
 import asyncio
-from typing import Union
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
-from chatbot.Unofficial import AsyncChatbot as BrowserChatbot
 from config import OpenAIAuthBase
 from utils import QueueInfo
 
@@ -12,7 +10,7 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
 
     account: OpenAIAuthBase
 
-    bot: Union[V1Chatbot, BrowserChatbot]
+    bot: V1Chatbot
 
     mode: str
 
@@ -50,18 +48,15 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
     async def delete_conversation(self, conversation_id):
         await self.bot.delete_conversation(conversation_id)
 
-    async def ask(self, prompt, conversation_id=None, parent_id=None):
+    async def ask(self, prompt, conversation_id=None, parent_id=None, model=''):
         """向 ChatGPT 发送提问"""
         # self.queue 已交给 MiddlewareConcurrentLock 处理，此处不处理
         self.bot.conversation_id = conversation_id
         self.bot.parent_id = parent_id
-        if self.mode == 'proxy' or self.mode == 'browserless':
-            async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
-                yield r
-            self.update_accessed_at()
-        else:
-            yield await self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id)
-            self.update_accessed_at()
+        self.bot.config['model'] = model
+        async for r in self.bot.ask(prompt=prompt, conversation_id=conversation_id, parent_id=parent_id):
+            yield r
+        self.update_accessed_at()
 
     def __str__(self) -> str:
         return self.bot.__str__()

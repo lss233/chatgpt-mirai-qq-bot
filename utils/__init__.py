@@ -1,6 +1,6 @@
 import asyncio
-from loguru import logger
 
+from .retry import retry
 
 class QueueInfo:
     lock: asyncio.Lock

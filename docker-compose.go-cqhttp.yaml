@@ -1,0 +1,23 @@
+version: '3.4'
+services:
+  gocqhttp:
+    image: silicer/go-cqhttp:latest
+    restart: always
+    environment:
+      LANG: 'C.UTF-8'
+    volumes:
+      - ./gocqhttp/:/data/
+  chatgpt:
+    image: lss233/chatgpt-mirai-qq-bot:browser-version
+    restart: always
+    environment:
+      LANG: 'C.UTF-8'
+    volumes:
+      - ./config.cfg:/app/config.cfg
+      - ./data:/app/data
+      - ./presets:/app/presets
+      # - ./fonts:/app/fonts # 如果你想自定义字体，就解除注释
+  watchtower: # [可选] 自动更新
+    image: containrrr/watchtower
+    volumes: # 如果启动失败，请修改下面这条：
+      - /var/run/docker.sock:/var/run/docker.sock

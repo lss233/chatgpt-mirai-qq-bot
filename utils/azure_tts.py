@@ -9,14 +9,15 @@ try:
     async def encode_to_silk(input_data: bytes) -> bytes:
         return await silkcoder.async_encode(
             input_data,
-            audio_format='ogg',
+            audio_format=None,
             ios_adaptive=True
         )
 except ImportError as e:
     async def encode_to_silk(a=None):
         logger.warning("警告：Silk 转码模块无法加载，语音可能无法正常播放，请安装最新的 vc_redist 运行库。")
         return a
-    asyncio.run(encode_to_silk())
+    if config.text_to_speech.engine == 'azure':
+        asyncio.run(encode_to_silk())
 
 
 try:
@@ -24,7 +25,7 @@ try:
 
 
     async def synthesize_speech(text: str, output_file: str,
-                                voice: str = "en-SG-WayneNeural"):  # Singapore English, Wayne
+                                voice):
         if not config.azure.tts_speech_key:
             logger.warning("[Azure TTS] 没有检测到 tts_speech_key，不进行语音转换。")
             return False
@@ -35,7 +36,7 @@ try:
             speech_key, service_region = config.azure.tts_speech_key, config.azure.tts_speech_service_region
             speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
             # https://learn.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices
-            speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_SynthVoice, voice)
+            speech_config.set_property(speechsdk.PropertyId.SpeechServiceConnection_SynthVoice, voice.full_name)
             audio_config = speechsdk.audio.AudioOutputConfig(filename=output_file)
             return speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
 
@@ -57,4 +58,5 @@ except FileNotFoundError as e:
         logger.error("参考链接：")
         logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/447")
         return None
-    asyncio.run(synthesize_speech())
+    if config.text_to_speech.engine == 'azure':
+        asyncio.run(synthesize_speech())

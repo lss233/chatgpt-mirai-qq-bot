@@ -1,16 +1,15 @@
-import asyncio
+import time
 import openai
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image, Plain, Voice
 from loguru import logger
-from telegram.request import HTTPXRequest
-
-from universal import handle_message
-
-from constants import botManager, config
-
 from telegram import Update, constants
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
+from telegram.request import HTTPXRequest
+from middlewares.ratelimit import manager as ratelimit_manager
+
+from constants import config, BotPlatform
+from universal import handle_message
 
 
 async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -23,7 +22,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     if type == 'group' and (
             bot_username not in update.message.text and (
-                update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)
+            update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)
     ):
         logger.debug(f"忽略消息（未满足匹配规则）: {update.message.text} ")
         return
@@ -43,7 +42,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         if isinstance(msg, Image):
             return await update.message.reply_photo(photo=await msg.get_bytes())
         if isinstance(msg, Voice):
-            await update.message.reply_audio(audio=await msg.get_bytes())
+            await update.message.reply_audio(audio=await msg.get_bytes(), title="Voice")
             return
 
     await handle_message(
@@ -51,32 +50,55 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         f"{type}-{update.message.chat.id}",
         update.message.text.replace(f"@{bot_username}", '').strip(),
         is_manager=update.message.from_user.id == config.telegram.manager_chat,
-        nickname=update.message.from_user.full_name or "群友"
+        nickname=update.message.from_user.full_name or "群友",
+        request_from=BotPlatform.TelegramBot
     )
 
 
-async def on_check_api(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not update.message.from_user.id == config.telegram.manager_chat:
+async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if (
+            config.presets.hide
+            and update.message.from_user.id != config.telegram.manager_chat
+    ):
         return await update.message.reply_text("您没有权限执行这个操作")
+    for keyword, path in config.presets.keywords.items():
+        try:
+            with open(path) as f:
+                preset_data = f.read().replace("\n\n", "\n=========\n")
+            answer = f"预设名：{keyword}\n{preset_data}"
+            await update.message.reply_text(answer)
+        except:
+            pass
 
-    tasklist = []
-    bots = botManager.bots.get("openai-api", [])
-    for account in bots:
-        tasklist.append(botManager.check_api_info(account))
-    msg = await update.message.reply_text("查询中，请稍等……")
-    answer = ''
-    for account, r in zip(bots, await asyncio.gather(*tasklist)):
-        grant_used, grant_available, has_payment_method, total_usage, hard_limit_usd = r
-        total_available = grant_available
-        if has_payment_method:
-            total_available = total_available + hard_limit_usd - total_usage
-        answer = answer + '* `' + account.api_key[:6] + "**" + account.api_key[-3:] + '`'
-        answer = answer + f' - ' + f'本月已用: `{round(total_usage, 2)}$`, 可用：`{round(total_available, 2)}$`, 绑卡：{has_payment_method}'
-        answer = answer + '\n'
-    if answer == '':
-        await msg.edit_text("没有查询到任何 API")
-        return
-    await msg.edit_text(answer)
+
+async def on_limit_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if (
+            update.message.from_user.id != config.telegram.manager_chat
+    ):
+        return await update.message.reply_text("您没有权限执行这个操作")
+    msg_type, msg_id, rate = update.message.text.split(' ')
+    if msg_type not in ["群组", "好友"]:
+        return await update.message.reply_text("类型异常，仅支持设定【群组】或【好友】的额度")
+    if msg_id != '默认' and not msg_id.isdecimal():
+        return await update.message.reply_text("目标异常，仅支持设定【默认】或【指定 chat id】的额度")
+    ratelimit_manager.update(msg_type, msg_id, rate)
+    return await update.message.reply_text("额度更新成功！")
+
+
+async def on_query_chat_limit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg_type, msg_id, rate = update.message.text.split(' ')
+
+    if msg_type not in ["群组", "好友"]:
+        return await update.message.reply_text("类型异常，仅支持设定【群组】或【好友】的额度")
+    if msg_id != '默认' and not msg_id.isdecimal():
+        return await update.message.reply_text("目标异常，仅支持设定【默认】或【指定 chat id】的额度")
+    limit = ratelimit_manager.get_limit(msg_type, msg_id)
+    if limit is None:
+        return await update.message.reply_text(f"{msg_type} {msg_id} 没有额度限制。")
+    usage = ratelimit_manager.get_usage(msg_type, msg_id)
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    return await update.message.reply_text(
+        f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
 
 async def bootstrap() -> None:
@@ -84,23 +106,25 @@ async def bootstrap() -> None:
     app = ApplicationBuilder() \
         .proxy_url(config.telegram.proxy or openai.proxy) \
         .token(config.telegram.bot_token) \
-        .connect_timeout(30)\
-        .read_timeout(30)\
-        .write_timeout(30)\
+        .connect_timeout(30) \
+        .read_timeout(30) \
+        .write_timeout(30) \
         .get_updates_request(HTTPXRequest(http_version="1.1")) \
         .http_version('1.1') \
         .build()
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
-    app.add_handler(CommandHandler("check_api", on_check_api))
+    app.add_handler(CommandHandler("presets", on_check_presets_list))
+    app.add_handler(CommandHandler("limit_chat", on_limit_chat))
+    app.add_handler(CommandHandler("query_limit", on_query_chat_limit))
     await app.initialize()
-    await botManager.login()
     await app.start()
     logger.info("启动完毕，接收消息中……")
     await app.updater.start_polling(drop_pending_updates=True)
 
 
-def main():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(bootstrap())
-    loop.run_forever()
+async def start_task():
+    """|coro|
+    以异步方式启动
+    """
+    return await bootstrap()

@@ -31,8 +31,9 @@ class BufferedContentMerger(Renderer):
         rendered = await self.parent.render(msg)
         if not rendered:
             return None
-        else:
-            self.hold.append(Plain(rendered + '\n'))
+        if not self.hold:
+            self.hold = []
+        self.hold.append(Plain(rendered + '\n'))
         if time_delta < config.response.buffer_delay:
             return None
         elif self.hold:
@@ -48,9 +49,7 @@ class BufferedContentMerger(Renderer):
             result = result + MessageChain(self.hold)
         if parent := await self.parent.result():
             result = result + parent
-        if len(result) > 0:
-            return result
-        return None
+        return result if len(result) > 0 else None
 
 
 class LengthContentMerger(Renderer):
@@ -85,6 +84,4 @@ class LengthContentMerger(Renderer):
             result = result + MessageChain(self.hold)
         if parent := await self.parent.result():
             result = result + parent
-        if len(result) > 0:
-            return result
-        return None
+        return result if len(result) > 0 else None
