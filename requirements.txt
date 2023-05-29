@@ -21,7 +21,7 @@ OpenAIAuth~=0.3.6
 urllib3~=1.26.15
 BingImageCreator~=0.1.5
 
-requests~=2.28.2
+requests~=2.31.0
 uuid~=1.30
 
 python-telegram-bot==20.3
