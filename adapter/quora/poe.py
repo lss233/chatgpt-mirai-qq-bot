@@ -32,6 +32,7 @@ class PoeBot(Enum):
                 if str(bot.name).lower() == tmp_name
                 or str(bot.value).lower() == tmp_name
                 or f"poe-{str(bot.name).lower()}" == tmp_name
+                or f"poe-{str(bot.value).lower()}" == tmp_name 
             ),
             None,
         )
