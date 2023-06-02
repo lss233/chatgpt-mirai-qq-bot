@@ -78,7 +78,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             msg = MessageChain([Plain(msg)])
 
         nonlocal conversation_context
-        if not conversation_context:
+        if not conversation_context and conversation_handler:
             conversation_context = conversation_handler.current_conversation
 
         if not conversation_context:
