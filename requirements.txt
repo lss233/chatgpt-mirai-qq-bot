@@ -19,7 +19,7 @@ EdgeGPT==0.3.8.1
 aiohttp~=3.8.4
 OpenAIAuth~=0.3.6
 urllib3~=1.26.15
-BingImageCreator~=0.1.5
+BingImageCreator~=0.4.1
 
 requests~=2.28.2
 uuid~=1.30
