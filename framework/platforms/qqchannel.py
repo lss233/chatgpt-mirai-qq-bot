@@ -31,11 +31,12 @@ class Channel(botpy.Client):
             nonlocal last_message_item, last_send_text
             if text:
                 last_send_text += text
+                logger.debug(f"发送文本：{last_send_text}")
                 if last_message_item:
                     last_message_item = await last_message_item.edit(content=last_send_text)
                 else:
                     last_message_item = await message.reply(content=last_send_text)
-            last_send_text = ''
+                last_send_text = ''
 
         request = Request()
         request.session_id = message.channel_id
