@@ -70,7 +70,11 @@ if constants.config.discord:
     from framework.platforms.discord_bot import start_task
 
     bots.append(start_task())
+if constants.config.qqchannel:
+    logger.info("检测到 QQChannel 配置，将启动 QQChannel 模式……")
+    from framework.platforms.qqchannel import start_task
 
+    bots.append(start_task())
 
 async def setup_web_service():
     from framework.platforms.onebot_bot import bot, start_http_app

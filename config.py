@@ -121,6 +121,17 @@ class WecomBot(BaseModel):
         description="企业微信应用 API 令牌 的 EncodingAESKey",
     )
 
+class QQChannel(BaseModel):
+    appid: str = Field(
+        title="Appid",
+        description="QQ Channel 的 App ID",
+        default=None
+    )
+    token: str = Field(
+        title="Token",
+        description="QQ Channel 的 Token",
+        default=None
+    )
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = Field(
@@ -876,6 +887,7 @@ class Config(BaseModel):
     discord: Optional[DiscordBot] = None
     http: Optional[HttpService] = HttpService()
     wecom: Optional[WecomBot] = None
+    qqchannel: Optional[QQChannel] = None
 
     # === Account Settings ===
     accounts: AccountsModel = AccountsModel()
