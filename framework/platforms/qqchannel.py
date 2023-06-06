@@ -6,6 +6,8 @@ from botpy.message import Message
 from botpy.message import MessageAudit
 from constants import config
 
+from typing import Optional
+
 from framework.universal import handle_message
 from framework.request import Request, Response
 
@@ -18,12 +20,22 @@ token = config.qqchannel.token
 
 class Channel(botpy.Client):
     async def on_ready(self):
-        logger.info(f"robot 「{self.robot.name}」 on_ready!")
+        logger.success(f"机器人「{self.robot.name}」启动完毕，接收消息中……")
 
     async def on_message_create(self, message: Message):
 
-        if "sleep" in message.content:
-            await asyncio.sleep(10)
+        last_message_item: Optional[Message] = None
+        last_send_text: str = ''
+
+        async def _response_func(chain: MessageChain, text: str, voice: None, image: None):
+            nonlocal last_message_item, last_send_text
+            if text:
+                last_send_text += text
+                if last_message_item:
+                    last_message_item = await last_message_item.edit(content=last_send_text)
+                else:
+                    last_message_item = await message.reply(content=last_send_text)
+            last_send_text = ''
 
         request = Request()
         request.session_id = message.channel_id
@@ -31,14 +43,13 @@ class Channel(botpy.Client):
         request.group_id = message.channel_id
         request.nickname = message.author.username
         request.message = MessageChain([Plain(message.content.replace(f"<@!{message.mentions[0].id}>", "").strip())])
-        logger.debug(request.message)
 
-        response = Response(message.reply)
+        response = Response(_response_func)
+
         try:
             await handle_message(request, response)
         except Exception as e:
             logger.error(e)
-        await message.reply(content=f"机器人{self.robot.name}收到你的@消息了: {message.content}")
 
     async def on_message_audit_pass(self, message: MessageAudit):
         """
