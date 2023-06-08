@@ -28,6 +28,9 @@ class Channel(botpy.Client):
 
         last_send_text: str = ''
 
+        if message.author.bot:
+            return
+
         async def _response_func(chain: MessageChain, text: str, voice: None, image: ImageElement):
             nonlocal last_send_text
             if text:
