@@ -24,7 +24,7 @@ class Channel(botpy.Client):
     async def on_message_audited(self, message: Message):
         print("e")
 
-    async def on_message_create(self, message: Message):
+    async def on_at_message_create(self, message: Message):
 
         last_send_text: str = ''
 
@@ -61,7 +61,6 @@ class Channel(botpy.Client):
         request.group_id = message.channel_id
         request.nickname = message.author.username
         request.message = MessageChain([Plain(message.content.replace(f"<@!{message.mentions[0].id}>", "").strip())])
-
         response = Response(_response_func)
 
         try:
@@ -70,9 +69,6 @@ class Channel(botpy.Client):
             logger.error(e)
 
 async def start_task():
-    """|coro|
-    以异步方式启动
-    """
     intents = botpy.Intents.all()
     client = Channel(intents=intents)
     return await client.start(appid=appid, token=token)
