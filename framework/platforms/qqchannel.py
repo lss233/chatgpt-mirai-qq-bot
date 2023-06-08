@@ -1,15 +1,14 @@
-import asyncio
-
 import botpy
 from loguru import logger
 from botpy.message import Message
-from botpy.message import MessageAudit
+from botpy.types.message import Reference
+
 from constants import config
 
-from typing import Optional
 
 from framework.universal import handle_message
 from framework.request import Request, Response
+from framework.messages import ImageElement
 
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
@@ -22,17 +21,36 @@ class Channel(botpy.Client):
     async def on_ready(self):
         logger.success(f"机器人「{self.robot.name}」启动完毕，接收消息中……")
 
+    async def on_message_audited(self, message: Message):
+        print("e")
+
     async def on_message_create(self, message: Message):
 
         last_send_text: str = ''
 
-        async def _response_func(chain: MessageChain, text: str, voice: None, image: None):
+        async def _response_func(chain: MessageChain, text: str, voice: None, image: ImageElement):
             nonlocal last_send_text
             if text:
                 last_send_text += text
-                logger.debug(f"发送文本：{last_send_text}")
-                await message.reply(content=last_send_text)
-                last_send_text = ''
+                message_reference = Reference(message_id=message.id)
+                await self.api.post_message(
+                    channel_id=message.channel_id,
+                    content=last_send_text,
+                    msg_id=message.id,
+                    message_reference=message_reference,
+                )
+
+            if image:
+                img_bytes = await image.get_bytes()
+                message_reference = Reference(message_id=message.id)
+                await self.api.post_message(
+                    channel_id=message.channel_id,
+                    file_image=img_bytes,
+                    msg_id=message.id,
+                    message_reference=message_reference,
+                )
+
+            last_send_text = ''
 
         request = Request()
         request.session_id = message.channel_id
