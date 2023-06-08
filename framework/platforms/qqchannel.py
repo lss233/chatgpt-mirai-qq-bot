@@ -24,18 +24,14 @@ class Channel(botpy.Client):
 
     async def on_message_create(self, message: Message):
 
-        last_message_item: Optional[Message] = None
         last_send_text: str = ''
 
         async def _response_func(chain: MessageChain, text: str, voice: None, image: None):
-            nonlocal last_message_item, last_send_text
+            nonlocal last_send_text
             if text:
                 last_send_text += text
                 logger.debug(f"发送文本：{last_send_text}")
-                if last_message_item:
-                    last_message_item = await last_message_item.edit(content=last_send_text)
-                else:
-                    last_message_item = await message.reply(content=last_send_text)
+                await message.reply(content=last_send_text)
                 last_send_text = ''
 
         request = Request()
@@ -51,16 +47,6 @@ class Channel(botpy.Client):
             await handle_message(request, response)
         except Exception as e:
             logger.error(e)
-
-    async def on_message_audit_pass(self, message: MessageAudit):
-        """
-        此处为处理该事件的代码
-        """
-
-    async def on_message_audit_reject(self, message: MessageAudit):
-        """
-        此处为处理该事件的代码
-        """
 
 async def start_task():
     """|coro|

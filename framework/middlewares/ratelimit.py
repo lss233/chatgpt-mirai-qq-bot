@@ -23,7 +23,12 @@ class MiddlewareRatelimit(Middleware):
 
     async def handle_respond_completed(self, request: Request, response: Response):
         key = '好友' if request.session_id.startswith("friend-") else '群组'
-        msg_id = request.session_id.split('-', 1)[1]
+
+        if config.qqchannel:
+            msg_id = request.session_id
+        else:
+            msg_id = request.session_id.split('-', 1)[1]
+
         manager.increment_usage(key, msg_id)
         rate_usage = manager.check_exceed(key, msg_id)
         if rate_usage >= config.ratelimit.warning_rate:
