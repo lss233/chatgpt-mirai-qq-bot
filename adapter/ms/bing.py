@@ -156,4 +156,13 @@ class BingAdapter(BotAdapter, DrawingAPI):
                 return GraiaImage(data_bytes=await resp.read())
 
     async def preset_ask(self, role: str, text: str):
-        yield None  # Bing 不使用预设功能
+        if role.endswith('bot') or role in {'assistant', 'bing'}:
+            logger.debug(f"[预设] 响应：{text}")
+            yield text
+        else:
+            logger.debug(f"[预设] 发送：{text}")
+            item = None
+            async for item in self.ask(text): ...
+            if item:
+                logger.debug(f"[预设] Chatbot 回应：{item}")
+
