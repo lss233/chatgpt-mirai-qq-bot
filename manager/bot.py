@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import itertools
 import os
@@ -5,6 +6,9 @@ import urllib.request
 from typing import List, Dict
 from urllib.parse import urlparse
 
+import base64
+import json
+import time
 import httpx
 import openai
 import regex
@@ -424,17 +428,42 @@ class BotManager:
         if cached_account.get('model'):  # Ready for backward-compatibility & forward-compatibility
             config['model'] = cached_account.get('model')
 
+        def get_access_token():
+            return bot.session.headers.get('Authorization').removeprefix('Bearer ')
+
         # 我承认这部分代码有点蠢
         async def __V1_check_auth() -> bool:
             try:
+                access_token = get_access_token()
+                _, payload, _ = access_token.split(".")
+
+                # Decode the payload using base64 decoding
+                payload_data = base64.urlsafe_b64decode(payload + "=" * ((4 - len(payload) % 4) % 4))
+
+                # Parse the JSON string to get the payload as a dictionary
+                payload_dict = json.loads(payload_data)
+
+                # Check the "exp" key in the payload dictionary to get the expiration time
+                exp_time = payload_dict["exp"]
+                email = payload_dict["https://api.openai.com/profile"]['email']
+
+                # Convert the expiration time to a Unix timestamp
+                exp_timestamp = int(exp_time)
+
+                # Compare the current time (also in Unix timestamp format) to the expiration time to check if the token has expired
+                current_timestamp = int(time.time())
+                if current_timestamp >= exp_timestamp:
+                    logger.error(f"[ChatGPT-Web] - {email} 的 access_token 已过期")
+                    return False
+                else:
+                    remaining_seconds = exp_timestamp - current_timestamp
+                    remaining_days = remaining_seconds // (24 * 60 * 60)
+                    logger.info(f"[ChatGPT-Web] - {email} 的 access_token 还有 {remaining_days} 天过期")
                 await bot.get_conversations(0, 1)
                 return True
             except (V1Error, KeyError) as e:
                 logger.error(e)
                 return False
-
-        def get_access_token():
-            return bot.session.headers.get('Authorization').removeprefix('Bearer ')
 
         if cached_account.get('access_token'):
             logger.info("尝试使用 access_token 登录中...")
@@ -461,7 +490,7 @@ class BotManager:
             config.pop('session_token', None)
             config['email'] = cached_account.get('email')
             config['password'] = cached_account.get('password')
-            async with httpx.AsyncClient(proxies=config.get('proxy', None)) as client:
+            async with httpx.AsyncClient(proxies=config.get('proxy', None), timeout=60, trust_env=True) as client:
                 resp = await client.post(
                     url=f"{V1.BASE_URL}login",
                     json={
