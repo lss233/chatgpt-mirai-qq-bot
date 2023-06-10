@@ -384,7 +384,7 @@ class Response(BaseModel):
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{exc}\n"
+    error_request_too_many: str = "糟糕！当前 ChatGPT 接入点收到的请求太多了，我需要一段时间冷静冷静。请过一会儿再来找我！\n预计恢复时间：{exc}(Code: 429)\n"
 
     error_request_concurrent_error: str = "当前有其他人正在和我进行聊天，请稍后再给我发消息吧！"
 
