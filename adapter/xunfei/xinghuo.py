@@ -89,6 +89,9 @@ class XinghuoAdapter(BotAdapter):
                     continue
                 if line == 'data:<end>':
                     break
+                if line == 'data:[geeError]':
+                    yield "错误：出现验证码，请到星火网页端发送一次消息再试。"
+                    break
                 encoded_data = line[len("data:"):]
                 missing_padding = len(encoded_data) % 4
                 if missing_padding != 0:
