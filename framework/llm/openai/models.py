@@ -50,7 +50,7 @@ class OpenAIAccessTokenAuth(OpenAIWebAuthBaseModel):
 
     def __init__(self, **data: Any):
         super().__init__(**data)
-        self._client = ChatGPTBrowserChatbot(AsyncChatbot(config={
+        super()._client = ChatGPTBrowserChatbot(AsyncChatbot(config={
             "access_token": self.access_token,
             "proxy": constants.proxy,
             "paid": self.paid
