@@ -56,6 +56,7 @@ class HttpService(BaseModel):
     debug: bool = False
     """是否开启debug，错误时展示日志"""
 
+
 class WecomBot(BaseModel):
     host: str = "0.0.0.0"
     """企业微信回调地址，需要能够被公网访问，0.0.0.0则不限制访问地址"""
@@ -73,7 +74,7 @@ class WecomBot(BaseModel):
     """企业微信应用 API 令牌 的 Token"""
     encoding_aes_key: str
     """企业微信应用 API 令牌 的 EncodingAESKey"""
-    
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -219,10 +220,24 @@ class YiyanCookiePath(BaseModel):
     """可选的代理地址，留空则检测系统代理"""
 
 
+class XinghuoCookiePath(BaseModel):
+    ssoSessionId: str
+    """星火 Cookie 中的 ssoSessionId 字段"""
+    fd: Optional[str] = ""
+    """星火请求中的 fd 字段"""
+    GtToken: Optional[str] = ""
+    """星火请求中的 GtToken 字段"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
 class YiyanAuths(BaseModel):
     accounts: List[YiyanCookiePath] = []
     """文心一言的账号列表"""
 
+
+class XinghuoAuths(BaseModel):
+    accounts: List[XinghuoCookiePath] = []
+    """讯飞星火大模型的账号列表"""
 
 class ChatGLMAPI(BaseModel):
     api_endpoint: str
@@ -520,6 +535,7 @@ class Config(BaseModel):
     chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
     slack: SlackAuths = SlackAuths()
+    xinghuo: XinghuoAuths = XinghuoAuths()
 
     # === Response Settings ===
     text_to_image: TextToImage = TextToImage()

@@ -23,7 +23,7 @@ from tinydb import TinyDB, Query
 import utils.network as network
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
-    PoeCookieAuth, SlackAuths, SlackAppAccessToken
+    PoeCookieAuth, SlackAppAccessToken, XinghuoCookiePath
 from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 
@@ -37,6 +37,7 @@ class BotManager:
         "bing-cookie": [],
         "bard-cookie": [],
         "yiyan-cookie": [],
+        "xinghuo-cookie": [],
         "slack-accesstoken": [],
     }
     """Bot list"""
@@ -62,6 +63,9 @@ class BotManager:
     slack: List[SlackAppAccessToken]
     """Slack Account Infos"""
 
+    xinghuo: List[XinghuoCookiePath]
+    """Xinghuo Account Infos"""
+
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
@@ -73,6 +77,7 @@ class BotManager:
         self.yiyan = config.yiyan.accounts if config.yiyan else []
         self.chatglm = config.chatglm.accounts if config.chatglm else []
         self.slack = config.slack.accounts if config.slack else []
+        self.xinghuo = config.xinghuo.accounts if config.xinghuo else []
         try:
             os.mkdir('data')
             logger.warning(
@@ -89,6 +94,7 @@ class BotManager:
             "bing-cookie": [],
             "bard-cookie": [],
             "yiyan-cookie": [],
+            "xinghuo-cookie": [],
             "chatglm-api": [],
             "slack-accesstoken": [],
         }
@@ -101,6 +107,8 @@ class BotManager:
             self.login_bard()
         if len(self.slack) > 0:
             self.login_slack()
+        if len(self.xinghuo) > 0:
+            self.login_xinghuo()
         if len(self.openai) > 0:
             # 考虑到有人会写错全局配置
             for account in self.config.openai.accounts:
@@ -164,6 +172,8 @@ class BotManager:
                 self.config.response.default_ai = 'yiyan'
             elif len(self.bots['chatglm-api']) > 0:
                 self.config.response.default_ai = 'chatglm-api'
+            elif len(self.bots['xinghuo-cookie']) > 0:
+                self.config.response.default_ai = 'xinghuo'
             elif len(self.bots['slack-accesstoken']) > 0:
                 self.config.response.default_ai = 'slack-claude'
             else:
@@ -236,6 +246,22 @@ class BotManager:
         if len(self.bots["slack-accesstoken"]) < 1:
             logger.error("所有 Claude (Slack) 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['slack-accesstoken'])}/{len(self.slack)} 个 Claude (Slack) 账号！")
+
+    def login_xinghuo(self):
+        try:
+            for i, account in enumerate(self.xinghuo):
+                logger.info("正在解析第 {i} 个 讯飞星火 账号", i=i + 1)
+                if proxy := self.__check_proxy(account.proxy):
+                    account.proxy = proxy
+                self.bots["xinghuo-cookie"].append(account)
+                logger.success("解析成功！", i=i + 1)
+        except Exception as e:
+            logger.error("解析失败：")
+            logger.exception(e)
+        if len(self.bots["xinghuo-cookie"]) < 1:
+            logger.error("所有 讯飞星火 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['xinghuo-cookie'])}/{len(self.xinghuo)} 个 讯飞星火 账号！")
+
 
     def login_poe(self):
         from adapter.quora.poe import PoeClientWrapper
@@ -501,4 +527,6 @@ class BotManager:
             bot_info += f"* {LlmName.PoeNeevaAI.value} : POE NeevaAI 模型\n"
         if len(self.bots['slack-accesstoken']) > 0:
             bot_info += f"* {LlmName.SlackClaude.value} : Slack Claude 模型\n"
+        if len(self.bots['xinghuo-cookie']) > 0:
+            bot_info += f"* {LlmName.XunfeiXinghuo.value} : 星火大模型\n"
         return bot_info
