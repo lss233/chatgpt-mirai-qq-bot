@@ -44,6 +44,8 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
         current_time = datetime.datetime.now()
         while len(self.accessed_at) > 0 and current_time - self.accessed_at[0] > datetime.timedelta(hours=1):
             self.accessed_at.pop(0)
+        if len(self.accessed_at) == 0:
+            self.accessed_at.append(current_time)
 
     async def delete_conversation(self, conversation_id):
         await self.bot.delete_conversation(conversation_id)
