@@ -129,8 +129,8 @@ class BingAdapter(BotAdapter, DrawingAPI):
         logger.debug(f"[Bing Image] Prompt: {prompt}")
         try:
             async with ImageGenAsync(
-                    next((cookie['value'] for cookie in self.bot.cookies if cookie['name'] == '_U'), None),
-                    False
+                    all_cookies=self.bot.chat_hub.cookies,
+                    quiet=True
             ) as image_generator:
                 images = await image_generator.get_images(prompt)
 
