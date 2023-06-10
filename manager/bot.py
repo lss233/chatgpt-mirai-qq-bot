@@ -5,7 +5,7 @@ import urllib.request
 from typing import List, Dict
 from urllib.parse import urlparse
 
-import OpenAIAuth
+import httpx
 import openai
 import regex
 import requests
@@ -312,8 +312,8 @@ class BotManager:
                 bot.account = account
                 logger.success("登录成功！", i=i + 1)
                 counter = counter + 1
-            except OpenAIAuth.Error as e:
-                logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
+            except httpx.HTTPStatusError as e:
+                logger.error("登录失败! 可能是账号密码错误，或者 Endpoint 不支持 该登录方式。{exc}", exc=e)
             except (ConnectTimeout, RequestException, SSLError, urllib3.exceptions.MaxRetryError, ClientConnectorError) as e:
                 logger.error("登录失败! 连接 OpenAI 服务器失败,请更换代理节点重试！{exc}", exc=e)
             except APIKeyNoFundsError:
@@ -431,18 +431,26 @@ class BotManager:
 
         if cached_account.get('password'):
             logger.info("尝试使用 email + password 登录中...")
-            logger.warning("警告：该方法已不推荐使用，建议使用 access_token 登录。")
             config.pop('access_token', None)
             config.pop('session_token', None)
             config['email'] = cached_account.get('email')
             config['password'] = cached_account.get('password')
-            bot = V1Chatbot(config=config)
-            self.__save_login_cache(account=account, cache={
-                "session_token": bot.config.get('session_token'),
-                "access_token": get_access_token()
-            })
-            if await __V1_check_auth():
-                return ChatGPTBrowserChatbot(bot, account.mode)
+            async with httpx.AsyncClient(proxies=config.get('proxy', None)) as client:
+                resp = await client.post(
+                    url=f"{V1.BASE_URL}login",
+                    json={
+                        "username": config['email'],
+                        "password": config['password'],
+                    },
+                )
+                resp.raise_for_status()
+                config['access_token'] = resp.json().get('accessToken')
+                self.__save_login_cache(account=account, cache={
+                    "access_token": config['access_token']
+                })
+                bot = V1Chatbot(config=config)
+                if await __V1_check_auth():
+                    return ChatGPTBrowserChatbot(bot, account.mode)
         # Invalidate cache
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
