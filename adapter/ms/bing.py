@@ -62,7 +62,8 @@ class BingAdapter(BotAdapter, DrawingAPI):
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
                                                              conversation_style=self.conversation_style,
-                                                             wss_link=config.bing.wss_link):
+                                                             wss_link=config.bing.wss_link,
+                                                             locale="zh-cn"):
                 if not response:
                     continue
 
