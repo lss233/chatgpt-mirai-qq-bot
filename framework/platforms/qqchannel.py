@@ -1,20 +1,40 @@
+# QQ频道库
 import botpy
 from loguru import logger
 from botpy.message import Message
 from botpy.types.message import Reference
-
+# 项目框架
 from constants import config
-
-
 from framework.universal import handle_message
 from framework.request import Request, Response
 from framework.messages import ImageElement
-
+# Ariadne框架
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
 
-appid = config.qqchannel.appid
-token = config.qqchannel.token
+
+class Config:
+    appid = config.qqchannel.appid
+    token = config.qqchannel.token
+
+
+async def post_response_function(client, channel_id, message_id, text=None, image=ImageElement):
+    message_reference = Reference(message_id=message_id)
+    if text:
+        await client.api.post_message(
+            channel_id=channel_id,
+            content=text,
+            msg_id=message_id,
+            message_reference=message_reference,
+        )
+    if image:
+        img_bytes = await image.get_bytes()
+        await client.api.post_message(
+            channel_id=channel_id,
+            file_image=img_bytes,
+            msg_id=message_id,
+            message_reference=message_reference,
+        )
 
 
 class Channel(botpy.Client):
@@ -35,23 +55,9 @@ class Channel(botpy.Client):
             nonlocal last_send_text
             if text:
                 last_send_text += text
-                message_reference = Reference(message_id=message.id)
-                await self.api.post_message(
-                    channel_id=message.channel_id,
-                    content=last_send_text,
-                    msg_id=message.id,
-                    message_reference=message_reference,
-                )
-
+                await post_response_function(self, message.channel_id, message.id, text=text)
             if image:
-                img_bytes = await image.get_bytes()
-                message_reference = Reference(message_id=message.id)
-                await self.api.post_message(
-                    channel_id=message.channel_id,
-                    file_image=img_bytes,
-                    msg_id=message.id,
-                    message_reference=message_reference,
-                )
+                await post_response_function(self, message.channel_id, message.id, image=image)
 
             last_send_text = ''
 
@@ -68,7 +74,8 @@ class Channel(botpy.Client):
         except Exception as e:
             logger.error(e)
 
+
 async def start_task():
     intents = botpy.Intents.all()
     client = Channel(intents=intents)
-    return await client.start(appid=appid, token=token)
+    return await client.start(appid=Config.appid, token=Config.token)
