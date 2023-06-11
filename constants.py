@@ -28,6 +28,7 @@ class LlmName(Enum):
     Bard = "bard"
     YiYan = "yiyan"
     ChatGLM = "chatglm-api"
+    XunfeiXinghuo = "xinghuo"
 
 
 class BotPlatform(Enum):

@@ -56,6 +56,7 @@ class HttpService(BaseModel):
     debug: bool = False
     """是否开启debug，错误时展示日志"""
 
+
 class WecomBot(BaseModel):
     host: str = "0.0.0.0"
     """企业微信回调地址，需要能够被公网访问，0.0.0.0则不限制访问地址"""
@@ -73,7 +74,7 @@ class WecomBot(BaseModel):
     """企业微信应用 API 令牌 的 Token"""
     encoding_aes_key: str
     """企业微信应用 API 令牌 的 EncodingAESKey"""
-    
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = 0.5
@@ -219,10 +220,24 @@ class YiyanCookiePath(BaseModel):
     """可选的代理地址，留空则检测系统代理"""
 
 
+class XinghuoCookiePath(BaseModel):
+    ssoSessionId: str
+    """星火 Cookie 中的 ssoSessionId 字段"""
+    fd: Optional[str] = ""
+    """星火请求中的 fd 字段"""
+    GtToken: Optional[str] = ""
+    """星火请求中的 GtToken 字段"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
+
 class YiyanAuths(BaseModel):
     accounts: List[YiyanCookiePath] = []
     """文心一言的账号列表"""
 
+
+class XinghuoAuths(BaseModel):
+    accounts: List[XinghuoCookiePath] = []
+    """讯飞星火大模型的账号列表"""
 
 class ChatGLMAPI(BaseModel):
     api_endpoint: str
@@ -369,7 +384,7 @@ class Response(BaseModel):
     error_session_authenciate_failed: str = "身份验证失败！无法登录至 ChatGPT 服务器，请检查账号信息是否正确！\n{exc}"
     """发生网络错误时发送的消息，请注意可以插入 {exc} 作为异常占位符"""
 
-    error_request_too_many: str = "糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{exc}\n"
+    error_request_too_many: str = "糟糕！当前 ChatGPT 接入点收到的请求太多了，我需要一段时间冷静冷静。请过一会儿再来找我！\n预计恢复时间：{exc}(Code: 429)\n"
 
     error_request_concurrent_error: str = "当前有其他人正在和我进行聊天，请稍后再给我发消息吧！"
 
@@ -520,6 +535,7 @@ class Config(BaseModel):
     chatglm: ChatGLMAuths = ChatGLMAuths()
     poe: PoeAuths = PoeAuths()
     slack: SlackAuths = SlackAuths()
+    xinghuo: XinghuoAuths = XinghuoAuths()
 
     # === Response Settings ===
     text_to_image: TextToImage = TextToImage()

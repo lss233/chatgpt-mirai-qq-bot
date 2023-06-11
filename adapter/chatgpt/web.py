@@ -1,6 +1,7 @@
 import datetime
 from typing import Generator, Union
 
+import revChatGPT
 from loguru import logger
 
 from adapter.botservice import BotAdapter
@@ -40,6 +41,9 @@ class ChatGPTWebAdapter(BotAdapter):
         if self.bot.account.paid:
             self.supported_models.append('text-davinci-002-render-paid')
             self.supported_models.append('gpt-4')
+            self.supported_models.append('gpt-4-mobile')
+            self.supported_models.append('gpt-4-browsing')
+            self.supported_models.append('gpt-4-plugins')
 
     async def switch_model(self, model_name):
         if (
@@ -92,20 +96,22 @@ class ChatGPTWebAdapter(BotAdapter):
                 # 确保是当前的会话，才更新 parent_id
                 if self.conversation_id == resp["conversation_id"]:
                     self.parent_id = resp["parent_id"]
+                logger.debug("resp = " + str(resp))
                 yield resp["message"]
             if last_response:
                 logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")
         except AttributeError as e:
             if str(e).startswith("'str' object has no attribute 'get'"):
                 yield "出现故障，请发送”{reset}“重新开始！".format(reset=config.trigger.reset_command)
-        except V1Error as e:
-            if e.code == 2:
+        except revChatGPT.typings.Error as e:
+            if e.code == 429:
                 current_time = datetime.datetime.now()
                 self.bot.refresh_accessed_at()
                 logger.debug(f"[ChatGPT-Web] accessed at: {str(self.bot.accessed_at)}")
                 first_accessed_at = self.bot.accessed_at[0] if len(self.bot.accessed_at) > 0 \
-                        else current_time - datetime.timedelta(hours=1)
-                remaining = divmod(current_time - first_accessed_at, datetime.timedelta(seconds=60))
+                    else current_time
+                next_available_time = first_accessed_at + datetime.timedelta(hours=1)
+                remaining = divmod(next_available_time - current_time, datetime.timedelta(seconds=60))
                 minute = remaining[0]
                 second = remaining[1].seconds
                 raise BotRatelimitException(f"{minute}分{second}秒") from e

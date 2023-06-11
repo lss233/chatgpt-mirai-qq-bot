@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import itertools
 import os
@@ -5,7 +6,10 @@ import urllib.request
 from typing import List, Dict
 from urllib.parse import urlparse
 
-import OpenAIAuth
+import base64
+import json
+import time
+import httpx
 import openai
 import regex
 import requests
@@ -23,7 +27,7 @@ from tinydb import TinyDB, Query
 import utils.network as network
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
-    PoeCookieAuth, SlackAuths, SlackAppAccessToken
+    PoeCookieAuth, SlackAppAccessToken, XinghuoCookiePath
 from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 
@@ -37,6 +41,7 @@ class BotManager:
         "bing-cookie": [],
         "bard-cookie": [],
         "yiyan-cookie": [],
+        "xinghuo-cookie": [],
         "slack-accesstoken": [],
     }
     """Bot list"""
@@ -62,6 +67,9 @@ class BotManager:
     slack: List[SlackAppAccessToken]
     """Slack Account Infos"""
 
+    xinghuo: List[XinghuoCookiePath]
+    """Xinghuo Account Infos"""
+
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
@@ -73,6 +81,7 @@ class BotManager:
         self.yiyan = config.yiyan.accounts if config.yiyan else []
         self.chatglm = config.chatglm.accounts if config.chatglm else []
         self.slack = config.slack.accounts if config.slack else []
+        self.xinghuo = config.xinghuo.accounts if config.xinghuo else []
         try:
             os.mkdir('data')
             logger.warning(
@@ -89,6 +98,7 @@ class BotManager:
             "bing-cookie": [],
             "bard-cookie": [],
             "yiyan-cookie": [],
+            "xinghuo-cookie": [],
             "chatglm-api": [],
             "slack-accesstoken": [],
         }
@@ -101,6 +111,8 @@ class BotManager:
             self.login_bard()
         if len(self.slack) > 0:
             self.login_slack()
+        if len(self.xinghuo) > 0:
+            self.login_xinghuo()
         if len(self.openai) > 0:
             # 考虑到有人会写错全局配置
             for account in self.config.openai.accounts:
@@ -164,6 +176,8 @@ class BotManager:
                 self.config.response.default_ai = 'yiyan'
             elif len(self.bots['chatglm-api']) > 0:
                 self.config.response.default_ai = 'chatglm-api'
+            elif len(self.bots['xinghuo-cookie']) > 0:
+                self.config.response.default_ai = 'xinghuo'
             elif len(self.bots['slack-accesstoken']) > 0:
                 self.config.response.default_ai = 'slack-claude'
             else:
@@ -236,6 +250,22 @@ class BotManager:
         if len(self.bots["slack-accesstoken"]) < 1:
             logger.error("所有 Claude (Slack) 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['slack-accesstoken'])}/{len(self.slack)} 个 Claude (Slack) 账号！")
+
+    def login_xinghuo(self):
+        try:
+            for i, account in enumerate(self.xinghuo):
+                logger.info("正在解析第 {i} 个 讯飞星火 账号", i=i + 1)
+                if proxy := self.__check_proxy(account.proxy):
+                    account.proxy = proxy
+                self.bots["xinghuo-cookie"].append(account)
+                logger.success("解析成功！", i=i + 1)
+        except Exception as e:
+            logger.error("解析失败：")
+            logger.exception(e)
+        if len(self.bots["xinghuo-cookie"]) < 1:
+            logger.error("所有 讯飞星火 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['xinghuo-cookie'])}/{len(self.xinghuo)} 个 讯飞星火 账号！")
+
 
     def login_poe(self):
         from adapter.quora.poe import PoeClientWrapper
@@ -312,8 +342,8 @@ class BotManager:
                 bot.account = account
                 logger.success("登录成功！", i=i + 1)
                 counter = counter + 1
-            except OpenAIAuth.Error as e:
-                logger.error("登录失败! 请检查 IP 、代理或者账号密码是否正确{exc}", exc=e)
+            except httpx.HTTPStatusError as e:
+                logger.error("登录失败! 可能是账号密码错误，或者 Endpoint 不支持 该登录方式。{exc}", exc=e)
             except (ConnectTimeout, RequestException, SSLError, urllib3.exceptions.MaxRetryError, ClientConnectorError) as e:
                 logger.error("登录失败! 连接 OpenAI 服务器失败,请更换代理节点重试！{exc}", exc=e)
             except APIKeyNoFundsError:
@@ -398,17 +428,42 @@ class BotManager:
         if cached_account.get('model'):  # Ready for backward-compatibility & forward-compatibility
             config['model'] = cached_account.get('model')
 
+        def get_access_token():
+            return bot.session.headers.get('Authorization').removeprefix('Bearer ')
+
         # 我承认这部分代码有点蠢
         async def __V1_check_auth() -> bool:
             try:
+                access_token = get_access_token()
+                _, payload, _ = access_token.split(".")
+
+                # Decode the payload using base64 decoding
+                payload_data = base64.urlsafe_b64decode(payload + "=" * ((4 - len(payload) % 4) % 4))
+
+                # Parse the JSON string to get the payload as a dictionary
+                payload_dict = json.loads(payload_data)
+
+                # Check the "exp" key in the payload dictionary to get the expiration time
+                exp_time = payload_dict["exp"]
+                email = payload_dict["https://api.openai.com/profile"]['email']
+
+                # Convert the expiration time to a Unix timestamp
+                exp_timestamp = int(exp_time)
+
+                # Compare the current time (also in Unix timestamp format) to the expiration time to check if the token has expired
+                current_timestamp = int(time.time())
+                if current_timestamp >= exp_timestamp:
+                    logger.error(f"[ChatGPT-Web] - {email} 的 access_token 已过期")
+                    return False
+                else:
+                    remaining_seconds = exp_timestamp - current_timestamp
+                    remaining_days = remaining_seconds // (24 * 60 * 60)
+                    logger.info(f"[ChatGPT-Web] - {email} 的 access_token 还有 {remaining_days} 天过期")
                 await bot.get_conversations(0, 1)
                 return True
             except (V1Error, KeyError) as e:
                 logger.error(e)
                 return False
-
-        def get_access_token():
-            return bot.session.headers.get('Authorization').removeprefix('Bearer ')
 
         if cached_account.get('access_token'):
             logger.info("尝试使用 access_token 登录中...")
@@ -431,18 +486,26 @@ class BotManager:
 
         if cached_account.get('password'):
             logger.info("尝试使用 email + password 登录中...")
-            logger.warning("警告：该方法已不推荐使用，建议使用 access_token 登录。")
             config.pop('access_token', None)
             config.pop('session_token', None)
             config['email'] = cached_account.get('email')
             config['password'] = cached_account.get('password')
-            bot = V1Chatbot(config=config)
-            self.__save_login_cache(account=account, cache={
-                "session_token": bot.config.get('session_token'),
-                "access_token": get_access_token()
-            })
-            if await __V1_check_auth():
-                return ChatGPTBrowserChatbot(bot, account.mode)
+            async with httpx.AsyncClient(proxies=config.get('proxy', None), timeout=60, trust_env=True) as client:
+                resp = await client.post(
+                    url=f"{V1.BASE_URL}login",
+                    json={
+                        "username": config['email'],
+                        "password": config['password'],
+                    },
+                )
+                resp.raise_for_status()
+                config['access_token'] = resp.json().get('accessToken')
+                self.__save_login_cache(account=account, cache={
+                    "access_token": config['access_token']
+                })
+                bot = V1Chatbot(config=config)
+                if await __V1_check_auth():
+                    return ChatGPTBrowserChatbot(bot, account.mode)
         # Invalidate cache
         self.__save_login_cache(account=account, cache={})
         raise Exception("All login method failed")
@@ -493,4 +556,6 @@ class BotManager:
             bot_info += f"* {LlmName.PoeNeevaAI.value} : POE NeevaAI 模型\n"
         if len(self.bots['slack-accesstoken']) > 0:
             bot_info += f"* {LlmName.SlackClaude.value} : Slack Claude 模型\n"
+        if len(self.bots['xinghuo-cookie']) > 0:
+            bot_info += f"* {LlmName.XunfeiXinghuo.value} : 星火大模型\n"
         return bot_info

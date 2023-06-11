@@ -1,6 +1,6 @@
 graia-ariadne==0.11.5
 graiax-silkcoder
-revChatGPT==4.2.3
+revChatGPT==6.1.4
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.7.1
@@ -15,13 +15,13 @@ pygments~=2.15.1
 imgkit~=1.2.3
 qrcode~=7.4.2
 openai~=0.27.7
-EdgeGPT==0.3.8.1
+EdgeGPT==0.8.2
 aiohttp~=3.8.4
-OpenAIAuth~=0.3.6
+OpenAIAuth~=1.0.2
 urllib3~=1.26.15
-BingImageCreator~=0.1.5
+BingImageCreator~=0.4.2
 
-requests~=2.28.2
+requests~=2.31.0
 uuid~=1.30
 
 python-telegram-bot==20.3
@@ -30,7 +30,7 @@ tls-client
 python-dateutil~=2.8.2
 discord.py
 azure-cognitiveservices-speech
-poe-api~=0.3.1
+poe-api~=0.4.6
 
 regex~=2023.3.23
 httpx

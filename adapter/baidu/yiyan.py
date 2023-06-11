@@ -81,6 +81,7 @@ class YiyanAdapter(BotAdapter):
             json={
                 "sessionName": prompt,
                 "timestamp": get_ts(),
+                "plugins": [],
                 "deviceType": "pc"
             }
         )
@@ -118,6 +119,9 @@ class YiyanAdapter(BotAdapter):
                 "deviceType": "pc",
                 "code": 0,
                 "msg": "",
+                "plugins": [],
+                "pluginInfo": "",
+                "jt": "",
                 "sign": self.client.headers['Acs-Token']
             }
         )
@@ -184,7 +188,7 @@ class YiyanAdapter(BotAdapter):
     async def get_sign(self):
         # 目前只需要这一个参数来计算 Acs-Token
         self.acs_client.headers['Cookie'] = f"BAIDUID={self.account.BAIDUID};"
-        req = await self.acs_client.get("https://chatgpt-proxy.lss233.com/yiyan-api/acs")
+        req = await self.acs_client.get("https://chatgpt-proxy.lss233.com/yiyan-api/acs", timeout=30)
         return req.json()['acs']
 
     async def __download_image(self, url: str) -> bytes:
