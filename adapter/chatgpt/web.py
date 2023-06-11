@@ -96,7 +96,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 # 确保是当前的会话，才更新 parent_id
                 if self.conversation_id == resp["conversation_id"]:
                     self.parent_id = resp["parent_id"]
-                logger.debug("resp = " + str(resp))
+
                 yield resp["message"]
             if last_response:
                 logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")
