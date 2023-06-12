@@ -25,7 +25,7 @@ requests~=2.31.0
 uuid~=1.30
 
 python-telegram-bot==20.3
-aiocqhttp~=1.4.3
+aiocqhttp~=1.4.4
 tls-client
 python-dateutil~=2.8.2
 discord.py
