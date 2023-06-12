@@ -55,7 +55,12 @@ class Channel(botpy.Client):
             nonlocal last_send_text
             # 如果开启了强制转图片
             if config.text_to_image.always:
-                await post_response_function(self, message.channel_id, message.id, image=await to_image(str(text)))
+                await post_response_function(
+                    self,
+                    message.channel_id,
+                    message.id,
+                    image=await to_image(text),
+                )
                 last_send_text = ''
             else:
                 if text:
