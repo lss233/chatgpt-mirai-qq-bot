@@ -75,13 +75,15 @@ class XinghuoAdapter(BotAdapter):
         full_response = ''
         async with self.client.stream(
                     "POST",
-                    url="https://xinghuo.xfyun.cn/iflygpt/u/chat_message/chat",
+                    url="https://xinghuo.xfyun.cn/iflygpt-chat/u/chat_message/chat",
                     data={
                         'fd': self.account.fd,
                         'chatId': self.conversation_id,
                         'text': prompt,
                         'GtToken': self.account.GtToken,
-                        'clientType': '1'
+                        'sid': self.account.sid,
+                        'clientType': '1',
+                        'isBot':'0'
                     },
             ) as req:
             async for line in req.aiter_lines():
