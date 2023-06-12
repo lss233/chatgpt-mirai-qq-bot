@@ -7,7 +7,7 @@ tinydb~=4.7.1
 
 loguru~=0.7.0
 asyncio~=3.4.3
-pydantic~=1.10.7
+pydantic~=1.10.9
 
 markdown~=3.4.3
 python-markdown-math~=0.8
