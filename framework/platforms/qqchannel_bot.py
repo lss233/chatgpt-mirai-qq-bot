@@ -8,6 +8,7 @@ from constants import config
 from framework.universal import handle_message
 from framework.request import Request, Response
 from framework.messages import ImageElement
+from framework.utils.text_to_img import to_image
 # Ariadne框架
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
@@ -33,7 +34,6 @@ async def post_response_function(client, channel_id, message_id, text=None, imag
             channel_id=channel_id,
             file_image=img_bytes,
             msg_id=message_id,
-            message_reference=message_reference,
         )
 
 
@@ -42,7 +42,7 @@ class Channel(botpy.Client):
         logger.success(f"机器人「{self.robot.name}」启动完毕，接收消息中……")
 
     async def on_message_audited(self, message: Message):
-        print("e")
+        logger.warning(f"机器人「{self.robot.name}」收到了一条审核消息.")
 
     async def on_at_message_create(self, message: Message):
 
@@ -53,13 +53,17 @@ class Channel(botpy.Client):
 
         async def _response_func(chain: MessageChain, text: str, voice: None, image: ImageElement):
             nonlocal last_send_text
-            if text:
-                last_send_text += text
-                await post_response_function(self, message.channel_id, message.id, text=text)
-            if image:
-                await post_response_function(self, message.channel_id, message.id, image=image)
-
-            last_send_text = ''
+            # 如果开启了强制转图片
+            if config.text_to_image.always:
+                await post_response_function(self, message.channel_id, message.id, image=await to_image(str(text)))
+                last_send_text = ''
+            else:
+                if text:
+                    last_send_text += text
+                    await post_response_function(self, message.channel_id, message.id, text=text)
+                if image:
+                    await post_response_function(self, message.channel_id, message.id, image=image)
+                last_send_text = ''
 
         request = Request()
         request.session_id = message.channel_id
@@ -76,6 +80,6 @@ class Channel(botpy.Client):
 
 
 async def start_task():
-    intents = botpy.Intents.all()
+    intents = botpy.Intents(public_guild_messages=True, direct_message=True, guilds=True, message_audit=True)
     client = Channel(intents=intents)
     return await client.start(appid=Config.appid, token=Config.token)
