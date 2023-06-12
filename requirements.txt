@@ -32,7 +32,7 @@ discord.py
 azure-cognitiveservices-speech
 poe-api~=0.4.6
 
-regex~=2023.3.23
+regex~=2023.6.3
 httpx
 Quart==0.17.0
 
