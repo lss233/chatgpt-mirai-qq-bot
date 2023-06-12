@@ -18,7 +18,7 @@ class Config:
     token = config.qqchannel.token
 
 
-async def post_response_function(client, channel_id, message_id, text=None, image=ImageElement):
+async def post_response_function(client, channel_id, message_id, text=None, image=None):
     message_reference = Reference(message_id=message_id)
     if text:
         await client.api.post_message(

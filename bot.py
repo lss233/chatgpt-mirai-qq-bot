@@ -72,7 +72,7 @@ if constants.config.discord:
     bots.append(start_task())
 if constants.config.qqchannel:
     logger.info("检测到 QQChannel 配置，将启动 QQChannel 模式……")
-    from framework.platforms.qqchannel import start_task
+    from framework.platforms.qqchannel_bot import start_task
 
     bots.append(start_task())
 
