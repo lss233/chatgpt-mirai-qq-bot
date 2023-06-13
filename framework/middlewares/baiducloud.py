@@ -91,7 +91,7 @@ class MiddlewareBaiduCloud(Middleware):
         if not config.baiducloud.check:
             return await _next(request, response)
         # 不处理没有文字的信息
-        if not response.body.has(Plain) or not response.text:
+        if not response.text:
             return await _next(request, response)
 
         try:

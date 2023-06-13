@@ -50,6 +50,7 @@ DrawingAIFactory.register("openai", ChatGPTAPIAdapter, ("drawing",))
 
 
 class BotPlatform(Enum):
+    QQChannelBot = "qq"
     AriadneBot = "mirai"
     DiscordBot = "discord"
     Onebot = "onebot"
