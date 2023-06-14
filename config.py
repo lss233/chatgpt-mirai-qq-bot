@@ -357,6 +357,9 @@ class Trigger(BaseModel):
     allowed_models: List[str] = [
         "gpt-3.5-turbo",
         "gpt-3.5-turbo-0301",
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k",
+        "gpt-3.5-turbo-16k-0613",
         "text-davinci-002-render-sha",
         "text-davinci-002-render-paid"
     ]
