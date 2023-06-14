@@ -50,6 +50,8 @@ class ChatGPTAPIAdapter(BotAdapter):
             "gpt-4-0314",
             "gpt-4-32k",
             "gpt-4-32k-0314",
+            "gpt-4-0613",
+            "gpt-4-32k-0613",
         ]
 
     async def switch_model(self, model_name):
