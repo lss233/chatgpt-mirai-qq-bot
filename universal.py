@@ -19,12 +19,14 @@ from exceptions import PresetNotFoundException, BotRatelimitException, Concurren
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException, \
     DrawingFailedException
 from middlewares.baiducloud import MiddlewareBaiduCloud
+from middlewares.openai_moderation import MiddlewareOpenAIModeration
 from middlewares.concurrentlock import MiddlewareConcurrentLock
 from middlewares.ratelimit import MiddlewareRatelimit
 from middlewares.timeout import MiddlewareTimeout
 from utils.text_to_speech import get_tts_voice, TtsVoiceManager, VoiceType
 
-middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
+middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(),
+               MiddlewareOpenAIModeration(), MiddlewareConcurrentLock()]
 
 
 async def get_ping_response(conversation_context: ConversationContext):

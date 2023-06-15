@@ -466,6 +466,12 @@ class BaiduCloud(BaseModel):
     """不合规消息自定义返回"""
 
 
+class OpenAIModeration(BaseModel):
+    check:bool = False
+    openai_api_key: str = ""
+    prompt_message: str = "[OpenAI Moderation]请珍惜机器人，当前返回内容不合规"
+
+
 class Preset(BaseModel):
     command: str = r"加载预设 (\w+)"
     keywords: dict[str, str] = {}
@@ -548,6 +554,7 @@ class Config(BaseModel):
     presets: Preset = Preset()
     ratelimit: Ratelimit = Ratelimit()
     baiducloud: BaiduCloud = BaiduCloud()
+    openai_moderation: OpenAIModeration = OpenAIModeration()
     vits: VitsConfig = VitsConfig()
 
     # === External Utilities ===
