@@ -1,6 +1,4 @@
-import os
 import json
-import time
 import aiohttp
 from loguru import logger
 from config import Config
@@ -19,8 +17,8 @@ class OpenAIModeration():
         moderation_url = f"https://api.openai.com/v1/moderations"
         headers = {'Content-Type': 'application/json',
                    'Accept': 'application/json',
-                   "Authorization": "Bearer "+self.openai_api
-        }
+                   "Authorization": "Bearer " + self.openai_api
+                   }
 
         async with aiohttp.ClientSession() as session:
             async with session.post(moderation_url, headers=headers, data={'input': text}) as response:
@@ -52,12 +50,14 @@ class MiddlewareOpenAIModeration(Middleware):
                 logger.success(f"[OpenAI文本审核] 判定结果：合规")
                 should_pass = True
             else:
-                # 获取审核不通过原因
+                # 获取被标记原因
                 categories = response_dict['results'][0]['categories']
                 reasons = []
-                if isinstance(categories,dict):
-                    for reason,value in categories.items():
-                        if value:reasons.append(reason)
+                if isinstance(categories, dict):
+                    for reason, value in categories.items():
+                        if value:
+                            reasons.append(reason)
+
                 msg = ','.join(reasons)
                 logger.error(f"[OpenAI文本审核] 判定结果：不合规")
                 conclusion = f"{config.openai_moderation.prompt_message}\n原因：{msg}"

@@ -467,9 +467,12 @@ class BaiduCloud(BaseModel):
 
 
 class OpenAIModeration(BaseModel):
-    check:bool = False
+    check: bool = False
+    """是否启动OpenAI内容安全审核"""
     openai_api_key: str = ""
+    """OpenAI API key"""
     prompt_message: str = "[OpenAI Moderation]请珍惜机器人，当前返回内容不合规"
+    """不合规消息自定义返回"""
 
 
 class Preset(BaseModel):
