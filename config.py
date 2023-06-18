@@ -473,6 +473,8 @@ class OpenAIModeration(BaseModel):
     """OpenAI API key"""
     prompt_message: str = "[OpenAI Moderation]请珍惜机器人，当前返回内容不合规"
     """不合规消息自定义返回"""
+    proxy: Optional[str] = None
+    """可选的代理地址，留空则检测系统代理"""
 
 
 class Preset(BaseModel):

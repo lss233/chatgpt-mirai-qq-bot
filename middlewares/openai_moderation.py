@@ -15,13 +15,15 @@ class OpenAIModeration():
 
     async def get_conclusion(self, text: str):
         moderation_url = f"https://api.openai.com/v1/moderations"
-        headers = {'Content-Type': 'application/json',
-                   'Accept': 'application/json',
-                   "Authorization": "Bearer " + self.openai_api
-                   }
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            "Authorization": "Bearer " + self.openai_api
+        }
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(moderation_url, headers=headers, data={'input': text}) as response:
+            async with session.post(moderation_url, headers=headers, data={'input': text},
+                                    proxy=config.openai_moderation.proxy) as response:
                 response.raise_for_status()
                 response_dict = await response.json()
 
