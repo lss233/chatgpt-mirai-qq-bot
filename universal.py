@@ -87,7 +87,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             return ret
         # TTS Converting
         if conversation_context.conversation_voice and isinstance(msg, MessageChain):
-            if request_from == BotPlatform.Onebot or request_from == BotPlatform.AriadneBot:
+            if request_from in [BotPlatform.Onebot, BotPlatform.AriadneBot]:
                 voice_type = VoiceType.Silk
             elif request_from == BotPlatform.HttpService:
                 voice_type = VoiceType.Mp3

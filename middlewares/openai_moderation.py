@@ -14,11 +14,11 @@ class OpenAIModeration():
         self.openai_api = config.openai_moderation.openai_api_key
 
     async def get_conclusion(self, text: str):
-        moderation_url = f"https://api.openai.com/v1/moderations"
+        moderation_url = "https://api.openai.com/v1/moderations"
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            "Authorization": "Bearer " + self.openai_api
+            "Authorization": f"Bearer {self.openai_api}",
         }
 
         async with aiohttp.ClientSession() as session:
@@ -45,26 +45,20 @@ class MiddlewareOpenAIModeration(Middleware):
         try:
             response_dict = await self.openai_moderation.get_conclusion(rendered)
 
-            # 处理审核结果
-            conclusion = response_dict['results'][0]['flagged']
-            # 如果未被标记
-            if not conclusion:
-                logger.success(f"[OpenAI文本审核] 判定结果：合规")
-                should_pass = True
-            else:
+            if conclusion := response_dict['results'][0]['flagged']:
                 # 获取被标记原因
                 categories = response_dict['results'][0]['categories']
                 reasons = []
                 if isinstance(categories, dict):
-                    for reason, value in categories.items():
-                        if value:
-                            reasons.append(reason)
-
+                    reasons.extend(reason for reason, value in categories.items() if value)
                 msg = ','.join(reasons)
-                logger.error(f"[OpenAI文本审核] 判定结果：不合规")
+                logger.error("[OpenAI文本审核] 判定结果：不合规")
                 conclusion = f"{config.openai_moderation.prompt_message}\n原因：{msg}"
                 return await action(session_id, prompt, conclusion, respond)
 
+            else:
+                logger.success("[OpenAI文本审核] 判定结果：合规")
+                should_pass = True
         except aiohttp.ClientError as e:
             logger.error(f"HTTP error occurred: {e}")
 
