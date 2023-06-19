@@ -3,7 +3,7 @@ graiax-silkcoder
 revChatGPT==6.3.2
 toml~=0.10.2
 Pillow>=9.3.0
-tinydb~=4.7.1
+tinydb~=4.8.0
 
 loguru~=0.7.0
 asyncio~=3.4.3
