@@ -165,26 +165,28 @@ class BotManager:
             for k, v in self.bots.items():
                 logger.info(f"AI 类型：{k} - 可用账号： {len(v)} 个")
 
-        # 自动推测默认 AI
-        default_ai_mappings = {
-            "poe-web": "poe-chatgpt",
-            "slack-accesstoken": "slack-claude",
-            "chatgpt-web": "chatgpt-web",
-            "openai-api": "chatgpt-api",
-            "bing-cookie": "bing",
-            "bard-cookie": "bard",
-            "yiyan-cookie": "yiyan",
-            "chatglm-api": "chatglm-api",
-            "xinghuo-cookie": "xinghuo",
-        }
-
         if not self.config.response.default_ai:
-            for key, default_ai in default_ai_mappings.items():
-                if len(self.bots[key]) > 0:
-                    self.config.response.default_ai = default_ai
-                    break
-            else:
-                self.config.response.default_ai = 'chatgpt-web'
+            # 自动推测默认 AI
+            default_ai_mappings = {
+                "poe-web": "poe-chatgpt",
+                "slack-accesstoken": "slack-claude",
+                "chatgpt-web": "chatgpt-web",
+                "openai-api": "chatgpt-api",
+                "bing-cookie": "bing",
+                "bard-cookie": "bard",
+                "yiyan-cookie": "yiyan",
+                "chatglm-api": "chatglm-api",
+                "xinghuo-cookie": "xinghuo",
+            }
+
+            self.config.response.default_ai = next(
+                (
+                    default_ai
+                    for key, default_ai in default_ai_mappings.items()
+                    if len(self.bots[key]) > 0
+                ),
+                'chatgpt-web',
+            )
 
     def reset_bot(self, bot):
         from adapter.quora.poe import PoeClientWrapper
