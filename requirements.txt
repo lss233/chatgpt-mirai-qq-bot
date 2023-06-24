@@ -1,9 +1,9 @@
 graia-ariadne==0.11.5
 graiax-silkcoder
-revChatGPT==6.3.2
+revChatGPT==6.3.3
 toml~=0.10.2
 Pillow>=9.3.0
-tinydb~=4.7.1
+tinydb~=4.8.0
 
 loguru~=0.7.0
 asyncio~=3.4.3
@@ -14,7 +14,7 @@ python-markdown-math~=0.8
 pygments~=2.15.1
 imgkit~=1.2.3
 qrcode~=7.4.2
-openai~=0.27.7
+openai~=0.27.8
 EdgeGPT==0.8.2
 aiohttp~=3.8.4
 OpenAIAuth~=1.0.2
