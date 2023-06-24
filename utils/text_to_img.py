@@ -10,6 +10,7 @@ from tempfile import NamedTemporaryFile
 from typing import Optional
 
 import aiohttp
+import unicodedata
 import asyncio
 import imgkit
 from pydantic import BaseModel
@@ -20,7 +21,6 @@ from utils.zipimporter_patch import patch
 
 import markdown
 import qrcode
-import unicodedata
 from PIL import Image
 from PIL import ImageDraw, ImageFont
 from charset_normalizer import from_bytes
