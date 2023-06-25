@@ -110,15 +110,17 @@ class MiddlewareBaiduCloud(Middleware):
                 conclusion = f"{config.baiducloud.prompt_message}\n原因：{msg}"
                 return await action(session_id, prompt, conclusion, respond)
 
-        except aiohttp.ClientError as e:
-            logger.error(f"HTTP error occurred: {e}")
-
-            await respond("[百度云文本审核] 判定出错\n以下是原消息：")
+        except Exception as e:
+            respond_message = "[百度云文本审核] 判定出错\n以下是原消息："
+            if isinstance(e, aiohttp.ClientError):
+                error_message = f"[百度云文本审核] HTTP错误: {e}"
+            elif isinstance(e, json.JSONDecodeError):
+                error_message = f"[百度云文本审核] JSON解码错误: {e}"
+            else:
+                error_message = f"[百度云文本审核] 其他错误：{e}"
+            logger.error(error_message)
+            await respond(respond_message)
             should_pass = True
 
-        except json.JSONDecodeError as e:
-            logger.error(f"[百度云文本审核] JSON decode error occurred: {e}")
-        except StopIteration as e:
-            logger.error(f"[百度云文本审核] StopIteration exception occurred: {e}")
         if should_pass:
             return await action(session_id, prompt, rendered, respond)

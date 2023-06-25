@@ -1,4 +1,4 @@
-import datetime
+import asyncio
 import hashlib
 import itertools
 import os
@@ -90,6 +90,39 @@ class BotManager:
             pass
         self.cache_db = TinyDB('data/login_caches.json')
 
+    async def handle_openai(self):
+        # 考虑到有人会写错全局配置
+        for account in self.config.openai.accounts:
+            account = account.dict()
+            if 'browserless_endpoint' in account:
+                logger.warning("警告： browserless_endpoint 配置位置有误，正在将其调整为全局配置")
+                self.config.openai.browserless_endpoint = account['browserless_endpoint']
+            if 'api_endpoint' in account:
+                logger.warning("警告： api_endpoint 配置位置有误，正在将其调整为全局配置")
+                self.config.openai.api_endpoint = account['api_endpoint']
+
+        # 应用 browserless_endpoint 配置
+        if self.config.openai.browserless_endpoint:
+            V1.BASE_URL = self.config.openai.browserless_endpoint or V1.BASE_URL
+        logger.info(f"当前的 browserless_endpoint 为：{V1.BASE_URL}")
+
+        # 历史遗留问题 1
+        if V1.BASE_URL == 'https://bypass.duti.tech/api/':
+            logger.error("检测到你还在使用旧的 browserless_endpoint，已为您切换。")
+            V1.BASE_URL = "https://bypass.churchless.tech/api/"
+        # 历史遗留问题 2
+        if not V1.BASE_URL.endswith("api/"):
+            logger.warning(
+                f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+
+        # 应用 api_endpoint 配置
+        if self.config.openai.api_endpoint:
+            openai.api_base = self.config.openai.api_endpoint or openai.api_base
+            if openai.api_base.endswith("/"):
+                openai.api_base.removesuffix("/")
+        logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
+        await self.login_openai()
+
     async def login(self):
         self.bots = {
             "chatgpt-web": [],
@@ -102,86 +135,58 @@ class BotManager:
             "chatglm-api": [],
             "slack-accesstoken": [],
         }
+
         self.__setup_system_proxy()
-        if len(self.bing) > 0:
-            self.login_bing()
-        if len(self.poe) > 0:
-            self.login_poe()
-        if len(self.bard) > 0:
-            self.login_bard()
-        if len(self.slack) > 0:
-            self.login_slack()
-        if len(self.xinghuo) > 0:
-            self.login_xinghuo()
-        if len(self.openai) > 0:
-            # 考虑到有人会写错全局配置
-            for account in self.config.openai.accounts:
-                account = account.dict()
-                if 'browserless_endpoint' in account:
-                    logger.warning("警告： browserless_endpoint 配置位置有误，正在将其调整为全局配置")
-                    self.config.openai.browserless_endpoint = account['browserless_endpoint']
-                if 'api_endpoint' in account:
-                    logger.warning("警告： api_endpoint 配置位置有误，正在将其调整为全局配置")
-                    self.config.openai.api_endpoint = account['api_endpoint']
 
-            # 应用 browserless_endpoint 配置
-            if self.config.openai.browserless_endpoint:
-                V1.BASE_URL = self.config.openai.browserless_endpoint or V1.BASE_URL
-            logger.info(f"当前的 browserless_endpoint 为：{V1.BASE_URL}")
+        login_funcs = {
+            'bing': self.login_bing,
+            'poe': self.login_poe,
+            'bard': self.login_bard,
+            'slack': self.login_slack,
+            'xinghuo': self.login_xinghuo,
+            'openai': self.handle_openai,
+            'yiyan': self.login_yiyan,
+            'chatglm': self.login_chatglm
+        }
 
-            # 历史遗留问题 1
-            if V1.BASE_URL == 'https://bypass.duti.tech/api/':
-                logger.error("检测到你还在使用旧的 browserless_endpoint，已为您切换。")
-                V1.BASE_URL = "https://bypass.churchless.tech/api/"
-            # 历史遗留问题 2
-            if not V1.BASE_URL.endswith("api/"):
-                logger.warning(
-                    f"提示：你可能要将 browserless_endpoint 修改为 \"{self.config.openai.browserless_endpoint}api/\"")
+        for key, login_func in login_funcs.items():
+            if hasattr(self, key) and len(getattr(self, key)) > 0:
+                if asyncio.iscoroutinefunction(login_func):
+                    await login_func()
+                else:
+                    login_func()
 
-            # 应用 api_endpoint 配置
-            if self.config.openai.api_endpoint:
-                openai.api_base = self.config.openai.api_endpoint or openai.api_base
-                if openai.api_base.endswith("/"):
-                    openai.api_base.removesuffix("/")
-            logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
-
-            await self.login_openai()
-        if len(self.yiyan) > 0:
-            self.login_yiyan()
-        if len(self.chatglm) > 0:
-            self.login_chatglm()
         count = sum(len(v) for v in self.bots.values())
+
         if count < 1:
             logger.error("没有登录成功的账号，程序无法启动！")
             exit(-2)
         else:
-            # 输出登录状况
             for k, v in self.bots.items():
                 logger.info(f"AI 类型：{k} - 可用账号： {len(v)} 个")
-        # 自动推测默认 AI
+
         if not self.config.response.default_ai:
-            if len(self.bots['poe-web']) > 0:
-                self.config.response.default_ai = 'poe-chatgpt'
-            elif len(self.bots['slack-accesstoken']) > 0:
-                self.config.response.default_ai = 'slack-claude'
-            elif len(self.bots['chatgpt-web']) > 0:
-                self.config.response.default_ai = 'chatgpt-web'
-            elif len(self.bots['openai-api']) > 0:
-                self.config.response.default_ai = 'chatgpt-api'
-            elif len(self.bots['bing-cookie']) > 0:
-                self.config.response.default_ai = 'bing'
-            elif len(self.bots['bard-cookie']) > 0:
-                self.config.response.default_ai = 'bard'
-            elif len(self.bots['yiyan-cookie']) > 0:
-                self.config.response.default_ai = 'yiyan'
-            elif len(self.bots['chatglm-api']) > 0:
-                self.config.response.default_ai = 'chatglm-api'
-            elif len(self.bots['xinghuo-cookie']) > 0:
-                self.config.response.default_ai = 'xinghuo'
-            elif len(self.bots['slack-accesstoken']) > 0:
-                self.config.response.default_ai = 'slack-claude'
-            else:
-                self.config.response.default_ai = 'chatgpt-web'
+            # 自动推测默认 AI
+            default_ai_mappings = {
+                "poe-web": "poe-chatgpt",
+                "slack-accesstoken": "slack-claude",
+                "chatgpt-web": "chatgpt-web",
+                "openai-api": "chatgpt-api",
+                "bing-cookie": "bing",
+                "bard-cookie": "bard",
+                "yiyan-cookie": "yiyan",
+                "chatglm-api": "chatglm-api",
+                "xinghuo-cookie": "xinghuo",
+            }
+
+            self.config.response.default_ai = next(
+                (
+                    default_ai
+                    for key, default_ai in default_ai_mappings.items()
+                    if len(self.bots[key]) > 0
+                ),
+                'chatgpt-web',
+            )
 
     def reset_bot(self, bot):
         from adapter.quora.poe import PoeClientWrapper

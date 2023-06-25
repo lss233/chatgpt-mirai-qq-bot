@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import Generator, Union, List
 
 import aiohttp
+import re
 import asyncio
 from PIL import Image
 
@@ -15,7 +16,6 @@ from constants import botManager
 from drawing import DrawingAPI
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
-import re
 from ImageGen import ImageGenAsync
 from graia.ariadne.message.element import Image as GraiaImage
 
