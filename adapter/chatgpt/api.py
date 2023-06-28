@@ -31,7 +31,7 @@ class OpenAIChatbot:
             "default": [
                 {
                     "role": "system",
-                    "content": None,
+                    "content": "You are ChatGPT, a large language model trained by OpenAI. Knowledge cutoff: 2021-09 Current date:[current date]",
                 },
             ],
         }
