@@ -69,31 +69,26 @@ class OpenAIChatbot:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
             encoding = tiktoken.get_encoding("cl100k_base")
-        return self._calc_tokens(session_id, model, encoding)
 
-    def _calc_tokens(self, session_id: str, model: str, encoding: object):
         if model in {
             "gpt-3.5-turbo-0613",
             "gpt-3.5-turbo-16k-0613",
             "gpt-4-0314",
             "gpt-4-32k-0314",
             "gpt-4-0613",
-            "gpt-4-32k-0613"
+            "gpt-4-32k-0613",
+            "gpt-3.5-turbo",
+            "gpt-4"
         }:
             tokens_per_message = 3
             tokens_per_name = 1
         elif model == "gpt-3.5-turbo-0301":
             tokens_per_message = 4  # every message follows {role/name}\n{content}\n
             tokens_per_name = -1  # if there's a name, the role is omitted
-        elif "gpt-3.5-turbo" in model:
-            logger.warning(" gpt-3.5-turbo 可能会随着时间的推移更新。这里使用最新的 gpt-3.5-turbo-0613 计算")
-            return self.count_tokens(session_id, model="gpt-3.5-turbo-0613")
-        elif "gpt-4" in model:
-            logger.warning(" gpt-4 可能会随着时间的推移更新。这里使用最新的 gpt-4-0613 计算")
-            return self.count_tokens(session_id, model="gpt-4-0613")
         else:
             logger.warning("未找到相应模型计算方法，不进行计算")
             return
+
         num_tokens = 0
         for message in self.conversation[session_id]:
             num_tokens += tokens_per_message
@@ -161,7 +156,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.api_info = botManager.pick('openai-api')
         api_key = self.api_info.api_key
         proxy = self.api_info.proxy
-        api_endpoint = config.openai.api_endpoint or "https://api.openai.com/"
+        api_endpoint = config.openai.api_endpoint or "https://api.openai.com/v1/chat/completions"
 
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
@@ -209,28 +204,29 @@ class ChatGPTAPIAdapter(BotAdapter):
                         completion_text: str = ''
 
                         async for line in resp.content:
-                            line = line.decode('utf-8').strip().lstrip("data: ")
-                            if not line or line == "[DONE]":
+                            line = line.decode('utf-8').strip()
+                            if not line.startswith("data: "):
+                                continue
+                            line = line[len("data: "):]
+                            if line == "[DONE]":
                                 break
+                            if not line:
+                                continue
                             try:
                                 event = json.loads(line)
                             except json.JSONDecodeError:
                                 raise Exception(f"JSON解码错误: {line}") from None
                             event_time = time.time() - start_time
-                            if event.get('error'):
+                            if 'error' in event:
                                 raise Exception(f"响应错误: {event['error']}")
-                            if not event.get('choices'):
-                                continue
-                            delta = event['choices'][0].get('delta')
-                            if not delta:
-                                continue
-                            response_role = delta.get('role', '')
-                            event_text = delta.get('content', '')
-                            if response_role is None or event_text is None:
-                                raise Exception("返回的响应中缺少必要的字段")
-                            if event_text:
-                                completion_text += event_text
-                                yield completion_text
+                            if 'choices' in event and len(event['choices']) > 0 and 'delta' in event['choices'][0]:
+                                delta = event['choices'][0]['delta']
+                                if 'role' in delta:
+                                    response_role = delta['role']
+                                if 'content' in delta:
+                                    event_text = delta['content']
+                                    completion_text += event_text
+                                    yield completion_text
 
             self.bot.add_to_conversation(completion_text, response_role, session_id=self.session_id)
             token_count = self.bot.count_tokens(self.session_id, self.bot.engine)
