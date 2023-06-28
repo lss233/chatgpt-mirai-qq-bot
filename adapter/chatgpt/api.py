@@ -13,6 +13,7 @@ from constants import botManager, config
 import tiktoken
 
 hashu = lambda word: ctypes.c_uint64(hash(word)).value
+DATA_PREFIX = "data: "
 
 
 class OpenAIChatbot:
@@ -160,7 +161,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.api_info = botManager.pick('openai-api')
         api_key = self.api_info.api_key
         proxy = self.api_info.proxy
-        api_endpoint = config.openai.api_endpoint or "https://api.openai.com/v1/chat/completions"
+        api_endpoint = config.openai.api_endpoint or "https://api.openai.com/"
 
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
@@ -208,27 +209,28 @@ class ChatGPTAPIAdapter(BotAdapter):
                         completion_text: str = ''
 
                         async for line in resp.content:
-                            line = line.decode('utf-8').strip()
-                            if line.startswith("data: "):
-                                line = line[len("data: "):]
-                                if line == "[DONE]":
-                                    break
-                                if line:
-                                    try:
-                                        event = json.loads(line)
-                                    except json.JSONDecodeError:
-                                        raise Exception(f"Error when decoding line: {line}")
-                                    event_time = time.time() - start_time
-                                    if 'error' in event:
-                                        raise Exception(f"{event['error']}")
-                                    elif 'choices' in event and len(event['choices']) > 0 and 'delta' in \
-                                            event['choices'][0]:
-                                        if 'role' in event['choices'][0]['delta']:
-                                            response_role = event['choices'][0]['delta']['role']
-                                        if 'content' in event['choices'][0]['delta']:
-                                            event_text = event['choices'][0]['delta']['content']
-                                            completion_text += event_text
-                                            yield completion_text
+                            line = line.decode('utf-8').strip().lstrip("data: ")
+                            if not line or line == "[DONE]":
+                                break
+                            try:
+                                event = json.loads(line)
+                            except json.JSONDecodeError:
+                                raise Exception(f"JSON解码错误: {line}") from None
+                            event_time = time.time() - start_time
+                            if event.get('error'):
+                                raise Exception(f"响应错误: {event['error']}")
+                            if not event.get('choices'):
+                                continue
+                            delta = event['choices'][0].get('delta')
+                            if not delta:
+                                continue
+                            response_role = delta.get('role', '')
+                            event_text = delta.get('content', '')
+                            if response_role is None or event_text is None:
+                                raise Exception("返回的响应中缺少必要的字段")
+                            if event_text:
+                                completion_text += event_text
+                                yield completion_text
 
             self.bot.add_to_conversation(completion_text, response_role, session_id=self.session_id)
             token_count = self.bot.count_tokens(self.session_id, self.bot.engine)
