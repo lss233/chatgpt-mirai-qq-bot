@@ -26,7 +26,7 @@ class OpenAIChatbot:
         self.temperature = config.openai.gpt3_params.temperature
         self.max_tokens = config.openai.gpt3_params.max_tokens
         self.engine = api_info.model or "gpt-3.5-turbo"
-        self.timeout: float = 1800
+        self.timeout = config.response.max_timeout
         self.conversation: dict[str, list[dict]] = {
             "default": [
                 {
@@ -120,7 +120,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.parent_id = None
         super().__init__()
         self.bot.conversation[self.session_id] = []
-        self.current_model = self.api_info.model or "gpt-3.5-turbo"
+        self.current_model = self.bot.engine
         self.supported_models = [
             "gpt-3.5-turbo",
             "gpt-3.5-turbo-0301",
@@ -150,13 +150,14 @@ class ChatGPTAPIAdapter(BotAdapter):
         self.bot.api_key = self.api_info.api_key
         self.bot.proxy = self.api_info.proxy
         self.bot.conversation[self.session_id] = []
+        self.bot.engine = self.api_info.model
         self.__conversation_keep_from = 0
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.api_info = botManager.pick('openai-api')
         api_key = self.api_info.api_key
         proxy = self.api_info.proxy
-        api_endpoint = config.openai.api_endpoint or "https://api.openai.com/v1/chat/completions"
+        api_endpoint = config.openai.api_endpoint or "https://api.openai.com/v1"
 
         if self.session_id not in self.bot.conversation:
             self.bot.conversation[self.session_id] = [
@@ -192,7 +193,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             }
             async with aiohttp.ClientSession() as session:
                 with async_timeout.timeout(self.bot.timeout):
-                    async with session.post(api_endpoint + '/v1/chat/completions', headers=headers,
+                    async with session.post(api_endpoint + '/chat/completions', headers=headers,
                                             data=json.dumps(data), proxy=proxy) as resp:
                         if resp.status != 200:
                             response_text = await resp.text()
