@@ -5,7 +5,7 @@ import os
 import urllib.request
 from typing import List, Dict
 from urllib.parse import urlparse
-
+import re
 import base64
 import json
 import time
@@ -120,8 +120,19 @@ class BotManager:
             openai.api_base = self.config.openai.api_endpoint or openai.api_base
             if openai.api_base.endswith("/"):
                 openai.api_base.removesuffix("/")
-        logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
-        await self.login_openai()
+
+        pattern = r'^https://[^/]+/v1$'
+        match = re.match(pattern, openai.api_base)
+
+        if match:
+            logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
+            await self.login_openai()
+        else:
+            logger.error("API反代地址填写错误，正确格式应为 'https://<网址>/v1'")
+            raise ValueError("API反代地址填写错误，正确格式应为 'https://<网址>/v1'")
+
+
+
 
     async def login(self):
         self.bots = {

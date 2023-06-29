@@ -1,7 +1,5 @@
-import ctypes
 import time
 from typing import Generator
-import openai
 import json
 import aiohttp
 import async_timeout
@@ -11,9 +9,6 @@ from adapter.botservice import BotAdapter
 from config import OpenAIAPIKey
 from constants import botManager, config
 import tiktoken
-
-hashu = lambda word: ctypes.c_uint64(hash(word)).value
-DATA_PREFIX = "data: "
 
 
 class OpenAIChatbot:
@@ -108,12 +103,9 @@ class ChatGPTAPIAdapter(BotAdapter):
     api_info: OpenAIAPIKey = None
     """API Key"""
 
-    hashed_user_id: str
-
     def __init__(self, session_id: str = "unknown"):
         self.__conversation_keep_from = 0
         self.session_id = session_id
-        self.hashed_user_id = "user-" + hashu("session_id").to_bytes(8, "big").hex()
         self.api_info = botManager.pick('openai-api')
         self.bot = OpenAIChatbot(self.api_info)
         self.conversation_id = None
@@ -169,8 +161,8 @@ class ChatGPTAPIAdapter(BotAdapter):
                 len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
             self.bot.conversation[self.session_id].pop(self.__conversation_keep_from)
             logger.debug(
-                    f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.count_tokens(self.session_id))}"
-                )
+                f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.count_tokens(self.session_id))}"
+            )
 
         try:
             logger.debug(f"[尝试使用ChatGPT-API:{self.bot.engine}] 请求：{prompt}")
