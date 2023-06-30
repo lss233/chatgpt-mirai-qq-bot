@@ -81,9 +81,9 @@ class OpenAIChatbot:
             tokens_per_message = 4  # every message follows {role/name}\n{content}\n
             tokens_per_name = -1  # if there's a name, the role is omitted
         else:
-            logger.warning("未找到相应模型计算方法，不进行计算")
-            return
-
+            logger.warning("未找到相应模型计算方法，使用默认方法进行计算")
+            tokens_per_message = 3
+            tokens_per_name = 1
         num_tokens = 0
         for message in self.conversation[session_id]:
             num_tokens += tokens_per_message
@@ -158,12 +158,12 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.__conversation_keep_from = 1
 
         while self.bot.max_tokens - self.bot.count_tokens(self.session_id) < config.openai.gpt3_params.min_tokens and \
-                len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
+                    len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
             self.bot.conversation[self.session_id].pop(self.__conversation_keep_from)
             logger.debug(
                 f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.count_tokens(self.session_id))}"
             )
-
+        event_time = None
         try:
             logger.debug(f"[尝试使用ChatGPT-API:{self.bot.engine}] 请求：{prompt}")
             self.bot.add_to_conversation(prompt, "user", session_id=self.session_id)
@@ -225,8 +225,8 @@ class ChatGPTAPIAdapter(BotAdapter):
             token_count = self.bot.count_tokens(self.session_id, self.bot.engine)
             logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{completion_text}")
             logger.debug(f"[ChatGPT-API:{self.bot.engine}] 使用 token 数：{token_count}")
-            logger.debug(f"[ChatGPT-API:{self.bot.engine}] 接收到全部消息花费了{event_time:.2f}秒")
-
+            if event_time is not None:
+                logger.debug(f"[ChatGPT-API:{self.bot.engine}] 接收到全部消息花费了{event_time:.2f}秒")
         except Exception as e:
             logger.error(f"[ChatGPT-API:{self.bot.engine}] 请求失败：\n{e}")
             yield f"发生错误: \n{e}"
