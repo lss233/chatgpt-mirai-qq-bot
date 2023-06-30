@@ -122,9 +122,7 @@ class BotManager:
                 openai.api_base.removesuffix("/")
 
         pattern = r'^https://[^/]+/v1$'
-        match = re.match(pattern, openai.api_base)
-
-        if match:
+        if match := re.match(pattern, openai.api_base):
             logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
             await self.login_openai()
         else:

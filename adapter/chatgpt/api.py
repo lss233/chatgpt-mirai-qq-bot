@@ -159,7 +159,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.__conversation_keep_from = 1
 
         while self.bot.max_tokens - self.bot.count_tokens(self.session_id) < config.openai.gpt3_params.min_tokens and \
-                len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
+                    len(self.bot.conversation[self.session_id]) > self.__conversation_keep_from:
             self.bot.conversation[self.session_id].pop(self.__conversation_keep_from)
             logger.debug(
                 f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.count_tokens(self.session_id))}"
@@ -188,8 +188,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             }
             async with aiohttp.ClientSession() as session:
                 with async_timeout.timeout(self.bot.timeout):
-                    async with session.post(api_endpoint + '/chat/completions', headers=headers,
-                                            data=json.dumps(data), proxy=proxy) as resp:
+                    async with session.post(f'{api_endpoint}/chat/completions', headers=headers, data=json.dumps(data), proxy=proxy) as resp:
                         if resp.status != 200:
                             response_text = await resp.text()
                             raise Exception(
