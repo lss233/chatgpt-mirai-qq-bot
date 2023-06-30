@@ -84,7 +84,6 @@ class OpenAIChatbot:
             logger.warning("未找到相应模型计算方法，使用默认方法进行计算")
             tokens_per_message = 3
             tokens_per_name = 1
-
         num_tokens = 0
         for message in self.conversation[session_id]:
             num_tokens += tokens_per_message
@@ -164,9 +163,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             logger.debug(
                 f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.count_tokens(self.session_id))}"
             )
-
         event_time = None
-
         try:
             logger.debug(f"[尝试使用ChatGPT-API:{self.bot.engine}] 请求：{prompt}")
             self.bot.add_to_conversation(prompt, "user", session_id=self.session_id)
@@ -188,7 +185,8 @@ class ChatGPTAPIAdapter(BotAdapter):
             }
             async with aiohttp.ClientSession() as session:
                 with async_timeout.timeout(self.bot.timeout):
-                    async with session.post(f'{api_endpoint}/chat/completions', headers=headers, data=json.dumps(data), proxy=proxy) as resp:
+                    async with session.post(api_endpoint + '/chat/completions', headers=headers,
+                                            data=json.dumps(data), proxy=proxy) as resp:
                         if resp.status != 200:
                             response_text = await resp.text()
                             raise Exception(
@@ -229,7 +227,6 @@ class ChatGPTAPIAdapter(BotAdapter):
             logger.debug(f"[ChatGPT-API:{self.bot.engine}] 使用 token 数：{token_count}")
             if event_time is not None:
                 logger.debug(f"[ChatGPT-API:{self.bot.engine}] 接收到全部消息花费了{event_time:.2f}秒")
-
         except Exception as e:
             logger.error(f"[ChatGPT-API:{self.bot.engine}] 请求失败：\n{e}")
             yield f"发生错误: \n{e}"
