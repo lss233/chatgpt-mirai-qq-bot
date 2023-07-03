@@ -30,7 +30,7 @@ tls-client
 python-dateutil~=2.8.2
 discord.py
 azure-cognitiveservices-speech
-poe-api~=0.4.6
+poe-api~=0.4.7
 
 regex~=2023.6.3
 httpx
