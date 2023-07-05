@@ -76,7 +76,7 @@ class BardAdapter(BotAdapter):
             for lines in res:
                 if "wrb.fr" in lines:
                     data = json.loads(json.loads(lines)[0][2])
-                    result = data[0][0]
+                    result = data[4][0][1][0]
                     self.bard_session_id = data[1][0]
                     self.r = data[1][1]  # 用于下一次请求, 这个位置是固定的
                     # self.rc = data[4][1][0]
