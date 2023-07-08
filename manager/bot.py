@@ -129,9 +129,6 @@ class BotManager:
             logger.error("API反代地址填写错误，正确格式应为 'https://<网址>/v1'")
             raise ValueError("API反代地址填写错误，正确格式应为 'https://<网址>/v1'")
 
-
-
-
     async def login(self):
         self.bots = {
             "chatgpt-web": [],
@@ -280,7 +277,6 @@ class BotManager:
             logger.error("所有 讯飞星火 账号均解析失败！")
         logger.success(f"成功解析 {len(self.bots['xinghuo-cookie'])}/{len(self.xinghuo)} 个 讯飞星火 账号！")
 
-
     def login_poe(self):
         from adapter.quora.poe import PoeClientWrapper
         try:
@@ -358,7 +354,9 @@ class BotManager:
                 counter = counter + 1
             except httpx.HTTPStatusError as e:
                 logger.error("登录失败! 可能是账号密码错误，或者 Endpoint 不支持 该登录方式。{exc}", exc=e)
-            except (ConnectTimeout, RequestException, SSLError, urllib3.exceptions.MaxRetryError, ClientConnectorError) as e:
+            except (
+                    ConnectTimeout, RequestException, SSLError, urllib3.exceptions.MaxRetryError,
+                    ClientConnectorError) as e:
                 logger.error("登录失败! 连接 OpenAI 服务器失败,请更换代理节点重试！{exc}", exc=e)
             except APIKeyNoFundsError:
                 logger.error("登录失败! API 账号余额不足，无法继续使用。")
