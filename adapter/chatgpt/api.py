@@ -1,3 +1,4 @@
+
 import json
 import time
 from typing import AsyncGenerator
@@ -5,11 +6,14 @@ from typing import AsyncGenerator
 import aiohttp
 import async_timeout
 import tiktoken
+
 from loguru import logger
 
 from adapter.botservice import BotAdapter
 from config import OpenAIAPIKey
 from constants import botManager, config
+import tiktoken
+
 
 DEFAULT_ENGINE: str = "gpt-3.5-turbo"
 
