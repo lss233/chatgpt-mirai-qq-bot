@@ -1,9 +1,9 @@
 graia-ariadne==0.11.5
 graiax-silkcoder
-revChatGPT==6.3.3
+revChatGPT~=6.5.0
 toml~=0.10.2
 Pillow>=9.3.0
-tinydb~=4.8.0
+tinydb~=4.7.1
 
 loguru~=0.7.0
 asyncio~=3.4.3
@@ -17,7 +17,7 @@ qrcode~=7.4.2
 openai~=0.27.8
 EdgeGPT==0.8.2
 aiohttp~=3.8.4
-OpenAIAuth~=1.0.2
+OpenAIAuth
 urllib3~=1.26.15
 BingImageCreator~=0.4.2
 
@@ -33,9 +33,13 @@ azure-cognitiveservices-speech
 poe-api~=0.4.8
 
 regex~=2023.6.3
-httpx
+httpx~=0.24.1
 Quart==0.17.0
 
 edge-tts
 wechatpy~=2.0.0a26
 pydub~=0.25.1
+
+creart~=0.2.2
+tiktoken~=0.4.0
+httpcore~=0.17.2

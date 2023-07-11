@@ -85,7 +85,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
             return ret
         # TTS Converting
         if conversation_context.conversation_voice and isinstance(msg, MessageChain):
-            if request_from == BotPlatform.Onebot or request_from == BotPlatform.AriadneBot:
+            if request_from in [BotPlatform.Onebot, BotPlatform.AriadneBot]:
                 voice_type = VoiceType.Silk
             elif request_from == BotPlatform.HttpService:
                 voice_type = VoiceType.Mp3
@@ -201,8 +201,10 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
                     await conversation_context.switch_model(model_name)
                     await respond(f"已切换至 {model_name} 模型，让我们聊天吧！")
             else:
+                logger.warning(f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话。")
+                await conversation_context.switch_model(model_name)
                 await respond(
-                    f"当前的 AI 不支持切换至 {model_name} 模型，目前仅支持：{conversation_context.supported_models}！")
+                    f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话，目前AI仅支持：{conversation_context.supported_models}！")
             return
 
         # 加载预设
