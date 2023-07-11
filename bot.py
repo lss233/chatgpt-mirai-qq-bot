@@ -10,8 +10,6 @@ from utils.edge_tts import load_edge_tts_voices
 
 sys.path.append(os.getcwd())
 
-hook()
-
 loop = creart.create(AbstractEventLoop)
 
 loop.run_until_complete(botManager.login())
@@ -57,5 +55,6 @@ except Exception as e:
     logger.exception(e)
     logger.error("[Edge TTS] 读取失败！")
 
+hook()
 loop.run_until_complete(asyncio.gather(*bots))
 loop.run_forever()

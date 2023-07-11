@@ -1,10 +1,9 @@
 import atexit
 import sys
-
+import os
 from loguru import logger
 import signal
-import sys
-
+from constants import config
 
 class ExitHooks(object):
     def __init__(self):
@@ -44,7 +43,10 @@ atexit.register(foo)
 
 
 def exit_gracefully(signal, frame):
-    print("Received signal {}, exiting...".format(signal))
+    if config.http:
+        logger.warning("检测到HTTP配置，将强制关闭程序……")
+        os._exit(0)
+    logger.warning("程序即将退出...".format(signal))
     sys.exit(0)
 
 
