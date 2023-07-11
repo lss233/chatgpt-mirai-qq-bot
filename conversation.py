@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List, Dict, Optional
 
 import httpx
-from EdgeGPT import ConversationStyle
+from EdgeGPT.EdgeGPT import ConversationStyle
 from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
