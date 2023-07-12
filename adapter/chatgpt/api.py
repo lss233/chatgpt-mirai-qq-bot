@@ -175,25 +175,19 @@ class ChatGPTAPIAdapter(BotAdapter):
         return api_key, proxy, api_endpoint, headers, data
 
     async def _process_response(self, resp, session_id: str = None):
-        if resp.status != 200:
-            response_text = await resp.text()
-            raise Exception(
-                f"{resp.status} {resp.reason} {response_text}",
-            )
 
         result = await resp.json()
-        # Extract total_tokens
+
         total_tokens = result.get('usage', {}).get('total_tokens', None)
         logger.debug(f"[ChatGPT-API:{self.bot.engine}] 使用 token 数：{total_tokens}")
         if total_tokens is None:
             raise Exception("Response does not contain 'total_tokens'")
 
-        # Extract content
         content = result.get('choices', [{}])[0].get('message', {}).get('content', None)
         logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{content}")
         if content is None:
             raise Exception("Response does not contain 'content'")
-        # Extract role
+
         response_role = result.get('choices', [{}])[0].get('message', {}).get('role', None)
         if response_role is None:
             raise Exception("Response does not contain 'role'")
@@ -209,6 +203,11 @@ class ChatGPTAPIAdapter(BotAdapter):
             with async_timeout.timeout(self.bot.timeout):
                 async with session.post(f'{api_endpoint}/chat/completions', headers=headers,
                                         data=json.dumps(data)) as resp:
+                    if resp.status != 200:
+                        response_text = await resp.text()
+                        raise Exception(
+                            f"{resp.status} {resp.reason} {response_text}",
+                        )
                     content = await self._process_response(resp, session_id)
 
                     return content
