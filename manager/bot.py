@@ -120,14 +120,15 @@ class BotManager:
             openai.api_base = self.config.openai.api_endpoint or openai.api_base
             if openai.api_base.endswith("/"):
                 openai.api_base.removesuffix("/")
+        logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
 
         pattern = r'^https://[^/]+/v1$'
-        if match := re.match(pattern, openai.api_base):
-            logger.info(f"当前的 api_endpoint 为：{openai.api_base}")
-            await self.login_openai()
-        else:
+
+        if not re.match(pattern, openai.api_base):
             logger.error("API反代地址填写错误，正确格式应为 'https://<网址>/v1'")
-            raise ValueError("API反代地址填写错误，正确格式应为 'https://<网址>/v1'")
+
+        await self.login_openai()
+
 
     async def login(self):
         self.bots = {
