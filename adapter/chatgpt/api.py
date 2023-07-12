@@ -1,11 +1,9 @@
-
 import json
 import time
 from typing import AsyncGenerator
 
 import aiohttp
 import async_timeout
-import tiktoken
 
 from loguru import logger
 
@@ -13,7 +11,6 @@ from adapter.botservice import BotAdapter
 from config import OpenAIAPIKey
 from constants import botManager, config
 import tiktoken
-
 
 DEFAULT_ENGINE: str = "gpt-3.5-turbo"
 
@@ -67,6 +64,8 @@ class OpenAIChatbot:
     # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
     def count_tokens(self, session_id: str = "default", model: str = DEFAULT_ENGINE):
         """Return the number of tokens used by a list of messages."""
+        if model is None:
+            model = DEFAULT_ENGINE
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
@@ -195,7 +194,8 @@ class ChatGPTAPIAdapter(BotAdapter):
         }
         async with aiohttp.ClientSession() as session:
             with async_timeout.timeout(self.bot.timeout):
-                async with session.post(f'{api_endpoint}/chat/completions', headers=headers, data=json.dumps(data), proxy=proxy) as resp:
+                async with session.post(f'{api_endpoint}/chat/completions', headers=headers, data=json.dumps(data),
+                                        proxy=proxy) as resp:
                     if resp.status != 200:
                         response_text = await resp.text()
                         raise Exception(
@@ -206,18 +206,22 @@ class ChatGPTAPIAdapter(BotAdapter):
                     completion_text: str = ''
 
                     async for line in resp.content:
-                        line = line.decode('utf-8').strip()
-                        if not line.startswith("data: "):
-                            continue
-                        line = line[len("data: "):]
-                        if line == "[DONE]":
-                            break
-                        if not line:
-                            continue
                         try:
+                            line = line.decode('utf-8').strip()
+                            if not line.startswith("data: "):
+                                continue
+                            line = line[len("data: "):]
+                            if line == "[DONE]":
+                                break
+                            if not line:
+                                continue
                             event = json.loads(line)
                         except json.JSONDecodeError:
                             raise Exception(f"JSON解码错误: {line}") from None
+                        except Exception as e:
+                            logger.error(f"未知错误: {e}\n响应内容: {resp.content}")
+                            logger.error("请将该段日记提交到项目issue中，以便修复该问题。")
+                            raise Exception(f"未知错误: {e}") from None
                         if 'error' in event:
                             raise Exception(f"响应错误: {event['error']}")
                         if 'choices' in event and len(event['choices']) > 0 and 'delta' in event['choices'][0]:
@@ -236,8 +240,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             logger.debug(f"不存在该会话，不进行压缩: {session_id}")
             return
 
-        if config.openai.gpt_params.compressed_session and self.bot.count_tokens(
-                session_id) > config.openai.gpt_params.compressed_tokens:
+        if self.bot.count_tokens(session_id) > config.openai.gpt_params.compressed_tokens:
             logger.debug('开始进行会话压缩')
 
             filtered_data = [entry for entry in self.bot.conversation[session_id] if entry['role'] != 'system']
@@ -258,12 +261,14 @@ class ChatGPTAPIAdapter(BotAdapter):
 
         self.manage_conversation(self.session_id, prompt)
 
-        await self.compressed_session(self.session_id)
+        if config.openai.gpt_params.compressed_session:
+            await self.compressed_session(self.session_id)
 
         event_time = None
 
         try:
-
+            if self.bot.engine not in self.supported_models:
+                logger.warning(f"当前模型非官方支持的模型，请注意控制台输出，当前使用的模型为 {self.bot.engine}")
             logger.debug(f"[尝试使用ChatGPT-API:{self.bot.engine}] 请求：{prompt}")
             self.bot.add_to_conversation(prompt, "user", session_id=self.session_id)
             start_time = time.time()
@@ -283,6 +288,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             yield f"发生错误: \n{e}"
 
     async def preset_ask(self, role: str, text: str):
+        self.bot.engine = self.current_model
         if role.endswith('bot') or role in {'assistant', 'chatgpt'}:
             logger.debug(f"[预设] 响应：{text}")
             yield text
