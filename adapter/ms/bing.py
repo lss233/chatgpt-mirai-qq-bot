@@ -9,14 +9,14 @@ from PIL import Image
 
 from constants import config
 from adapter.botservice import BotAdapter
-from EdgeGPT.EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle, NotAllowedToAccess
+from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle, NotAllowedToAccess
 from contextlib import suppress
 
 from constants import botManager
 from drawing import DrawingAPI
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
-from EdgeGPT.ImageGen import ImageGenAsync
+from ImageGen import ImageGenAsync
 from graia.ariadne.message.element import Image as GraiaImage
 
 image_pattern = r"!\[.*\]\((.*)\)"
