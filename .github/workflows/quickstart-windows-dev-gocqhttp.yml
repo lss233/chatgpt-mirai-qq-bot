@@ -1,0 +1,79 @@
+name: Windows Quickstart Dev (go-cqhttp)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'browser-version-dev'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Quickstart (GO-CQHTTP)
+    runs-on: Windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Generate files
+      run: |
+        mkdir C:/generated_files
+        mkdir C:/tmp_files
+        echo "Creating folders..."
+        cd C:/generated_files
+        echo "Downloading go-cqhttp..."
+        mkdir go-cqhttp
+        mkdir chatgpt
+        mkdir ffmpeg
+        Invoke-WebRequest -URI https://github.com/Mrs4s/go-cqhttp/releases/download/v1.0.1/go-cqhttp_windows_amd64.exe -OutFile C:/generated_files/go-cqhttp/go-cqhttp.exe
+        
+        cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\chatgpt\
+        
+        echo "Downloading ffmpeg ..."
+        Invoke-WebRequest  https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-full_build.7z -OutFile C:/tmp_files/ffmpeg.7z
+        7z x C:/tmp_files/ffmpeg.zip -r -oC:/generated_files/ffmpeg
+        
+        echo "Downloading Python3.11 ..."
+        Invoke-WebRequest https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip -OutFile C:/tmp_files/python.zip
+        7z x C:/tmp_files/python.zip -r -oC:/generated_files/python3.11
+
+        echo "Downloading get-pip.py ..."
+        Invoke-WebRequest -URI https://bootstrap.pypa.io/get-pip.py -OutFile C:/generated_files/python3.11/get-pip.py
+        echo "import site" >> C:/generated_files/python3.11/python311._pth
+
+        echo "Moving files..."
+        mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
+
+        echo "Replacing..."
+        cp C:/generated_files/files/go-cqhttp/scripts/初始化.cmd C:/generated_files/
+        
+        Invoke-WebRequest -URI https://github.com/lss233/awesome-chatgpt-qq-presets/archive/refs/heads/master.zip -OutFile C:/tmp_files/presets.zip
+        7z x C:/tmp_files/presets.zip -oC:/tmp_files/
+        Copy-Item C:\tmp_files\awesome-chatgpt-qq-presets-master\*  -Destination C:\generated_files\chatgpt\presets\ -Recurse
+        
+        Invoke-WebRequest -URI https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.mxe-cross-win64.7z -O C:/tmp_files/wkhtmltox.7z
+        
+        echo "Downloading vc_redist.exe..."
+        Invoke-WebRequest -URI https://aka.ms/vs/17/release/vc_redist.x64.exe -O "C:\generated_files\【语音功能依赖】vc_redist.x64.exe"
+        
+        echo "Setting up wkhtmltox"
+        7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
+        cp C:/tmp_files/wkhtmltox/bin/wkhtmltoimage.exe C:\generated_files\chatgpt\
+        
+        echo "Downloading packages..."
+        cd C:/generated_files/chatgpt
+        ..\python3.11\python.exe C:/generated_files/python3.11/get-pip.py
+        ..\python3.11\python.exe -m pip install -r requirements.txt
+        
+        echo "Packing..." 
+        cd C:/generated_files
+        7z a quickstart-windows-dev-go-cqhttp-amd64.zip C:\generated_files\*
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: quickstart-windows-dev-go-cqhttp-amd64.zip
+        path: |
+          C:\generated_files\quickstart-windows-dev-go-cqhttp-amd64.zip
