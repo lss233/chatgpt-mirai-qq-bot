@@ -95,7 +95,9 @@ class BingAdapter(BotAdapter, DrawingAPI):
                         return
                 else:
                     # 生成中的消息
-                    parsed_content = re.sub(r"\[\^\d+\^\]", "", response)
+                    parsed_content = re.sub(r"Searching the web for:(.*)\n", "", response)
+                    parsed_content = re.sub(r"```json(.*)```", "", parsed_content,flags=re.DOTALL)
+                    parsed_content = re.sub(r"Generating answers for you...", "", parsed_content)
                     if config.bing.show_references:
                         parsed_content = re.sub(r"\[(\d+)\]: ", r"\1: ", parsed_content)
                     else:
