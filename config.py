@@ -203,7 +203,7 @@ class BingAuths(BaseModel):
     """Bing 的会话创建接入点"""
     accounts: List[BingCookiePath] = []
     """Bing 的账号列表"""
-    max_messages: int = 20
+    max_messages: int = 30
     """Bing 的最大消息数，仅展示用"""
 
 

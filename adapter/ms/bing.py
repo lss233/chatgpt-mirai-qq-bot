@@ -9,14 +9,14 @@ from PIL import Image
 
 from constants import config
 from adapter.botservice import BotAdapter
-from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle, NotAllowedToAccess
+from EdgeGPT.EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle, NotAllowedToAccess
 from contextlib import suppress
 
 from constants import botManager
 from drawing import DrawingAPI
 from exceptions import BotOperationNotSupportedException
 from loguru import logger
-from ImageGen import ImageGenAsync
+from EdgeGPT.ImageGen import ImageGenAsync
 from graia.ariadne.message.element import Image as GraiaImage
 
 image_pattern = r"!\[.*\]\((.*)\)"
@@ -95,7 +95,9 @@ class BingAdapter(BotAdapter, DrawingAPI):
                         return
                 else:
                     # 生成中的消息
-                    parsed_content = re.sub(r"\[\^\d+\^\]", "", response)
+                    parsed_content = re.sub(r"Searching the web for:(.*)\n", "", response)
+                    parsed_content = re.sub(r"```json(.*)```", "", parsed_content,flags=re.DOTALL)
+                    parsed_content = re.sub(r"Generating answers for you...", "", parsed_content)
                     if config.bing.show_references:
                         parsed_content = re.sub(r"\[(\d+)\]: ", r"\1: ", parsed_content)
                     else:
