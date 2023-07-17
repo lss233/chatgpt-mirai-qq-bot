@@ -308,6 +308,7 @@ class ChatGPTAPIAdapter(BotAdapter):
         except Exception as e:
             logger.error(f"[ChatGPT-API:{self.bot.engine}] 请求失败：\n{e}")
             yield f"发生错误: \n{e}"
+            raise
 
     async def preset_ask(self, role: str, text: str):
         self.bot.engine = self.current_model
