@@ -249,7 +249,7 @@ class ChatGPTAPIAdapter(BotAdapter):
                                 event_text = delta['content']
                                 completion_text += event_text
                                 self.latest_role = response_role
-                                yield completion_text
+                                yield event_text
         self.bot.add_to_conversation(completion_text, response_role, session_id)
 
     async def compressed_session(self, session_id: str):
@@ -290,16 +290,19 @@ class ChatGPTAPIAdapter(BotAdapter):
             self.bot.add_to_conversation(prompt, "user", session_id=self.session_id)
             start_time = time.time()
 
+            full_response = ''
+
             if config.openai.gpt_params.stream:
-                async for completion_text in self.request_with_stream(session_id=self.session_id):
-                    yield completion_text
+                async for resp in self.request_with_stream(session_id=self.session_id):
+                    full_response += resp
+                    yield full_response
 
                 token_count = self.bot.count_tokens(self.session_id, self.bot.engine)
-                logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{completion_text}")
+                logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
                 logger.debug(f"[ChatGPT-API:{self.bot.engine}] 使用 token 数：{token_count}")
             else:
-                completion_text = await self.request(session_id=self.session_id)
-                yield completion_text
+                full_response = await self.request(session_id=self.session_id)
+                yield full_response
 
             event_time = time.time() - start_time
             if event_time is not None:
