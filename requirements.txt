@@ -42,4 +42,4 @@ pydub~=0.25.1
 
 creart~=0.2.2
 tiktoken~=0.4.0
-httpcore~=0.17.2
+httpcore~=0.17.3
