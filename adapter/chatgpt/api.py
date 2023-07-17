@@ -202,15 +202,13 @@ class ChatGPTAPIAdapter(BotAdapter):
         async with aiohttp.ClientSession() as session:
             with async_timeout.timeout(self.bot.timeout):
                 async with session.post(f'{api_endpoint}/chat/completions', headers=headers,
-                                        data=json.dumps(data), proxy=proxy) as resp:
+                                                    data=json.dumps(data), proxy=proxy) as resp:
                     if resp.status != 200:
                         response_text = await resp.text()
                         raise Exception(
                             f"{resp.status} {resp.reason} {response_text}",
                         )
-                    content = await self._process_response(resp, session_id)
-
-                    return content
+                    return await self._process_response(resp, session_id)
 
     async def request_with_stream(self, session_id: str = None, messages: list = None) -> AsyncGenerator[str, None]:
         proxy, api_endpoint, headers, data = self._prepare_request(session_id, messages, stream=True)
@@ -301,9 +299,7 @@ class ChatGPTAPIAdapter(BotAdapter):
                 logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
                 logger.debug(f"[ChatGPT-API:{self.bot.engine}] 使用 token 数：{token_count}")
             else:
-                full_response = await self.request(session_id=self.session_id)
-                yield full_response
-
+                yield await self.request(session_id=self.session_id)
             event_time = time.time() - start_time
             if event_time is not None:
                 logger.debug(f"[ChatGPT-API:{self.bot.engine}] 接收到全部消息花费了{event_time:.2f}秒")
