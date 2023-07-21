@@ -217,6 +217,12 @@ class ChatGPTAPIAdapter(BotAdapter):
             with async_timeout.timeout(self.bot.timeout):
                 async with session.post(f'{api_endpoint}/chat/completions', headers=headers, data=json.dumps(data),
                                         proxy=proxy) as resp:
+                    if resp.status != 200:
+                        response_text = await resp.text()
+                        raise Exception(
+                            f"{resp.status} {resp.reason} {response_text}",
+                        )
+
                     response_role: str = ''
                     completion_text: str = ''
 
