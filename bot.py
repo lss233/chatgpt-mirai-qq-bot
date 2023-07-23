@@ -1,14 +1,13 @@
 import os
 import sys
 import creart
+sys.path.append(os.getcwd())
 from asyncio import AbstractEventLoop
 import asyncio
 from utils.exithooks import hook
 from loguru import logger
 from constants import config, botManager
 from utils.edge_tts import load_edge_tts_voices
-
-sys.path.append(os.getcwd())
 
 loop = creart.create(AbstractEventLoop)
 
