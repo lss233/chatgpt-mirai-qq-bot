@@ -109,6 +109,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             "gpt-4-32k-0314",
             "gpt-4-0613",
             "gpt-4-32k-0613",
+            "claude-2-web",
         ]
 
     def manage_conversation(self, session_id: str, prompt: str):
