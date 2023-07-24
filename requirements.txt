@@ -18,7 +18,7 @@ openai~=0.27.8
 EdgeGPT==0.12.1
 aiohttp~=3.8.4
 OpenAIAuth>=2.0.0
-urllib3~=2.0.3
+urllib3~=2.0.4
 BingImageCreator~=0.4.2
 
 requests~=2.31.0
