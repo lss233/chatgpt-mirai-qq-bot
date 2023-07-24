@@ -16,7 +16,7 @@ imgkit~=1.2.3
 qrcode~=7.4.2
 openai~=0.27.8
 EdgeGPT==0.12.1
-aiohttp~=3.8.4
+aiohttp~=3.8.5
 OpenAIAuth>=2.0.0
 urllib3~=2.0.3
 BingImageCreator~=0.4.2
