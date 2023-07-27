@@ -71,9 +71,10 @@ class OpenAIChatbot:
         for message in self.conversation[session_id]:
             num_tokens += tokens_per_message
             for key, value in message.items():
-                num_tokens += len(encoding.encode(value))
-                if key == "name":
-                    num_tokens += tokens_per_name
+                if value is not None:
+                    num_tokens += len(encoding.encode(value))
+                    if key == "name":
+                        num_tokens += tokens_per_name
         num_tokens += 3  # every reply is primed with assistant
         return num_tokens
 
@@ -109,7 +110,6 @@ class ChatGPTAPIAdapter(BotAdapter):
             "gpt-4-32k-0314",
             "gpt-4-0613",
             "gpt-4-32k-0613",
-            "claude-2-web",
         ]
 
     def manage_conversation(self, session_id: str, prompt: str):
@@ -252,9 +252,10 @@ class ChatGPTAPIAdapter(BotAdapter):
                                 response_role = delta['role']
                             if 'content' in delta:
                                 event_text = delta['content']
-                                completion_text += event_text
-                                self.latest_role = response_role
-                                yield event_text
+                                if event_text is not None:
+                                    completion_text += event_text
+                                    self.latest_role = response_role
+                                    yield event_text
         self.bot.add_to_conversation(completion_text, response_role, session_id)
 
     async def compressed_session(self, session_id: str):
