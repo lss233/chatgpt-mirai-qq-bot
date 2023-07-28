@@ -249,7 +249,8 @@ class ChatGPTAPIAdapter(BotAdapter):
                         if 'choices' in event and len(event['choices']) > 0 and 'delta' in event['choices'][0]:
                             delta = event['choices'][0]['delta']
                             if 'role' in delta:
-                                response_role = delta['role']
+                                if delta['role'] is not None:
+                                    response_role = delta['role']
                             if 'content' in delta:
                                 event_text = delta['content']
                                 if event_text is not None:
