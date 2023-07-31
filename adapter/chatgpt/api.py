@@ -52,7 +52,11 @@ class OpenAIChatbot:
             raise
 
     def add_to_conversation(self, message: str, role: str, session_id: str = "default") -> None:
-        self.conversation[session_id].append({"role": role, "content": message})
+        if role and message is not None:
+            self.conversation[session_id].append({"role": role, "content": message})
+        else:
+            logger.warning("出现错误！返回消息为空，不添加到会话。")
+            raise ValueError("出现错误！返回消息为空，不添加到会话。")
 
     # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
     def count_tokens(self, session_id: str = "default", model: str = DEFAULT_ENGINE):
