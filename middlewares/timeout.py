@@ -32,6 +32,12 @@ class MiddlewareTimeout(Middleware):
                 del self.timeout_task[session_id]
         except asyncio.TimeoutError:
             await respond(config.response.cancel_wait_too_long)
+        except Exception as e:
+            logger.error(f"发生错误: {e}")
+            if session_id in self.timeout_task:
+                self.timeout_task[session_id].cancel()
+                del self.timeout_task[session_id]
+            raise e
 
     async def on_respond(self, session_id: str, prompt: str, rendered: str):
         if rendered and session_id in self.timeout_task:
