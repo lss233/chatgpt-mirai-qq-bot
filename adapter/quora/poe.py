@@ -11,16 +11,19 @@ from constants import botManager
 
 
 class PoeBot(Enum):
-    """Poe 支持的机器人：{'capybara': 'Sage', 'beaver': 'GPT-4', 'a2_2': 'Claude+','a2': 'Claude','a2_100k': 'Claude100k', 'chinchilla': 'ChatGPT', 'hutia': 'NeevaAI',
-    'nutria': 'Dragonfly'} """
+    """Poe 支持的机器人：{'capybara': 'Assistant', 'a2': 'Claude-instant', 'beaver': 'GPT-4', 'chinchilla': 'ChatGPT',
+    'llama_2_7b_chat': 'Llama-2-7b', 'a2_100k': 'Claude-instant-100k', 'llama_2_13b_chat': 'Llama-2-13b', 'agouti': 'ChatGPT-16k', 
+    'vizcacha': 'GPT-4-32k', 'acouchy': 'Google-PaLM', 'llama_2_70b_chat':'Llama-2-70b', 'a2_2': 'Claude-2-100k'} """
     Sage = "capybara"
     GPT4 = "beaver"
+    GPT432k = "vizcacha"
     Claude2 = "a2_2"
     Claude = "a2"
     Claude100k = "a2_100k"
     ChatGPT = "chinchilla"
-    NeevaAI = "hutia"
-    Dragonfly = "nutria"
+    ChatGPT16k = "agouti"
+    Llama2 = "llama_2_70b_chat"
+    PaLM = "acouchy"
 
     @staticmethod
     def parse(bot_name: str):
