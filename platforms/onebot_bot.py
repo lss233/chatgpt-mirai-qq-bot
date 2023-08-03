@@ -159,10 +159,10 @@ async def daily_care():
                 message = messages[id]
                 for name, qq in targets.items():
                     event.user_id = qq
-                    event.message = message 
+                    event.message = message
                     salt = random.randint(1, 10000)
                     if (salt % 3) == 0:
-                        event.message = event.message + "提示：" + promots[name]
+                        event.message = f"{event.message}提示：{promots[name]}"
                     event.message += require
                     event.raw_message = event.message
                     event.sender = {'age': 0, 'nickname': nicknames[name], 'sex': 'unknown', 'user_id': qq}
