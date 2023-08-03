@@ -18,6 +18,12 @@ from manager.bot import BotManager
 from middlewares.ratelimit import manager as ratelimit_manager
 from universal import handle_message
 
+import pickle
+import datetime
+import time
+import asyncio
+import random
+
 bot = CQHttp()
 
 
@@ -133,6 +139,55 @@ def response(event, is_group: bool):
 
 FriendTrigger = DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)
 
+async def daily_care():
+    with open('./chat.pkl', 'rb') as f:
+        event = pickle.load(f)
+    send_times = [[8, 0], [22, 0]]
+    morning_msg = "现在是早上8点0分，发个早安祝福语。"
+    evening_msg = "现在是晚上22点0分，发个晚安祝福语。"
+    require = "要求：注意要有文采，要体现出贴心和关怀，不要显得流程化，确保每次发送的内容风格不同。"
+    messages = [morning_msg, evening_msg]
+    # 发送列表
+    targets = {"小明": 123456789} # QQ号
+    nicknames = {"小明": "小明"} # QQ昵称
+    promots = {"小明": "小明是个大学生[可以补充个性化信息]。"
+            }
+    while True:
+        now = datetime.datetime.now()  # 获取当前时间
+        for id, send_time in enumerate(send_times):
+            if now.hour == send_time[0] and now.minute == send_time[1]:
+                message = messages[id]
+                for name, qq in targets.items():
+                    event.user_id = qq
+                    event.message = message 
+                    salt = random.randint(1, 10000)
+                    if (salt % 3) == 0:
+                        event.message = event.message + "提示：" + promots[name]
+                    event.message += require
+                    event.raw_message = event.message
+                    event.sender = {'age': 0, 'nickname': nicknames[name], 'sex': 'unknown', 'user_id': qq}
+                    if event.message.startswith('.'):
+                        return
+                    chain = transform_message_chain(event.message)
+                    try:
+                        msg = await FriendTrigger(chain, None)
+                    except:
+                        logger.debug(f"丢弃私聊消息：{event.message}（原因：不符合触发前缀）")
+                        return
+                    logger.debug(f"私聊消息：{event.message}")
+                    try:
+                        await handle_message(
+                            response(event, False),
+                            f"friend-{event.user_id}",
+                            msg.display,
+                            chain,
+                            is_manager=event.user_id == config.onebot.manager_qq,
+                            nickname=event.sender.get("nickname", "好友"),
+                            request_from=constants.BotPlatform.Onebot
+                        )
+                    except Exception as e:
+                        logger.exception(e)
+        await asyncio.sleep(60)
 
 @bot.on_message('private')
 async def _(event: Event):
