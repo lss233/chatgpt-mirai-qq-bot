@@ -120,7 +120,7 @@ class CommandHandler:
             logger.warning(f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话。")
             await context.conversation_context.switch_model(model_name)
             await context.respond(
-                f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话，目前AI仅支持：{conversation_context.supported_models}！")
+                f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话，目前AI仅支持：{context.conversation_context.supported_models}！")
         return True
 
     async def handle_switch_ai(self, context):
