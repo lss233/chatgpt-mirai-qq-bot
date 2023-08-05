@@ -250,7 +250,6 @@ async def update_rate(app: Ariadne, event: MessageEvent, sender: Union[Friend, M
         raise ExecutionStop()
 
 
-
 @cmd.command(".查看 {msg_type: str} {msg_id: str} 的使用情况")
 async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: str):
     try:
@@ -289,7 +288,6 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
         raise ExecutionStop()
-
 
 
 @cmd.command(".预设列表")

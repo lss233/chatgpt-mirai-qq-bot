@@ -300,7 +300,7 @@ class ChatGPTAPIAdapter(BotAdapter):
             logger.debug(f"[尝试使用ChatGPT-API:{self.bot.engine}] 请求：{prompt}")
             self.bot.add_to_conversation(prompt, "user", session_id=self.session_id)
             start_time = time.time()
-
+            logger.debug(self.bot.conversation[self.session_id])
             full_response = ''
 
             if config.openai.gpt_params.stream:

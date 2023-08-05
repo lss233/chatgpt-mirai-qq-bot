@@ -12,32 +12,20 @@ from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
 
+from command import CommandHandler
 from constants import botManager, BotPlatform
 from constants import config
-from conversation import ConversationHandler, ConversationContext
+from conversation import ConversationHandler
 from exceptions import PresetNotFoundException, BotRatelimitException, ConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, BotOperationNotSupportedException, CommandRefusedException, \
     DrawingFailedException
-from middlewares.baiducloud import MiddlewareBaiduCloud
-from middlewares.concurrentlock import MiddlewareConcurrentLock
-from middlewares.ratelimit import MiddlewareRatelimit
-from middlewares.timeout import MiddlewareTimeout
-from utils.text_to_speech import get_tts_voice, TtsVoiceManager, VoiceType
 
-middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
+from utils.text_to_speech import get_tts_voice, VoiceType
+from middlewares.middlewares_loader import load_middlewares
 
+command_handler = CommandHandler()
 
-async def get_ping_response(conversation_context: ConversationContext):
-    current_voice = conversation_context.conversation_voice.alias if conversation_context.conversation_voice else "无"
-    response = config.response.ping_response.format(current_ai=conversation_context.type,
-                                                    current_voice=current_voice,
-                                                    supported_ai=botManager.bots_info())
-    tts_voices = await TtsVoiceManager.list_tts_voices(
-        config.text_to_speech.engine, config.text_to_speech.default_voice_prefix)
-    if tts_voices:
-        supported_tts = ",".join([v.alias for v in tts_voices])
-        response += config.response.ping_tts_response.format(supported_tts=supported_tts)
-    return response
+middlewares = load_middlewares()
 
 
 async def handle_message(_respond: Callable, session_id: str, message: str,
@@ -49,6 +37,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         """
         Wrapping send messages
         """
+
         async def call(session_id, message, conversation_context, respond):
             await m.handle_request(session_id, message, respond, conversation_context, n)
 
@@ -58,6 +47,7 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         """
         Wrapping respond messages
         """
+
         async def call(session_id, message, rendered, respond):
             await m.handle_respond(session_id, message, rendered, respond, n)
 
@@ -109,119 +99,20 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
         Request method
         """
 
-        task = None
+        task = [None]
 
-        # 不带前缀 - 正常初始化会话
-        if bot_type_search := re.search(config.trigger.switch_command, prompt):
-            if not (config.trigger.allow_switching_ai or is_manager):
-                await respond("不好意思，只有管理员才能切换AI！")
-                return
-            conversation_handler.current_conversation = (
-                await conversation_handler.create(
-                    bot_type_search[1].strip()
-                )
-            )
-            await respond(f"已切换至 {bot_type_search[1].strip()} AI，现在开始和我聊天吧！")
-            return
-        # 最终要选择的对话上下文
         if not conversation_context:
             conversation_context = conversation_handler.current_conversation
-        # 此处为会话存在后可执行的指令
 
-        # 重置会话
-        if prompt in config.trigger.reset_command:
-            task = conversation_context.reset()
-
-        elif prompt in config.trigger.rollback_command:
-            task = conversation_context.rollback()
-
-        elif prompt in config.trigger.ping_command:
-            await respond(await get_ping_response(conversation_context))
+        # 命令处理
+        if await command_handler.handle_command(prompt, session_id, conversation_context, conversation_handler, respond,
+                                                is_manager, task):
             return
-
-        elif voice_type_search := re.search(config.trigger.switch_voice, prompt):
-            if not config.azure.tts_speech_key and config.text_to_speech.engine == "azure":
-                await respond("未配置 Azure TTS 账户，无法切换语音！")
-            new_voice = voice_type_search[1].strip()
-            if new_voice in ['关闭', "None"]:
-                conversation_context.conversation_voice = None
-                await respond("已关闭语音，让我们继续聊天吧！")
-            elif config.text_to_speech.engine == "vits":
-                from utils.vits_tts import vits_api_instance
-                try:
-                    voice_name = await vits_api_instance.set_id(new_voice)
-                    conversation_context.conversation_voice = TtsVoiceManager.parse_tts_voice("vits", voice_name)
-                    await respond(f"已切换至 {voice_name} 语音，让我们继续聊天吧！")
-                except ValueError:
-                    await respond("提供的语音ID无效，请输入一个有效的数字ID。")
-                except Exception as e:
-                    await respond(str(e))
-            elif config.text_to_speech.engine == "edge":
-                tts_voice = TtsVoiceManager.parse_tts_voice("edge", new_voice)
-                if tts_voice:
-                    conversation_context.conversation_voice = tts_voice
-                    await respond(f"已切换至 {tts_voice.alias} 语音，让我们继续聊天吧！")
-                else:
-                    available_voice = ",".join([v.alias for v in await TtsVoiceManager.list_tts_voices(
-                        "edge", config.text_to_speech.default_voice_prefix)])
-                    await respond(f"提供的语音ID无效，请输入一个有效的语音ID。如：{available_voice}。")
-                    conversation_context.conversation_voice = None
-            elif config.text_to_speech.engine == "azure":
-                tts_voice = TtsVoiceManager.parse_tts_voice("azure", new_voice)
-                conversation_context.conversation_voice = tts_voice
-                if tts_voice:
-                    await respond(f"已切换至 {tts_voice.full_name} 语音，让我们继续聊天吧！")
-                else:
-                    await respond("提供的语音ID无效，请输入一个有效的语音ID。")
-            else:
-                await respond("未配置文字转语音引擎，无法使用语音功能。")
-            return
-
-        elif prompt in config.trigger.mixed_only_command:
-            conversation_context.switch_renderer("mixed")
-            await respond("已切换至图文混合模式，接下来我的回复将会以图文混合的方式呈现！")
-            return
-
-        elif prompt in config.trigger.image_only_command:
-            conversation_context.switch_renderer("image")
-            await respond("已切换至纯图片模式，接下来我的回复将会以图片呈现！")
-            return
-
-        elif prompt in config.trigger.text_only_command:
-            conversation_context.switch_renderer("text")
-            await respond("已切换至纯文字模式，接下来我的回复将会以文字呈现（被吞除外）！")
-            return
-
-        elif switch_model_search := re.search(config.trigger.switch_model, prompt):
-            model_name = switch_model_search[1].strip()
-            if model_name in conversation_context.supported_models:
-                if not (is_manager or model_name in config.trigger.allowed_models):
-                    await respond(f"不好意思，只有管理员才能切换到 {model_name} 模型！")
-                else:
-                    await conversation_context.switch_model(model_name)
-                    await respond(f"已切换至 {model_name} 模型，让我们聊天吧！")
-            else:
-                logger.warning(f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话。")
-                await conversation_context.switch_model(model_name)
-                await respond(
-                    f"模型 {model_name} 不在支持列表中，下次将尝试使用此模型创建对话，目前AI仅支持：{conversation_context.supported_models}！")
-            return
-
-        # 加载预设
-        if preset_search := re.search(config.presets.command, prompt):
-            logger.trace(f"{session_id} - 正在执行预设： {preset_search[1]}")
-            async for _ in conversation_context.reset(): ...
-            task = conversation_context.load_preset(preset_search[1])
-        elif not conversation_context.preset:
-            # 当前没有预设
-            logger.trace(f"{session_id} - 未检测到预设，正在执行默认预设……")
-            # 隐式加载不回复预设内容
-            async for _ in conversation_context.load_preset('default'): ...
 
         # 没有任务那就聊天吧！
-        if not task:
-            task = conversation_context.ask(prompt=prompt, chain=chain, name=nickname)
-        async for rendered in task:
+        if not task[0]:
+            task[0] = conversation_context.ask(prompt=prompt, chain=chain, name=nickname)
+        async for rendered in task[0]:
             if rendered:
                 if not str(rendered).strip():
                     logger.warning("检测到内容为空的输出，已忽略")
