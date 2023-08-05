@@ -155,8 +155,7 @@ class CommandHandler:
             except Exception as e:
                 await context.respond(str(e))
         elif config.text_to_speech.engine == "edge":
-            tts_voice = TtsVoiceManager.parse_tts_voice("edge", new_voice)
-            if tts_voice:
+            if tts_voice := TtsVoiceManager.parse_tts_voice("edge", new_voice):
                 context.conversation_context.conversation_voice = tts_voice
                 await context.respond(f"已切换至 {tts_voice.alias} 语音，让我们继续聊天吧！")
             else:
@@ -185,8 +184,7 @@ class CommandHandler:
 
     async def handle_command(self, prompt, session_id, conversation_context, conversation_handler, respond, is_manager, task):
         for command_regex, handler in self.commands.items():
-            match = re.search(command_regex, prompt)
-            if match:
+            if match := re.search(command_regex, prompt):
                 args = match.groups()
                 context = CommandContext(args, session_id, conversation_context, conversation_handler, respond,
                                          is_manager, task)
