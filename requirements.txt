@@ -25,7 +25,7 @@ tinydb~=4.8.0
 loguru~=0.7.0
 asyncio~=3.4.3
 pydantic
-markdown~=3.4.3
+markdown~=3.4.4
 python-markdown-math~=0.8
 pygments~=2.15.1
 imgkit~=1.2.3
