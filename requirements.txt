@@ -1,11 +1,11 @@
-# 机器人框架
+# Robot-frame
 graia-ariadne==0.11.7
 graiax-silkcoder
 python-telegram-bot==20.4
 discord.py
 wechatpy~=2.0.0a26
 
-# LLM上游库
+# LLM-Upstream-library
 revChatGPT~=6.8.6
 openai~=0.27.8
 EdgeGPT==0.13.2
@@ -14,11 +14,11 @@ BingImageCreator~=0.4.4
 poe-api==0.5.2
 tiktoken~=0.4.0
 
-# TTS相关依赖
+# TTS-related-dependencies
 azure-cognitiveservices-speech
 edge-tts
 
-# 其他依赖
+# Other-dependencies
 toml~=0.10.2
 Pillow>=9.3.0
 tinydb~=4.8.0
