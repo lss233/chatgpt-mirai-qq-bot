@@ -40,6 +40,6 @@ edge-tts
 wechatpy~=2.0.0a26
 pydub~=0.25.1
 
-creart~=0.2.2
+creart~=0.3.0
 tiktoken~=0.4.0
 httpcore~=0.17.3
