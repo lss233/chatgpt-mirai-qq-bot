@@ -1,4 +1,4 @@
-graia-ariadne==0.11.5
+graia-ariadne==0.11.7
 graiax-silkcoder
 revChatGPT~=6.8.6
 toml~=0.10.2
