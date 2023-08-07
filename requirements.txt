@@ -10,7 +10,7 @@ revChatGPT~=6.8.6
 openai~=0.27.8
 EdgeGPT==0.12.1
 OpenAIAuth>=2.0.0
-BingImageCreator~=0.4.2
+BingImageCreator~=0.4.4
 poe-api==0.5.2
 tiktoken~=0.4.0
 
