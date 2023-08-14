@@ -27,7 +27,7 @@ asyncio~=3.4.3
 pydantic
 markdown~=3.4.4
 python-markdown-math~=0.8
-pygments~=2.15.1
+pygments~=2.16.1
 imgkit~=1.2.3
 qrcode~=7.4.2
 aiohttp~=3.8.5
