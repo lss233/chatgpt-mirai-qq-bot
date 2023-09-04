@@ -7,7 +7,7 @@ wechatpy~=2.0.0a26
 
 # LLM-Upstream-library
 revChatGPT~=6.8.6
-openai~=0.27.8
+openai~=0.28.0
 EdgeGPT==0.13.2
 OpenAIAuth>=2.0.0
 BingImageCreator~=0.4.4
