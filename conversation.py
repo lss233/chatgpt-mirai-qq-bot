@@ -1,4 +1,3 @@
-import asyncio
 import contextlib
 import time
 from datetime import datetime
@@ -10,28 +9,29 @@ from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
 from loguru import logger
 
-import constants
 from adapter.baidu.yiyan import YiyanAdapter
 from adapter.botservice import BotAdapter
 from adapter.chatgpt.api import ChatGPTAPIAdapter
 from adapter.chatgpt.web import ChatGPTWebAdapter
 from adapter.claude.slack import ClaudeInSlackAdapter
 from adapter.google.bard import BardAdapter
+from adapter.gpt4free.g4f_helper import parse as g4f_parse
+from adapter.gpt4free.gpt4free import Gpt4FreeAdapter
 from adapter.ms.bing import BingAdapter
-from adapter.xunfei.xinghuo import XinghuoAdapter
-from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
 from adapter.quora.poe import PoeBot, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
+from adapter.xunfei.xinghuo import XinghuoAdapter
+from constants import LlmName
 from constants import config
+from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
 from exceptions import PresetNotFoundException, BotTypeNotFoundException, NoAvailableBotException, \
     CommandRefusedException, DrawingFailedException
+from middlewares.draw_ratelimit import MiddlewareRatelimit
 from renderer import Renderer
 from renderer.merger import BufferedContentMerger, LengthContentMerger
 from renderer.renderer import MixedContentMessageChainRenderer, MarkdownImageRenderer, PlainTextRenderer
 from renderer.splitter import MultipleSegmentSplitter
-from middlewares.draw_ratelimit import MiddlewareRatelimit
 from utils import retry
-from constants import LlmName
 from utils.text_to_speech import TtsVoice, TtsVoiceManager
 
 handlers = {}
@@ -110,6 +110,8 @@ class ConversationContext:
             self.adapter = ClaudeInSlackAdapter(self.session_id)
         elif _type == LlmName.XunfeiXinghuo.value:
             self.adapter = XinghuoAdapter(self.session_id)
+        elif g4f_parse(_type):
+            self.adapter = Gpt4FreeAdapter(self.session_id, g4f_parse(_type))
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type

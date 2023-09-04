@@ -1,8 +1,8 @@
+import asyncio
 import time
 from enum import Enum
 from typing import Generator
 
-import asyncio
 from loguru import logger
 from poe import Client as PoeClient
 
