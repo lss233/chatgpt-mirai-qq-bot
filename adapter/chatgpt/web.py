@@ -102,7 +102,7 @@ class ChatGPTWebAdapter(BotAdapter):
                 logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")
         except AttributeError as e:
             if str(e).startswith("'str' object has no attribute 'get'"):
-                yield "出现故障，请发送”{reset}“重新开始！".format(reset=config.trigger.reset_command)
+                yield "出现故障，请发送“{reset}”重新开始！".format(reset=config.trigger.reset_command)
         except revChatGPT.typings.Error as e:
             if e.code == 429:
                 current_time = datetime.datetime.now()
