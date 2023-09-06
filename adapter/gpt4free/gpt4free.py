@@ -29,7 +29,7 @@ class Gpt4FreeAdapter(BotAdapter):
     async def ask(self, prompt: str) -> Generator[str, None, None]:
         self.conversation_history.append(vars(ChatMessage(ROLE_USER, prompt)))
         response = g4f.ChatCompletion.create(
-            model=self.model.model,
+            model=eval(self.model.model) if self.model.model.startswith("g4f.models.") else self.model.model,
             provider=eval(self.model.provider),
             messages=self.conversation_history,
         )
