@@ -9,7 +9,7 @@ def g4f_check_account(account: G4fModels):
 
     try:
         response = g4f.ChatCompletion.create(
-            model=account.model,
+            model=eval(account.model) if account.model.startswith("g4f.models.") else account.model,
             provider=eval(account.provider),
             messages=[vars(ChatMessage(ROLE_USER, "hello"))],
         )
