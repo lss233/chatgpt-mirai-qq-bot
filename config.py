@@ -1,11 +1,13 @@
 from __future__ import annotations
-from typing import List, Union, Literal, Dict, Optional
-from pydantic import BaseModel, BaseConfig, Extra
-from charset_normalizer import from_bytes
-from loguru import logger
+
 import os
 import sys
+from typing import List, Union, Literal, Dict, Optional
+
 import toml
+from charset_normalizer import from_bytes
+from loguru import logger
+from pydantic import BaseModel, BaseConfig, Extra
 
 
 class Onebot(BaseModel):
@@ -259,6 +261,22 @@ class ChatGLMAPI(BaseModel):
 class ChatGLMAuths(BaseModel):
     accounts: List[ChatGLMAPI] = []
     """ChatGLM的账号列表"""
+
+
+class G4fModels(BaseModel):
+    provider: str
+    """ai提供方"""
+    model: str
+    """ai模型"""
+    alias: str
+    """模型缩写"""
+    description: str
+    """介绍"""
+
+
+class G4fAuths(BaseModel):
+    accounts: List[G4fModels] = []
+    """支持的模型"""
 
 
 class SlackAppAccessToken(BaseModel):
@@ -544,6 +562,7 @@ class Config(BaseModel):
     poe: PoeAuths = PoeAuths()
     slack: SlackAuths = SlackAuths()
     xinghuo: XinghuoAuths = XinghuoAuths()
+    gpt4free: G4fAuths = G4fAuths()
 
     # === Response Settings ===
     text_to_image: TextToImage = TextToImage()

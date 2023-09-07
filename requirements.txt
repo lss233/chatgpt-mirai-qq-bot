@@ -42,3 +42,4 @@ httpx~=0.24.1
 Quart==0.17.0
 pydub~=0.25.1
 httpcore~=0.17.3
+g4f~=0.0.2.6
