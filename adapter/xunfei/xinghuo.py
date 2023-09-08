@@ -74,18 +74,18 @@ class XinghuoAdapter(BotAdapter):
 
         full_response = ''
         async with self.client.stream(
-                    "POST",
-                    url="https://xinghuo.xfyun.cn/iflygpt-chat/u/chat_message/chat",
-                    data={
-                        'fd': self.account.fd,
-                        'chatId': self.conversation_id,
-                        'text': prompt,
-                        'GtToken': self.account.GtToken,
-                        'sid': self.account.sid,
-                        'clientType': '1',
-                        'isBot':'0'
-                    },
-            ) as req:
+            "POST",
+            url="https://xinghuo.xfyun.cn/iflygpt-chat/u/chat_message/chat",
+            data={
+                'fd': self.account.fd,
+                'chatId': self.conversation_id,
+                'text': prompt,
+                'GtToken': self.account.GtToken,
+                'sid': self.account.sid,
+                'clientType': '1',
+                'isBot': '0'
+            },
+        ) as req:
             async for line in req.aiter_lines():
                 if not line:
                     continue
@@ -113,7 +113,8 @@ class XinghuoAdapter(BotAdapter):
         else:
             logger.debug(f"[预设] 发送：{text}")
             item = None
-            async for item in self.ask(text): ...
+            async for item in self.ask(text):
+                ...
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 

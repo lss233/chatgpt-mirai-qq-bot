@@ -1,41 +1,15 @@
+import asyncio
+from framework.accounts import account_manager
+import constants
+from framework.universal import handle_message
+from loguru import logger
+from graia.ariadne.message.element import Plain, Image
+from graia.ariadne.message.chain import MessageChain
 import os
 import sys
 
 
 sys.path.append(os.getcwd())
-from constants import botManager
-
-from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain, Image
-from loguru import logger
-
-from universal import handle_message
-
-import asyncio
-
-from renderer.renderer import MixedContentMessageChainRenderer
-from renderer.merger import BufferedContentMerger
-from renderer.splitter import MultipleSegmentSplitter
-
-
-renderer = MultipleSegmentSplitter()
-
-renderer = BufferedContentMerger(renderer)
-
-renderer = MixedContentMessageChainRenderer(renderer)
-
-
-async def render(text: str):
-    async with renderer:
-        total_text = ''
-        for i in data:
-            await asyncio.sleep(0.03)
-            partial = await renderer.render(i)
-            if partial:
-                print(partial)
-                print('---')
-        result = await renderer.result()
-        print('result', result)
 
 
 if __name__ == '__main__':
@@ -49,7 +23,8 @@ if __name__ == '__main__':
                     logger.debug(f"Say Image: {elem}")
         else:
             logger.debug(f"Say Other: {msg}")
-    asyncio.run(botManager.login())
+
+    asyncio.run(account_manager.load_accounts(constants.config.accounts))
     asyncio.run(handle_message(
         response,
         f"friend-1234567890",
