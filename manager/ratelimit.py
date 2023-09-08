@@ -54,6 +54,7 @@ class RateLimitManager:
         q = Query()
         usage = self.draw_usage_db.get(q.fragment({"type": _type, "id": _id}))
         current_time = time.localtime(time.time()).tm_hour
+        current_day = time.localtime(time.time()).tm_mday
 
         # 删除过期的记录
         if usage is not None and usage['time'] != current_time:
