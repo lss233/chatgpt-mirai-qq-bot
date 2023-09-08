@@ -23,7 +23,6 @@ class DrawingAIFactory:
         entry = registered_ai[name]
         return entry[0](*entry[1])
 
-
     @staticmethod
     def register(name: str, clazz: Type[DrawAI], args: Tuple):
         registered_ai[name] = (clazz, args)

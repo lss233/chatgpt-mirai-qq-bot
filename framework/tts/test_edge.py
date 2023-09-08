@@ -16,7 +16,12 @@ class TestEdgeTTSEngine(IsolatedAsyncioTestCase):
     async def test_speak(self):
         # Test if speak returns a TTSResponse object with non-empty audio data
         engine = EdgeTTSEngine()
-        voice = TTSVoice(engine="edge", codename="af-ZA-AdriNeural", full_name="Microsoft Server Speech Text to Speech Voice (af-ZA, AdriNeural)", lang=["af-ZA"], aliases=["Adri"])
+        voice = TTSVoice(
+            engine="edge",
+            codename="af-ZA-AdriNeural",
+            full_name="Microsoft Server Speech Text to Speech Voice (af-ZA, AdriNeural)",
+            lang=["af-ZA"],
+            aliases=["Adri"])
         text = EmotionMarkupText([("claim", "Hello, world!")])
         response = await engine.speak(text, voice)
         self.assertIsInstance(response, TTSResponse)

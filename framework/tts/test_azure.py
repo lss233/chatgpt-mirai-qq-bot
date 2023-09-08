@@ -25,7 +25,7 @@ class TestAzureTTSEngine(IsolatedAsyncioTestCase):
                 full_name="Orla",
                 lang=["ga-IE"],
                 aliases=["Orla"]
-            )
+        )
         ]
         with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value.json.return_value = [
@@ -49,18 +49,15 @@ class TestAzureTTSEngine(IsolatedAsyncioTestCase):
                         "depressed",
                         "chat",
                         "assistant",
-                        "newscast"
-                    ],
+                        "newscast"],
                     "SampleRateHertz": "24000",
                     "VoiceType": "Neural",
                     "Status": "GA",
                     "RolePlayList": [
                         "Narrator",
                         "YoungAdultMale",
-                        "Boy"
-                    ],
-                    "WordsPerMinute": "293"
-                },
+                        "Boy"],
+                    "WordsPerMinute": "293"},
                 {
                     "Name": "Microsoft Server Speech Text to Speech Voice (ga-IE, OrlaNeural)",
                     "DisplayName": "Orla",
@@ -72,8 +69,7 @@ class TestAzureTTSEngine(IsolatedAsyncioTestCase):
                     "SampleRateHertz": "24000",
                     "VoiceType": "Neural",
                     "Status": "GA",
-                    "WordsPerMinute": "139"
-                },
+                    "WordsPerMinute": "139"},
             ]
             engine = AzureTTSEngine(fakeConfig)
             voices = await engine.get_voice_list()
@@ -102,12 +98,40 @@ class TestAzureTTSEngine(IsolatedAsyncioTestCase):
 
     async def test_get_supported_styles(self):
         expected_styles = [
-            "advertisement_upbeat", "affectionate", "angry", "assistant", "calm", "chat", "cheerful", "customerservice",
-            "depressed", "disgruntled", "documentary-narration", "embarrassed", "empathetic", "envious", "excited",
-            "fearful", "friendly", "gentle", "hopeful", "lyrical", "narration-professional", "narration-relaxed",
-            "newscast", "newscast-casual", "newscast-formal", "poetry-reading", "sad", "serious", "shouting",
-            "sports_commentary", "sports_commentary_excited", "whispering", "terrified", "unfriendly"
-        ]
+            "advertisement_upbeat",
+            "affectionate",
+            "angry",
+            "assistant",
+            "calm",
+            "chat",
+            "cheerful",
+            "customerservice",
+            "depressed",
+            "disgruntled",
+            "documentary-narration",
+            "embarrassed",
+            "empathetic",
+            "envious",
+            "excited",
+            "fearful",
+            "friendly",
+            "gentle",
+            "hopeful",
+            "lyrical",
+            "narration-professional",
+            "narration-relaxed",
+            "newscast",
+            "newscast-casual",
+            "newscast-formal",
+            "poetry-reading",
+            "sad",
+            "serious",
+            "shouting",
+            "sports_commentary",
+            "sports_commentary_excited",
+            "whispering",
+            "terrified",
+            "unfriendly"]
         engine = AzureTTSEngine(fakeConfig)
         styles = await engine.get_supported_styles()
         self.assertEqual(styles, expected_styles)

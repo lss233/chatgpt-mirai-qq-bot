@@ -25,7 +25,8 @@ class BaiduCloud:
     def save_token_info(self):
         try:
             with open(self.token_file, 'w') as f:
-                json.dump({"access_token": self.access_token, "expiration_time": self.expiration_time}, f)
+                json.dump({"access_token": self.access_token,
+                          "expiration_time": self.expiration_time}, f)
         except IOError as e:
             logger.error(f"[百度云文本审核] 无法保存 access token 到指定位置: {e}")
 
@@ -72,7 +73,9 @@ class BaiduCloud:
 
         baidu_url = f"https://aip.baidubce.com/rest/2.0/solution/v1/text_censor/v2/user_defined" \
                     f"?access_token={self.access_token}"
-        headers = {'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json'}
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'}
 
         async with aiohttp.ClientSession() as session:
             async with session.post(baidu_url, headers=headers, data={'text': text}) as response:
@@ -108,7 +111,8 @@ class MiddlewareBaiduCloud(Middleware):
             else:
                 msg = response_dict['data'][0]['msg']
                 logger.error(f"[百度云文本审核] 判定结果：{conclusion}")
-                response.body = MessageChain([Plain(f"{config.baiducloud.prompt_message}\n原因：{msg}")])
+                response.body = MessageChain(
+                    [Plain(f"{config.baiducloud.prompt_message}\n原因：{msg}")])
                 return await _next(request, response)
 
         except aiohttp.ClientError as e:

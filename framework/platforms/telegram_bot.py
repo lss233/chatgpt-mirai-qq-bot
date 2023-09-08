@@ -27,10 +27,8 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     bot_username = (await context.bot.get_me()).username
 
-    if type == 'group' and (
-            bot_username not in update.message.text and (
-            update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)
-    ):
+    if type == 'group' and (bot_username not in update.message.text and (
+            update.message.reply_to_message is None or update.message.reply_to_message.from_user is None or update.message.reply_to_message.from_user.username != bot_username)):
         logger.debug(f"忽略消息（未满足匹配规则）: {update.message.text} ")
         return
 
@@ -44,13 +42,13 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         if voice:
             await update.message.reply_chat_action(action=telegram.constants.ChatAction.UPLOAD_VOICE)
             last_message_item = await update.message.reply_audio(audio=await voice.transcode(VoiceFormat.Wav),
-                                                            title="Voice Message",
-                                                            caption=last_send_text)
+                                                                 title="Voice Message",
+                                                                 caption=last_send_text)
         if image:
             await update.message.reply_chat_action(action=telegram.constants.ChatAction.UPLOAD_PHOTO)
             last_message_item = await update.message.reply_photo(photo=await image.get_bytes(),
-                                                            caption=last_send_text,
-                                                            parse_mode=ParseMode.MARKDOWN_V2)
+                                                                 caption=last_send_text,
+                                                                 parse_mode=ParseMode.MARKDOWN_V2)
 
         elif text:
             await update.message.reply_chat_action(action=telegram.constants.ChatAction.TYPING)
@@ -77,7 +75,8 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     request.user_id = update.message.from_user.id
     request.group_id = update.message.chat_id
     request.nickname = update.message.from_user.full_name or "路人甲"
-    request.message = MessageChain([Plain(update.message.text.replace(f"@{bot_username}", '').strip())])
+    request.message = MessageChain(
+        [Plain(update.message.text.replace(f"@{bot_username}", '').strip())])
 
     response = Response(_response_func)
 
@@ -97,7 +96,7 @@ async def on_check_presets_list(update: Update, context: ContextTypes.DEFAULT_TY
                 preset_data = f.read().replace("\n\n", "\n=========\n")
             answer = f"预设名：{keyword}\n{preset_data}"
             await update.message.reply_text(answer)
-        except:
+        except BaseException:
             pass
 
 
@@ -126,7 +125,10 @@ async def on_query_chat_limit(update: Update, context: ContextTypes.DEFAULT_TYPE
     if limit is None:
         return await update.message.reply_text(f"{msg_type} {msg_id} 没有额度限制。")
     usage = ratelimit_manager.get_usage(msg_type, msg_id)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    current_time = time.strftime(
+        "%Y-%m-%d %H:%M:%S",
+        time.localtime(
+            time.time()))
     return await update.message.reply_text(
         f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
@@ -143,7 +145,10 @@ async def bootstrap() -> None:
         .http_version('1.1') \
         .build()
 
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
+    app.add_handler(
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND,
+            on_message))
     app.add_handler(CommandHandler("presets", on_check_presets_list))
     app.add_handler(CommandHandler("limit_chat", on_limit_chat))
     app.add_handler(CommandHandler("query_limit", on_query_chat_limit))

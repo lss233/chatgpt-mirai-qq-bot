@@ -39,7 +39,8 @@ class ChatGPTBrowserChatbot(asyncio.Lock):
     def refresh_accessed_at(self):
         # 删除栈顶过期的信息
         current_time = datetime.datetime.now()
-        while len(self.accessed_at) > 0 and current_time - self.accessed_at[0] > datetime.timedelta(hours=1):
+        while len(self.accessed_at) > 0 and current_time - \
+                self.accessed_at[0] > datetime.timedelta(hours=1):
             self.accessed_at.pop(0)
         if len(self.accessed_at) == 0:
             self.accessed_at.append(current_time)

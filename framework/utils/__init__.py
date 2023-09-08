@@ -2,6 +2,7 @@ import asyncio
 
 from .retry import retry
 
+
 class QueueInfo:
     lock: asyncio.Lock
     size: int

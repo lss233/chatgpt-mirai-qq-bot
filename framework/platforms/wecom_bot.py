@@ -77,9 +77,13 @@ def route(app: Quart):
             _request.user_id = msg.source
             _request.nickname = client.user.get(msg.source) or "某人"
             _request.message = MessageChain([Plain(msg.content)])
-            logger.info(f"Get message from {_request.session_id}:\n{_request.message}")
+            logger.info(
+                f"Get message from {_request.session_id}:\n{_request.message}")
 
-            _response = Response(functools.partial(_response_func, UserId=msg.source))
+            _response = Response(
+                functools.partial(
+                    _response_func,
+                    UserId=msg.source))
 
             asyncio.create_task(handle_message(_request, _response))
 

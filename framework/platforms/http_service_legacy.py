@@ -55,7 +55,12 @@ class BotRequest(Request):
 
 
 class ResponseResult:
-    def __init__(self, message=None, voice=None, image=None, result_status=RESPONSE_SUCCESS):
+    def __init__(
+            self,
+            message=None,
+            voice=None,
+            image=None,
+            result_status=RESPONSE_SUCCESS):
         self.result_status = result_status
         self.message = self._ensure_list(message)
         self.voice = self._ensure_list(voice)
@@ -94,7 +99,8 @@ async def process_request(bot_request: BotRequest):
         if voice:
             bot_request.append_result("voice", f"data:audio/wav;base64,{await voice.get_base64(VoiceFormat.Wav)}")
         if image:
-            bot_request.append_result("image", f"data:image/png;base64,{image.base64}")
+            bot_request.append_result(
+                "image", f"data:image/png;base64,{image.base64}")
 
     logger.debug(f"Start to process bot request {bot_request.request_time}.")
     if bot_request.message is None or not str(bot_request.message).strip():
@@ -137,13 +143,16 @@ def route(app: Quart):
         request_id = request.args.get("request_id")
         bot_request: BotRequest = request_dic.get(request_id, None)
         if bot_request is None:
-            return ResponseResult(message="没有更多了！", result_status=RESPONSE_FAILED).to_json()
+            return ResponseResult(
+                message="没有更多了！",
+                result_status=RESPONSE_FAILED).to_json()
         response = bot_request.result.to_json()
         if bot_request.done:
             request_dic.pop(request_id)
         else:
             bot_request.result.pop_all()
-        logger.debug(f"Bot request {request_id} response -> \n{response[:100]}")
+        logger.debug(
+            f"Bot request {request_id} response -> \n{response[:100]}")
         return response
 
 
@@ -154,8 +163,9 @@ def clear_request_dict():
         keys_to_delete = []
         for key, bot_request in request_dic.items():
             if now - int(key) / 1000 > 600:
-                logger.debug(f"Remove time out request -> {key}|{bot_request.session_id}|{bot_request.username}"
-                             f"|{bot_request.message}")
+                logger.debug(
+                    f"Remove time out request -> {key}|{bot_request.session_id}|{bot_request.username}"
+                    f"|{bot_request.message}")
                 keys_to_delete.append(key)
         for key in keys_to_delete:
             request_dic.pop(key)
@@ -168,5 +178,6 @@ def construct_bot_request(data):
     message = data.get('message')
     logger.info(f"Get message from {session_id}[{username}]:\n{message}")
     with lock:
-        bot_request = BotRequest(session_id, username, message, str(int(time.time() * 1000)))
+        bot_request = BotRequest(session_id, username,
+                                 message, str(int(time.time() * 1000)))
     return bot_request

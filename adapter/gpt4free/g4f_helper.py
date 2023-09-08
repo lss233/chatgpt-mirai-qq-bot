@@ -9,11 +9,18 @@ def g4f_check_account(account: G4fModels):
 
     try:
         response = g4f.ChatCompletion.create(
-            model=eval(account.model) if account.model.startswith("g4f.models.") else account.model,
-            provider=eval(account.provider),
-            messages=[vars(ChatMessage(ROLE_USER, "hello"))],
+            model=eval(
+                account.model) if account.model.startswith("g4f.models.") else account.model,
+            provider=eval(
+                account.provider),
+            messages=[
+                vars(
+                    ChatMessage(
+                        ROLE_USER,
+                        "hello"))],
         )
-        logger.debug(f"g4f model ({vars(account)}) is active. hello -> {response}")
+        logger.debug(
+            f"g4f model ({vars(account)}) is active. hello -> {response}")
     except KeyError as e:
         logger.debug(f"g4f model ({vars(account)}) is inactive. hello -> {e}")
         return False

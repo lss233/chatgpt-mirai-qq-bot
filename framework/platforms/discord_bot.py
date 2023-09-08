@@ -1,3 +1,4 @@
+from constants import config
 import os
 import sys
 from io import BytesIO
@@ -16,13 +17,15 @@ from framework.universal import handle_message
 
 sys.path.append(os.getcwd())
 
-from constants import config
 
 intents = discord.Intents.default()
 intents.typing = False
 intents.presences = False
 
-bot = commands.Bot(command_prefix='!', intents=intents, proxy=config.discord.proxy)
+bot = commands.Bot(
+    command_prefix='!',
+    intents=intents,
+    proxy=config.discord.proxy)
 
 
 async def on_message_event(message: discord.Message) -> None:
@@ -52,12 +55,12 @@ async def on_message_event(message: discord.Message) -> None:
             last_send_text += text
         if voice:
             last_message_item = await message.reply(file=discord.File(BytesIO(await voice.transcode(VoiceFormat.Wav)),
-                                                  filename="voice.wav"),
-                                content=last_send_text)
+                                                                      filename="voice.wav"),
+                                                    content=last_send_text)
         if image:
             last_message_item = await message.reply(file=discord.File(BytesIO(await image.get_bytes()),
-                                                  filename="image.png"),
-                                content=last_send_text)
+                                                                      filename="image.png"),
+                                                    content=last_send_text)
 
         elif text:
             if last_message_item:
@@ -71,11 +74,13 @@ async def on_message_event(message: discord.Message) -> None:
     request.user_id = message.author.id
     request.group_id = message.channel.id
     request.nickname = message.author.name
-    request.message = MessageChain([Plain(message.content.replace(f"<@{bot_id}>", "").strip())])
+    request.message = MessageChain(
+        [Plain(message.content.replace(f"<@{bot_id}>", "").strip())])
 
     response = Response(_response_func)
 
     await handle_message(request, response)
+
 
 @bot.event
 async def on_message(message):

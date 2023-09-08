@@ -9,8 +9,10 @@ from .base import DrawAI
 
 def basic_auth_encode(authorization: str) -> str:
     authorization_bytes = authorization.encode('utf-8')
-    encoded_authorization = base64.b64encode(authorization_bytes).decode('utf-8')
+    encoded_authorization = base64.b64encode(
+        authorization_bytes).decode('utf-8')
     return f"Basic {encoded_authorization}"
+
 
 class SDWebUI(DrawAI):
 
@@ -18,7 +20,8 @@ class SDWebUI(DrawAI):
         self.params = params
         self.client = httpx.AsyncClient(timeout=params.timeout)
         if params.authorization:
-            self.client.headers["Authorization"] = basic_auth_encode(params.authorization)
+            self.client.headers["Authorization"] = basic_auth_encode(
+                params.authorization)
 
     async def text_to_img(self, prompt):
         payload = {
@@ -51,7 +54,8 @@ class SDWebUI(DrawAI):
 
     async def img_to_img(self, init_images: List[Image], prompt=''):
         # 需要调用get_bytes方法，才能获取到base64字段内容
-        for x in init_images: await x.get_bytes()
+        for x in init_images:
+            await x.get_bytes()
         # 消息链显示字符串中有“[图片]”字样，需要过滤
         prompt = prompt.replace("[图片]", "")
         payload = {

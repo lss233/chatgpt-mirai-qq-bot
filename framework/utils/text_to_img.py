@@ -42,7 +42,8 @@ with open("./assets/texttoimg/template.html", "rb") as f:
         raise ValueError("无法识别 Markdown 模板 template.html，请检查是否输入有误！")
 
     # 获取 Pygments 生成的 CSS 样式
-    highlight_css = HtmlFormatter(style=XcodeStyle).get_style_defs('.highlight')
+    highlight_css = HtmlFormatter(
+        style=XcodeStyle).get_style_defs('.highlight')
 
     template_html = str(guessed_str).replace("{highlight_css}", highlight_css)
 
@@ -129,7 +130,8 @@ class TextWrapper(textwrap.TextWrapper):
                 cur_len = sum(map(self._strlen, cur_line))
 
             # If the last chunk on this line is all whitespace, drop it.
-            if self.drop_whitespace and cur_line and cur_line[-1].strip() == '':
+            if self.drop_whitespace and cur_line and cur_line[-1].strip(
+            ) == '':
                 cur_len -= self._strlen(cur_line[-1])
                 del cur_line[-1]
 
@@ -145,8 +147,8 @@ class TextWrapper(textwrap.TextWrapper):
                     lines.append(indent + ''.join(cur_line))
                 else:
                     while cur_line:
-                        if (cur_line[-1].strip() and
-                                cur_len + self._strlen(self.placeholder) <= width):
+                        if (cur_line[-1].strip() and cur_len +
+                                self._strlen(self.placeholder) <= width):
                             cur_line.append(self.placeholder)
                             lines.append(indent + ''.join(cur_line))
                             break
@@ -155,8 +157,8 @@ class TextWrapper(textwrap.TextWrapper):
                     else:
                         if lines:
                             prev_line = lines[-1].rstrip()
-                            if (self._strlen(prev_line) + self._strlen(self.placeholder) <=
-                                    self.width):
+                            if (self._strlen(prev_line) +
+                                    self._strlen(self.placeholder) <= self.width):
                                 lines[-1] = prev_line + self.placeholder
                                 break
                         lines.append(indent + self.placeholder.lstrip())
@@ -211,9 +213,13 @@ class TextWrapper(textwrap.TextWrapper):
         return self._split(text)
 
 
-def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.text_to_image.font_path,
-                      font_size=config.text_to_image.font_size, offset_x=config.text_to_image.offset_x,
-                      offset_y=config.text_to_image.offset_y):
+def text_to_image_raw(
+        text,
+        width=config.text_to_image.width,
+        font_name=config.text_to_image.font_path,
+        font_size=config.text_to_image.font_size,
+        offset_x=config.text_to_image.offset_x,
+        offset_y=config.text_to_image.offset_y):
     # Create a draw object that can be used to measure the size of the text
     draw = ImageDraw.Draw(Image.new('RGB', (width, 1)))
 
@@ -239,7 +245,11 @@ def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.t
     height = int(height)
 
     # Create a new image with the calculated height and the specified width
-    image = Image.new('RGB', (width + offset_x * 2, height + offset_y), color='white')
+    image = Image.new(
+        'RGB',
+        (width + offset_x * 2,
+         height + offset_y),
+        color='white')
 
     # Create a draw object that can be used to draw on the image
     draw = ImageDraw.Draw(image)
@@ -248,7 +258,8 @@ def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.t
     font = ImageFont.truetype(font_name, font_size)
 
     # Draw the wrapped text on the image
-    draw.text((offset_x, offset_y), '\n'.join(wrapped_text), font=font, fill='black')
+    draw.text((offset_x, offset_y), '\n'.join(
+        wrapped_text), font=font, fill='black')
 
     return image
 
@@ -268,7 +279,12 @@ def md_to_html(text: str) -> str:
     extensions = [
         DisableHTMLExtension(),
         MathExtension(enable_dollar_delimiter=True),  # 开启美元符号渲染
-        CodeHiliteExtension(linenums=False, css_class='highlight', noclasses=False, guess_lang=True),  # 添加代码块语法高亮
+        CodeHiliteExtension(
+            linenums=False,
+            css_class='highlight',
+            noclasses=False,
+            guess_lang=True),
+        # 添加代码块语法高亮
         TableExtension(),
         'fenced_code'
     ]
@@ -285,7 +301,11 @@ def md_to_html(text: str) -> str:
 async def get_qr_data(text):
     """将 Markdown 文本保存到 Mozilla Pastebin，并获得 URL"""
     async with aiohttp.ClientSession() as session:
-        payload = {'expires': '86400', 'format': 'url', 'lexer': '_markdown', 'content': text}
+        payload = {
+            'expires': '86400',
+            'format': 'url',
+            'lexer': '_markdown',
+            'content': text}
         try:
             async with session.post('https://pastebin.mozilla.org/api/',
                                     data=payload) as resp:
@@ -326,7 +346,8 @@ async def text_to_image(text):
             temp_jpg_filename = temp_jpg_file.name
             temp_jpg_file.close()
 
-        imgkit_config = imgkit.config(wkhtmltoimage=config.text_to_image.wkhtmltoimage)
+        imgkit_config = imgkit.config(
+            wkhtmltoimage=config.text_to_image.wkhtmltoimage)
         with StringIO(html) as input_file:
             ok = False
             try:
@@ -339,7 +360,8 @@ async def text_to_image(text):
                                                                             "width": config.text_to_image.width,  # 图片宽度
                                                                         }, None, None, None, imgkit_config)
                     # 调用PIL将图片读取为 JPEG，RGB 格式
-                    image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
+                    image = Image.open(
+                        temp_jpg_filename, formats=['PNG']).convert('RGB')
                     ok = True
                 else:
                     ok = False

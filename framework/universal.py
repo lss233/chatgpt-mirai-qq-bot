@@ -28,7 +28,11 @@ from framework.middlewares.timeout import MiddlewareTimeout
 from framework.tts.tts import TTSResponse
 from framework.request import Request, Response
 
-middlewares = [MiddlewareTimeout(), MiddlewareRatelimit(), MiddlewareBaiduCloud(), MiddlewareConcurrentLock()]
+middlewares = [
+    MiddlewareTimeout(),
+    MiddlewareRatelimit(),
+    MiddlewareBaiduCloud(),
+    MiddlewareConcurrentLock()]
 
 
 def __wrap_request(next_, middleware):
@@ -77,8 +81,11 @@ async def handle_message(request: Request, response: Response):
         # TODO: 统一的指令系统
 
         # 切换 AI 的指令
-        if bot_type_search := re.search(constants.config.trigger.switch_command, request.text):
-            if not (constants.config.trigger.allow_switching_ai or request.is_manager):
+        if bot_type_search := re.search(
+                constants.config.trigger.switch_command,
+                request.text):
+            if not (
+                    constants.config.trigger.allow_switching_ai or request.is_manager):
                 # TODO: option to modify this
                 await response.send(text="不好意思，只有管理员才能切换AI！")
                 return
@@ -92,12 +99,14 @@ async def handle_message(request: Request, response: Response):
             return
 
         # 指定前缀对话
-        if ' ' in request.text and (constants.config.trigger.allow_switching_ai or request.is_manager):
+        if ' ' in request.text and (
+                constants.config.trigger.allow_switching_ai or request.is_manager):
             for ai_type, prefixes in constants.config.trigger.prefix_ai.items():
                 for prefix in prefixes:
                     if f'{prefix}' in request.text:
                         request.conversation_context = await conversation_handler.first_or_create(ai_type)
-                        request.message = request.message.removeprefix(f'{prefix}')
+                        request.message = request.message.removeprefix(
+                            f'{prefix}')
                         break
                 else:
                     # Continue if the inner loop wasn't broken.
@@ -106,7 +115,8 @@ async def handle_message(request: Request, response: Response):
                 break
 
         if not conversation_handler.current_conversation:
-            logger.debug(f"尝试使用 default_ai={constants.config.response.default_ai} 来创建对话上下文")
+            logger.debug(
+                f"尝试使用 default_ai={constants.config.response.default_ai} 来创建对话上下文")
             conversation_handler.current_conversation = await conversation_handler.create(
                 constants.config.response.default_ai)
 
@@ -129,7 +139,8 @@ async def handle_message(request: Request, response: Response):
         # ping
         elif request.text in constants.config.trigger.ping_command:
             # TODO: standardlize this
-            # await response.send(text=await get_ping_response(conversation_context))
+            # await response.send(text=await
+            # get_ping_response(conversation_context))
             return
 
         # 图文混合模式
@@ -153,7 +164,8 @@ async def handle_message(request: Request, response: Response):
         elif switch_model_search := re.search(constants.config.trigger.switch_model, request.text):
             model_name = switch_model_search[1].strip()
             if model_name in request.conversation_context.supported_models:
-                if not (request.is_manager or model_name in constants.config.trigger.allowed_models):
+                if not (
+                        request.is_manager or model_name in constants.config.trigger.allowed_models):
                     # TODO: export to config file
                     await response.send(text=f"不好意思，只有管理员才能切换到 {model_name} 模型！")
                 else:
@@ -201,7 +213,7 @@ async def handle_message(request: Request, response: Response):
             _initialization = True
 
         async def _respond_func(chain: MessageChain = None, text: str = None, voice: TTSResponse = None,
-                               image: ImageElement = None):
+                                image: ImageElement = None):
             """
             Respond method
             """

@@ -2,7 +2,18 @@ import ast
 
 
 class ExpressionChecker(ast.NodeVisitor):
-    ALLOWED_NODES = (ast.Name, ast.Call, ast.Constant, ast.BoolOp, ast.Compare, ast.UnaryOp, ast.Expression, ast.boolop, ast.Subscript, ast.Load, ast.cmpop)
+    ALLOWED_NODES = (
+        ast.Name,
+        ast.Call,
+        ast.Constant,
+        ast.BoolOp,
+        ast.Compare,
+        ast.UnaryOp,
+        ast.Expression,
+        ast.boolop,
+        ast.Subscript,
+        ast.Load,
+        ast.cmpop)
 
     def __init__(self, variables):
         self.variables = variables

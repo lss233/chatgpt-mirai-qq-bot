@@ -75,7 +75,8 @@ class Channel(botpy.Client):
         request.user_id = message.author.id
         request.group_id = message.channel_id
         request.nickname = message.author.username
-        request.message = MessageChain([Plain(message.content.replace(f"<@!{message.mentions[0].id}>", "").strip())])
+        request.message = MessageChain(
+            [Plain(message.content.replace(f"<@!{message.mentions[0].id}>", "").strip())])
         response = Response(_response_func)
 
         try:
@@ -85,6 +86,10 @@ class Channel(botpy.Client):
 
 
 async def start_task():
-    intents = botpy.Intents(public_guild_messages=True, direct_message=True, guilds=True, message_audit=True)
+    intents = botpy.Intents(
+        public_guild_messages=True,
+        direct_message=True,
+        guilds=True,
+        message_audit=True)
     client = Channel(intents=intents)
     return await client.start(appid=Config.appid, token=Config.token)

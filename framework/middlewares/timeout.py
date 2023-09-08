@@ -20,14 +20,14 @@ class MiddlewareTimeout(Middleware):
     async def handle_request(self, request: Request, response: Response, _next: Callable):
         if request.session_id in self.timeout_task:
             self.timeout_task[request.session_id].cancel()
-        self.timeout_task[request.session_id] = asyncio.create_task(self.create_timeout_task(response.send, request.session_id))
+        self.timeout_task[request.session_id] = asyncio.create_task(
+            self.create_timeout_task(response.send, request.session_id))
         coro_task = asyncio.create_task(_next(request, response))
         self.request_task[request.session_id] = coro_task
         try:
             await asyncio.wait_for(coro_task, config.response.max_timeout)
             if request.session_id in self.timeout_task and not (
-                    self.timeout_task[request.session_id].cancel() or self.timeout_task[request.session_id].done()
-            ):
+                    self.timeout_task[request.session_id].cancel() or self.timeout_task[request.session_id].done()):
                 self.timeout_task[request.session_id].cancel()
                 del self.timeout_task[request.session_id]
         except asyncio.TimeoutError:
@@ -41,9 +41,11 @@ class MiddlewareTimeout(Middleware):
 
         await _next(request, response)
 
-        if request.session_id in self.request_task and not self.request_task[request.session_id].done():
+        if request.session_id in self.request_task and not self.request_task[request.session_id].done(
+        ):
             # Create the task again
-            self.timeout_task[request.session_id] = asyncio.create_task(self.create_timeout_task(response.send, request.session_id))
+            self.timeout_task[request.session_id] = asyncio.create_task(
+                self.create_timeout_task(response.send, request.session_id))
 
     async def create_timeout_task(self, respond, session_id):
         logger.debug("[Timeout] 开始计时……")

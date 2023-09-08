@@ -13,4 +13,3 @@ class VITSTTSEngine(TTSEngine):
 
     async def get_supported_styles(self) -> List[str]:
         pass
-

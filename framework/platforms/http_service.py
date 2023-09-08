@@ -30,7 +30,10 @@ from datetime import timezone
 login_attempts = {}
 
 if not constants.config.http.password:
-    password = "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=10))
+    password = "".join(
+        random.choices(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            k=10))
     logger.warning("=====================================")
     logger.warning(" ")
     logger.warning(" 警告：未设置 HTTP 控制台密码")
@@ -38,12 +41,14 @@ if not constants.config.http.password:
     logger.warning(" 请妥善保存")
     logger.warning(" ")
     logger.warning("=====================================")
-    constants.config.http.password = generate_password_hash(password, method="sha512", salt_length=6)
+    constants.config.http.password = generate_password_hash(
+        password, method="sha512", salt_length=6)
     constants.Config.save_config(constants.config)
 
 
 def get_jwt_secret_key():
-    return hashlib.sha256(constants.config.http.password.encode('utf-8')).digest()
+    return hashlib.sha256(
+        constants.config.http.password.encode('utf-8')).digest()
 
 
 webui_static = safe_join(os.path.dirname(os.path.pardir), 'assets/webui')
@@ -62,7 +67,8 @@ def authenticate(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         # 检查 Authorization 头
-        token = request.headers.get("Authorization", '').removeprefix("Bearer ")
+        token = request.headers.get(
+            "Authorization", '').removeprefix("Bearer ")
         if not token:
             return jsonify({"error": "认证失败"}), 401
 
@@ -100,7 +106,8 @@ def route(app: Quart):
                 seconds_since_last_attempt = int(now - last_attempt_time)
                 remaining_wait_time = wait_time - seconds_since_last_attempt
                 if remaining_wait_time > 0:
-                    return jsonify({"error": f"登录失败次数过多，请在 {remaining_wait_time} 秒后重试"}), 429
+                    return jsonify(
+                        {"error": f"登录失败次数过多，请在 {remaining_wait_time} 秒后重试"}), 429
             else:
                 login_attempts[ip] = (failed_attempts + 1, now)
         else:
@@ -211,7 +218,8 @@ def route(app: Quart):
         _req.group_id = data.get("group_id", "")
         _req.nickname = data.get("nickname", "Bob")
         _req.is_manager = data.get("is_manager", False)
-        prefered_format: VoiceFormat = data.get("prefered_format", VoiceFormat.Wav)
+        prefered_format: VoiceFormat = data.get(
+            "prefered_format", VoiceFormat.Wav)
         message_chain = []
         for item in data.get("messages", []):
             type_ = item.get('type', 'text')
@@ -221,8 +229,10 @@ def route(app: Quart):
                 message_chain.append(ImageElement(base64=item.get('value')))
             elif type_ == 'voice':
                 message_chain.append(
-                    TTSResponse(format_=item.get('format'), data_bytes=base64.b64decode(item.get('value')),
-                                text=item.get('text', '')))
+                    TTSResponse(
+                        format_=item.get('format'), data_bytes=base64.b64decode(
+                            item.get('value')), text=item.get(
+                            'text', '')))
         _req.message = MessageChain(message_chain)
 
         q = asyncio.Queue()

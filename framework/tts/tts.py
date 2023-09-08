@@ -35,14 +35,20 @@ class TTSResponse:
         self.text = text
 
     async def __to_mp3(self):
-        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(self.data_bytes.keys())[0]
+        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(
+            self.data_bytes.keys())[0]
         output_bytes = BytesIO()
-        AudioSegment.from_file(BytesIO(self.data_bytes[src_format])).export(output_bytes, format='mp3')
+        AudioSegment.from_file(
+            BytesIO(
+                self.data_bytes[src_format])).export(
+            output_bytes,
+            format='mp3')
         output_bytes.seek(0)
         return output_bytes.read()
 
     async def __to_silk(self) -> bytes:
-        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(self.data_bytes.keys())[0]
+        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(
+            self.data_bytes.keys())[0]
         try:
             from graiax import silkcoder
             return await silkcoder.async_encode(
@@ -53,10 +59,12 @@ class TTSResponse:
             )
         except ImportError as e:
             logger.warning("警告：Silk 转码模块无法加载，语音可能无法正常播放，请安装最新的 vc_redist 运行库。")
-            raise TTSEncodingFailedException(src_format, VoiceFormat.Silk) from e
+            raise TTSEncodingFailedException(
+                src_format, VoiceFormat.Silk) from e
 
     async def __to_amr(self) -> bytes:
-        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(self.data_bytes.keys())[0]
+        src_format = VoiceFormat.Wav if VoiceFormat.Wav in self.data_bytes else list(
+            self.data_bytes.keys())[0]
         output_bytes = BytesIO()
         AudioSegment.from_file(BytesIO(self.data_bytes[src_format])) \
             .set_frame_rate(8000)\
@@ -120,8 +128,13 @@ class TTSVoice(metaclass=abc.ABCMeta):
     aliases: List[str] = []
     """别名"""
 
-    def __init__(self, engine: str, codename: str = None, full_name: str = None, lang: List[str] = None,
-                 aliases: List[str] = None):
+    def __init__(
+            self,
+            engine: str,
+            codename: str = None,
+            full_name: str = None,
+            lang: List[str] = None,
+            aliases: List[str] = None):
         self.engine = engine
         self.codename = codename
         self.full_name = full_name
@@ -172,8 +185,8 @@ class TTSEngine(metaclass=abc.ABCMeta):
                     voice
                     for voice in self.voices
                     if voice_name.lower() == voice.full_name.lower()
-                       or voice_name.lower() == voice.codename.lower()
-                       or voice_name.lower() in [t.lower() for t in voice.aliases]
+                    or voice_name.lower() == voice.codename.lower()
+                    or voice_name.lower() in [t.lower() for t in voice.aliases]
                 )
             )
         except StopIteration as e:

@@ -14,8 +14,10 @@ class MiddlewareRatelimit(Middleware):
         ...
 
     async def handle_request(self, request: Request, response: Response, _next: Callable):
-        _id = request.session_id.split('-', 1)[1] if '-' in request.session_id else request.session_id
-        rate_usage = manager.check_exceed('好友' if request.session_id.startswith("friend-") else '群组', _id)
+        _id = request.session_id.split(
+            '-', 1)[1] if '-' in request.session_id else request.session_id
+        rate_usage = manager.check_exceed(
+            '好友' if request.session_id.startswith("friend-") else '群组', _id)
         if rate_usage >= 1:
             await response.send(text=config.ratelimit.exceed)
             return
@@ -34,7 +36,10 @@ class MiddlewareRatelimit(Middleware):
         if rate_usage >= config.ratelimit.warning_rate:
             limit = manager.get_limit(key, msg_id)
             usage = manager.get_usage(key, msg_id)
-            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+            current_time = time.strftime(
+                "%Y-%m-%d %H:%M:%S",
+                time.localtime(
+                    time.time()))
             await response.send(config.ratelimit.warning_msg.format(usage=usage['count'],
-                                                        limit=limit['rate'],
-                                                        current_time=current_time))
+                                                                    limit=limit['rate'],
+                                                                    current_time=current_time))

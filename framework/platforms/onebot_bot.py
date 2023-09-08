@@ -26,6 +26,7 @@ from framework.universal import handle_message
 bot = CQHttp()
 bot.server_app.service_routes = [("OneBot", "ws", "/ws")]
 
+
 class InterceptHandler(logging.Handler):
     def emit(self, record):
         logger_opt = logger.opt(depth=6, exception=record.exc_info)
@@ -45,10 +46,13 @@ class MentionMe:
     async def __call__(self, chain: MessageChain, event: Event) -> Optional[MessageChain]:
         first = chain[0]
         if isinstance(first, At) and first.target == event.self_id:
-            return MessageChain(chain.__root__[1:], inline=True).removeprefix(" ")
+            return MessageChain(
+                chain.__root__[
+                    1:], inline=True).removeprefix(" ")
         elif isinstance(first, Plain):
             member_info = await bot.get_group_member_info(group_id=event.group_id, user_id=event.self_id)
-            if member_info.get("nickname") and chain.startswith(member_info.get("nickname")):
+            if member_info.get("nickname") and chain.startswith(
+                    member_info.get("nickname")):
                 return chain.removeprefix(" ")
         raise ExecutionStop
 
@@ -107,7 +111,7 @@ async def safe_send(event, resp: MessageChain, is_group):
         if config.response.quote:
             message = MessageSegment.reply(event.message_id) + message
         return await bot.send(event, message)
-    except:
+    except BaseException:
         logger.error("文本消息发送失败，正在尝试使用转发消息发送……")
         try:
             return await bot.call_action(
@@ -117,7 +121,7 @@ async def safe_send(event, resp: MessageChain, is_group):
                     MessageSegment.node_custom(event.self_id, "ChatGPT", resp)
                 ]
             )
-        except:
+        except BaseException:
             logger.error("转发消息发送失败，正在尝试图片发送……")
             try:
                 return await bot.send(event, MessageSegment.image(f"base64://{(await to_image(str(resp))).base64}"))
@@ -142,7 +146,8 @@ async def respond(event: aiocqhttp.Event, is_group: bool, chain: MessageChain = 
             if not isinstance(chain, MessageChain):
                 chain = MessageChain(chain)
             chain = transform_from_message_chain(chain)
-            if config.response.quote and '[CQ:record,file=' not in str(chain):  # skip voice
+            if config.response.quote and '[CQ:record,file=' not in str(
+                    chain):  # skip voice
                 chain = MessageSegment.reply(event.message_id) + chain
             return await bot.send(event, chain)
         except Exception as e:
@@ -157,7 +162,9 @@ async def respond(event: aiocqhttp.Event, is_group: bool, chain: MessageChain = 
             )
 
 
-FriendTrigger = DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)
+FriendTrigger = DetectPrefix(
+    config.trigger.prefix +
+    config.trigger.prefix_friend)
 
 
 @bot.on_message('private')
@@ -190,9 +197,14 @@ async def _(event: Event):
         logger.exception(e)
 
 
-GroupTrigger = [MentionMe(config.trigger.require_mention != "at"), DetectPrefix(
-    config.trigger.prefix + config.trigger.prefix_group)] if config.trigger.require_mention != "none" else [
-    DetectPrefix(config.trigger.prefix)]
+GroupTrigger = [
+    MentionMe(
+        config.trigger.require_mention != "at"),
+    DetectPrefix(
+        config.trigger.prefix +
+        config.trigger.prefix_group)] if config.trigger.require_mention != "none" else [
+    DetectPrefix(
+        config.trigger.prefix)]
 
 
 @bot.on_message('group')
@@ -281,7 +293,10 @@ async def _(event: Event):
     if limit is None:
         return await bot.send(event, f"{msg_type} {msg_id} 没有额度限制。")
     usage = ratelimit_manager.get_usage(msg_type, msg_id)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    current_time = time.strftime(
+        "%Y-%m-%d %H:%M:%S",
+        time.localtime(
+            time.time()))
     return await bot.send(event,
                           f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
 
@@ -303,7 +318,10 @@ async def _(event: Event):
     if limit is None:
         return await bot.send(event, f"{msg_type} {msg_id} 没有额度限制。")
     usage = ratelimit_manager.get_draw_usage(msg_type, msg_id)
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    current_time = time.strftime(
+        "%Y-%m-%d %H:%M:%S",
+        time.localtime(
+            time.time()))
     return await bot.send(event,
                           f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}个图/小时， 当前已绘制：{usage['count']}个图\n整点重置，当前服务器时间：{current_time}")
 

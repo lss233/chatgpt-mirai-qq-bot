@@ -117,7 +117,8 @@ class VitsAPI:
     def linguistic_process(self, text):
         lang = self.lang
 
-        if lang == "auto": return text
+        if lang == "auto":
+            return text
 
         patterns = {
             "mix": r'[\!\"\#\$\%\&\'\(\)\*\+\,\-\.\/\:\;\<\>\=\?\@\[\]\{\}\\\\\^\_\`\~\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\u4e00-\u9fff]+|[\u3040-\u309f\u30a0-\u30ff]+|\w+|[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+',
@@ -135,7 +136,7 @@ class VitsAPI:
                 if re.search(patterns['ja'], match)
                 else match
                 if re.search(
-                    '[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\w]+', match
+                    '[^\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\\w]+', match
                 )
                 else "[ZH]还有一些我不会说，抱歉[ZH]"
                 for match in matches

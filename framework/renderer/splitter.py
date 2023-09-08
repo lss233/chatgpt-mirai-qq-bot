@@ -25,7 +25,7 @@ class MultipleSegmentSplitter(Renderer):
                 if seg.endswith("```"):
                     # Keep left
                     self.last_commit = self.last_commit + \
-                                           self.uncommitted_msg[:len(tokens) + self.uncommitted_msg.find(tokens)]
+                        self.uncommitted_msg[:len(tokens) + self.uncommitted_msg.find(tokens)]
                     return tokens
             return None
         elif segments[0].startswith("$$"):
@@ -38,7 +38,7 @@ class MultipleSegmentSplitter(Renderer):
                 if seg.endswith("$$"):
                     # Keep left
                     self.last_commit = self.last_commit + \
-                                           self.uncommitted_msg[:len(tokens) + self.uncommitted_msg.find(tokens)]
+                        self.uncommitted_msg[:len(tokens) + self.uncommitted_msg.find(tokens)]
                     return tokens
             return None
         elif segments[0].startswith("* "):

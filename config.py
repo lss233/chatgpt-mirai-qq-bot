@@ -100,7 +100,6 @@ class HttpService(BaseModel):
     )
 
 
-
 class WecomBot(BaseModel):
     corp_id: str = Field(
         title="企业 ID",
@@ -123,6 +122,7 @@ class WecomBot(BaseModel):
         description="企业微信应用 API 令牌 的 EncodingAESKey",
     )
 
+
 class QQChannel(BaseModel):
     appid: str = Field(
         title="Appid",
@@ -134,6 +134,7 @@ class QQChannel(BaseModel):
         description="QQ Channel 的 Token",
         default=None
     )
+
 
 class OpenAIGPT3Params(BaseModel):
     temperature: float = Field(
@@ -176,7 +177,10 @@ class OpenAIAuths(BaseModel):
 
     gpt_params: OpenAIParams = OpenAIParams()
 
-    accounts: List[Union[OpenAIEmailAuth, OpenAISessionTokenAuth, OpenAIAccessTokenAuth, OpenAIAPIKey]] = []
+    accounts: List[Union[OpenAIEmailAuth,
+                         OpenAISessionTokenAuth,
+                         OpenAIAccessTokenAuth,
+                         OpenAIAPIKey]] = []
 
 
 class OpenAIAuthBase(BaseModel):
@@ -433,8 +437,7 @@ class TextToSpeech(BaseModel):
     default: str = Field(
         title="默认音色",
         description="你可以在[这里](https://learn.microsoft.com/zh-CN/azure/cognitive-services/speech-service/language-support?tabs=tts#neural-voices)查看支持的音色列表",
-        default="zh-CN-XiaoxiaoNeural"
-    )
+        default="zh-CN-XiaoxiaoNeural")
     default_voice_prefix: List[str] = Field(
         title="Default Voice Prefix",
         description="默认的提示音色前缀",
@@ -618,8 +621,7 @@ class Response(BaseModel):
     error_request_too_many: str = Field(
         title="请求过多时的消息",
         description="糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{exc}\n",
-        default="糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{exc}\n"
-    )
+        default="糟糕！当前收到的请求太多了，我需要一段时间冷静冷静。你可以选择“重置会话”，或者过一会儿再来找我！\n预计恢复时间：{exc}\n")
 
     error_request_concurrent_error: str = Field(
         title="并发错误时的消息",
@@ -816,8 +818,7 @@ class Ratelimit(BaseModel):
     warning_msg: str = Field(
         title="额度警告消息",
         description="\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}",
-        default="\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
-    )
+        default="\n\n警告：额度即将耗尽！\n目前已发送：{usage}条消息，最大限制为{limit}条消息/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}")
     exceed: str = Field(
         title="额度超限消息",
         description="已达到额度限制，请等待下一小时继续和我对话。",
@@ -826,8 +827,7 @@ class Ratelimit(BaseModel):
     draw_warning_msg: str = Field(
         title="画图额度警告消息",
         description="\n\n警告：额度即将耗尽！\n目前已画：{usage}个图，最大限制为{limit}个图/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}",
-        default="\n\n警告：额度即将耗尽！\n目前已画：{usage}个图，最大限制为{limit}个图/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}"
-    )
+        default="\n\n警告：额度即将耗尽！\n目前已画：{usage}个图，最大限制为{limit}个图/小时，请调整您的节奏。\n额度限制整点重置，当前服务器时间：{current_time}")
     draw_exceed: str = Field(
         title="画图额度超限消息",
         description="已达到额度限制，请等待下一小时再使用画图功能。",
@@ -980,7 +980,9 @@ class Config(BaseModel):
         try:
             with open(self.prompts.keywords[keyword], "rb") as f:
                 if guessed_str := from_bytes(f.read()).best():
-                    return str(guessed_str).replace('<|im_end|>', '').replace('\r', '').split('\n\n')
+                    return str(guessed_str).replace(
+                        '<|im_end|>', '').replace(
+                        '\r', '').split('\n\n')
                 else:
                     raise ValueError("无法识别预设的 JSON 格式，请检查编码！")
 
@@ -1019,7 +1021,8 @@ class Config(BaseModel):
             ) and os.path.exists('config.json'):
                 logger.info("正在转换旧版配置文件……")
                 Config.save_config(Config.__load_json_config())
-                logger.warning("提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
+                logger.warning(
+                    "提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
                 try:
                     os.rename('config.json', 'config.json.old')
                 except Exception as e:
@@ -1039,7 +1042,9 @@ class Config(BaseModel):
     def save_config(config: Config):
         try:
             with open("config.cfg", "wb") as f:
-                parsed_str = toml.dumps(config.dict()).encode(sys.getdefaultencoding())
+                parsed_str = toml.dumps(
+                    config.dict()).encode(
+                    sys.getdefaultencoding())
                 f.write(parsed_str)
         except Exception as e:
             logger.exception(e)

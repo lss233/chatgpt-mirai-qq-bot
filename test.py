@@ -1,18 +1,16 @@
+import asyncio
+from framework.accounts import account_manager
+import constants
+from framework.universal import handle_message
+from loguru import logger
+from graia.ariadne.message.element import Plain, Image
+from graia.ariadne.message.chain import MessageChain
 import os
 import sys
 
 
 sys.path.append(os.getcwd())
 
-from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain, Image
-from loguru import logger
-
-from framework.universal import handle_message
-
-import constants
-from framework.accounts import account_manager
-import asyncio
 
 if __name__ == '__main__':
     async def response(msg):
@@ -25,7 +23,6 @@ if __name__ == '__main__':
                     logger.debug(f"Say Image: {elem}")
         else:
             logger.debug(f"Say Other: {msg}")
-
 
     asyncio.run(account_manager.load_accounts(constants.config.accounts))
     asyncio.run(handle_message(

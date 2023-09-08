@@ -44,7 +44,8 @@ class AccountManager:
             raise NoAvailableBotException(type_)
 
         if type_ not in self._roundrobin:
-            self._roundrobin[type_] = itertools.cycle(self.loggedin_accounts[type_])
+            self._roundrobin[type_] = itertools.cycle(
+                self.loggedin_accounts[type_])
         return next(self._roundrobin[type_])
 
     async def login_account(self, type_: str, account: CT):
@@ -69,7 +70,8 @@ class AccountManager:
         for field in accounts_model.__fields__.keys():
             if field not in self.loaded_accounts:
                 self.loaded_accounts[field] = []
-            self.loaded_accounts[field].extend(accounts_model.__getattribute__(field))
+            self.loaded_accounts[field].extend(
+                accounts_model.__getattribute__(field))
 
         tasks = []
         for field in accounts_model.__fields__.keys():
@@ -79,8 +81,10 @@ class AccountManager:
             )
         before_logins = len(tasks)
         await asyncio.gather(*tasks, return_exceptions=True)
-        after_logins = sum(len(models) for _, models in self.loggedin_accounts.items())
-        logger.debug(f"[AccountManager] 登录完毕，共有 {after_logins}/{before_logins} 个账号成功登录。")
+        after_logins = sum(len(models)
+                           for _, models in self.loggedin_accounts.items())
+        logger.debug(
+            f"[AccountManager] 登录完毕，共有 {after_logins}/{before_logins} 个账号成功登录。")
 
     @property
     def loggedin_accounts(self) -> Dict[str, List[CT]]:

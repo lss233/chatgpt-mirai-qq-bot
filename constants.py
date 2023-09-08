@@ -46,7 +46,8 @@ proxy: Optional[str] = config.check_proxy()
 
 if config.sdwebui:
     DrawingAIFactory.register("sd", SDWebUI, (config.sdwebui,))
-DrawingAIFactory.register("bing", BingAdapter, ("drawing", ConversationStyle.creative))
+DrawingAIFactory.register(
+    "bing", BingAdapter, ("drawing", ConversationStyle.creative))
 DrawingAIFactory.register("openai", ChatGPTAPIAdapter, ("drawing",))
 
 

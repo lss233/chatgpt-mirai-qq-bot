@@ -44,7 +44,10 @@ if config.mirai.reverse_ws_port:
             WebsocketServerConfig()
         ),
     )
-    app.launch_manager.add_launchable(AiohttpServerService(config.mirai.reverse_ws_host, config.mirai.reverse_ws_port))
+    app.launch_manager.add_launchable(
+        AiohttpServerService(
+            config.mirai.reverse_ws_host,
+            config.mirai.reverse_ws_port))
 else:
     app = Ariadne(
         ariadne_config(
@@ -133,7 +136,14 @@ async def response(target: Union[Friend, Group], source: Source, chain: MessageC
         logger.error(f"处理响应时发生错误: {e}")
 
 
-def create_request(user_id, target_id, platform, is_manager, chain, nickname, session_prefix):
+def create_request(
+        user_id,
+        target_id,
+        platform,
+        is_manager,
+        chain,
+        nickname,
+        session_prefix):
     request = Request()
     request.user_id = user_id
     request.group_id = target_id
@@ -145,7 +155,9 @@ def create_request(user_id, target_id, platform, is_manager, chain, nickname, se
     return request
 
 
-FriendTrigger = DetectPrefix(config.trigger.prefix + config.trigger.prefix_friend)
+FriendTrigger = DetectPrefix(
+    config.trigger.prefix +
+    config.trigger.prefix_friend)
 
 
 @app.broadcast.receiver("FriendMessage", priority=19)
@@ -153,7 +165,7 @@ async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
                                   chain: MessageChain):
     try:
         chain = await FriendTrigger(chain, None)
-    except:
+    except BaseException:
         logger.debug(f"丢弃私聊消息：{chain.display}（原因：不符合触发前缀）")
         return
 
@@ -162,9 +174,14 @@ async def friend_message_listener(app: Ariadne, target: Friend, source: Source,
     if chain.display.startswith("."):
         return
 
-    request = create_request(target.id, target.id, constants.BotPlatform.AriadneBot,
-                             target.id == config.mirai.manager_qq,
-                             chain, target.nickname, "friend")
+    request = create_request(
+        target.id,
+        target.id,
+        constants.BotPlatform.AriadneBot,
+        target.id == config.mirai.manager_qq,
+        chain,
+        target.nickname,
+        "friend")
 
     respond_partial = functools.partial(response, target, source)
     response_obj = Response(respond_partial)
@@ -185,9 +202,14 @@ async def group_message_listener(target: Group, source: Source, chain: GroupTrig
     if chain.display.startswith("."):
         return
 
-    request = create_request(member.id, target.id, constants.BotPlatform.AriadneBot,
-                             member.id == config.mirai.manager_qq,
-                             chain, member.name, "group")
+    request = create_request(
+        member.id,
+        target.id,
+        constants.BotPlatform.AriadneBot,
+        member.id == config.mirai.manager_qq,
+        chain,
+        member.name,
+        "group")
 
     respond_partial = functools.partial(response, target, source)
     response_obj = Response(respond_partial)
@@ -214,12 +236,15 @@ async def on_friend_request(event: BotInvitedJoinGroupRequestEvent):
 async def start_background():
     logger.info("尝试从 Mirai 服务中读取机器人 QQ 的 session key……")
     if config.mirai.reverse_ws_port:
-        logger.info("[提示] 当前为反向 ws 模式，请确保你的 mirai api http 设置了正确的 reverse-ws adapter 配置")
+        logger.info(
+            "[提示] 当前为反向 ws 模式，请确保你的 mirai api http 设置了正确的 reverse-ws adapter 配置")
         logger.info("[提示] 配置不正确会导致 Mirai 端出现错误提示。")
 
     else:
-        logger.info("[提示] 当前为正向 ws + http 模式，请确保你的 mirai api http 设置了正确的 ws 和 http 配置")
-        logger.info("[提示] 配置不正确或 Mirai 未登录 QQ 都会导致 【Websocket reconnecting...】 提示的出现。")
+        logger.info(
+            "[提示] 当前为正向 ws + http 模式，请确保你的 mirai api http 设置了正确的 ws 和 http 配置")
+        logger.info(
+            "[提示] 配置不正确或 Mirai 未登录 QQ 都会导致 【Websocket reconnecting...】 提示的出现。")
 
 
 cmd = Commander(app.broadcast)
@@ -285,7 +310,10 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
         if limit is None:
             return await app.send_message(event, f"{msg_type} {msg_id} 没有额度限制。")
         usage = ratelimit_manager.get_usage(msg_type, msg_id)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        current_time = time.strftime(
+            "%Y-%m-%d %H:%M:%S",
+            time.localtime(
+                time.time()))
         return await app.send_message(event,
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
@@ -305,7 +333,10 @@ async def show_rate(app: Ariadne, event: MessageEvent, msg_type: str, msg_id: st
         if limit is None:
             return await app.send_message(event, f"{msg_type} {msg_id} 没有额度限制。")
         usage = ratelimit_manager.get_draw_usage(msg_type, msg_id)
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+        current_time = time.strftime(
+            "%Y-%m-%d %H:%M:%S",
+            time.localtime(
+                time.time()))
         return await app.send_message(event,
                                       f"{msg_type} {msg_id} 的额度使用情况：{limit['rate']}条/小时， 当前已发送：{usage['count']}条消息\n整点重置，当前服务器时间：{current_time}")
     finally:
@@ -322,7 +353,8 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
             try:
                 with open(path, 'rb') as f:
                     guessed_str = from_bytes(f.read()).best()
-                    preset_data = str(guessed_str).replace("\n\n", "\n=========\n")
+                    preset_data = str(guessed_str).replace(
+                        "\n\n", "\n=========\n")
                 answer = f"预设名：{keyword}\n{preset_data}"
 
                 node = ForwardNode(
@@ -332,7 +364,7 @@ async def presets_list(app: Ariadne, event: MessageEvent, sender: Union[Friend, 
                     time=datetime.datetime.now()
                 )
                 nodes.append(node)
-            except:
+            except BaseException:
                 pass
 
         if not nodes:

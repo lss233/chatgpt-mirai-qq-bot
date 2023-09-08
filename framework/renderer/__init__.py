@@ -9,4 +9,8 @@ class Renderer:
 
     async def __aenter__(self): ...
 
-    async def __aexit__(self, exc_type: type[BaseException], exc: BaseException, tb): ...
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException],
+        exc: BaseException,
+        tb): ...

@@ -47,7 +47,8 @@ class PromptFlowBaseModel(BaseModel):
 def load_prompt(file_path: str) -> PromptFlowBaseModel:
     with open(file_path, "rb") as f:
         if guessed_str := from_bytes(f.read()).best():
-            return PromptFlowBaseModel.parse_obj(yaml.safe_load(str(guessed_str)))
+            return PromptFlowBaseModel.parse_obj(
+                yaml.safe_load(str(guessed_str)))
         else:
             raise ValueError("无法识别配置文件，请检查是否输入有误！")
 
@@ -132,6 +133,7 @@ async def execute_action_block(action_flow: List[ActionBlockBaseModel], context:
                 break
             except Exception as e:
                 logger.exception(e)
-                logger.error(f"[Prompt execution] failed\naction: {block.action}, \nname:{block.name}")
+                logger.error(
+                    f"[Prompt execution] failed\naction: {block.action}, \nname:{block.name}")
                 if i == block.retry and not block.fail_continue:
                     raise e

@@ -33,7 +33,8 @@ class Llm:
         else:
             logger.debug(f"[预设] 发送：{prompt}")
             item = None
-            async for item in self.ask(prompt): ...
+            async for item in self.ask(prompt):
+                ...
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 
@@ -43,5 +44,3 @@ class Llm:
     @classmethod
     def register(cls):
         pass
-
-

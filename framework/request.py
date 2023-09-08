@@ -16,7 +16,6 @@ class Request:
     conversation_context: Optional[ConversationContext] = None
     is_manager: bool = False
 
-
     @property
     def text(self):
         return str(self.message)

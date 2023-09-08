@@ -1,23 +1,20 @@
 import os
 import sys
-
-from quart import Quart
-
 sys.path.append(os.getcwd())
+
+import asyncio
+import creart
+import threading
+from quart import Quart
+from loguru import logger
+
+import constants
+from framework.utils.exithooks import hook
+from framework.tts import AzureTTSEngine, TTSEngine, EdgeTTSEngine
 from framework.accounts import account_manager
 
-from framework.tts import AzureTTSEngine, TTSEngine, EdgeTTSEngine
 
-import creart
-from asyncio import AbstractEventLoop
-import asyncio
-from framework.utils.exithooks import hook
-from loguru import logger
-import constants
-import threading
-
-loop = creart.create(AbstractEventLoop)
-
+loop = creart.create(asyncio.AbstractEventLoop)
 
 def setup_cloudflared(app: Quart):
     logger.info("尝试开启 Cloudflare Tunnel……")
@@ -36,7 +33,12 @@ def setup_cloudflared(app: Quart):
 
 tasks = []
 if constants.config.azure:
-    tasks.append(loop.create_task(TTSEngine.register("azure", AzureTTSEngine(constants.config.azure))))
+    tasks.append(
+        loop.create_task(
+            TTSEngine.register(
+                "azure",
+                AzureTTSEngine(
+                    constants.config.azure))))
 
 tasks.extend(
     (
@@ -74,6 +76,7 @@ if constants.config.qqchannel:
 
     bots.append(start_task())
 
+
 async def setup_web_service():
     from framework.platforms.onebot_bot import bot, start_http_app
     from framework.platforms.http_service import route as routes_http
@@ -87,11 +90,14 @@ async def setup_web_service():
         routes_wecom(bot.server_app)
 
     if constants.config.http.cloudflared:
-        threading.Thread(target=setup_cloudflared, args=(bot.server_app,)).start()
+        threading.Thread(
+            target=setup_cloudflared, args=(
+                bot.server_app,)).start()
 
     logger.info("启动 HTTP API 中……")
     for service_name, proto, uri in bot.server_app.service_routes:
-        logger.info(f"{service_name} 地址：{proto}://{constants.config.http.host}:{constants.config.http.port}{uri}")
+        logger.info(
+            f"{service_name} 地址：{proto}://{constants.config.http.host}:{constants.config.http.port}{uri}")
     await start_http_app()
 
 

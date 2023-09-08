@@ -5,6 +5,7 @@ from loguru import logger
 import signal
 from constants import config
 
+
 class ExitHooks(object):
     def __init__(self):
         self._orig_exit = None
@@ -35,7 +36,8 @@ def foo():
         logger.error("看样子程序似乎没有正常退出。")
         logger.exception(hooks.exception)
         logger.error("你可以在这里阅读常见问题的解决方案：")
-        logger.error("https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85")
+        logger.error(
+            "https://github.com/lss233/chatgpt-mirai-qq-bot/issues/85")
         raise hooks.exception
 
 
