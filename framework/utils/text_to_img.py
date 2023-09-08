@@ -9,6 +9,7 @@ from io import StringIO
 from tempfile import NamedTemporaryFile
 
 import aiohttp
+import unicodedata
 import asyncio
 import imgkit
 
@@ -17,7 +18,6 @@ from framework.utils.zipimporter_patch import patch
 
 import markdown
 import qrcode
-import unicodedata
 from PIL import Image
 from PIL import ImageDraw, ImageFont
 from charset_normalizer import from_bytes
@@ -330,16 +330,19 @@ async def text_to_image(text):
         with StringIO(html) as input_file:
             ok = False
             try:
-                # 调用imgkit将html转为图片
-                ok = await asyncio.get_event_loop().run_in_executor(None, imgkit.from_file, input_file,
-                                                                    temp_jpg_filename, {
-                                                                        "enable-local-file-access": "",
-                                                                        "allow": asset_folder,
-                                                                        "width": config.text_to_image.width,  # 图片宽度
-                                                                    }, None, None, None, imgkit_config)
-                # 调用PIL将图片读取为 JPEG，RGB 格式
-                image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
-                ok = True
+                if config.text_to_image.wkhtmltoimage:
+                    # 调用imgkit将html转为图片
+                    ok = await asyncio.get_event_loop().run_in_executor(None, imgkit.from_file, input_file,
+                                                                        temp_jpg_filename, {
+                                                                            "enable-local-file-access": "",
+                                                                            "allow": asset_folder,
+                                                                            "width": config.text_to_image.width,  # 图片宽度
+                                                                        }, None, None, None, imgkit_config)
+                    # 调用PIL将图片读取为 JPEG，RGB 格式
+                    image = Image.open(temp_jpg_filename, formats=['PNG']).convert('RGB')
+                    ok = True
+                else:
+                    ok = False
             except Exception as e:
                 logger.exception(e)
             finally:
@@ -353,6 +356,7 @@ async def text_to_image(text):
         image = await asyncio.get_event_loop().run_in_executor(None, text_to_image_raw, text)
 
     return image
+
 
 async def to_image(text) -> GraiaImage:
     img = await text_to_image(text=str(text))

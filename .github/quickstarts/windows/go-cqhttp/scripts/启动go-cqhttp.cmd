@@ -3,7 +3,7 @@
 
 TITLE [ChatGPT for QQ] go-cqhttp 端正在运行...
 
-setx /M PATH "%cd%\ffmpeg\bin;%PATH%"
+SET PATH="%cd%\ffmpeg\bin;%PATH%"
 
 cd go-cqhttp && go-cqhttp -faststart
 TITLE [ChatGPT for QQ] go-cqhttp 端已停止运行

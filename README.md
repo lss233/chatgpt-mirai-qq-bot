@@ -79,6 +79,21 @@
 
 如果你是手机党，可以看这个纯用手机的部署教程（使用 Linux 服务器）：https://www.bilibili.com/video/av949514538
 
+
+<details>
+    <summary>AidLux: 仅使用旧安卓手机进行部署</summary>
+执行下面这行命令启动自动安装脚本。  
+
+```bash
+bash -c "$(wget -O- https://gist.githubusercontent.com/B17w153/f77c2726c4eca4e05b488f9af58823a5/raw/4410356eba091d3259c48506fb68112e68db729b/install_bot_aidlux.sh)"
+```
+[部署教程](https://github.com/lss233/chatgpt-for-bot-docs/tree/main/bu-shu-jiao-cheng/kuai-su-bu-shu-jiao-cheng/linux-yi-jian-bu-shu-jiao-cheng.md)
+  
+
+</details>
+
+
+
 <details>
     <summary>Linux: 通过快速部署脚本部署 （新人推荐)</summary>
 执行下面这行命令启动自动部署脚本。  

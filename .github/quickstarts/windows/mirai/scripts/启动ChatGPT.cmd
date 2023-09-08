@@ -3,7 +3,7 @@
 
 TITLE [ChatGPT for QQ] ChatGPT 端正在运行...
 
-setx /M PATH "%cd%\ffmpeg\bin;%PATH%"
+SET PATH="%cd%\ffmpeg\bin;%PATH%"
 
 cd chatgpt && ..\python3.11\python.exe bot.py
 TITLE [ChatGPT for QQ] ChatGPT 端已停止运行

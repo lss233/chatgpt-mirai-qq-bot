@@ -34,6 +34,7 @@ LlmFactory.register("poe-claude", PoeAdapter, (PoeBotType.Claude,))
 LlmFactory.register("poe-chinchilla", PoeAdapter, (PoeBotType.ChatGPT,))
 LlmFactory.register("poe-chatgpt", PoeAdapter, (PoeBotType.ChatGPT,))
 LlmFactory.register("poe-nutria", PoeAdapter, (PoeBotType.Dragonfly,))
+LlmFactory.register("poe-nutria", PoeAdapter, (PoeBotType.Dragonfly,))
 
 # TODO: DrawingAIFactory.register_ai("yiyan", YiyanAdapter, ("drawing", ))
 

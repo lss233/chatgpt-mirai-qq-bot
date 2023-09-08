@@ -4,9 +4,10 @@ from contextlib import suppress
 from typing import Generator, List
 
 import aiohttp
+import re
 import asyncio
 from EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle, NotAllowedToAccess
-from ImageGen import ImageGenAsync
+from EdgeGPT.ImageGen import ImageGenAsync
 from framework.llm.llm import Llm
 from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
@@ -54,7 +55,8 @@ class BingAdapter(Llm, DrawAI):
         try:
             async for final, response in self.bot.ask_stream(prompt=prompt,
                                                              conversation_style=self.conversation_style,
-                                                             wss_link=constants.config.bing.wss_link):
+                                                             wss_link=constants.config.bing.wss_link,
+                                                             locale="zh-cn"):
                 if not response:
                     continue
 
@@ -87,9 +89,11 @@ class BingAdapter(Llm, DrawAI):
                         return
                 else:
                     # 生成中的消息
-                    parsed_content = re.sub(r"\[\^\d+\^]", "", response)
+                    parsed_content = re.sub(r"Searching the web for:(.*)\n", "", response)
+                    parsed_content = re.sub(r"```json(.*)```", "", parsed_content,flags=re.DOTALL)
+                    parsed_content = re.sub(r"Generating answers for you...", "", parsed_content)
                     if constants.config.bing.show_references:
-                        parsed_content = re.sub(r"\[(\d+)]: ", r"\1: ", parsed_content)
+                        parsed_content = re.sub(r"\[(\d+)\]: ", r"\1: ", parsed_content)
                     else:
                         parsed_content = re.sub(r"(\[\d+]: .+)+", "", parsed_content)
                     parts = re.split(image_pattern, parsed_content)
@@ -120,8 +124,8 @@ class BingAdapter(Llm, DrawAI):
         logger.debug(f"[Bing Image] Prompt: {prompt}")
         try:
             async with ImageGenAsync(
-                    next((cookie['value'] for cookie in self.bot.cookies if cookie['name'] == '_U'), None),
-                    False
+                    all_cookies=self.bot.chat_hub.cookies,
+                    quiet=True
             ) as image_generator:
                 images = await image_generator.get_images(prompt)
 
@@ -145,9 +149,17 @@ class BingAdapter(Llm, DrawAI):
                 logger.debug(f"[Bing AI] 下载完成：{resp.content_type} {url}")
                 return GraiaImage(data_bytes=await resp.read())
 
-    async def preset_ask(self, role: str, prompt: str):
-        yield None  # Bing 不使用预设功能
-
     @classmethod
     def register(cls):
         account_manager.register_type("bing", BingCookieAuth)
+    async def preset_ask(self, role: str, text: str):
+        if role.endswith('bot') or role in {'assistant', 'bing'}:
+            logger.debug(f"[预设] 响应：{text}")
+            yield text
+        else:
+            logger.debug(f"[预设] 发送：{text}")
+            item = None
+            async for item in self.ask(text): ...
+            if item:
+                logger.debug(f"[预设] Chatbot 回应：{item}")
+

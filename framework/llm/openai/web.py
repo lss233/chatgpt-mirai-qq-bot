@@ -1,6 +1,7 @@
 import datetime
 from typing import Generator, Union
 
+import revChatGPT
 from loguru import logger
 import revChatGPT.V1 as ChatGPTV1
 from revChatGPT.typings import Error as V1Error
@@ -43,7 +44,9 @@ class ChatGPTWebAdapter(Llm):
         if self.account.paid:
             self.supported_models.append('text-davinci-002-render-paid')
             self.supported_models.append('gpt-4')
+            self.supported_models.append('gpt-4-mobile')
             self.supported_models.append('gpt-4-browsing')
+            self.supported_models.append('gpt-4-plugins')
 
     async def switch_model(self, model_name):
         if (
@@ -96,6 +99,7 @@ class ChatGPTWebAdapter(Llm):
                 # 确保是当前的会话，才更新 parent_id
                 if self.conversation_id == resp["conversation_id"]:
                     self.parent_id = resp["parent_id"]
+
                 yield resp["message"]
             if last_response:
                 logger.debug(f"[ChatGPT-Web] {last_response['conversation_id']} - {last_response['message']}")

@@ -117,7 +117,7 @@ class MiddlewareBaiduCloud(Middleware):
             await response.send(text="[百度云文本审核] 判定出错\n以下是原消息：")
 
         except json.JSONDecodeError as e:
-            logger.error(f"[百度云文本审核] JSON decode error occurred: {e}")
+            logger.error(f"[百度云文本审核] JSON解码错误: {e}")
         except StopIteration as e:
             logger.error(f"[百度云文本审核] StopIteration exception occurred: {e}")
         return await _next(request, response)

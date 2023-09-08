@@ -16,8 +16,6 @@ from loguru import logger
 import constants
 import threading
 
-hook()
-
 loop = creart.create(AbstractEventLoop)
 
 
@@ -99,5 +97,6 @@ async def setup_web_service():
 
 bots.append(setup_web_service())
 
+hook()
 loop.run_until_complete(asyncio.gather(*bots))
 loop.run_forever()
