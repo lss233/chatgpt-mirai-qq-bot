@@ -62,7 +62,7 @@ class RateLimitManager:
 
         # 初始化
         if usage is None:
-            usage = {'type': _type, 'id': _id, 'count': 0, 'time': current_time}
+            usage = {'type': _type, 'id': _id, 'count': 0, 'time': current_time, 'day': current_day}
             self.draw_usage_db.insert(usage)
 
         return usage
@@ -73,15 +73,18 @@ class RateLimitManager:
         q = Query()
         usage = self.usage_db.get(q.fragment({"type": _type, "id": _id}))
         current_time = time.localtime(time.time()).tm_hour
+        current_day = time.localtime(time.time()).tm_mday
 
         # 删除过期的记录
-        if usage is not None and usage['time'] != current_time:
+        time_diff_dondition = (usage is not None and usage['time'] != current_time)
+        day_diff_condition = (usage is not None and usage['time'] == current_time and usage['day'] != current_day)
+        if time_diff_dondition or day_diff_condition:
             self.usage_db.remove(doc_ids=[usage.doc_id])
             usage = None
-
+            
         # 初始化
         if usage is None:
-            usage = {'type': _type, 'id': _id, 'count': 0, 'time': current_time}
+            usage = {'type': _type, 'id': _id, 'count': 0, 'time': current_time, 'day': current_day}
             self.usage_db.insert(usage)
 
         return usage
