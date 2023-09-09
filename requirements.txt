@@ -45,3 +45,4 @@ creart~=0.3.0
 pydub~=0.25.1
 httpcore~=0.17.3
 g4f~=0.0.2.6
+creart
