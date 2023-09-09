@@ -1,9 +1,9 @@
+import asyncio
 import re
 import time
 from io import BytesIO
 from typing import Generator
 
-import asyncio
 import httpx
 from PIL import Image
 from graia.ariadne.message.element import Image as GraiaImage
@@ -177,7 +177,8 @@ class YiyanAdapter(Llm):
         else:
             logger.debug(f"[预设] 发送：{prompt}")
             item = None
-            async for item in self.ask(prompt): ...
+            async for item in self.ask(prompt):
+                pass
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 

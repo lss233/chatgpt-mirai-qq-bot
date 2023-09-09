@@ -48,3 +48,5 @@ PyJWT~=2.7.0
 PyYAML~=6.0
 pycloudflared
 g4f~=0.0.2.6
+
+tempenv

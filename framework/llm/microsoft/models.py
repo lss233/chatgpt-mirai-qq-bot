@@ -1,10 +1,12 @@
-import httpx
 import json
+
+import httpx
 from pydantic import Field
 
 import constants
 from framework.accounts import AccountInfoBaseModel
 from framework.exceptions import LLmAuthenticationFailedException
+
 
 class BingCookieAuth(AccountInfoBaseModel):
     cookie_content: str = Field(

@@ -1,7 +1,8 @@
+from io import BytesIO
 from typing import List, Union
 
 import edge_tts
-from io import BytesIO
+
 import constants
 from framework.exceptions import TTSSpeakFailedException
 from framework.tts.tts import TTSEngine, TTSVoice, EmotionMarkupText, TTSResponse, VoiceFormat

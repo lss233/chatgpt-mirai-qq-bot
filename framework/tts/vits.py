@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 
 from framework.tts import TTSEngine
 from framework.tts.tts import EmotionMarkupText, TTSVoice, TTSResponse

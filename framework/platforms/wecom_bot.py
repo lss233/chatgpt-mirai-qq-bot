@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import functools
 from io import BytesIO
 
-import asyncio
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
 from loguru import logger

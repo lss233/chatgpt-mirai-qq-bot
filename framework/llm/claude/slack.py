@@ -1,9 +1,8 @@
 import json
+import uuid
 from typing import Generator
 
 import httpx
-import uuid
-from loguru import logger
 
 from framework.accounts import account_manager
 from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \

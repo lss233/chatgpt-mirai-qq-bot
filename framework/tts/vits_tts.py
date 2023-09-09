@@ -1,7 +1,8 @@
 import regex as re
-from loguru import logger
-from constants import config
 from aiohttp import ClientSession, ClientTimeout, FormData
+from loguru import logger
+
+from constants import config
 
 __all__ = ['VitsAPI']
 
@@ -86,7 +87,12 @@ class VitsAPI:
         return integer_number
 
     async def get_voice_data(self, text, lang, voice_type):
-        url = f"{config.vits.api_url}?text={text}&lang={lang}&id={self.id}&format={voice_type}&length={config.vits.speed}"
+        url = f"{config.vits.api_url}?" \
+              f"text={text}&" \
+              f"lang={lang}&" \
+              f"id={self.id}&" \
+              f"format={voice_type}&" \
+              f"length={config.vits.speed}"
 
         async with ClientSession(timeout=ClientTimeout(total=config.vits.timeout)) as session:
             try:

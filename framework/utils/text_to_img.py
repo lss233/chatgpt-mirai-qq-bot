@@ -1,22 +1,17 @@
+import asyncio
 import base64
 import itertools
 import os
 import pathlib
 import shutil
 import textwrap
+import unicodedata
 from io import BytesIO
 from io import StringIO
 from tempfile import NamedTemporaryFile
 
 import aiohttp
-import unicodedata
-import asyncio
 import imgkit
-
-# Do not delete this line, it has be loaded **BEFORE** markdown
-from framework.utils.zipimporter_patch import patch
-
-import markdown
 import qrcode
 from PIL import Image
 from PIL import ImageDraw, ImageFont
@@ -30,6 +25,10 @@ from pygments.formatters import HtmlFormatter
 from pygments.styles.xcode import XcodeStyle
 
 from config import Config
+
+# Do not delete this line, it has be loaded **BEFORE** markdown
+from framework.utils.zipimporter_patch import patch
+import markdown
 
 patch()
 

@@ -1,17 +1,17 @@
 from __future__ import annotations
-import contextlib
+
+import os
+import sys
+import urllib.request
 from typing import List, Union, Literal, Dict, Optional
 from urllib.parse import urlparse
 
+import pydantic
 import requests
-from pydantic import BaseModel, BaseConfig, Extra, Field
+import toml
 from charset_normalizer import from_bytes
 from loguru import logger
-import os
-import sys
-
-import toml
-import urllib.request
+from pydantic import BaseModel, BaseConfig, Extra, Field
 
 from framework.utils import network
 
@@ -22,6 +22,12 @@ class Onebot(BaseModel):
         title="管理员 QQ",
         description="此 QQ 可以发送管理员命令"
     )
+
+    class Config:
+        title = 'OneBot 协议'
+        schema_extra = {
+            "description": "点击 [这里](https://onebot.dev/introduction.html) 查看介绍。"
+        }
 
 
 class Mirai(BaseModel):
@@ -123,17 +129,28 @@ class WecomBot(BaseModel):
     )
 
 
-class QQChannel(BaseModel):
+class QQRobot(BaseModel):
     appid: str = Field(
-        title="Appid",
-        description="QQ Channel 的 App ID",
+        title="AppId",
+        description="QQ 机器人的 App ID",
         default=None
     )
     token: str = Field(
-        title="Token",
-        description="QQ Channel 的 Token",
+        title="机器人令牌",
+        description="以机器人身份调用 OpenAPI",
         default=None
     )
+    secret: str = Field(
+        title="机器人密钥",
+        description="用于 OAuth 场景",
+        default=None
+    )
+
+    class Config:
+        title = 'QQ 官方机器人'
+        schema_extra = {
+            "description": "申请地址：[QQ 开放平台](https://q.qq.com/#/)"
+        }
 
 
 class OpenAIGPT3Params(BaseModel):
@@ -169,96 +186,11 @@ class OpenAIGPT3Params(BaseModel):
     )
 
 
-class OpenAIAuths(BaseModel):
-    browserless_endpoint: Optional[str] = "https://chatgpt-proxy.lss233.com/api/"
-    """自定义无浏览器登录模式的接入点"""
-    api_endpoint: Optional[str] = None
-    """自定义 OpenAI API 的接入点"""
-
-    gpt_params: OpenAIParams = OpenAIParams()
-
-    accounts: List[Union[OpenAIEmailAuth,
-                         OpenAISessionTokenAuth,
-                         OpenAIAccessTokenAuth,
-                         OpenAIAPIKey]] = []
-
-
-class OpenAIAuthBase(BaseModel):
-    mode: str = "browserless"
-    """OpenAI 的登录模式，可选的值：browserless - 无浏览器登录 browser - 浏览器登录"""
-    proxy: Union[str, None] = None
-    """可选的代理地址"""
-    driver_exec_path: Union[str, None] = None
-    """可选的 Chromedriver 路径"""
-    browser_exec_path: Union[str, None] = None
-    """可选的 Chrome 浏览器路径"""
-    conversation: Union[str, None] = None
-    """初始化对话所使用的UUID"""
-    paid: bool = False
-    """使用 ChatGPT Plus"""
-    gpt4: bool = False
-    """使用 GPT-4"""
-    model: Optional[str] = None
-    """使用的默认模型，此选项优先级最高"""
-    verbose: bool = False
-    """启用详尽日志模式"""
-    title_pattern: str = ""
-    """自动修改标题，为空则不修改"""
-    auto_remove_old_conversations: bool = False
-    """自动删除旧的对话"""
-
-    class Config(BaseConfig):
-        extra = Extra.allow
-
-
-class OpenAIEmailAuth(OpenAIAuthBase):
-    email: str
-    """OpenAI 注册邮箱"""
-    password: str
-    """OpenAI 密码"""
-    isMicrosoftLogin: bool = False
-    """是否通过 Microsoft 登录"""
-
-
-class OpenAISessionTokenAuth(OpenAIAuthBase):
-    session_token: str
-    """OpenAI 的 session_token"""
-
-
-class OpenAIAccessTokenAuth(OpenAIAuthBase):
-    access_token: str
-    """OpenAI 的 access_token"""
-
-
-class OpenAIAPIKey(OpenAIAuthBase):
-    api_key: str
-    """OpenAI 的 api_key"""
-
-
-class PoeCookieAuth(BaseModel):
-    p_b: str
-    """登陆 poe.com 后 Cookie 中 p_b 的值"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-
 class BingCookiePath(BaseModel):
     cookie_content: str
     """Bing 的 Cookie 文件内容"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
-
-
-class BardCookiePath(BaseModel):
-    cookie_content: str
-    """Bard 的 Cookie 文件内容"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-
-class PoeAuths(BaseModel):
-    accounts: List[PoeCookieAuth] = []
-    """Poe 的账号列表"""
 
 
 class TTSAccounts(BaseModel):
@@ -291,60 +223,6 @@ class BingAuths(BaseModel):
     """Bing 的最大消息数，仅展示用"""
 
 
-class BardAuths(BaseModel):
-    accounts: List[BardCookiePath] = []
-    """Bard 的账号列表"""
-
-
-class YiyanCookiePath(BaseModel):
-    BDUSS: Optional[str] = None
-    """百度 Cookie 中的 BDUSS 字段"""
-    BAIDUID: Optional[str] = None
-    """百度 Cookie 中的 BAIDUID 字段"""
-    cookie_content: Optional[str] = None
-    """百度 Cookie （已弃用）"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-
-class XinghuoCookiePath(BaseModel):
-    ssoSessionId: str
-    """星火 Cookie 中的 ssoSessionId 字段"""
-    fd: Optional[str] = ""
-    """星火请求中的 fd 字段"""
-    GtToken: Optional[
-        str] = "R0VFAAYyNDAzOTU0YzM5Y2M0ZTRlNDY2MTE2MDA4ZGZlYjZjMGQzNGMyMGY0YjQ1NTA1NDg3OWQ0ZWJlOTk0NzQxNGI1MWUzM2IzZDUyZTEyMGM3MWYxNjlmNWY2YmYwMWMxNDI2YzIxOTlmZjMzYTI5YmY3YjQ1M2RjZGQwZWNjMDdiYjMzMmY4OTE2OTRhYTk1OWIyZWVlNzFjNmI5ZWFmY2MxNDFkNjk2MWYzYWQ3ZDAyYjZkM2U0YTllYWZlOTM0Njc4NmMyZmQ4NTRiYWViMTI2NjhlZmFhMWRiNmRmMDc5MzQxN2EyYzMzZDhiN2M4NzJjMzQ3YTYwNDFiMGZkZjkxN2Q2OTRlOWFiZWMwN2U0ZTg3Y2UwM2UxNDlmODBjMzA0MmE4NTAyNzhiNjU0MTU3ZjBlMmMzN2UxMTQ0MjA3ZWE0MDIzZTMyNDRiMjJmMjcwYjE5NGZiMWJhMmFlNGQ4YzkxMWNmZmQ0OGQzYzBlYmQxMTk1ZjE5MDJmMTVjNWUyMDI3ZmNmMDI0ODIxYWJiMWZhNzc3MTExOTBiZmZhMWRhYmRlYzVhYTkwMGRlMjU2YjFhNGQ4ZGYwYzQ0ZjI4MGJiNzcyNGIyOTlkYjU0ZGMyYjllY2U1NjNlYjQzZWE5MzhkMmQ3NTFjMTVkMGY0NDNkYjdhNzdlMmQ4NzM1NTQ3NDI0ZDBjNzRmMTA0NzY4NmI2M2UwZWRiMDM0ZjNhODc1NGZkYjgxMDBlNDA0MmZlZDYzZmFlYmYyNTExMTI5NTIyOTg0ZDMzN2UxYTBhN2NiZWZlZGMxOTVjOWQ2MGVhOTMyY2E5M2VhYmZkODI1YjBiMzU0ZDViYzUzMmM5YzI5NjA2ZWU3MmFmNGYwNGRkNTlhNDEzYzJiZmYyODllZjBkNWJlNWU5ZjZkZWVlMjk4MDUyMTU2OTQwNzE3ZDQ5M2NlM2E4YmIwN2YyZjE4MzgzZmEwNjQxNGZlYmFlNzdmN2QwNTZlYTQ3NDEwMmNlZjU1YmZhNjNjMDM2MmI5OTU2NjBkZjg4YzFjYzA2MmY0NjU2OTE0ZGIwMWE3ODQxNjA2YjdlZWE3ZDJjZTM4NjE5YTcwYjg0MmVkZTBmM2Y1MzI3ZGI2YmU5M2ZjYTNiMzg4OTJkOGQ3NWI4Y2M4YjQ3NjBkNDExZmQ3ZmFlNGIxY2YwMGE5ZDk2MmM2ZDYzMWE1YmRjNmYzMmU0Y2U5MDYwOGNiMDMzMTlkZGE2ZDlkMGU4OGUwMzUwMDkwZTQ5MGRhMmY5ODU1MGU4ZmQ1ODc3NmQ0Yjg5MDM1Y2FiNTg3MjMyMGMwOTJmOTUyODkwYmQ3YjIwYTMzODI5Y2MwY2VlZTE0MWY5N2FiN2IzYmJjNDg3MWM0M2E3ZTViYWNjZWZiZjg4MjM1ZDRiNWMzMjBjM2IxNGM2ZWE2NWVkZjc0OWI0ZDNlNzZjOWYyMTkwZDM0ZTVkYTZkNjM1NjFmZWNmMWYyODIxMTMyNjIyOGFjMWU0MTA2NjY1OWQ4Y2JlZTRmMjIwYzI2NjNmNzYxYzBhZGEyY2VkZjkyNDkzZWExNzFhN2NhZThiNTMxNDNmNzEzM2RhY2UyOWNmYjQ4ZTk5YzE2YjcyM2ZmZTJjZDk5MjU0NGM5OWNhOTFlMDRlMWNiNTQ5ZjU4MGQxY2I4YWU5MWU0MDlmZDZmYjhjNGYzYTRmODA2ZWFiZjRlMDI3OWJmOTM4NmQwN2I5MTBmYzlkYzNjMGM2ODIzYjg4OWFjNWZkZjBhYWNjYzNhYmU0MDRmMTg3Y2Q0MGNmMjcyNWFmY2VkYzAzYmVjZGY2MmMzNWRkNzQ5MGExYjQ1MDdlNTczNDI1OTliYTJhMjNmM2FmNDg1NGM3ODZkYzBiZWIzYTllMGEwYWUyMTllNmZhNzYyN2YyNTI5ZDc3YzQ3MGY1YzIxNzI1NzhhM2EwYzM3NzM0NTM4MTlhYjE3ODJiNmRmOGM1NTI2YjQzZjUzNTZlNDVhM2Q5MDc4N2IwZGNkZTdmYmYzM2ZkMWQ2NGY2NjdmOWYzNDIzZjJkMmU2NzgyMTY5ZWM3MTE1Y2E3MDdlYWRhOGJmNzI0OTJmMGM3Y2QxNjJjMDI4NmFjOThmNDhmOWEyYWQzZDAwYzg5YmViYzA3NTA4ZjYwYzE1OGVmYjk5ZjBkOGY4MzQ1ODI5Yzg4Yzc0YTA3OGQyZjU5NTFjNmQzNTc1N2QyNjI0NWVjNTk0Y2JkMzc2YmVhMGNiZmEzMWYwZTA5MGRhYzhlYzNlYjQ0ZGIxN2M4MWE5NWY4MTE4MDAwNDJkMjQ2MmMzMjk2ODU5Yjg3ZjRhZmI1MDYxM2MxY2FiYTZkZDI0ODdiZDQ3MmVmNzBjMzFkN2YwNjZmZTMxOThiYzFhOWFlZjIwZTQzY2FlNDBkMDkxZWEzMmNiYTBhNDM0YmQ2ZDU2NDQ3YTU4YTNjODZjYTk0NjQ3MGNiZjM4ZjM3ZjU2YTZkZmQ4MDY0OWEyZGU3MzllN2EyZWE3M2RlNDE5NDljNmI4ODU2YmE5ZTM4Njc2YmRhNzA1MWE5MjlmMWU1YTczZjEwYTg2ZjgwNDJjZDQxZTMwYjVjMTA1ODYzNzlhMGY3NmRlOWExODZiZmU2N2Y5NzZhOTY3MTg0ZjNkYmFhYWU0YjdmNmFlMjM5MTlkNDljNDNiODc4MzRjMjA0MzY4YThkOGEyYzRkNjc3MzhkMTU0NmFiNTVjMWE0YTQ0Y2M3MzE5OGM4Y2YzOTAxZGI0ZGY1MzFmNGY5NTI4MDE5MjZjN2I2MDg1YjQzODI0YmFiMTQ3NTIxZTYwNWQzYzhmZjljYjNmOTRlNzg3MDJiYzc1MzE4NTRhN2M3ZDE2OWQyMzcyYjUzMDBhNGQzNzhhYWNjOTk3ZDM1ZTZjODYwZGQwMWNlYTMwZjU1YTFlMjQxMTMxMTQwZjQwMWJmZGJkNWU3NzA4OWE5YzljNDIzY2E2ODk3OGE2ODMwYWEzYTlkZGJiZmMyYTE3NGZhOTc4NmI3ZTYyYmIzNTZlNjRiMzBiYzI4ZDMyYTVjMDMxYzgxZjZlOGEyMGMwNWFlNjJlYWM2ZWExNDY5OTFiZjk1Yzc4NzQzMjMwYTIyNzk1MWRlMzI4NjFjYjU5ZGQ3N2QxOWQ5MTMxNDgwYmY2ZTgyYTkwNzgwMTBlYjAzMzIzYjcxNGY0NzM5NDNmY2MwNTM3ODJmOTIwMGFkNzlmNzZiNjkxNDdmZGQwOTdhZTUwMTk1YjE4M2Q2YWM5NjVmN2NkNDNhMGI3MTEwOTNkZTM5NGM3OTYwNjNlNTBhMDAyNzNkOTE2MzQzODY2MzFkZThkMzViYTUxNmI4MTIyZWZjNzE5MTU0OTQ2NTIyYzc0YjhmNTY2OTMwZDM3YmIwZjJkM2Q4ODgyZGQwZTU0YTcyODM1NmYyZDk2ZWVlNzZiYmZlYjI1YTFjM2ZhNTg5OGY5OTM0YTc4NTBjYzRlNjY4NjE5YWMzOTg2MmE5NDhjMDVhMTc0MzE0MjIwOGFhMjk5OGY2ZmIwMmZlZWI2YTk0M2Q1NzcyN2JhZWU4ZmY5NGFmZjgzZGVjMTUyZmYxOWVkYmM1Y2RiZDkzYzBiNDc1OTEzMjFhYTY4MjI1MDA4ODhmYWJhMzAzNjdlZmRjYmJjNzhjYzE5MWI1MDViNTlmMjBhY2RiYTYzMzQyYzE1YTI2M2NiOGE1NDQ3NzQ4ODU3YWYxMzllMDJlMzY0ODlkNjRlNTRiMTc5YTgwOGRmMWU5YTk1ODY2YzE2YTYzM2EyZmUyYjA2MzM4OTI5YTc4MmRlMGFkZDgwZDZiYWU3Y2M1ZjljMWEzYzA5MGU4MTVlNjc2MGJjMzA0ZWU3ZmY1MDM5OGRiNDc0YTJkNWMzYWVhNTMxZjc0ZDU3NGNhZGNhZTIzZmZiZjcyY2FhNmU5YTNjNjFhYzNiMDJjNDdjYzQzZGJhYjA2NTgwNTkyZmE5YjMyNGMxMGJhMGRjNjgzZWIyYzRiNDg4NzFiMjk2YmIxNDBhMWUyZWRlOTE0NmY3MThkZTE4ZWU0M2QwZTk4NWY3NWQ1YWYyYjlkNjU5ODM5YzQwZWFiMzg2"
-    """星火请求中的 GtToken 字段"""
-    sid: Optional[str] = ""
-    """星火请求中的 sid 字段"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-
-class YiyanAuths(BaseModel):
-    accounts: List[YiyanCookiePath] = []
-    """文心一言的账号列表"""
-
-
-class XinghuoAuths(BaseModel):
-    accounts: List[XinghuoCookiePath] = []
-    """讯飞星火大模型的账号列表"""
-
-
-class ChatGLMAPI(BaseModel):
-    api_endpoint: str
-    """自定义 ChatGLM API 的接入点"""
-    max_turns: int = 10
-    """最大对话轮数"""
-    timeout: int = 120
-    """请求超时时间（单位：秒）"""
-
-
-class ChatGLMAuths(BaseModel):
-    accounts: List[ChatGLMAPI] = []
-    """ChatGLM的账号列表"""
-
-
 class G4fModels(BaseModel):
     provider: str
     """ai提供方"""
@@ -359,25 +237,6 @@ class G4fModels(BaseModel):
 class G4fAuths(BaseModel):
     accounts: List[G4fModels] = []
     """支持的模型"""
-
-
-class SlackAppAccessToken(BaseModel):
-    channel_id: str
-    """负责与机器人交互的 Channel ID"""
-
-    access_token: str
-    """安装 Slack App 时获得的 access_token"""
-
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-    app_endpoint: str = "https://chatgpt-proxy.lss233.com/claude-in-slack/backend-api/"
-    """API 的接入点"""
-
-
-class SlackAuths(BaseModel):
-    accounts: List[SlackAppAccessToken] = []
-    """Slack App 账号信息"""
 
 
 class TextToImage(BaseModel):
@@ -927,20 +786,13 @@ class Config(BaseModel):
     discord: Optional[DiscordBot] = None
     http: Optional[HttpService] = HttpService()
     wecom: Optional[WecomBot] = None
-    qqchannel: Optional[QQChannel] = None
+    qqrobot: Optional[QQRobot] = None
 
     # === Account Settings ===
     accounts: AccountsModel = AccountsModel()
 
-    openai: OpenAIAuths = OpenAIAuths()
     bing: BingAuths = BingAuths()
-    bard: BardAuths = BardAuths()
     azure: Optional[AzureConfig]
-    yiyan: YiyanAuths = YiyanAuths()
-    chatglm: ChatGLMAuths = ChatGLMAuths()
-    poe: PoeAuths = PoeAuths()
-    slack: SlackAuths = SlackAuths()
-    xinghuo: XinghuoAuths = XinghuoAuths()
     gpt4free: G4fAuths = G4fAuths()
 
     # === Response Settings ===
@@ -994,8 +846,6 @@ class Config(BaseModel):
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
 
-    OpenAIAuths.update_forward_refs()
-
     @staticmethod
     def __load_json_config() -> Config:
         try:
@@ -1012,28 +862,21 @@ class Config(BaseModel):
 
     @staticmethod
     def load_config() -> Config:
+        # PaaS 部署兼容
         if env_config := os.environ.get('CHATGPT_FOR_BOT_FULL_CONFIG', ''):
             return Config.parse_obj(toml.loads(env_config))
+
+        if not os.path.exists('config.cfg'):
+            logger.info("未检测到配置文件，创建中……")
+            Config.save_config(Config())
+
         try:
-            if (
-                    not os.path.exists('config.cfg')
-                    or os.path.getsize('config.cfg') <= 0
-            ) and os.path.exists('config.json'):
-                logger.info("正在转换旧版配置文件……")
-                Config.save_config(Config.__load_json_config())
-                logger.warning(
-                    "提示：配置文件已经修改为 config.cfg，原来的 config.json 将被重命名为 config.json.old。")
-                try:
-                    os.rename('config.json', 'config.json.old')
-                except Exception as e:
-                    logger.error(e)
-                    logger.error("无法重命名配置文件，请自行处理。")
             with open("config.cfg", "rb") as f:
                 if guessed_str := from_bytes(f.read()).best():
                     return Config.parse_obj(toml.loads(str(guessed_str)))
                 else:
                     raise ValueError("无法识别配置文件，请检查是否输入有误！")
-        except Exception as e:
+        except pydantic.PydanticValueError as e:
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
             exit(-1)
@@ -1046,7 +889,7 @@ class Config(BaseModel):
                     config.dict()).encode(
                     sys.getdefaultencoding())
                 f.write(parsed_str)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=bare-exception
             logger.exception(e)
             logger.warning("配置保存失败。")
 

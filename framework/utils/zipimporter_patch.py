@@ -1,7 +1,7 @@
 from zipimport import zipimporter
 
 
-# zipimport patch to fix Markdown module unable installing to embedded Python
+# zipimport patch to fix Markdown module unable to install on embedded Python edition
 # Refer to https://gitee.com/zmister/MrDoc/issues/I3P1AK#note_5014508_link
 def create_module(self, spec):
     return None

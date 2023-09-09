@@ -1,27 +1,27 @@
 import ctypes
 import os
-from typing import Generator
-
-import httpx
-import openai
 import tempfile
 from io import BytesIO
+from typing import Generator
 from typing import List
 
 import aiohttp
-from graia.ariadne.message.element import Image as GraiaImage
+import httpx
+import openai
 from PIL import Image
+from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
 from revChatGPT.V3 import Chatbot as OpenAIChatbot
 from revChatGPT.typings import APIConnectionError
+from tempenv import TemporaryEnvironment
 
 import constants
 from config import OpenAIGPT3Params
 from framework.accounts import account_manager
-from framework.exceptions import LlmRequestTimeoutException, LlmRequestFailedException
-from framework.llm.openai.models import OpenAIAPIKeyAuth
-from framework.llm.llm import Llm
 from framework.drawing import DrawAI
+from framework.exceptions import LlmRequestTimeoutException, LlmRequestFailedException
+from framework.llm.llm import Llm
+from framework.llm.openai.models import OpenAIAPIKeyAuth
 
 
 class ChatGPTAPIAdapter(Llm, DrawAI):
@@ -100,12 +100,14 @@ class ChatGPTAPIAdapter(Llm, DrawAI):
                 f"清理 token，历史记录遗忘后使用 token 数：{str(self.bot.get_token_count(self.session_id))}"
             )
 
-        os.environ['API_URL'] = f'{openai.api_base}/chat/completions'
         full_response = ''
         try:
-            async for resp in self.bot.ask_stream_async(prompt=prompt, role=self.hashed_user_id, convo_id=self.session_id):
-                full_response += resp
-                yield full_response
+            with TemporaryEnvironment({"API_URL": f'{self.api_info.api_endpoint}/chat/completions'}):
+                async for resp in self.bot.ask_stream_async(prompt=prompt,
+                                                            role=self.hashed_user_id,
+                                                            convo_id=self.session_id):
+                    full_response += resp
+                    yield full_response
             logger.debug(f"[ChatGPT-API:{self.bot.engine}] 响应：{full_response}")
             logger.debug(f"使用 token 数：{str(self.bot.get_token_count(self.session_id))}")
         except httpx.TimeoutException as e:

@@ -1,7 +1,6 @@
 import g4f
 from loguru import logger
 
-from adapter.common.chat_helper import ChatMessage, ROLE_USER
 from config import G4fModels
 
 
@@ -14,10 +13,7 @@ def g4f_check_account(account: G4fModels):
             provider=eval(
                 account.provider),
             messages=[
-                vars(
-                    ChatMessage(
-                        ROLE_USER,
-                        "hello"))],
+                {'role': 'user', 'content': 'hello'}],
         )
         logger.debug(
             f"g4f model ({vars(account)}) is active. hello -> {response}")

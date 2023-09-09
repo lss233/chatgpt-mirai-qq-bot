@@ -1,21 +1,21 @@
 from enum import Enum
 from typing import Optional
 
-from EdgeGPT import ConversationStyle
+from EdgeGPT.EdgeGPT import ConversationStyle
 
-from framework.llm import LlmFactory
-
+from config import Config
 from framework.drawing import DrawingAIFactory, SDWebUI
-from framework.llm import YiyanAdapter
+from framework.llm import BardAdapter
+from framework.llm import BingAdapter
+from framework.llm import ChatGLM6BAdapter
 from framework.llm import ChatGPTAPIAdapter
 from framework.llm import ChatGPTWebAdapter
 from framework.llm import ClaudeInSlackAdapter
-from framework.llm import BardAdapter
-from framework.llm import BingAdapter
+from framework.llm import LlmFactory
 from framework.llm import PoeAdapter
+from framework.llm import YiyanAdapter
+from framework.llm.iflytek.web import XinghuoWebAdapter
 from framework.llm.quora.poe_web import BotType as PoeBotType
-from framework.llm import ChatGLM6BAdapter
-from config import Config
 
 LlmFactory.register("chatgpt-web", ChatGPTWebAdapter, ())
 LlmFactory.register("chatgpt-api", ChatGPTAPIAdapter, ())
@@ -35,6 +35,7 @@ LlmFactory.register("poe-chinchilla", PoeAdapter, (PoeBotType.ChatGPT,))
 LlmFactory.register("poe-chatgpt", PoeAdapter, (PoeBotType.ChatGPT,))
 LlmFactory.register("poe-nutria", PoeAdapter, (PoeBotType.Dragonfly,))
 LlmFactory.register("poe-nutria", PoeAdapter, (PoeBotType.Dragonfly,))
+LlmFactory.register("xinghuo-web", XinghuoWebAdapter, ())
 
 # TODO: DrawingAIFactory.register_ai("yiyan", YiyanAdapter, ("drawing", ))
 

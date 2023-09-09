@@ -1,30 +1,33 @@
-from io import BytesIO
-
+import base64
 from typing import Generator
 
-from adapter.botservice import BotAdapter
-from config import XinghuoCookiePath
-from constants import botManager
-from exceptions import BotOperationNotSupportedException
-from loguru import logger
 import httpx
-import base64
-from PIL import Image
+from loguru import logger
+
+from framework.accounts import account_manager
+from framework.exceptions import LlmOperationNotSupportedException
+from framework.llm.iflytek.models import XinghuoWebCookieAuth
+from framework.llm.llm import Llm
 
 
-class XinghuoAdapter(BotAdapter):
+def __check_response(resp):
+    if int(resp['code']) != 0:
+        raise Exception(resp['msg'])
+
+
+class XinghuoWebAdapter(Llm):
     """
+    星火网页版
     Credit: https://github.com/dfvips/xunfeixinghuo
     """
-    account: XinghuoCookiePath
+    account: XinghuoWebCookieAuth
     client: httpx.AsyncClient
 
     def __init__(self, session_id: str = ""):
         super().__init__(session_id)
         self.session_id = session_id
-        self.account = botManager.pick('xinghuo-cookie')
-        self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers(self.client)
+        self.account = account_manager.pick('xinghuo-cookie')
+        self.client = self.account.get_client()
         self.conversation_id = None
         self.parent_chat_id = ''
 
@@ -34,29 +37,8 @@ class XinghuoAdapter(BotAdapter):
         })
 
     async def rollback(self):
-        raise BotOperationNotSupportedException()
+        raise LlmOperationNotSupportedException()
 
-    async def on_reset(self):
-        await self.client.aclose()
-        self.client = httpx.AsyncClient(proxies=self.account.proxy)
-        self.__setup_headers(self.client)
-        self.conversation_id = None
-        self.parent_chat_id = 0
-
-    def __setup_headers(self, client):
-        client.headers['Cookie'] = f"ssoSessionId={self.account.ssoSessionId};"
-        client.headers[
-            'User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
-        client.headers['Sec-Fetch-User'] = '?1'
-        client.headers['Sec-Fetch-Mode'] = 'navigate'
-        client.headers['Sec-Fetch-Site'] = 'none'
-        client.headers['Sec-Ch-Ua-Platform'] = '"Windows"'
-        client.headers['Sec-Ch-Ua-Mobile'] = '?0'
-        client.headers['Sec-Ch-Ua'] = '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"'
-        client.headers['Origin'] = 'https://xinghuo.xfyun.cn'
-        client.headers['Referer'] = 'https://xinghuo.xfyun.cn/desk'
-        client.headers['Connection'] = 'keep-alive'
-        client.headers['X-Requested-With'] = 'XMLHttpRequest'
 
     async def new_conversation(self):
         req = await self.client.post(
@@ -64,7 +46,7 @@ class XinghuoAdapter(BotAdapter):
             json={}
         )
         req.raise_for_status()
-        self.__check_response(req.json())
+        __check_response(req.json())
         self.conversation_id = req.json()['data']['id']
         self.parent_chat_id = 0
 
@@ -118,6 +100,6 @@ class XinghuoAdapter(BotAdapter):
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
 
-    def __check_response(self, resp):
-        if int(resp['code']) != 0:
-            raise Exception(resp['msg'])
+    @classmethod
+    def register(cls):
+        account_manager.register_type("xinghuo-cookie", XinghuoWebCookieAuth)

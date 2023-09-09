@@ -1,16 +1,15 @@
 import datetime
 from typing import Generator, Union
 
-import revChatGPT
-from loguru import logger
 import revChatGPT.V1 as ChatGPTV1
+from loguru import logger
 from revChatGPT.typings import Error as V1Error
 
 from framework.accounts import account_manager
-from framework.llm.openai.models import OpenAIAccessTokenAuth, OpenAIWebAuthBaseModel
-from framework.llm.llm import Llm
 from framework.chatbot.chatgpt import ChatGPTBrowserChatbot
 from framework.exceptions import LlmRateLimitException, LlmConcurrentMessageException
+from framework.llm.llm import Llm
+from framework.llm.openai.models import OpenAIAccessTokenAuth, OpenAIWebAuthBaseModel
 
 
 class ChatGPTWebAdapter(Llm):
@@ -127,5 +126,4 @@ class ChatGPTWebAdapter(Llm):
 
     @classmethod
     def register(cls):
-        ChatGPTV1.BASE_URL = 'https://chatgpt-proxy.lss233.com/api/'
         account_manager.register_type("chatgpt-web", Union[OpenAIAccessTokenAuth])

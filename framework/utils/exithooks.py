@@ -1,8 +1,10 @@
 import atexit
-import sys
 import os
-from loguru import logger
 import signal
+import sys
+
+from loguru import logger
+
 from constants import config
 
 
@@ -12,7 +14,7 @@ class ExitHooks(object):
         self.exit_code = None
         self.exception = None
 
-    def hook(self):
+    def replace_exit(self):
         self._orig_exit = sys.exit
         sys.exit = self.exit
         sys.excepthook = self.exc_handler
@@ -25,11 +27,7 @@ class ExitHooks(object):
         self.exception = exc
 
 
-hooks = ExitHooks()
-hooks.hook()
-
-
-def foo():
+def foo(hooks):
     if hooks.exit_code is not None or hooks.exception is not None:
         if isinstance(hooks.exception, (KeyboardInterrupt, type(None))):
             return
@@ -41,18 +39,16 @@ def foo():
         raise hooks.exception
 
 
-atexit.register(foo)
-
-
 def exit_gracefully(signal, frame):
-    if config.http:
-        logger.warning("检测到HTTP配置，将强制关闭程序……")
-        os._exit(0)
     logger.warning("程序即将退出...".format(signal))
-    sys.exit(0)
+    os._exit(0)
 
 
 def hook():
+    hooks = ExitHooks()
+    hooks.replace_exit()
+    atexit.register(foo, hooks)
+
     signal.signal(signal.SIGINT, exit_gracefully)
     signal.signal(signal.SIGTERM, exit_gracefully)
     signal.signal(signal.SIGABRT, exit_gracefully)

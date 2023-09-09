@@ -2,19 +2,18 @@ from typing import Generator
 
 import g4f
 
-from adapter.botservice import BotAdapter
-from adapter.common.chat_helper import ChatMessage, ROLE_ASSISTANT, ROLE_USER
 from config import G4fModels
-from constants import botManager
+from framework.accounts import account_manager
+from framework.llm import Llm
 
 
-class Gpt4FreeAdapter(BotAdapter):
+class Gpt4FreeAdapter(Llm):
     """实例"""
 
     def __init__(self, session_id: str = "unknown", model: G4fModels = None):
         super().__init__(session_id)
         self.session_id = session_id
-        self.model = model or botManager.pick("gpt4free")
+        self.model = model or account_manager.pick("gpt4free")
         self.conversation_history = []
 
     async def rollback(self):
@@ -27,7 +26,8 @@ class Gpt4FreeAdapter(BotAdapter):
         self.conversation_history = []
 
     async def ask(self, prompt: str) -> Generator[str, None, None]:
-        self.conversation_history.append(vars(ChatMessage(ROLE_USER, prompt)))
+        self.conversation_history.append({'role': 'user', 'content': prompt})
+        # FIXME: 删除 eval
         response = g4f.ChatCompletion.create(
             model=eval(
                 self.model.model) if self.model.model.startswith("g4f.models.") else self.model.model,
@@ -35,6 +35,5 @@ class Gpt4FreeAdapter(BotAdapter):
                 self.model.provider),
             messages=self.conversation_history,
         )
-        self.conversation_history.append(
-            vars(ChatMessage(ROLE_ASSISTANT, response)))
+        self.conversation_history.append({'role': 'assistant', 'content': response})
         yield response

@@ -1,9 +1,10 @@
+import abc
 from typing import Generator
 
 from loguru import logger
 
 
-class Llm:
+class Llm(abc.ABC):
     """定义所有 Chatbot 的通用接口"""
     preset_name: str = "default"
 
@@ -16,9 +17,11 @@ class Llm:
         self.current_model = "default"
         ...
 
+    @abc.abstractmethod
     async def ask(self, msg: str) -> Generator[str, None, None]: ...
     """向 AI 发送消息"""
 
+    @abc.abstractmethod
     async def rollback(self): ...
     """回滚对话"""
 
@@ -42,5 +45,6 @@ class Llm:
     """切换模型"""
 
     @classmethod
+    @abc.abstractmethod
     def register(cls):
         pass

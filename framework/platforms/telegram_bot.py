@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Optional, Union
+from typing import Optional
 
 import openai
 import telegram.helpers
@@ -11,7 +11,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
 from telegram.request import HTTPXRequest
 
-from constants import config, BotPlatform
+from constants import config
 from framework.messages import ImageElement
 from framework.middlewares.ratelimit import manager as ratelimit_manager
 from framework.request import Response, Request

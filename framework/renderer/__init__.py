@@ -1,5 +1,3 @@
-
-
 class Renderer:
     context = {}
 

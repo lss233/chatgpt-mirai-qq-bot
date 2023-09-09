@@ -1,6 +1,6 @@
+import asyncio
 from typing import Callable, Dict
 
-import asyncio
 from loguru import logger
 
 from constants import config

@@ -2,13 +2,12 @@ from typing import Any
 
 import httpx
 import openai
+import revChatGPT.V1 as ChatGPTV1
 from pydantic import Field
+from revChatGPT.V1 import AsyncChatbot
 
 import constants
 from framework.accounts import AccountInfoBaseModel
-import revChatGPT.V1 as ChatGPTV1
-from revChatGPT.V1 import AsyncChatbot
-
 from framework.chatbot.chatgpt import ChatGPTBrowserChatbot
 
 
@@ -34,6 +33,11 @@ class OpenAIWebAuthBaseModel(AccountInfoBaseModel):
         description="自动删除旧的对话",
     )
 
+    web_endpoint: str = Field(
+        default='https://chatgpt-proxy.lss233.com/api/',
+        description="Web 访问接入点地址",
+    )
+
     _client: ChatGPTBrowserChatbot = None
 
     async def check_alive(self) -> bool:
@@ -54,7 +58,7 @@ class OpenAIAccessTokenAuth(OpenAIWebAuthBaseModel):
             "access_token": self.access_token,
             "proxy": constants.proxy,
             "paid": self.paid
-        }))
+        }, base_url=self.web_endpoint))
 
     class Config:
         title = 'ChatGPT 网页版 账号设置'
@@ -97,6 +101,11 @@ class OpenAIAPIKeyAuth(AccountInfoBaseModel):
         description="使用的默认模型",
     )
 
+    api_endpoint: str = Field(
+        default="https://chatgpt-proxy.lss233.com/api",
+        description="OpenAI API 接入点"
+    )
+
 
     class Config:
         title = 'OpenAI API 账号设置'
@@ -106,7 +115,7 @@ class OpenAIAPIKeyAuth(AccountInfoBaseModel):
 
     async def check_alive(self) -> bool:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f'{openai.api_base}/chat/completions',
+            response = await client.post(f'{self.api_endpoint}/chat/completions',
                                          headers={'Authorization': f'Bearer {self.api_key}'},
                                          json={"model": "gpt-3.5-turbo", "messages": []}
                                          )

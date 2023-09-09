@@ -5,9 +5,8 @@ from typing import List
 
 import yaml
 from charset_normalizer import from_bytes
-from pydantic import BaseModel, Extra
 from loguru import logger
-import json
+from pydantic import BaseModel, Extra
 
 from framework.prompt import evaluate_expression
 

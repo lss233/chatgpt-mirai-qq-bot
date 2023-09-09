@@ -1,22 +1,17 @@
 import functools
-
-import asyncio
 import re
-from typing import Callable, Optional
 
 import httpcore
 import httpx
 import openai
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Plain
 from httpx import ConnectTimeout
 from loguru import logger
 from requests.exceptions import SSLError, ProxyError, RequestException
 from urllib3.exceptions import MaxRetryError
 
-from constants import BotPlatform
 import constants
-from framework.conversation import ConversationHandler, ConversationContext
+from framework.conversation import ConversationHandler
 from framework.exceptions import PresetNotFoundException, LlmRateLimitException, LlmConcurrentMessageException, \
     BotTypeNotFoundException, NoAvailableBotException, LlmOperationNotSupportedException, CommandRefusedException, \
     DrawingFailedException
@@ -25,8 +20,8 @@ from framework.middlewares.baiducloud import MiddlewareBaiduCloud
 from framework.middlewares.concurrentlock import MiddlewareConcurrentLock
 from framework.middlewares.ratelimit import MiddlewareRatelimit
 from framework.middlewares.timeout import MiddlewareTimeout
-from framework.tts.tts import TTSResponse
 from framework.request import Request, Response
+from framework.tts.tts import TTSResponse
 
 middlewares = [
     MiddlewareTimeout(),
@@ -47,6 +42,15 @@ def __wrap_respond(next_, middleware):
     Wrapping respond messages
     """
     return functools.partial(middleware.handle_respond, next=next_)
+
+
+def get_default_ai():
+    """推测默认 AI"""
+    # 若用户指定，则直接返回
+    if constants.config.response.default_ai:
+        return constants.config.response.default_ai
+    # TODO: 自动推测
+    raise NotImplemented("自动推测支持模型尚未实现，请在配置文件中设置 default_ai")
 
 
 async def handle_message(request: Request, response: Response):
@@ -115,10 +119,10 @@ async def handle_message(request: Request, response: Response):
                 break
 
         if not conversation_handler.current_conversation:
+            default_ai = get_default_ai()
             logger.debug(
-                f"尝试使用 default_ai={constants.config.response.default_ai} 来创建对话上下文")
-            conversation_handler.current_conversation = await conversation_handler.create(
-                constants.config.response.default_ai)
+                f"尝试使用 default_ai={default_ai} 来创建对话上下文")
+            conversation_handler.current_conversation = await conversation_handler.create(default_ai)
 
         # 最终我们要操作的是 conversation_context
         if not request.conversation_context:

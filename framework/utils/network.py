@@ -10,7 +10,7 @@ def is_open(ip, port):
         is_port_open = sock.connect_ex((ip, int(port))) == 0
         if is_port_open:
             sock.shutdown(socket.SHUT_RDWR)
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         is_port_open = False
     sock.close()
     return is_port_open

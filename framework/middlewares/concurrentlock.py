@@ -1,9 +1,10 @@
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict
+
 from loguru import logger
 
 from constants import config
+from framework.conversation import ConversationHandler
 from framework.middlewares.middleware import Middleware
-from framework.conversation import ConversationContext, ConversationHandler
 from framework.request import Response, Request
 from framework.utils import QueueInfo
 
@@ -20,7 +21,7 @@ class MiddlewareConcurrentLock(Middleware):
         if request.session_id not in self.ctx:
             self.ctx[request.session_id] = QueueInfo()
         queue_info = self.ctx[request.session_id]
-        selected_ctx = handler.current_conversation if request.conversation_context is None else request.conversation_context
+        selected_ctx = request.conversation_context if request.conversation_context else handler.current_conversation
         if internal_queue := selected_ctx.llm_adapter.get_queue_info():
             logger.trace("[Concurrent] 使用 Adapter 内部的 Queue")
             # 如果 Adapter 内部实现了 Queue，则用在用他们的之前先把中间件的队先排完

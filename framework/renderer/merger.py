@@ -1,11 +1,11 @@
-from framework.renderer import Renderer
-from constants import config
-
-from typing import Optional, Any
 import time
+from typing import Optional, Any
 
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
+
+from constants import config
+from framework.renderer import Renderer
 
 
 class BufferedContentMerger(Renderer):

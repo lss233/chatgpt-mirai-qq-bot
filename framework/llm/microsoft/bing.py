@@ -1,21 +1,21 @@
 import asyncio
-import re
 import json
+import re
 from contextlib import suppress
 from typing import Generator, List
 
 import aiohttp
-from graia.ariadne.message.element import Image as GraiaImage
 from EdgeGPT.EdgeGPT import Chatbot as EdgeChatbot, ConversationStyle, NotAllowedToAccess
 from EdgeGPT.ImageGen import ImageGenAsync
+from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
 
 import constants
-from framework.llm.llm import Llm
 from framework.accounts import account_manager
 from framework.drawing import DrawAI
 from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \
     LLmAuthenticationFailedException, DrawingFailedException
+from framework.llm.llm import Llm
 from framework.llm.microsoft.models import BingCookieAuth
 
 image_pattern = r"!\[.*\]\((.*)\)"
@@ -89,7 +89,7 @@ class BingAdapter(Llm, DrawAI):
                 else:
                     # 生成中的消息
                     parsed_content = re.sub(r"Searching the web for:(.*)\n", "", response)
-                    parsed_content = re.sub(r"```json(.*)```", "", parsed_content,flags=re.DOTALL)
+                    parsed_content = re.sub(r"```json(.*)```", "", parsed_content, flags=re.DOTALL)
                     parsed_content = re.sub(r"Generating answers for you...", "", parsed_content)
                     if constants.config.bing.show_references:
                         parsed_content = re.sub(r"\[(\d+)\]: ", r"\1: ", parsed_content)
@@ -123,8 +123,8 @@ class BingAdapter(Llm, DrawAI):
         logger.debug(f"[Bing Image] Prompt: {prompt}")
         try:
             async with ImageGenAsync(
-                    all_cookies=self.bot.chat_hub.cookies,
-                    quiet=True
+                all_cookies=self.bot.chat_hub.cookies,
+                quiet=True
             ) as image_generator:
                 images = await image_generator.get_images(prompt)
 
@@ -151,6 +151,7 @@ class BingAdapter(Llm, DrawAI):
     @classmethod
     def register(cls):
         account_manager.register_type("bing", BingCookieAuth)
+
     async def preset_ask(self, role: str, text: str):
         if role.endswith('bot') or role in {'assistant', 'bing'}:
             logger.debug(f"[预设] 响应：{text}")
@@ -158,7 +159,7 @@ class BingAdapter(Llm, DrawAI):
         else:
             logger.debug(f"[预设] 发送：{text}")
             item = None
-            async for item in self.ask(text): ...
+            async for item in self.ask(text):
+                pass
             if item:
                 logger.debug(f"[预设] Chatbot 回应：{item}")
-

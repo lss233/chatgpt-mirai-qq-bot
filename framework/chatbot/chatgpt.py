@@ -1,14 +1,13 @@
-import datetime
 import asyncio
+import datetime
+
 from revChatGPT.V1 import AsyncChatbot as V1Chatbot
-from config import OpenAIAuthBase
+
 from framework.utils import QueueInfo
 
 
 class ChatGPTBrowserChatbot(asyncio.Lock):
     id = 0
-
-    account: OpenAIAuthBase
 
     bot: V1Chatbot
 

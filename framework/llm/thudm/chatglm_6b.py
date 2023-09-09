@@ -1,10 +1,10 @@
 from typing import Generator
 
+import httpx
+
 from framework.accounts import account_manager
 from framework.exceptions import LlmRequestTimeoutException, LlmRequestFailedException
 from framework.llm.llm import Llm
-import httpx
-
 from framework.llm.thudm.models import ChatGLMAPIInfo
 
 

@@ -80,7 +80,8 @@ class AzureTTSEngine(TTSEngine):
 
     def get_supported_styles(self) -> List[str]:
         """
-        支持的风格: https://learn.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup-voice#speaking-styles-and-roles
+        支持的风格:
+        https://learn.microsoft.com/zh-cn/azure/cognitive-services/speech-service/speech-synthesis-markup-voice#speaking-styles-and-roles
         """
         return [
             "advertisement_upbeat",

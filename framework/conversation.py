@@ -1,9 +1,11 @@
-from typing import List, Dict, Optional, Callable, Any
 import re
+from functools import partial
+from typing import List, Dict, Optional, Callable, Any
+
 import httpx
 from graia.amnesia.message import MessageChain
 from graia.ariadne.message.element import Image as GraiaImage, Element
-from functools import partial
+from loguru import logger
 
 import constants
 from framework.drawing import DrawAI, DrawingAIFactory
@@ -21,7 +23,6 @@ from framework.renderer.renderer import MixedContentMessageChainRenderer, Markdo
 from framework.renderer.splitter import MultipleSegmentSplitter
 from framework.tts import TTSEngine, TTSVoice, EmotionMarkupText
 from framework.utils import retry
-from loguru import logger
 
 handlers = {}
 

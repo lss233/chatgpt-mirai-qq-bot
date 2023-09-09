@@ -1,8 +1,8 @@
 import functools
+import logging
 import re
 import time
 from typing import Union, Optional
-import logging
 
 import aiocqhttp
 from aiocqhttp import CQHttp, Event, MessageSegment
@@ -12,7 +12,6 @@ from graia.ariadne.message.element import Image as GraiaImage, At, Plain, Voice
 from graia.ariadne.message.parser.base import DetectPrefix
 from graia.broadcast import ExecutionStop
 from loguru import logger
-from quart import Quart
 
 import constants
 from constants import config
@@ -20,8 +19,8 @@ from framework.messages import ImageElement
 from framework.middlewares.ratelimit import manager as ratelimit_manager
 from framework.request import Request, Response
 from framework.tts.tts import TTSResponse, VoiceFormat
-from framework.utils.text_to_img import to_image
 from framework.universal import handle_message
+from framework.utils.text_to_img import to_image
 
 bot = CQHttp()
 bot.server_app.service_routes = [("OneBot", "ws", "/ws")]
@@ -187,7 +186,7 @@ async def _(event: Event):
     request.message = msg
     request.platform = constants.BotPlatform.Onebot
     request.is_manager = event.user_id == config.onebot.manager_qq
-    request.nickname = event.sender.get("nickname", "好友"),
+    request.nickname = event.sender.get("nickname", "好友")
 
     response = Response(functools.partial(respond, event, False))
 
@@ -389,4 +388,4 @@ async def startup():
 
 
 async def start_http_app():
-    return await bot.run_task(host=config.http.host, port=config.http.port)
+    return await bot.run_task(host=config.http.host, port=config.http.port, debug=False)

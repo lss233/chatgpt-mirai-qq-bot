@@ -27,12 +27,12 @@ from typing_extensions import Annotated
 import constants
 from constants import config
 from framework.accounts import account_manager
+from framework.messages import ImageElement
 from framework.middlewares.ratelimit import manager as ratelimit_manager
+from framework.request import Request, Response
+from framework.tts.tts import TTSResponse
 from framework.universal import handle_message
 from framework.utils.text_to_img import to_image
-from framework.request import Request, Response
-from framework.messages import ImageElement
-from framework.tts.tts import TTSResponse
 
 # Refer to https://graia.readthedocs.io/ariadne/quickstart/
 if config.mirai.reverse_ws_port:

@@ -1,4 +1,3 @@
-from constants import config
 import os
 import sys
 from io import BytesIO
@@ -10,6 +9,7 @@ from discord.ext import commands
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
 
+from constants import config
 from framework.messages import ImageElement
 from framework.request import Request, Response
 from framework.tts.tts import TTSResponse, VoiceFormat

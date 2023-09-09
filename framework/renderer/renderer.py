@@ -1,13 +1,12 @@
 import re
-
-from framework.renderer import Renderer
-from framework.utils.asyncutils import evaluate_array
-from framework.utils.text_to_img import to_image
-
 from typing import Optional
 
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
+
+from framework.renderer import Renderer
+from framework.utils.asyncutils import evaluate_array
+from framework.utils.text_to_img import to_image
 
 
 class PlainTextRenderer(Renderer):

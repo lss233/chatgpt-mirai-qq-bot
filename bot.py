@@ -1,25 +1,27 @@
 import os
 import sys
+
 sys.path.append(os.getcwd())
 
 import asyncio
-import creart
 import threading
+
+import creart
 from quart import Quart
 from loguru import logger
+from pycloudflared import try_cloudflare, remove_executable
 
 import constants
 from framework.utils.exithooks import hook
 from framework.tts import AzureTTSEngine, TTSEngine, EdgeTTSEngine
 from framework.accounts import account_manager
 
-
 loop = creart.create(asyncio.AbstractEventLoop)
+
 
 def setup_cloudflared(app: Quart):
     logger.info("尝试开启 Cloudflare Tunnel……")
     try:
-        from pycloudflared import try_cloudflare, remove_executable
         cloudflared_url = try_cloudflare(port=constants.config.http.port)
         for service_name, proto, uri in app.service_routes:
             logger.info(
@@ -27,54 +29,8 @@ def setup_cloudflared(app: Quart):
     except OSError as e:
         logger.error(f"Cloudflared 开启失败：{e}")
         remove_executable()
-    except Exception as e:
+    except Exception as e:  # pylint: disable=bare-exception
         logger.error(f"Cloudflared 开启失败：{e}")
-
-
-tasks = []
-if constants.config.azure:
-    tasks.append(
-        loop.create_task(
-            TTSEngine.register(
-                "azure",
-                AzureTTSEngine(
-                    constants.config.azure))))
-
-tasks.extend(
-    (
-        loop.create_task(
-            TTSEngine.register("edge", EdgeTTSEngine())
-        ),
-        loop.create_task(
-            account_manager.load_accounts(constants.config.accounts)
-        ),
-    )
-)
-loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-
-bots = []
-
-if constants.config.mirai:
-    logger.info("检测到 mirai 配置，将启动 mirai 模式……")
-    from framework.platforms.ariadne_bot import start_task
-
-    bots.append(start_task())
-
-if constants.config.telegram:
-    logger.info("检测到 telegram 配置，将启动 telegram bot 模式……")
-    from framework.platforms.telegram_bot import start_task
-
-    bots.append(start_task())
-if constants.config.discord:
-    logger.info("检测到 discord 配置，将启动 discord bot 模式……")
-    from framework.platforms.discord_bot import start_task
-
-    bots.append(start_task())
-if constants.config.qqchannel:
-    logger.info("检测到 QQChannel 配置，将启动 QQChannel 模式……")
-    from framework.platforms.qqchannel_bot import start_task
-
-    bots.append(start_task())
 
 
 async def setup_web_service():
@@ -101,8 +57,45 @@ async def setup_web_service():
     await start_http_app()
 
 
-bots.append(setup_web_service())
+if __name__ == '__main__':
+    tasks = []
+    if constants.config.azure:
+        tasks.append(TTSEngine.register("azure", AzureTTSEngine(constants.config.azure)))
 
-hook()
-loop.run_until_complete(asyncio.gather(*bots))
-loop.run_forever()
+    tasks.extend(
+        (
+            TTSEngine.register("edge", EdgeTTSEngine()),
+            account_manager.load_accounts(constants.config.accounts),
+        )
+    )
+    loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+
+    bots = []
+
+    if constants.config.mirai:
+        logger.info("检测到 mirai 配置，将启动 mirai 模式……")
+        from framework.platforms.ariadne_bot import start_task
+
+        bots.append(start_task())
+
+    if constants.config.telegram:
+        logger.info("检测到 telegram 配置，将启动 telegram bot 模式……")
+        from framework.platforms.telegram_bot import start_task
+
+        bots.append(start_task())
+    if constants.config.discord:
+        logger.info("检测到 discord 配置，将启动 discord bot 模式……")
+        from framework.platforms.discord_bot import start_task
+
+        bots.append(start_task())
+    if constants.config.qqrobot:
+        logger.info("检测到 QQ 官方机器人 配置，将启动 QQChannel 模式……")
+        from framework.platforms.qq_bot import start_task
+
+        bots.append(start_task())
+
+    bots.append(setup_web_service())
+
+    loop.run_until_complete(asyncio.gather(*bots))
+    hook()
+    loop.run_forever()

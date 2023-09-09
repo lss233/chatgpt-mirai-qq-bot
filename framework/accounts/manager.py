@@ -1,14 +1,13 @@
+import asyncio
 import itertools
 from typing import Type, TypeVar, Dict, List, Any, Optional
 
-import asyncio
 from loguru import logger
 from pydantic import BaseConfig
 from pydantic.fields import ModelField
 
 from config import AccountsModel
 from framework.exceptions import NoAvailableBotException
-
 from .models import AccountInfoBaseModel
 
 CT = TypeVar('CT', bound=AccountInfoBaseModel)
@@ -58,7 +57,7 @@ class AccountManager:
             else:
                 account.ok = False
                 logger.error(f"[AccountManager] 登录失败: {type_}")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             account.ok = False
             logger.error(f"[AccountManager] 登录失败: {type_} with exception: {e}")
         return account.ok

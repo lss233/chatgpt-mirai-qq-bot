@@ -1,15 +1,20 @@
+import asyncio
 import base64
+import contextlib
+import hashlib
 import json
-import typing
-import random
 import os.path
+import random
+import time
+import typing
+from datetime import datetime, timedelta
+from datetime import timezone
 from functools import wraps
 
-import asyncio
-
-import contextlib
+import jwt
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Plain
+from loguru import logger
 from quart import Quart, request, make_response, jsonify, send_from_directory, safe_join
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -19,13 +24,6 @@ from framework.messages import ImageElement
 from framework.request import Request, Response
 from framework.tts.tts import TTSResponse, VoiceFormat
 from framework.universal import handle_message
-import hashlib
-from loguru import logger
-from datetime import datetime, timedelta
-import jwt
-import time
-
-from datetime import timezone
 
 login_attempts = {}
 
@@ -42,7 +40,7 @@ if not constants.config.http.password:
     logger.warning(" ")
     logger.warning("=====================================")
     constants.config.http.password = generate_password_hash(
-        password, method="sha512", salt_length=6)
+        password, method="scrypt", salt_length=6)
     constants.Config.save_config(constants.config)
 
 
@@ -162,7 +160,10 @@ def route(app: Quart):
     @authenticate
     async def get_accounts():
         return json.dumps({
-            key: [item.dict() for item in value]
+            key: {
+                "model": account_manager.registered_models[key].schema(),
+                "accounts": [item.dict() for item in value]
+            }
             for key, value in account_manager.loaded_accounts.items()
         })
 

@@ -1,16 +1,15 @@
-from typing import Generator, Any
-
-import httpx
-
-from framework.accounts import account_manager
-from framework.llm.llm import Llm
-from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \
-    LlmRequestFailedException
-from loguru import logger
 import json
+from typing import Generator
 from urllib.parse import quote
 
+import httpx
+from loguru import logger
+
+from framework.accounts import account_manager
+from framework.exceptions import LlmOperationNotSupportedException, LlmRequestTimeoutException, \
+    LlmRequestFailedException
 from framework.llm.google.models import BardCookieAuth
+from framework.llm.llm import Llm
 
 
 class BardAdapter(Llm):
@@ -50,7 +49,9 @@ class BardAdapter(Llm):
                 url,
                 timeout=30,
                 data={
-                    "f.req": json.dumps([None, json.dumps([[prompt], None, [self.bard_session_id, self.r, self.rc]])]).replace(" ", ""),
+                    "f.req": json.dumps(
+                        [None, json.dumps([[prompt], None, [self.bard_session_id, self.r, self.rc]])]
+                    ).replace(" ", ""),
                     "at": self.at.replace("%3A", ":")
                 }
             )

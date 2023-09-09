@@ -1,16 +1,13 @@
+import asyncio
 import json
 import threading
 import time
-import asyncio
 
 from graia.ariadne.message.chain import MessageChain
-from graia.ariadne.message.element import Image, Voice
 from graia.ariadne.message.element import Plain
 from loguru import logger
 from quart import Quart, request
 
-import constants
-from constants import config, BotPlatform
 from framework.messages import ImageElement
 from framework.request import Request, Response
 from framework.tts.tts import TTSResponse, VoiceFormat

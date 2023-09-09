@@ -55,7 +55,9 @@ class LlmRequestTimeoutException(Exception):
 
 
 class LlmRequestFailedException(Exception):
-    ...
+    def __str__(self, *args, **kwargs): # real signature unknown
+        """ Return str(self). """
+        return f"无法请求 {args}"
 
 
 class LLmAuthenticationFailedException(Exception):

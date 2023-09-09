@@ -1,5 +1,6 @@
-from typing import List
 import base64
+from typing import List
+
 import httpx
 from graia.ariadne.message.element import Image
 
