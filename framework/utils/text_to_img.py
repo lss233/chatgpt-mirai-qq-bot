@@ -18,21 +18,18 @@ from PIL import ImageDraw, ImageFont
 from charset_normalizer import from_bytes
 from graia.ariadne.message.element import Image as GraiaImage
 from loguru import logger
+# Do not delete this line, it has be loaded **BEFORE** markdown
+from framework.utils.zipimporter_patch import patch
+import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.tables import TableExtension
 from mdx_math import MathExtension
 from pygments.formatters import HtmlFormatter
 from pygments.styles.xcode import XcodeStyle
 
-from config import Config
-
-# Do not delete this line, it has be loaded **BEFORE** markdown
-from framework.utils.zipimporter_patch import patch
-import markdown
+import constants
 
 patch()
-
-config = Config.load_config()
 
 template_html = ''
 with open("./assets/texttoimg/template.html", "rb") as f:
@@ -46,10 +43,10 @@ with open("./assets/texttoimg/template.html", "rb") as f:
 
     template_html = str(guessed_str).replace("{highlight_css}", highlight_css)
 
-if config.text_to_image.wkhtmltoimage is None:
+if constants.config.text_to_image.wkhtmltoimage is None:
     os.environ["PATH"] = os.environ["PATH"] + os.pathsep + os.getcwd()
-    config.text_to_image.wkhtmltoimage = shutil.which("wkhtmltoimage")
-if config.text_to_image.wkhtmltoimage is None:
+    constants.config.text_to_image.wkhtmltoimage = shutil.which("wkhtmltoimage")
+if constants.config.text_to_image.wkhtmltoimage is None:
     logger.error("未检测到 wkhtmltoimage，无法进行 Markdown 渲染！")
 
 
@@ -214,11 +211,11 @@ class TextWrapper(textwrap.TextWrapper):
 
 def text_to_image_raw(
         text,
-        width=config.text_to_image.width,
-        font_name=config.text_to_image.font_path,
-        font_size=config.text_to_image.font_size,
-        offset_x=config.text_to_image.offset_x,
-        offset_y=config.text_to_image.offset_y):
+        width=constants.config.text_to_image.width,
+        font_name=constants.config.text_to_image.font_path,
+        font_size=constants.config.text_to_image.font_size,
+        offset_x=constants.config.text_to_image.offset_x,
+        offset_y=constants.config.text_to_image.offset_y):
     # Create a draw object that can be used to measure the size of the text
     draw = ImageDraw.Draw(Image.new('RGB', (width, 1)))
 
@@ -328,7 +325,7 @@ async def text_to_image(text):
 
         asset_folder = os.path.join(os.getcwd(), 'assets', 'texttoimg')
 
-        font_path = os.path.join(os.getcwd(), config.text_to_image.font_path)
+        font_path = os.path.join(os.getcwd(), constants.config.text_to_image.font_path)
 
         # 输出html到字符串io流
         with StringIO() as output_file:
@@ -336,7 +333,7 @@ async def text_to_image(text):
             html = template_html.replace('{path_texttoimg}', pathlib.Path(asset_folder).as_uri()) \
                 .replace("{qrcode}", await get_qr_data(text)) \
                 .replace("{content}", content) \
-                .replace("{font_size_texttoimg}", str(config.text_to_image.font_size)) \
+                .replace("{font_size_texttoimg}", str(constants.config.text_to_image.font_size)) \
                 .replace("{font_path_texttoimg}", pathlib.Path(font_path).as_uri())
             output_file.write(html)
 
@@ -346,17 +343,17 @@ async def text_to_image(text):
             temp_jpg_file.close()
 
         imgkit_config = imgkit.config(
-            wkhtmltoimage=config.text_to_image.wkhtmltoimage)
+            wkhtmltoimage=constants.config.text_to_image.wkhtmltoimage)
         with StringIO(html) as input_file:
             ok = False
             try:
-                if config.text_to_image.wkhtmltoimage:
+                if constants.config.text_to_image.wkhtmltoimage:
                     # 调用imgkit将html转为图片
                     ok = await asyncio.get_event_loop().run_in_executor(None, imgkit.from_file, input_file,
                                                                         temp_jpg_filename, {
                                                                             "enable-local-file-access": "",
                                                                             "allow": asset_folder,
-                                                                            "width": config.text_to_image.width,  # 图片宽度
+                                                                            "width": constants.config.text_to_image.width,  # 图片宽度
                                                                         }, None, None, None, imgkit_config)
                     # 调用PIL将图片读取为 JPEG，RGB 格式
                     image = Image.open(

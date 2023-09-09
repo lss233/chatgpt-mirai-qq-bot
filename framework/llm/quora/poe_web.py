@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import Generator
+from typing import Generator, Dict, List
 
-import asyncio
+import openai
+import tiktoken
 from loguru import logger
 
 from framework.accounts import account_manager
@@ -10,14 +11,12 @@ from framework.llm.quora.models import PoeCookieAuth
 
 
 class BotType(Enum):
-    """Poe 支持的机器人：{'capybara': 'Sage', 'beaver': 'GPT-4', 'a2_2': 'Claude+','a2': 'Claude', 'chinchilla': 'ChatGPT',
-    'nutria': 'Dragonfly'} """
-    Sage = "capybara"
-    GPT4 = "beaver"
-    Claude2 = "a2_2"
-    Claude = "a2"
-    ChatGPT = "chinchilla"
-    Dragonfly = "nutria"
+    Sage = "gpt-3.5-turbo"
+    GPT4 = "chat-gpt-4"
+    Claude2 = "claude-2-100k"
+    Claude = "claude"
+    ChatGPT = "gpt-3.5-turbo"
+    Dragonfly = "llama_2_7b"
 
     @staticmethod
     def parse(bot_name: str):
@@ -34,57 +33,92 @@ class BotType(Enum):
         )
 
 
+def get_token_count(model: str, messages: List[Dict[str, str]]) -> int:
+    """
+    Get token count
+    """
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        return 0
+
+    num_tokens = 0
+    for message in messages:
+        # every message follows <im_start>{role/name}\n{content}<im_end>\n
+        num_tokens += 5
+        for key, value in message.items():
+            if value:
+                num_tokens += len(encoding.encode(value))
+            if key == "name":  # if there's a name, the role is omitted
+                num_tokens += 5  # role is always required and always 1 token
+    num_tokens += 5  # every reply is primed with <im_start>assistant
+    return num_tokens
+
+
 class PoeAdapter(Llm):
     account: PoeCookieAuth
+    messages: List[Dict[str, str]]
 
     def __init__(self, session_id: str = "unknown", bot_type: BotType = None):
         """获取内部队列"""
         super().__init__(session_id)
+        self.__conversation_keep_from = 0
         self.session_id = session_id
-        self.bot_name = bot_type.value
+        self.model = bot_type.value
         self.account = account_manager.pick("poe-token")
-        self.client = self.account.get_client()
-        self.custom_bot = False
-        if self.bot_name in [BotType.ChatGPT, BotType.Claude]:
-            # Create new bot or use default one?
-            self.custom_bot = {
-                "handle": self.bot_name,
-                "base_model": bot_type.value,
-                "prompt": r"You're a helpful assistant.",
-                "prompt_public": False,
-                "description": f"ChatGPT for Bot: session_id={session_id}, base_model={bot_type.value}",
-                "suggested_replies": False,
-                "private": False
-            }
-            self.client.create_bot(**self.custom_bot)
+        self.messages = []
+        self.max_tokens: int = (
+            31000
+            if "gpt-4-32k" in self.model
+            else 7000
+            if "gpt-4" in self.model
+            else 15000
+            if "gpt-3.5-turbo-16k" in self.model
+            else 4000
+        )
 
     async def ask(self, msg: str) -> Generator[str, None, None]:
         """向 AI 发送消息"""
-        # 覆盖 PoeClient 内部的锁逻辑
-        while None in self.client.active_messages.values():
-            await asyncio.sleep(0.01)
-        for final_resp in self.client.send_message(chatbot=self.bot_name.value, message=msg):
-            yield final_resp["text"]
+        self.messages.append({"role": "user", "content": msg})
+        full_chunk = []
+        full_text = ''
+        while self.max_tokens - get_token_count(self.model, self.messages) < 0 and \
+            len(self.messages) > self.__conversation_keep_from:
+            self.messages.pop(self.__conversation_keep_from)
+            logger.debug(
+                f"清理 token，历史记录遗忘后使用 token 数：{str(get_token_count(self.model, self.messages))}"
+            )
+        async for chunk in await openai.ChatCompletion.acreate(
+            model=self.model,
+            messages=self.messages,
+            stream=True,
+            api_base="https://chatgpt-proxy.lss233.com/poe/v1",
+            api_key=self.account.p_b
+        ):
+            full_chunk.append(chunk.choices[0].delta)
+            full_text = ''.join([m.get('content', '') for m in full_chunk])
+            yield full_text
+        logger.debug(f"[Poe-{self.model}] {self.session_id} - {full_text}")
+        self.messages.append({"role": "assistant", "content": full_text})
 
     async def rollback(self):
         """回滚对话"""
-        self.client.purge_conversation(self.bot_name.value, 2)
+        self.messages = self.messages[:-2 or None]
 
     async def on_destoryed(self):
         """当会话被重置时，此函数被调用"""
-        self.client.send_chat_break(self.bot_name.value)
+        pass
 
     async def preset_ask(self, role: str, prompt: str):
-        if role.endswith('bot') or role in {'assistant', 'poe'}:
+        if role.endswith('bot') or role in {'assistant', 'chatgpt'}:
             logger.debug(f"[预设] 响应：{prompt}")
             yield prompt
-        else:
-            if role == 'system' and self.custom_bot:
-                self.custom_bot['prompt'] = prompt
-                self.client.edit_bot(**self.custom_bot)
-                return
-            logger.debug(f"[预设] 发送：{prompt}")
-            item = None
-            async for item in self.ask(prompt): ...
-            if item:
-                logger.debug(f"[预设] Chatbot 回应：{item}")
+            role = 'assistant'
+        if role not in ['assistant', 'user', 'system']:
+            raise ValueError(f"预设文本有误！仅支持设定 assistant、user 或 system 的预设文本，但你写了{role}。")
+        self.messages.append({"role": role, "content": prompt})
+        self.__conversation_keep_from = len(self.messages)
+
+    @classmethod
+    def register(cls):
+        account_manager.register_type("poe-token", PoeCookieAuth)
