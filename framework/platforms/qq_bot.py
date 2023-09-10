@@ -26,7 +26,7 @@ async def post_response_function(client, message: Message, text=None, image=None
         send_payload['channel_id'] = message.channel_id
 
     if text:
-        send_payload['content'] = text
+        send_payload['content'] = text.replace('.', ' . ')
     if image:
         send_payload['file_image'] = await image.get_bytes()
     await send_func(**send_payload)

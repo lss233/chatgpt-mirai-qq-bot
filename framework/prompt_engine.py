@@ -118,7 +118,10 @@ async def execute_action_block(action_flow: List[ActionBlockBaseModel], context:
         for i in range(block.retry + 1):
             try:
                 result = action_callable(**args)
-                if result and inspect.iscoroutine(result):
+                if result and inspect.isasyncgen(result):
+                    async for result in result:
+                        pass
+                elif result and inspect.iscoroutine(result):
                     result = await result
 
                 if block.name:
