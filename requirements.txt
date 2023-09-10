@@ -1,5 +1,6 @@
 # Robot-frame
 graia-ariadne==0.11.7
+graia-broadcast==0.19.2
 graiax-silkcoder
 python-telegram-bot==20.4
 discord.py
@@ -40,6 +41,7 @@ python-dateutil~=2.8.2
 regex~=2023.6.3
 httpx~=0.24.1
 Quart==0.17.0
+creart==0.2.2
 pydub~=0.25.1
 httpcore~=0.17.3
 g4f~=0.0.2.6
