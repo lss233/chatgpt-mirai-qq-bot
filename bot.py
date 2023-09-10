@@ -53,7 +53,9 @@ async def setup_web_service():
     logger.info("启动 HTTP API 中……")
     for service_name, proto, uri in bot.server_app.service_routes:
         logger.info(
-            f"{service_name} 地址：{proto}://{constants.config.http.host}:{constants.config.http.port}{uri}")
+            f"{service_name} 监听地址：{proto}://{constants.config.http.host}:{constants.config.http.port}{uri}")
+        logger.info(
+            f"{service_name} 本地网络访问地址：{proto}://127.0.0.1:{constants.config.http.port}{uri}")
     await start_http_app()
 
 
