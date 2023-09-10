@@ -8,6 +8,7 @@ from loguru import logger
 from framework.accounts import account_manager
 from framework.llm.llm import Llm
 from framework.llm.quora.models import PoeCookieAuth
+from framework.utils.tokenutils import get_token_count
 
 
 class BotType(Enum):
@@ -33,31 +34,10 @@ class BotType(Enum):
         )
 
 
-def get_token_count(model: str, messages: List[Dict[str, str]]) -> int:
-    """
-    Get token count
-    """
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        return 0
-
-    num_tokens = 0
-    for message in messages:
-        # every message follows <im_start>{role/name}\n{content}<im_end>\n
-        num_tokens += 5
-        for key, value in message.items():
-            if value:
-                num_tokens += len(encoding.encode(value))
-            if key == "name":  # if there's a name, the role is omitted
-                num_tokens += 5  # role is always required and always 1 token
-    num_tokens += 5  # every reply is primed with <im_start>assistant
-    return num_tokens
-
-
 class PoeAdapter(Llm):
     account: PoeCookieAuth
     messages: List[Dict[str, str]]
+    model: str
 
     def __init__(self, session_id: str = "unknown", bot_type: BotType = None):
         """获取内部队列"""
@@ -92,7 +72,7 @@ class PoeAdapter(Llm):
             model=self.model,
             messages=self.messages,
             stream=True,
-            api_base="https://chatgpt-proxy.lss233.com/poe/v1",
+            api_base="https://llm-proxy.lss233.com/poe/v1",
             api_key=self.account.p_b
         ):
             full_chunk.append(chunk.choices[0].delta)

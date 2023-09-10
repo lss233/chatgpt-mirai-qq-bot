@@ -20,7 +20,7 @@ class PoeCookieAuth(AccountInfoBaseModel):
     async def check_alive(self) -> bool:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                'https://chatgpt-proxy.lss233.com/poe/v1/models',
+                'https://llm-proxy.lss233.com/poe/v1/models',
                 headers={'Authorization': f'Bearer {self.p_b}'}
             )
 

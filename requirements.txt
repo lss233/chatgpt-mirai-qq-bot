@@ -1,6 +1,6 @@
 # Robot-frame
 graia-ariadne==0.11.7
-graia-broadcast==0.19.2
+graia-broadcast==0.23.2
 graiax-silkcoder[libsndfile]
 python-telegram-bot==20.4
 discord.py
@@ -10,13 +10,10 @@ qq-botpy
 # LLM-Upstream-library
 revChatGPT~=6.8.6
 openai~=0.27.8
-EdgeGPT==0.13.2
 OpenAIAuth>=2.0.0
-BingImageCreator~=0.4.4
 tiktoken
 
 # TTS-related-dependencies
-azure-cognitiveservices-speech
 edge-tts
 
 # Other-dependencies
@@ -33,7 +30,6 @@ imgkit~=1.2.3
 qrcode~=7.4.2
 aiohttp~=3.8.5
 urllib3~=2.0.4
-requests~=2.31.0
 uuid~=1.30
 aiocqhttp~=1.4.4
 tls-client
@@ -45,9 +41,9 @@ Quart==0.17.0
 pydub~=0.25.1
 PyJWT~=2.7.0
 PyYAML~=6.0
-creart==0.2.2
+creart~=0.3.0
 pycloudflared
-g4f~=0.0.2.6
+# g4f~=0.0.2.6
 Werkzeug~=2.3.7
 
 tempenv

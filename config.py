@@ -185,14 +185,6 @@ class OpenAIGPT3Params(BaseModel):
         default=1000
     )
 
-
-class BingCookiePath(BaseModel):
-    cookie_content: str
-    """Bing 的 Cookie 文件内容"""
-    proxy: Optional[str] = None
-    """可选的代理地址，留空则检测系统代理"""
-
-
 class TTSAccounts(BaseModel):
     speech_key: str
     """TTS KEY"""
@@ -200,28 +192,6 @@ class TTSAccounts(BaseModel):
     """TTS 地区"""
     proxy: Optional[str] = None
     """可选的代理地址，留空则检测系统代理"""
-
-
-class BingAuths(BaseModel):
-    show_suggestions: bool = True
-    """在 Bing 的回复后加上猜你想问"""
-    show_references: bool = True
-    """在 Bing 的回复前加上引用资料"""
-    show_remaining_count: bool = True
-    """在 Bing 的回复后加上剩余次数"""
-
-    use_drawing: bool = False
-    """使用 Bing 画图"""
-
-    wss_link: str = "wss://sydney.bing.com/sydney/ChatHub"
-    """Bing 的 Websocket 接入点"""
-    bing_endpoint: str = "https://edgeservices.bing.com/edgesvc/turing/conversation/create"
-    """Bing 的会话创建接入点"""
-    accounts: List[BingCookiePath] = []
-    """Bing 的账号列表"""
-    max_messages: int = 30
-    """Bing 的最大消息数，仅展示用"""
-
 
 class G4fModels(BaseModel):
     provider: str
@@ -791,7 +761,6 @@ class Config(BaseModel):
     # === Account Settings ===
     accounts: AccountsModel = AccountsModel()
 
-    bing: BingAuths = BingAuths()
     azure: Optional[AzureConfig]
     gpt4free: G4fAuths = G4fAuths()
 
@@ -845,20 +814,6 @@ class Config(BaseModel):
         except Exception as e:
             logger.exception(e)
             logger.error("配置文件有误，请重新修改！")
-
-    @staticmethod
-    def __load_json_config() -> Config:
-        try:
-            import json
-            with open("config.json", "rb") as f:
-                if guessed_str := from_bytes(f.read()).best():
-                    return Config.parse_obj(json.loads(str(guessed_str)))
-                else:
-                    raise ValueError("无法识别 JSON 格式！")
-        except Exception as e:
-            logger.exception(e)
-            logger.error("配置文件有误，请重新修改！")
-            exit(-1)
 
     @staticmethod
     def load_config() -> Config:

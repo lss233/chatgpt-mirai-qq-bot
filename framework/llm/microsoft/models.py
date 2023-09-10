@@ -25,13 +25,16 @@ class BingCookieAuth(AccountInfoBaseModel):
     async def check_alive(self) -> bool:
         async with httpx.AsyncClient(
                 trust_env=True,
-                headers={
-                    "Cookie": ';'.join(f"{cookie['name']}=cookie['value'])" for cookie in json.loads(self.cookie_content)),
-                    "sec-ch-ua": r'"Chromium";v="112", "Microsoft Edge";v="112", "Not:A-Brand";v="99"',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.64'
-                }
+                headers=self.build_headers()
         ) as client:
-            response = await client.get(f"{constants.config.bing.bing_endpoint}")
+            response = await client.get("https://edgeservices.bing.com/edgesvc/turing/conversation/create")
             if response.json()["result"]["value"] == "UnauthorizedRequest":
                 raise LLmAuthenticationFailedException(response.json()["result"]["message"])
             return "Success" in response.text
+
+    def build_headers(self):
+        return {
+            "Cookie": ';'.join(f"{cookie['name']}={cookie['value']})" for cookie in json.loads(self.cookie_content)),
+            "sec-ch-ua": r'"Chromium";v="112", "Microsoft Edge";v="112", "Not:A-Brand";v="99"',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.64'
+        }
