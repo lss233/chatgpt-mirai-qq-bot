@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   mirai:
-    image: lss233/mirai-http:latest
+    image: lss233/mirai-http:latest 
     restart: always
     environment:
       LANG: 'C.UTF-8'
@@ -11,7 +11,7 @@ services:
       - ./mirai/data:/app/data
       # - ./mirai/config.json:/app/config.json # 如果你要修改 mcl 的设置，就解除这个注释
   chatgpt:
-    image: lss233/chatgpt-mirai-qq-bot:browser-version
+    image: lss233/chatgpt-mirai-qq-bot:browser-version-dev
     restart: always
     environment:
       LANG: 'C.UTF-8'
