@@ -1,6 +1,6 @@
 # Robot-frame
 graia-ariadne==0.11.7
-graia-broadcast==0.19.2
+graia-broadcast==0.23.2
 graiax-silkcoder
 python-telegram-bot==20.4
 discord.py
