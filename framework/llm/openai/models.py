@@ -1,7 +1,7 @@
+import abc
 from typing import Any
 
 import httpx
-import openai
 import revChatGPT.V1 as ChatGPTV1
 from pydantic import Field
 from revChatGPT.V1 import AsyncChatbot
@@ -38,27 +38,39 @@ class OpenAIWebAuthBaseModel(AccountInfoBaseModel):
         description="Web 访问接入点地址",
     )
 
-    _client: ChatGPTBrowserChatbot = None
+    class Config:
+        arbitrary_types_allowed = True
+        underscore_attrs_are_private = True
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
 
     async def check_alive(self) -> bool:
         raise NotImplemented("check_alive() for this method is not implemented")
 
+    @abc.abstractmethod
     def get_client(self) -> ChatGPTBrowserChatbot:
-        return self._client
+        pass
 
 
 class OpenAIAccessTokenAuth(OpenAIWebAuthBaseModel):
+
     access_token: str = Field(
         description="OpenAI 的 access_token",
     )
 
+    _client: ChatGPTBrowserChatbot
+
     def __init__(self, **data: Any):
-        super().__init__(**data)
-        super()._client = ChatGPTBrowserChatbot(AsyncChatbot(config={
+        super(OpenAIWebAuthBaseModel, self).__init__(**data)
+        self._client = ChatGPTBrowserChatbot(AsyncChatbot(config={
             "access_token": self.access_token,
             "proxy": constants.proxy,
             "paid": self.paid
         }, base_url=self.web_endpoint))
+
+    def get_client(self) -> ChatGPTBrowserChatbot:
+        return self._client
 
     class Config:
         title = 'ChatGPT 网页版 账号设置'
