@@ -63,11 +63,13 @@ class OpenAIAccessTokenAuth(OpenAIWebAuthBaseModel):
 
     def __init__(self, **data: Any):
         super(OpenAIWebAuthBaseModel, self).__init__(**data)
-        self._client = ChatGPTBrowserChatbot(AsyncChatbot(config={
+        config = {
             "access_token": self.access_token,
-            "proxy": constants.proxy,
             "paid": self.paid
-        }, base_url=self.web_endpoint))
+        }
+        if constants.proxy:
+            config["proxy"] = constants.proxy
+        self._client = ChatGPTBrowserChatbot(AsyncChatbot(config=config, base_url=self.web_endpoint))
 
     def get_client(self) -> ChatGPTBrowserChatbot:
         return self._client
