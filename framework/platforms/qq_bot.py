@@ -74,7 +74,7 @@ class QQRobotClient(botpy.Client):
             request.session_id = f'好友-{message.author.id}'
         else:
             request.session_id = f'群组-{message.guild_id}'
-        request.user_id = message.author.id
+        request.user_id = f'{message.channel_id}-{message.author.id}'
         request.group_id = message.guild_id
         request.nickname = message.author.username
         request.message = MessageChain([Plain(msg_str)])
