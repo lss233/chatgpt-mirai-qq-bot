@@ -225,8 +225,10 @@ def text_to_image_raw(text, width=config.text_to_image.width, font_name=config.t
     lines = text.split('\n')
     line_lengths = [draw.textlength(line, font=font) for line in lines]
     text_width = max(line_lengths)
-    text_height = font.getsize(text)[1]
-    char_width = font.getsize('.')[0]
+    _, top, _, bottom = font.getbbox(text)
+    text_height = bottom - top
+    left, _, right, _ = font.getbbox('.')
+    char_width = right - left
 
     wrapper = TextWrapper(width=int(width / char_width), break_long_words=True)
     wrapped_text = [wrapper.wrap(i) for i in lines if i != '']
