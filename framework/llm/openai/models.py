@@ -134,4 +134,4 @@ class OpenAIAPIKeyAuth(AccountInfoBaseModel):
                                          json={"model": "gpt-3.5-turbo", "messages": []}
                                          )
 
-            return 'invalid_request_error' in response.text
+            return 'request_error' in response.text
