@@ -214,8 +214,8 @@ debug = false
 |:---|:---|:---|
 |result| String |SUCESS,DONE,FAILED|
 |message| String[] |文本返回，支持多段返回|
-|voice| String[] |音频返回，支持多个音频的base64编码；参考：data:audio/mpeg;base64,...|
-|image| String[] |图片返回，支持多个图片的base64编码；参考：data:image/png;base64,...|
+|voice| String[] |音频返回，支持多个音频的base64编码；参考：data:audio/mpeg;base64,,iVBORw0KGgoAAAANS...|
+|image| String[] |图片返回，支持多个图片的base64编码；参考：data:image/png;base64,UhEUgAAAgAAAAIACAIA...|
 
 **响应示例**  
 ```json
@@ -253,6 +253,12 @@ debug = false
 1681525479905
 ```
 
+* 请注意，返回的内容可能会带有引号。请去除引号。（包括 `"` 和 `'` ）
+
+```
+ ('1681525479905', 200)
+```
+
 **GET**    `/v2/chat/response`  
 
 **请求参数**  
@@ -265,13 +271,28 @@ debug = false
 ```
 /v2/chat/response?request_id=1681525479905
 ```
+* 请注意，request_id不能带有引号（包括 `"` 和 `'` ）。
+下列为错误示范
+```
+/v2/chat/response?request_id='1681525479905'
+```
+```
+/v2/chat/response?request_id="1681525479905"
+```
+```
+/v2/chat/response?request_id='1681525479905"
+```
+```
+/v2/chat/response?request_id="1681525479905'
+```
+
 **响应格式**
 |参数名|类型|说明|
 |:---|:---|:---|
 |result| String |SUCESS,DONE,FAILED|
 |message| String[] |文本返回，支持多段返回|
-|voice| String[] |音频返回，支持多个音频的base64编码；参考：data:audio/mpeg;base64,...|
-|image| String[] |图片返回，支持多个图片的base64编码；参考：data:image/png;base64,...|
+|voice| String[] |音频返回，支持多个音频的base64编码；参考：data:audio/mpeg;base64,,iVBORw0KGgoAAAANS...|
+|image| String[] |图片返回，支持多个图片的base64编码；参考：data:image/png;base64,UhEUgAAAgAAAAIACAIA...|
 
 * 每次请求返回增量并清空。DONE、FAILED之后没有更多返回。
 
@@ -280,10 +301,20 @@ debug = false
 {
     "result": "DONE",
     "message": ["pong!"],
-    "voice": ["data:audio/mpeg;base64,..."],
-    "image": ["data:image/png;base64,...", "data:image/png;base64,..."]
+    "voice": ["data:audio/mpeg;base64,iVBORw0KGgoAAAANS..."],
+    "image": ["data:image/png;base64,UhEUgAAAgAAAAIACAIA...", "data:image/png;base64,UhEUgAAAgAAAAIACAIA..."]
 }
 ```
+* 请注意，当返回 `SUCCESS`的时候表示等待
+```json
+{"result": "SUCCESS", "message": [], "voice": [], "image": []}
+```
+* 请注意，可能有多条`DONE`，请一直请求，直到出现`FAILED`。`FAILED`表示回复完毕。
+```json
+{"result": "FAILED", "message": ["\u6ca1\u6709\u66f4\u591a\u4e86\uff01"], "voice": [], "image": []}
+```
+* 请注意`DONE`和`FAILED`之间可能会穿插`SUCCESS`。整个回复周期可能会大于一分钟。
+
 </details>
 
 ## 🦊 加载预设
