@@ -79,7 +79,10 @@ async def handle_message(_respond: Callable, session_id: str, message: str,
 
         nonlocal conversation_context
         if not conversation_context:
-            conversation_context = conversation_handler.current_conversation
+            try:
+                conversation_context = conversation_handler.current_conversation
+            except NameError:
+                logger.warning(f"收到空消息时尚未定义conversation_handler，报错已忽略")
 
         if not conversation_context:
             return ret
