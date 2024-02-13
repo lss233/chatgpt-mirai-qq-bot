@@ -13,15 +13,16 @@ class MiddlewareRatelimit():
 
 
     def handle_draw_request(self, session_id: str, prompt: str):
-        _id = session_id.split('-', 1)[1] if '-' in session_id else session_id
-        rate_usage = manager.check_draw_exceed('好友' if session_id.startswith("friend-") else '群组', _id)
+        _id = session_id.split('-', 1)[1] if '-' in session_id and not session_id.startswith('-') and not session_id.endswith('-') else session_id
+        key = '好友' if session_id.startswith("friend-") else '群组'
+        rate_usage = manager.check_draw_exceed(key, _id)
         return config.ratelimit.draw_exceed if rate_usage >= 1 else "1"
 
 
 
     def handle_draw_respond_completed(self, session_id: str, prompt: str):
         key = '好友' if session_id.startswith("friend-") else '群组'
-        msg_id = session_id.split('-', 1)[1]
+        msg_id = session_id.split('-', 1)[1] if '-' in session_id and not session_id.startswith('-') and not session_id.endswith('-') else session_id
         manager.increment_draw_usage(key, msg_id)
         rate_usage = manager.check_draw_exceed(key, msg_id)
         if rate_usage >= config.ratelimit.warning_rate:
