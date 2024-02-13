@@ -15,6 +15,9 @@ loop.run_until_complete(botManager.login())
 
 bots = []
 
+# 将log输出到stdout
+logger.configure(handlers=[{"sink": sys.stdout}])
+
 if config.mirai:
     logger.info("检测到 mirai 配置，将启动 mirai 模式……")
     from platforms.ariadne_bot import start_task
