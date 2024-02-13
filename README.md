@@ -245,6 +245,17 @@ debug = false
     "message": "ping"
 }
 ```
+
+* 请注意，`session_id`请采用规范格式。其格式为`friend-`（好友）或`group-`（群组）加字符串
+
+示例
+```
+friend-R6sxRvblulTZqNC
+group-M3jpvxv26mKVM
+```
+
+如果不能正确继续是好友还是群组，将一律按照群组处理
+
 **响应格式**
 字符串：request_id
 
@@ -256,7 +267,7 @@ debug = false
 * 请注意，返回的内容可能会带有引号。请去除引号。（包括 `"` 和 `'` ）
 
 ```
- ('1681525479905', 200)
+ '1681525479905'
 ```
 
 **GET**    `/v2/chat/response`  
