@@ -235,7 +235,9 @@ class ConversationContext:
                                                                                   text.strip())
                         logger.debug(f"Set conversation voice to {self.conversation_voice.full_name}")
                         continue
-
+                    
+                    # Replace {date} in system prompt
+                    text = text.replace("{date}", datetime.now().strftime('%Y-%m-%d'))
                     async for item in self.adapter.preset_ask(role=role.lower().strip(), text=text.strip()):
                         yield item
         elif keyword != 'default':
