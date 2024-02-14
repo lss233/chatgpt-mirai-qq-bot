@@ -138,6 +138,7 @@ async def v2_chat():
     # Return the result time as request_id
     return bot_request.request_time
 
+
 @app.route('/v2/chat/response', methods=['GET'])
 async def v2_chat_response():
     """异步请求时，配合/v2/chat获取内容"""
@@ -153,6 +154,7 @@ async def v2_chat_response():
         bot_request.result.pop_all()
     logger.debug(f"Bot request {request_id} response -> \n{response[:100]}")
     return response
+
 
 def clear_request_dict():
     logger.debug("Watch and clean request_dic.")
