@@ -153,6 +153,9 @@ class ConversationContext:
         await self.adapter.on_reset()
         self.last_resp = ''
         self.last_resp_time = -1
+        # 在重置会话时自动加载默认预设
+        async for value in self.load_preset('default'):
+            pass
         yield config.response.reset
 
     @retry((httpx.ConnectError, httpx.ConnectTimeout, TimeoutError))
