@@ -41,7 +41,8 @@ class SDWebUI(DrawingAPI):
             'tiling': 'false',
             'negative_prompt': config.sdwebui.negative_prompt,
             'eta': 0,
-            'sampler_index': config.sdwebui.sampler_index
+            'sampler_index': config.sdwebui.sampler_index,
+            'alwayson_scripts': {}
         }
 
         for key, value in config.sdwebui.dict(exclude_none=True).items():
