@@ -517,6 +517,12 @@ class Ratelimit(BaseModel):
 
 
 class SDWebUI(BaseModel):
+    class ScriptArg(BaseModel):
+        ad_model: str
+
+    class ScriptConfig(BaseModel):
+        args: List['SDWebUI.ScriptArg']
+    
     api_url: str
     """API 基地址，如：http://127.0.0.1:7890"""
     prompt_prefix: str = 'masterpiece, best quality, illustration, extremely detailed 8K wallpaper'
@@ -534,6 +540,7 @@ class SDWebUI(BaseModel):
     cfg_scale: float = 7.5
     restore_faces: bool = False
     authorization: str = ''
+    alwayson_scripts: Dict[str, 'SDWebUI.ScriptConfig'] = {}
     """登录api的账号:密码"""
 
     timeout: float = 10.0
@@ -541,6 +548,8 @@ class SDWebUI(BaseModel):
 
     class Config(BaseConfig):
         extra = Extra.allow
+SDWebUI.update_forward_refs()
+SDWebUI.ScriptConfig.update_forward_refs()
 
 
 class Config(BaseModel):
