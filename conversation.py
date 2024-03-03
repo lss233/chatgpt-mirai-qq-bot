@@ -21,6 +21,7 @@ from adapter.ms.bing import BingAdapter
 from adapter.quora.poe import PoeBot, PoeAdapter
 from adapter.thudm.chatglm_6b import ChatGLM6BAdapter
 from adapter.xunfei.xinghuo import XinghuoAdapter
+from adapter.mistral.mistral import MistralAIAPIAdapter
 from constants import LlmName
 from constants import config
 from drawing import DrawingAPI, SDWebUI as SDDrawing, OpenAI as OpenAIDrawing
@@ -112,6 +113,12 @@ class ConversationContext:
             self.adapter = XinghuoAdapter(self.session_id)
         elif g4f_parse(_type):
             self.adapter = Gpt4FreeAdapter(self.session_id, g4f_parse(_type))
+        elif _type == LlmName.MistralLarge.value:
+            self.adapter = MistralAIAPIAdapter(self.session_id)
+        elif _type == LlmName.MistralMedium.value:
+            self.adapter = MistralAIAPIAdapter(self.session_id)
+        elif _type == LlmName.MistralSmall.value:
+            self.adapter = MistralAIAPIAdapter(self.session_id)
         else:
             raise BotTypeNotFoundException(_type)
         self.type = _type
