@@ -31,6 +31,9 @@ class LlmName(Enum):
     YiYan = "yiyan"
     ChatGLM = "chatglm-api"
     XunfeiXinghuo = "xinghuo"
+    MistralSmall = "mistral-small-latest"
+    MistralMedium = "mistral-medium-latest"
+    MistralLarge = "mistral-large-latest"
 
 
 class BotPlatform(Enum):

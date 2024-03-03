@@ -29,7 +29,7 @@ import utils.network as network
 from adapter.gpt4free import g4f_helper
 from chatbot.chatgpt import ChatGPTBrowserChatbot
 from config import OpenAIAuthBase, OpenAIAPIKey, Config, BingCookiePath, BardCookiePath, YiyanCookiePath, ChatGLMAPI, \
-    PoeCookieAuth, SlackAppAccessToken, XinghuoCookiePath, G4fModels
+    PoeCookieAuth, SlackAppAccessToken, XinghuoCookiePath, G4fModels, MistralAIAPIKey
 from exceptions import NoAvailableBotException, APIKeyNoFundsError
 
 
@@ -46,6 +46,7 @@ class BotManager:
         "xinghuo-cookie": [],
         "slack-accesstoken": [],
         "gpt4free": [],
+        "mistral": [],
     }
     """Bot list"""
 
@@ -76,6 +77,9 @@ class BotManager:
     gpt4free: List[G4fModels]
     """gpt4free Account Infos"""
 
+    mistral: List[MistralAIAPIKey]
+    """MistralAIAPIKey Account Infos"""
+
     roundrobin: Dict[str, itertools.cycle] = {}
 
     def __init__(self, config: Config) -> None:
@@ -89,6 +93,7 @@ class BotManager:
         self.slack = config.slack.accounts if config.slack else []
         self.xinghuo = config.xinghuo.accounts if config.xinghuo else []
         self.gpt4free = config.gpt4free.accounts if config.gpt4free else []
+        self.mistral = config.mistral.accounts if config.mistral else []
 
         try:
             os.mkdir('data')
@@ -149,6 +154,7 @@ class BotManager:
             "chatglm-api": [],
             "slack-accesstoken": [],
             "gpt4free": [],
+            "mistral": [],
         }
 
         self.__setup_system_proxy()
@@ -162,7 +168,8 @@ class BotManager:
             'openai': self.handle_openai,
             'yiyan': self.login_yiyan,
             'chatglm': self.login_chatglm,
-            'gpt4free': self.login_gpt4free
+            'gpt4free': self.login_gpt4free,
+            'mistral': self.login_mistral,
         }
 
         for key, login_func in login_funcs.items():
@@ -194,6 +201,7 @@ class BotManager:
                 "chatglm-api": "chatglm-api",
                 "xinghuo-cookie": "xinghuo",
                 "gpt4free": self.bots["gpt4free"][0].alias if len(self.bots["gpt4free"]) > 0 else "",
+                "mistral": "mistral-large-latest",
             }
 
             self.config.response.default_ai = next(
@@ -398,6 +406,17 @@ class BotManager:
             logger.error("所有 OpenAI 账号均登录失败！")
         logger.success(f"成功登录 {counter}/{len(self.openai)} 个 OpenAI 账号！")
 
+    def login_mistral(self):
+        for i, account in enumerate(self.mistral):
+            logger.info("正在解析第 {i} 个 MistralAI 账号", i=i + 1)
+            if proxy := self.__check_proxy(account.proxy):
+                account.proxy = proxy
+            self.bots["mistral"].append(account)
+            logger.success("解析成功！", i=i + 1)
+        if len(self.bots) < 1:
+            logger.error("所有 MistralAI 账号均解析失败！")
+        logger.success(f"成功解析 {len(self.bots['mistral'])}/{len(self.mistral)} 个 MistralAI 账号！")
+
     def __login_browser(self, account) -> ChatGPTBrowserChatbot:
         logger.info("模式：浏览器登录")
         logger.info("这需要你拥有最新版的 Chrome 浏览器。")
@@ -600,4 +619,8 @@ class BotManager:
         if len(self.bots['gpt4free']) > 0:
             for model in self.bots['gpt4free']:
                 bot_info += f"* {model.alias} : {model.description}\n"
+        if len(self.bots['mistral']) > 0:
+            bot_info += f"* {LlmName.MistralLarge.value} : Mistral Large 模型\n"
+            bot_info += f"* {LlmName.MistralMedium.value} : Mistral Medium 模型\n"
+            bot_info += f"* {LlmName.MistralSmall.value} : Mistral Small 模型\n"
         return bot_info
