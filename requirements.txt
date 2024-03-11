@@ -40,9 +40,10 @@ tls-client
 python-dateutil~=2.8.2
 regex~=2023.6.3
 httpx~=0.24.1
-Quart==0.17.0
+Quart==0.19.4
 creart~=0.3.0
 pydub~=0.25.1
 httpcore~=0.17.3
 g4f~=0.0.2.6
 creart
+lark_oapi==1.2.2
