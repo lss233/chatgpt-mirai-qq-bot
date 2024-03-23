@@ -49,6 +49,11 @@ if config.wecom:
     from platforms.wecom_bot import start_task
 
     bots.append(loop.create_task(start_task()))
+if config.feishu:
+    logger.info("检测到 feishu 配置，将启动 Feishu bot 模式……")
+    from platforms.feishu_bot import start_task
+
+    bots.append(loop.create_task(start_task()))
 try:
     logger.info("[Edge TTS] 读取 Edge TTS 可用音色列表……")
     loop.run_until_complete(load_edge_tts_voices())

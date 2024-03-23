@@ -78,6 +78,21 @@ class WecomBot(BaseModel):
     """企业微信应用 API 令牌 的 EncodingAESKey"""
 
 
+class FeishuBot(BaseModel):
+    port: int = 9880
+    """飞书回调端口号, 默认9880"""
+    debug: bool = False
+    """是否开启debug，错误时展示日志"""
+    app_id: str
+    """飞书应用 的 App ID"""
+    app_secret: str
+    """飞书应用 的 Secret"""
+    token: str
+    """飞书应用 API 加密策略 的 Verification Token"""
+    encrypt_key: Optional[str] = None
+    """飞书应用的加密策略 encrypt_key"""
+
+
 class OpenAIParams(BaseModel):
     temperature: float = 0.5
     max_tokens: int = 4000
@@ -560,6 +575,7 @@ class Config(BaseModel):
     discord: Optional[DiscordBot] = None
     http: Optional[HttpService] = None
     wecom: Optional[WecomBot] = None
+    feishu: Optional[FeishuBot] = None
 
     # === Account Settings ===
     openai: OpenAIAuths = OpenAIAuths()
