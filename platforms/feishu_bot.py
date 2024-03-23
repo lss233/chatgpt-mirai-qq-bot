@@ -340,7 +340,7 @@ async def process_request(bot_request: BotRequest):
             bot_request.session_id,
             bot_request.message,
             nickname=bot_request.username,
-            request_from=constants.BotPlatform.WecomBot
+            request_from=constants.BotPlatform.FeishuBot
         )
         bot_request.set_result_status(RESPONSE_DONE)
     bot_request.done = True
