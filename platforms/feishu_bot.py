@@ -6,6 +6,7 @@ import threading
 import time
 
 import lark_oapi as lark
+from io import BytesIO
 from Crypto.Cipher import AES
 from graia.ariadne.message.chain import MessageChain
 from graia.ariadne.message.element import Image
@@ -84,7 +85,6 @@ class ResponseResult:
     def pop_all(self):
         with lock:
             self.message = []
-            self.voice = []
             self.image = []
 
     def to_json(self):
@@ -165,8 +165,11 @@ def _send_text(receive_id_type, receive_id, msg):
     return create_message_resp
 
 
-def _send_image(receive_id_type, receive_id, image):
-    # 上传文件
+def _send_image(receive_id_type, receive_id, imagebase64):
+    imagebytes = base64.b64decode(imagebase64)
+    img_file = BytesIO(imagebytes)
+    image = Image.open(img_file)
+    # 上传图片
     create_image_req = CreateImageRequest.builder() \
         .request_body(CreateImageRequestBody.builder()
                       .image_type("message")
@@ -190,7 +193,7 @@ def _send_image(receive_id_type, receive_id, image):
         .receive_id_type(receive_id_type) \
         .request_body(CreateMessageRequestBody.builder()
                       .receive_id(receive_id)
-                      .msg_type("text")
+                      .msg_type("image")
                       .content(lark.JSON.marshal(create_image_resp.data))
                       .build()) \
         .build()
@@ -228,6 +231,7 @@ def _decrypt_json(encrypt_json):
 async def event():
     encrypt_json = await request.get_json()
     decrypt_string = _decrypt_json(encrypt_json)
+    logger.info(f"decrypt_string={decrypt_string}")
     decrypt_json = dict_2_obj(decrypt_string)
     try:
         header = decrypt_json.header
@@ -340,7 +344,7 @@ async def process_request(bot_request: BotRequest):
             bot_request.session_id,
             bot_request.message,
             nickname=bot_request.username,
-            request_from=constants.BotPlatform.FeishuBot
+            request_from=constants.BotPlatform.WecomBot
         )
         bot_request.set_result_status(RESPONSE_DONE)
     bot_request.done = True
