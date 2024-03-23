@@ -6,6 +6,7 @@ import threading
 import time
 
 import lark_oapi as lark
+from PIL import Image as PILImage
 from io import BytesIO
 from Crypto.Cipher import AES
 from graia.ariadne.message.chain import MessageChain
@@ -166,9 +167,7 @@ def _send_text(receive_id_type, receive_id, msg):
 
 
 def _send_image(receive_id_type, receive_id, imagebase64):
-    imagebytes = base64.b64decode(imagebase64)
-    img_file = BytesIO(imagebytes)
-    image = Image.open(img_file)
+    image = BytesIO(base64.b64decode(imagebase64))
     # 上传图片
     create_image_req = CreateImageRequest.builder() \
         .request_body(CreateImageRequestBody.builder()
@@ -240,9 +239,7 @@ async def event():
 
         if header.event_type == "im.message.receive_v1":
             event_json = decrypt_json.event
-            event_id = header.event_id
             bot_request = construct_bot_request(event_json)
-            request_dic[event_id] = bot_request
             asyncio.create_task(process_request(bot_request))
             request_dic[bot_request.request_time] = bot_request
 
@@ -267,6 +264,7 @@ async def event():
 async def reply(bot_request: BotRequest):
     UserId = bot_request.user_id
     receive_id_type = bot_request.receive_id_type
+    logger.info(f"result: {bot_request.result.to_json()}")
     response = bot_request.result.to_json()
     if bot_request.done:
         request_dic.pop(bot_request.request_time)
@@ -309,7 +307,9 @@ def construct_bot_request(data):
         user_id = data.sender.sender_id.open_id
         receive_id_type = "open_id"
     username = "某人"
-    message = data.message.content
+    message = json.loads(data.message.content)
+    if data.message.message_type == "text":
+        message = message.get("text")
     logger.info(f"Get message from {session_id}[{user_id}]:\n{message}")
     with lock:
         bot_request = BotRequest(session_id, user_id, receive_id_type, username,
