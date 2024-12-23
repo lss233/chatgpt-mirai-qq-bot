@@ -1,49 +1,5 @@
-# Robot-frame
-graia-ariadne==0.11.7
-graia-broadcast==0.23.2
-graiax-silkcoder[libsndfile]
-python-telegram-bot==20.4
-discord.py
-wechatpy~=2.0.0a26
-qq-botpy
-
-# LLM-Upstream-library
-revChatGPT~=6.8.6
-openai~=0.27.8
-OpenAIAuth>=2.0.0
-tiktoken
-
-# TTS-related-dependencies
-edge-tts
-
-# Other-dependencies
-toml~=0.10.2
-Pillow>=9.3.0
-tinydb~=4.8.0
-loguru~=0.7.0
-asyncio~=3.4.3
 pydantic
-markdown~=3.4.4
-python-markdown-math~=0.8
-pygments~=2.15.1
-imgkit~=1.2.3
-qrcode~=7.4.2
-aiohttp~=3.8.5
-urllib3~=2.0.4
-uuid~=1.30
-aiocqhttp~=1.4.4
-tls-client
-python-dateutil~=2.8.2
-discord.py
-
-httpx~=0.24.1
-Quart==0.17.0
-pydub~=0.25.1
-PyJWT~=2.7.0
-PyYAML~=6.0
-creart~=0.3.0
-pycloudflared
-# g4f~=0.0.2.6
-Werkzeug~=2.3.7
-
-tempenv
+ruamel.yaml
+pytest
+python-telegram-bot
+loguru

@@ -9,3 +9,5 @@ Dockerfile.dev
 **/.DS_Store
 venv/
 .vscode/
+config.yaml
+logs/

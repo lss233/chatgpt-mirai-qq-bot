@@ -1,0 +1,9 @@
+ims:
+  enable:
+    telegram: ['telegram-bot-1234']
+  configs:
+    telegram-bot-1234:
+      token: 'abcd'
+
+plugins:
+  enable: []
