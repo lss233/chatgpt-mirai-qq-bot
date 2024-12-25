@@ -60,7 +60,7 @@ class PluginLoader:
         self.logger.debug(f"Instantiating plugin class: {plugin_class.__name__}")
         with self.container.scoped() as scoped_container:
             scoped_container.register(PluginEventBus, PluginEventBus())
-            return Inject(scoped_container)(plugin_class)()
+            return Inject(scoped_container).create(plugin_class)()
 
     def load_plugins(self):
         """Initializes all loaded plugins."""

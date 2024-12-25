@@ -4,16 +4,16 @@ from framework.logger import get_logger
 from framework.plugin_manager.plugin import Plugin
 
 logger = get_logger("TG-Adapter")
-class ExamplePlugin(Plugin):
+class TelegramAdapterPlugin(Plugin):
     def __init__(self):
         pass
 
     def on_load(self):
-        self.adapter_registry.register("telegram", TelegramAdapter, TelegramConfig)
-        logger.info("ExamplePlugin loaded")
+        self.im_registry.register("telegram", TelegramAdapter, TelegramConfig)
+        logger.info("TelegramAdapterPlugin loaded")
 
     def on_start(self):
-        logger.info("ExamplePlugin started")
+        logger.info("TelegramAdapterPlugin started")
 
     def on_stop(self):
-        logger.info("ExamplePlugin stopped")
+        logger.info("TelegramAdapterPlugin stopped")

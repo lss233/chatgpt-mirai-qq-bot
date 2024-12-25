@@ -1,9 +1,11 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from framework.im.adapter import IMAdapter
 from framework.im.message import Message, TextMessage, VoiceMessage, ImageMessage
 from framework.im.telegram.config import TelegramConfig
+from framework.llm.llm_registry import LLMAbility
 
-class TelegramAdapter:
+class TelegramAdapter(IMAdapter):
     """
     Telegram Adapter，包含 Telegram Bot 的所有逻辑。
     """

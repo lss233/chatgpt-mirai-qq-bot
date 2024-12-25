@@ -1,16 +1,18 @@
 from abc import ABC, abstractmethod
 
-from framework.im.adapter_registry import AdapterRegistry
+from framework.im.im_registry import IMRegistry
 from framework.im.manager import IMManager
 from framework.ioc.inject import Inject
+from framework.llm.llm_registry import LLMBackendRegistry
 from framework.plugin_manager.plugin_event_bus import PluginEventBus
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 
 class Plugin(ABC):
     event_bus: PluginEventBus
     workflow_dispatcher: WorkflowDispatcher
-    adapter_registry: AdapterRegistry
-    im_manager: IMManager    
+    llm_registry: LLMBackendRegistry
+    im_registry: IMRegistry
+    im_manager: IMManager
     
     @abstractmethod
     def on_load(self):

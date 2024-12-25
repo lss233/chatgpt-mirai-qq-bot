@@ -1,9 +1,11 @@
 from framework.config.config_loader import ConfigLoader
 from framework.config.global_config import GlobalConfig
 from framework.events.event_bus import EventBus
-from framework.im.adapter_registry import AdapterRegistry
+from framework.im.im_registry import IMRegistry
 from framework.im.manager import IMManager
 from framework.ioc.container import DependencyContainer
+from framework.llm.llm_manager import LLMManager
+from framework.llm.llm_registry import LLMBackendRegistry
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.logger import get_logger
@@ -22,26 +24,24 @@ def main():
     logger.info("Configuration loaded successfully")
     
     container = DependencyContainer()
-    logger.info("Dependency container created")
+    container.register(DependencyContainer, container)
     
-    logger.info("Registering EventBus in dependency container")
     container.register(EventBus, EventBus())
     
-    logger.info("Registering GlobalConfig in dependency container")
     container.register(GlobalConfig, config)
     
-    logger.info("Registering AdapterRegistry in dependency container")
-    container.register(AdapterRegistry, AdapterRegistry())
+    container.register(IMRegistry, IMRegistry())
+    container.register(LLMBackendRegistry, LLMBackendRegistry())
     
-    logger.info("Creating IMManager instance")
-    manager = IMManager(container)
-    container.register(IMManager, manager)
+    im_manager = IMManager(container)
+    container.register(IMManager, im_manager)
     
-    logger.info("Creating PluginLoader instance")
+    llm_manager = LLMManager(container)
+    container.register(LLMManager, llm_manager)
+    
     plugin_loader = PluginLoader(container)
     container.register(PluginLoader, plugin_loader)
     
-    logger.info("Creating WorkflowDispatcher instance")
     workflow_dispatcher = WorkflowDispatcher()
     container.register(WorkflowDispatcher, workflow_dispatcher)
     
@@ -53,9 +53,13 @@ def main():
     logger.info("Loading plugins")
     plugin_loader.load_plugins()
     
+    # 加载模型后端配置
+    logger.info("Loading LLMs")
+    llm_manager.load_config()
+    
     # 创建 IM 生命周期管理器
     logger.info("Starting adapters")
-    manager.start_adapters()
+    im_manager.start_adapters()
     
     # 启动插件
     logger.info("Starting plugins")
@@ -71,7 +75,7 @@ def main():
     
     # 停止所有 adapter
     logger.info("Stopping adapters")
-    manager.stop_adapters()
+    im_manager.stop_adapters()
     # 停止插件
     logger.info("Stopping plugins")
     plugin_loader.stop_plugins()

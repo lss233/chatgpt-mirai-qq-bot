@@ -1,17 +1,25 @@
 from typing import Dict
 
 from framework.config.global_config import GlobalConfig
-from framework.im.adapter_registry import AdapterRegistry
+from framework.im.im_registry import IMRegistry
+from framework.ioc.container import DependencyContainer
 from framework.ioc.inject import Inject
 
 class IMManager:
     """
     IM 生命周期管理器，负责管理所有 adapter 的启动、运行和停止。
     """
+    container: DependencyContainer
+    
+    config: GlobalConfig
+    
+    im_registry: IMRegistry
+    
     @Inject()
-    def __init__(self, config: GlobalConfig, adapter_registry: AdapterRegistry):
+    def __init__(self, container: DependencyContainer, config: GlobalConfig, adapter_registry: IMRegistry):
+        self.container = container
         self.config = config
-        self.adapter_registry = adapter_registry
+        self.im_registry = adapter_registry
         self.adapters: Dict[str, any] = {}
 
 
@@ -24,9 +32,9 @@ class IMManager:
 
         for platform, adapter_keys in enable_ims.items():
             # 动态获取 adapter 类
-            adapter_class = self.adapter_registry.get(platform)
+            adapter_class = self.im_registry.get(platform)
             # 动态获取 adapter 的配置类
-            config_class = self.adapter_registry.get_config_class(platform)
+            config_class = self.im_registry.get_config_class(platform)
 
             for key in adapter_keys:
                 # 从 credentials 中读取配置
@@ -38,7 +46,9 @@ class IMManager:
                 adapter_config = config_class(**credential)
 
                 # 创建 adapter 实例
-                adapter = adapter_class(adapter_config)
+                with self.container.scoped() as scoped_container:
+                    scoped_container.register(config_class, adapter_config)
+                    adapter = Inject(scoped_container).create(adapter_class)()
                 self.adapters[key] = adapter
                 adapter.run()
 

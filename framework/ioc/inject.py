@@ -19,7 +19,13 @@ def get_all_attributes(cls):
 class Inject:
     def __init__(self, container: Any = None):
         self.container = container  # 允许外部传入 container
-
+        
+    def create(self, target: type):
+        # 注入类
+        injected_class = self.__call__(target)
+        # 注入构造函数
+        return self.inject_function(injected_class)
+    
     def __call__(self, target: Any):
         # 如果修饰的是一个类
         if isinstance(target, type):

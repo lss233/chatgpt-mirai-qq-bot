@@ -24,7 +24,12 @@ class DependencyContainer:
 
     def scoped(self):
         """创建一个新的作用域容器"""
-        return ScopedContainer(self)
+        new_container = ScopedContainer(self)
+        
+        if DependencyContainer in self.registry:
+            new_container.registry[DependencyContainer] = new_container
+            new_container.registry[ScopedContainer] = new_container
+        return new_container
 
 class ScopedContainer(DependencyContainer):
     def __init__(self, parent):
