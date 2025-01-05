@@ -1,10 +1,13 @@
+import asyncio
 from typing import Dict
 
 from framework.config.global_config import GlobalConfig
 from framework.im.im_registry import IMRegistry
 from framework.ioc.container import DependencyContainer
 from framework.ioc.inject import Inject
+from framework.logger import get_logger
 
+logger = get_logger("IMManager")
 class IMManager:
     """
     IM 生命周期管理器，负责管理所有 adapter 的启动、运行和停止。
@@ -23,10 +26,14 @@ class IMManager:
         self.adapters: Dict[str, any] = {}
 
 
-    def start_adapters(self):
+    def start_adapters(self, loop=None):
         """
         根据配置文件中的 enable_ims 启动对应的 adapter。
+        :param loop: 负责执行的 event loop
         """
+        if loop is None:
+            loop = asyncio.get_event_loop()
+            
         enable_ims = self.config.ims.enable
         credentials = self.config.ims.configs
 
@@ -50,15 +57,19 @@ class IMManager:
                     scoped_container.register(config_class, adapter_config)
                     adapter = Inject(scoped_container).create(adapter_class)()
                 self.adapters[key] = adapter
-                adapter.run()
+                asyncio.ensure_future(self._start_adapter(key, adapter, loop), loop=loop)
 
-    def stop_adapters(self):
+    def stop_adapters(self, loop=None):
         """
         停止所有已启动的 adapter。
+        :param loop: 负责执行的 event loop
         """
+        if loop is None:
+            loop = asyncio.get_event_loop()
+            
         for key, adapter in self.adapters.items():
-            adapter.stop()
-            print(f"Stopped adapter: {key}")
+            asyncio.ensure_future(self._stop_adapter(key, adapter, loop), loop=loop)
+            
 
     def get_adapters(self) -> Dict[str, any]:
         """
@@ -66,3 +77,13 @@ class IMManager:
         :return: 已启动的 adapter 字典。
         """
         return self.adapters
+    
+    async def _start_adapter(self, key, adapter, loop):
+        logger.info(f"Starting adapter: {key}")
+        await adapter.start()
+        logger.info(f"Started adapter: {key}")
+
+    async def _stop_adapter(self, key, adapter, loop):
+        logger.info(f"Stopping adapter: {key}")
+        await adapter.stop()
+        logger.info(f"Stopped adapter: {key}")

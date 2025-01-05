@@ -1,3 +1,4 @@
+import asyncio
 from framework.config.config_loader import ConfigLoader
 from framework.config.global_config import GlobalConfig
 from framework.events.event_bus import EventBus
@@ -11,6 +12,7 @@ from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.logger import get_logger
 
 def main():
+    loop = asyncio.new_event_loop()
     logger = get_logger("Entrypoint")
     
     logger.info("Starting application...")
@@ -25,6 +27,8 @@ def main():
     
     container = DependencyContainer()
     container.register(DependencyContainer, container)
+    
+    container.register(asyncio.AbstractEventLoop, loop)
     
     container.register(EventBus, EventBus())
     
@@ -59,7 +63,7 @@ def main():
     
     # 创建 IM 生命周期管理器
     logger.info("Starting adapters")
-    im_manager.start_adapters()
+    im_manager.start_adapters(loop=loop)
     
     # 启动插件
     logger.info("Starting plugins")
@@ -69,13 +73,13 @@ def main():
         # 保持程序运行
         logger.info("Application started. Waiting for events...")
         while True:
-            pass
+            loop.run_forever()
     except KeyboardInterrupt:
         logger.warning("KeyboardInterrupt detected. Stopping application...")
     
     # 停止所有 adapter
     logger.info("Stopping adapters")
-    im_manager.stop_adapters()
+    im_manager.stop_adapters(loop=loop)
     # 停止插件
     logger.info("Stopping plugins")
     plugin_loader.stop_plugins()

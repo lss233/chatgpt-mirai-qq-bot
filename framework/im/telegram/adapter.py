@@ -74,10 +74,14 @@ class TelegramAdapter(IMAdapter):
         return message
 
 
-    def run(self):
+    async def start(self):
         """启动 Bot"""
-        self.application.run_polling()
+        await self.application.initialize()
+        await self.application.start()
+        await self.application.updater.start_polling()
 
-    def stop(self):
+    async def stop(self):
         """停止 Bot"""
-        self.application.stop()
+        await self.application.updater.stop()
+        await self.application.stop()
+        await self.application.shutdown()

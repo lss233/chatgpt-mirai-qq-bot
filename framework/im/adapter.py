@@ -19,5 +19,9 @@ class IMAdapter(ABC):
         """
         pass
     @abstractmethod
-    def run(self):
+    async def start(self):
+        pass
+    
+    @abstractmethod
+    async def stop(self):
         pass
