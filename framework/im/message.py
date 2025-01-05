@@ -8,6 +8,10 @@ class MessageElement(ABC):
     @abstractmethod
     def to_dict(self):
         pass
+    
+    @abstractmethod
+    def to_plain(self):
+        pass
 
 # 定义文本消息元素
 class TextMessage(MessageElement):
@@ -16,9 +20,12 @@ class TextMessage(MessageElement):
 
     def to_dict(self):
         return {"type": "text", "text": self.text}
+    
+    def to_plain(self):
+        return self.text
 
 # 定义媒体消息的基类
-class MediaMessage(ABC):
+class MediaMessage(MessageElement):
     def __init__(self, url: Optional[str] = None, path: Optional[str] = None, data: Optional[bytes] = None, format: Optional[str] = None):
         self.url = url
         self.path = path
@@ -56,10 +63,6 @@ class MediaMessage(ABC):
         self.url = None
         self.path = None
 
-    @abstractmethod
-    def to_dict(self):
-        pass
-
 # 定义语音消息
 class VoiceMessage(MediaMessage):
     def to_dict(self):
@@ -70,6 +73,10 @@ class VoiceMessage(MediaMessage):
             "data": base64.b64encode(self.data).decode() if self.data else None,
             "format": self.format
         }
+        
+    def to_plain(self):
+        return "[VoiceMessage]"
+    
 
 # 定义图片消息
 class ImageMessage(MediaMessage):
@@ -81,9 +88,12 @@ class ImageMessage(MediaMessage):
             "data": base64.b64encode(self.data).decode() if self.data else None,
             "format": self.format
         }
-
+        
+    def to_plain(self):
+        return "[ImageMessage]"
+    
 # 定义消息类
-class Message:
+class IMMessage:
     def __init__(self, sender: str, message_elements: List[MessageElement], raw_message: dict = None):
         self.sender = sender
         self.message_elements = message_elements
@@ -93,6 +103,7 @@ class Message:
         return {
             "sender": self.sender,
             "message_elements": [element.to_dict() for element in self.message_elements],
+            "plain_text": ''.join([element.to_plain() for element in self.message_elements]),
             "raw_message": self.raw_message
         }
 
@@ -104,7 +115,7 @@ if __name__ == "__main__":
     image_element = ImageMessage("https://example.com/image.jpg", 800, 600)
 
     # 创建消息对象
-    message = Message(
+    message = IMMessage(
         sender="user123",
         message_elements=[text_element, voice_element, image_element],
         raw_message={"platform": "example_chat", "timestamp": "2023-10-01T12:00:00Z"}

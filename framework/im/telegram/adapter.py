@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from framework.im.adapter import IMAdapter
-from framework.im.message import Message, TextMessage, VoiceMessage, ImageMessage
+from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.im.telegram.config import TelegramConfig
 from framework.llm.llm_registry import LLMAbility
 
@@ -38,7 +38,7 @@ class TelegramAdapter(IMAdapter):
         # 打印转换后的 Message 对象
         print("Converted Message:", message.to_dict())
 
-    def convert_to_message(self, raw_message: Update) -> Message:
+    def convert_to_message(self, raw_message: Update) -> IMMessage:
         """
         将 Telegram 的 Update 对象转换为 Message 对象。
         :param raw_message: Telegram 的 Update 对象。
@@ -70,7 +70,7 @@ class TelegramAdapter(IMAdapter):
             message_elements.append(photo_element)
 
         # 创建 Message 对象
-        message = Message(sender=sender, message_elements=message_elements, raw_message=raw_message_dict)
+        message = IMMessage(sender=sender, message_elements=message_elements, raw_message=raw_message_dict)
         return message
 
 
