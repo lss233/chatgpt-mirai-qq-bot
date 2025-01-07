@@ -3,7 +3,7 @@ from framework.im.telegram.config import TelegramConfig
 from framework.llm.llm_registry import LLMAbility
 from framework.logger import get_logger
 from framework.plugin_manager.plugin import Plugin
-from deepseek_adapter.adapter import DeepSeekAdapter, DeepSeekConfig
+from plugins.deepseek_adapter.adapter import DeepSeekAdapter, DeepSeekConfig
 
 logger = get_logger("DeepSeek")
 class DeepSeekPlugin(Plugin):
