@@ -18,6 +18,16 @@ class IMAdapter(ABC):
         :return: 转换后的 Message 对象。
         """
         pass
+
+    @abstractmethod
+    async def send_message(self, message: IMMessage, recipient: Any):
+        """
+        发送消息到 IM 平台。
+        :param message: 要发送的消息对象。
+        :param recipient: 接收消息的目标对象，可以是用户ID、用户对象、群组ID等，具体由各平台实现决定。
+        """
+        pass
+
     @abstractmethod
     async def start(self):
         pass

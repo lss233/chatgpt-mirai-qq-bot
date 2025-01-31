@@ -1,9 +1,9 @@
+from typing import Any
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.im.telegram.config import TelegramConfig
-from framework.llm.llm_registry import LLMAbility
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 
 class TelegramAdapter(IMAdapter):
@@ -39,7 +39,7 @@ class TelegramAdapter(IMAdapter):
         :param raw_message: Telegram 的 Update 对象。
         :return: 转换后的 Message 对象。
         """
-        sender = raw_message.message.from_user.username or raw_message.message.from_user.first_name
+        sender = raw_message.message.chat_id
         message_elements = []
         raw_message_dict = raw_message.message.to_dict()
 
@@ -68,6 +68,21 @@ class TelegramAdapter(IMAdapter):
         message = IMMessage(sender=sender, message_elements=message_elements, raw_message=raw_message_dict)
         return message
 
+    async def send_message(self, message: IMMessage, recipient: Any):
+        """
+        发送消息到 Telegram。
+        :param message: 要发送的消息对象。
+        :param recipient: 接收消息的目标对象，这里应该是 chat_id。
+        """
+        chat_id = recipient
+        
+        for element in message.message_elements:
+            if isinstance(element, TextMessage):
+                await self.application.bot.send_message(chat_id=chat_id, text=element.text)
+            elif isinstance(element, ImageMessage):
+                await self.application.bot.send_photo(chat_id=chat_id, photo=element.url)
+            elif isinstance(element, VoiceMessage):
+                await self.application.bot.send_voice(chat_id=chat_id, voice=element.url)
 
     async def start(self):
         """启动 Bot"""
