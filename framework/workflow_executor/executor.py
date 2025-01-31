@@ -1,12 +1,10 @@
-import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, List
+
+from framework.logger import get_logger
 from .workflow import Workflow
 from .block import Block
-
-# 配置日志记录
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class WorkflowExecutor:
     def __init__(self, workflow: Workflow):
@@ -15,6 +13,7 @@ class WorkflowExecutor:
         
         :param workflow: 要执行的工作流对象
         """
+        self.logger = get_logger("WorkflowExecutor")
         self.workflow = workflow
         self.compiled_plan = self._compile_workflow()
 
@@ -29,7 +28,7 @@ class WorkflowExecutor:
         # 构建块之间的依赖关系
         for wire in self.workflow.wires:
             dependencies[wire.source_block].append(wire.target_block)
-            logging.debug(f"Added dependency: {wire.source_block.name} -> {wire.target_block.name}")
+            self.logger.debug(f"Added dependency: {wire.source_block.name} -> {wire.target_block.name}")
 
         # 验证连线的数据类型是否匹配
         for wire in self.workflow.wires:
@@ -40,7 +39,7 @@ class WorkflowExecutor:
                                 f"({source_output.data_type}) -> {wire.target_block.name}.{wire.target_input} "
                                 f"({target_input.data_type})")
 
-        logging.info("Workflow compilation completed successfully.")
+        self.logger.info("Workflow compilation completed successfully.")
         return dependencies
 
     def run(self) -> Dict[str, Any]:
@@ -57,7 +56,7 @@ class WorkflowExecutor:
             for block in self.workflow.blocks:
                 if not block.inputs:
                     futures[executor.submit(block.execute)] = block
-                    logging.debug(f"Submitted block '{block.name}' with no inputs.")
+                    self.logger.debug(f"Submitted block '{block.name}' with no inputs.")
 
             # 处理已完成的块并提交依赖它的块
             while futures:
@@ -66,9 +65,9 @@ class WorkflowExecutor:
 
                 try:
                     block_outputs = completed_future.result()
-                    logging.info(f"Block '{completed_block.name}' executed successfully.")
+                    self.logger.info(f"Block '{completed_block.name}' executed successfully.")
                 except Exception as e:
-                    logging.error(f"Block '{completed_block.name}' execution failed: {e}")
+                    self.logger.error(f"Block '{completed_block.name}' execution failed: {e}")
                     raise RuntimeError(f"Block {completed_block.name} execution failed: {e}")
 
                 results[completed_block.name] = block_outputs
@@ -91,7 +90,7 @@ class WorkflowExecutor:
 
                     if all_inputs_satisfied:
                         futures[executor.submit(dependent_block.execute, **block_inputs)] = dependent_block
-                        logging.debug(f"Submitted dependent block '{dependent_block.name}' with inputs: {block_inputs}")
+                        self.logger.debug(f"Submitted dependent block '{dependent_block.name}' with inputs: {block_inputs}")
 
-        logging.info("Workflow execution completed successfully.")
+        self.logger.info("Workflow execution completed successfully.")
         return results

@@ -4,11 +4,13 @@ from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.im.telegram.config import TelegramConfig
 from framework.llm.llm_registry import LLMAbility
+from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 
 class TelegramAdapter(IMAdapter):
     """
     Telegram Adapter，包含 Telegram Bot 的所有逻辑。
     """
+    dispatcher: WorkflowDispatcher
 
     def __init__(self, config: TelegramConfig):
         self.config = config
@@ -27,14 +29,7 @@ class TelegramAdapter(IMAdapter):
         # 将 Telegram 消息转换为 Message 对象
         message = self.convert_to_message(update)
 
-        # 打印转换后的 Message 对象
-        print("Converted Message:", message.to_dict())
-
-    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """处理接收到的消息"""
-        # 将 Telegram 消息转换为 Message 对象
-        message = self.convert_to_message(update)
-
+        await self.dispatcher.dispatch(self, message)
         # 打印转换后的 Message 对象
         print("Converted Message:", message.to_dict())
 

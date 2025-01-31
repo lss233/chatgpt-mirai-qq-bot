@@ -94,6 +94,37 @@ class ImageMessage(MediaMessage):
     
 # 定义消息类
 class IMMessage:
+    """
+    IM消息类，用于表示一条完整的消息。
+    包含发送者信息和消息元素列表。
+    
+    Attributes:
+        sender: 发送者标识
+        message_elements: 消息元素列表,可以包含文本、图片、语音等
+        raw_message: 原始消息数据
+        content: 消息的纯文本内容
+        images: 消息中的图片列表
+        voices: 消息中的语音列表
+    """
+    sender: str
+    message_elements: List[MessageElement]
+    raw_message: Optional[dict]
+    
+    @property
+    def content(self) -> str:
+        """获取消息的纯文本内容"""
+        return ''.join([element.to_plain() for element in self.message_elements])
+        
+    @property
+    def images(self) -> List[ImageMessage]:
+        """获取消息中的所有图片"""
+        return [element for element in self.message_elements if isinstance(element, ImageMessage)]
+        
+    @property
+    def voices(self) -> List[VoiceMessage]:
+        """获取消息中的所有语音"""
+        return [element for element in self.message_elements if isinstance(element, VoiceMessage)]
+    
     def __init__(self, sender: str, message_elements: List[MessageElement], raw_message: dict = None):
         self.sender = sender
         self.message_elements = message_elements

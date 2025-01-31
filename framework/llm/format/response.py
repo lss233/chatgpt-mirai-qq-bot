@@ -41,6 +41,6 @@ class LLMChatResponseContent(BaseModel):
     logprobs: Optional[Logprobs] = None
 
 class LLMChatResponse(BaseModel):
-    content: Optional[List[LLMChatResponseContent]] = None
+    choices: Optional[List[LLMChatResponseContent]] = None
     model: Optional[str] = None
     usage: Optional[Usage] = None

@@ -4,3 +4,4 @@ pytest
 python-telegram-bot
 loguru
 aiohttp
+requests

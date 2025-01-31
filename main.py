@@ -1,4 +1,5 @@
 import asyncio
+import os
 from framework.config.config_loader import ConfigLoader
 from framework.config.global_config import GlobalConfig
 from framework.events.event_bus import EventBus
@@ -22,8 +23,13 @@ def main():
 
     # 加载配置文件
     logger.info(f"Loading configuration from {config_path}")
-    config = ConfigLoader.load_config(config_path, GlobalConfig)
-    logger.info("Configuration loaded successfully")
+    if os.path.exists(config_path):
+        config = ConfigLoader.load_config(config_path, GlobalConfig)
+        logger.info("Configuration loaded successfully")
+    else:
+        logger.warning(f"Configuration file {config_path} not found, using default configuration")
+        logger.warning("Please create a configuration file by copying config.yaml.example to config.yaml and modify it according to your needs")
+        config = GlobalConfig()
     
     container = DependencyContainer()
     container.register(DependencyContainer, container)
@@ -46,7 +52,7 @@ def main():
     plugin_loader = PluginLoader(container)
     container.register(PluginLoader, plugin_loader)
     
-    workflow_dispatcher = WorkflowDispatcher()
+    workflow_dispatcher = WorkflowDispatcher(container)
     container.register(WorkflowDispatcher, workflow_dispatcher)
     
     # 发现并加载内部插件

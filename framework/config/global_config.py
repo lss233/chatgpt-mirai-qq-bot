@@ -1,10 +1,10 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 class IMConfig(BaseModel):
-    enable: Dict[str, List[str]]
-    configs: Dict[str, Dict[str, str]] = Field(description="IM 的凭证配置")
+    enable: Dict[str, List[str]] = dict()
+    configs: Dict[str, Dict[str, str]] = Field(description="IM 的凭证配置", default=dict())
 
 class LLMBackendConfig(BaseModel):
     enable: bool
@@ -13,8 +13,8 @@ class LLMBackendConfig(BaseModel):
     models: List[str]
 
 class LLMConfig(BaseModel):
-    backends: Dict[str, LLMBackendConfig]
+    backends: Dict[str, LLMBackendConfig] = dict()
     
 class GlobalConfig(BaseModel):
-    ims: IMConfig
-    llms: LLMConfig
+    ims: IMConfig = IMConfig()
+    llms: LLMConfig = LLMConfig()

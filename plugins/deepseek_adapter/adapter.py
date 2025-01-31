@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-import aiohttp
+import requests
 from framework.llm.adapter import LLMBackendAdapter
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
@@ -15,7 +15,7 @@ class DeepSeekAdapter(LLMBackendAdapter):
         self.config = config
 
 
-    async def chat(self, req: LLMChatRequest) -> LLMChatResponse:
+    def chat(self, req: LLMChatRequest) -> LLMChatResponse:
         api_url = f"{self.config.api_base}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
@@ -23,7 +23,7 @@ class DeepSeekAdapter(LLMBackendAdapter):
         }
 
         data = {
-            "messages": req.messages,
+            "messages": [msg.model_dump(mode='json') for msg in req.messages],
             "model": req.model,
             "frequency_penalty": req.frequency_penalty,
             "max_tokens": req.max_tokens,
@@ -42,17 +42,13 @@ class DeepSeekAdapter(LLMBackendAdapter):
 
         # 移除值为 None 的字段
         data = {k: v for k, v in data.items() if v is not None}
-        async with aiohttp.ClientSession() as session:
-            async with session.post(api_url, json=data, headers=headers) as response:
-                response.raise_for_status()
-                response_data = await response.json()
-                return LLMChatResponse(**response_data)
-        return LLMChatResponse(
-            id=response_data["id"],
-            choices=response_data["choices"],
-            created=response_data["created"],
-            model=response_data["model"],
-            system_fingerprint=response_data["system_fingerprint"],
-            object=response_data["object"],
-            usage=response_data["usage"]
-        )
+        
+        response = requests.post(api_url, json=data, headers=headers)
+        try:
+            response.raise_for_status()
+            response_data = response.json()
+        except Exception as e:
+            print(f"API Response: {response.text}")
+            raise e
+        print(response_data)
+        return LLMChatResponse(**response_data)
