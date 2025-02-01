@@ -11,115 +11,92 @@ from framework.ioc.container import DependencyContainer
 from framework.workflow_executor.block import Block
 from framework.workflow_executor.input_output import Input, Output
 
-class IMMessageInputBlock(Block):
+class MessageInput(Block):
     def __init__(self, container: DependencyContainer):
-        inputs = {}
-        outputs = {"message": Output("message", IMMessage, "IM message from container")}
-        super().__init__("im_message_input", inputs, outputs)
+        outputs = {"msg": Output("msg", IMMessage, "Input message")}
+        super().__init__("msg_input", {}, outputs)
         self.container = container
 
     def execute(self, **kwargs) -> Dict[str, Any]:
-        message = self.container.resolve(IMMessage)
-        return {"message": message}
-    
-class MessageConverterBlock(Block):
+        msg = self.container.resolve(IMMessage)
+        return {"msg": msg}
+
+class MessageToLLM(Block):
     def __init__(self, container: DependencyContainer):
-        inputs = {"message": Input("message", IMMessage, "Input IM message")}
-        outputs = {"llm_message": Output("llm_message", List[LLMChatMessage], "Converted LLM message")}
-        super().__init__("message_converter", inputs, outputs)
+        inputs = {"msg": Input("msg", IMMessage, "Input message")}
+        outputs = {"llm_msg": Output("llm_msg", List[LLMChatMessage], "LLM message")}
+        super().__init__("msg_to_llm", inputs, outputs)
         self.container = container
 
     def execute(self, **kwargs) -> Dict[str, Any]:
-        im_message = kwargs["message"]
-        # Convert IMMessage to string format  for LLM
-        llm_message = LLMChatMessage(role='user', content=im_message.content)
-        return {"llm_message": [llm_message]}
+        msg = kwargs["msg"]
+        llm_msg = LLMChatMessage(role='user', content=msg.content)
+        return {"llm_msg": [llm_msg]}
 
-class LLMChatBlock(Block):
+class LLMChat(Block):
     def __init__(self, container: DependencyContainer):
-        inputs = {"prompt": Input("prompt", List[LLMChatMessage], "Input prompt for LLM")}
-        outputs = {"response": Output("response", LLMChatResponse, "LLM response text")}
+        inputs = {"prompt": Input("prompt", List[LLMChatMessage], "LLM prompt")}
+        outputs = {"resp": Output("resp", LLMChatResponse, "LLM response")}
         super().__init__("llm_chat", inputs, outputs)
         self.container = container
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         prompt = kwargs["prompt"]
-        llm_manager: LLMManager = self.container.resolve(LLMManager)
-        model_name = 'deepseek-r1'
-        adapter = llm_manager.get_llm(model_name)
+        llm = self.container.resolve(LLMManager).get_llm('deepseek-r1')
         req = LLMChatRequest(messages=prompt, model='DeepSeek-R1')
-        response = adapter.chat(req)
-        return {"response": response}
-    
-class ResponseConverterBlock(Block):
+        return {"resp": llm.chat(req)}
+
+class LLMToMessage(Block):
     def __init__(self, container: DependencyContainer):
-        inputs = {"response": Input("response", LLMChatResponse, "Input LLM response")}
-        outputs = {"im_message": Output("im_message", IMMessage, "Converted IM message")}
-        super().__init__("response_converter", inputs, outputs)
+        inputs = {"resp": Input("resp", LLMChatResponse, "LLM response")}
+        outputs = {"msg": Output("msg", IMMessage, "Output message")}
+        super().__init__("llm_to_msg", inputs, outputs)
         self.container = container
 
     def execute(self, **kwargs) -> Dict[str, Any]:
-        llm_response: LLMChatResponse = kwargs["response"]
-        
-        # Extract the content from LLMChatResponse
+        resp = kwargs["resp"]
         content = ""
-        if llm_response.choices and len(llm_response.choices) > 0:
-            if llm_response.choices[0].message:
-                content = llm_response.choices[0].message.content
-        
-        # Create TextMessage element
-        text_element = TextMessage(content)
-        
-        # Create IMMessage with system as sender
-        im_message = IMMessage(
+        if resp.choices and resp.choices[0].message:
+            content = resp.choices[0].message.content
+            
+        msg = IMMessage(
             sender="<@llm>",
-            message_elements=[text_element]
+            message_elements=[TextMessage(content)]
         )
-        
-        return {"im_message": im_message}
+        return {"msg": msg}
 
-
-class IMSendBlock(Block):
+class MessageSender(Block):
     def __init__(self, container: DependencyContainer):
-        inputs = {"im_message": Input("im_message", IMMessage, "Response to send")}
-        outputs = {"sent": Output("sent", bool, "Message sent status")}
-        super().__init__("message_sender", inputs, outputs)
+        inputs = {"msg": Input("msg", IMMessage, "Message to send")}
+        super().__init__("msg_sender", inputs, {})
         self.container = container
 
     def execute(self, **kwargs) -> Dict[str, Any]:
-        message: LLMChatResponse = kwargs["im_message"]
-        source_message: IMMessage = self.container.resolve(IMMessage)
-        source = source_message.sender
-        try:
-            # Simulate sending message
-            adapter: IMAdapter = self.container.resolve(IMAdapter)
-            asyncio.run(adapter.send_message(message, source))
-            
-            print(f"Sending message: {message}")
-            return {"sent": True}
-        except Exception as e:
-            print(f"Failed to send message: {str(e)}")
-            return {"sent": False}
-        
+        msg = kwargs["msg"]
+        src_msg = self.container.resolve(IMMessage)
+        adapter = self.container.resolve(IMAdapter)
+        loop: asyncio.AbstractEventLoop = self.container.resolve(asyncio.AbstractEventLoop)
+        loop.create_task(adapter.send_message(msg, src_msg.sender))
+        # return {"ok": True}
+
 class DefaultWorkflow(Workflow):
     def __init__(self, container: DependencyContainer):
-        # Create block instances
-        message_converter = MessageConverterBlock(container)
-        llm_chat = LLMChatBlock(container)
-        response_converter = ResponseConverterBlock(container)  # Add new block
-        message_sender = IMSendBlock(container)
-        im_message_input = IMMessageInputBlock(container)
+        msg_input = MessageInput(container)
+        msg_to_llm = MessageToLLM(container) 
+        llm_chat = LLMChat(container)
+        llm_to_msg = LLMToMessage(container)
+        msg_sender = MessageSender(container)
 
-        # Create wires to connect the blocks
-        input_to_converter = Wire(im_message_input, "message", message_converter, "message")
-        converter_to_llm = Wire(message_converter, "llm_message", llm_chat, "prompt")
-        llm_to_response_converter = Wire(llm_chat, "response", response_converter, "response")  # Add new wire
-        response_converter_to_sender = Wire(response_converter, "im_message", message_sender, "im_message")  # Update wire
+        wires = [
+            Wire(msg_input, "msg", msg_to_llm, "msg"),
+            Wire(msg_to_llm, "llm_msg", llm_chat, "prompt"),
+            Wire(llm_chat, "resp", llm_to_msg, "resp"),
+            Wire(llm_to_msg, "msg", msg_sender, "msg")
+        ]
 
-        # Initialize workflow with blocks and wires
         super().__init__(
-            [im_message_input, message_converter, llm_chat, response_converter, message_sender],  # Add new block
-            [input_to_converter, converter_to_llm, llm_to_response_converter, response_converter_to_sender]  # Update wires
+            [msg_input, msg_to_llm, llm_chat, llm_to_msg, msg_sender],
+            wires
         )
         
         self.container = container
