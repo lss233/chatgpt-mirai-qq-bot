@@ -14,7 +14,11 @@ class TelegramAdapter(IMAdapter):
 
     def __init__(self, config: TelegramConfig):
         self.config = config
-        self.application = Application.builder().token(config.token).build()
+        self.application = (
+            Application.builder()
+            .token(config.token)
+            .build()
+        )
 
         # 注册命令处理器和消息处理器
         self.application.add_handler(CommandHandler("start", self.start))
@@ -88,7 +92,7 @@ class TelegramAdapter(IMAdapter):
         """启动 Bot"""
         await self.application.initialize()
         await self.application.start()
-        await self.application.updater.start_polling()
+        await self.application.updater.start_polling(drop_pending_updates=True)
 
     async def stop(self):
         """停止 Bot"""
