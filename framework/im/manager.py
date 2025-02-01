@@ -42,7 +42,7 @@ class IMManager:
             adapter_class = self.im_registry.get(platform)
             # 动态获取 adapter 的配置类
             config_class = self.im_registry.get_config_class(platform)
-
+            tasks = []
             for key in adapter_keys:
                 # 从 credentials 中读取配置
                 if key not in credentials:
@@ -57,7 +57,8 @@ class IMManager:
                     scoped_container.register(config_class, adapter_config)
                     adapter = Inject(scoped_container).create(adapter_class)()
                 self.adapters[key] = adapter
-                asyncio.ensure_future(self._start_adapter(key, adapter, loop), loop=loop)
+                tasks.append(asyncio.ensure_future(self._start_adapter(key, adapter, loop), loop=loop))
+            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 
     def stop_adapters(self, loop=None):
         """
@@ -68,7 +69,7 @@ class IMManager:
             loop = asyncio.get_event_loop()
             
         for key, adapter in self.adapters.items():
-            asyncio.ensure_future(self._stop_adapter(key, adapter, loop), loop=loop)
+            loop.run_until_complete(self._stop_adapter(key, adapter, loop))
             
 
     def get_adapters(self) -> Dict[str, any]:

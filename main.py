@@ -1,5 +1,6 @@
 import asyncio
 import os
+import signal
 from framework.config.config_loader import ConfigLoader
 from framework.config.global_config import GlobalConfig
 from framework.events.event_bus import EventBus
@@ -12,9 +13,22 @@ from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.logger import get_logger
 
+logger = get_logger("Entrypoint")
+
+# 定义优雅退出异常
+class GracefulExit(SystemExit):
+    code = 1
+
+# 注册信号处理函数
+def _signal_handler(*args):
+    logger.warning("Interrupt signal received. Stopping application...")
+    raise GracefulExit()
+
 def main():
+    signal.signal(signal.SIGINT, _signal_handler)
+    signal.signal(signal.SIGTERM, _signal_handler)
+
     loop = asyncio.new_event_loop()
-    logger = get_logger("Entrypoint")
     
     logger.info("Starting application...")
     
@@ -72,24 +86,20 @@ def main():
     im_manager.start_adapters(loop=loop)
     
     # 启动插件
-    logger.info("Starting plugins")
     plugin_loader.start_plugins()
 
     try:
         # 保持程序运行
         logger.info("Application started. Waiting for events...")
-        while True:
-            loop.run_forever()
-    except KeyboardInterrupt:
-        logger.warning("KeyboardInterrupt detected. Stopping application...")
-    
-    # 停止所有 adapter
-    logger.info("Stopping adapters")
-    im_manager.stop_adapters(loop=loop)
-    # 停止插件
-    logger.info("Stopping plugins")
-    plugin_loader.stop_plugins()
-    logger.info("Application stopped gracefully")
+        loop.run_forever()
+    finally:
+        # 停止所有 adapter
+        im_manager.stop_adapters(loop=loop)
+        # 停止插件
+        plugin_loader.stop_plugins()
+        # 关闭事件循环
+        loop.close()
+        logger.info("Application stopped gracefully")
 
 if __name__ == "__main__":
     main()
