@@ -10,6 +10,7 @@ from framework.im.message import IMMessage, TextMessage
 from framework.ioc.container import DependencyContainer
 from framework.workflow_executor.block import Block
 from framework.workflow_executor.input_output import Input, Output
+from framework.config.global_config import GlobalConfig
 
 class MessageInput(Block):
     def __init__(self, container: DependencyContainer):
@@ -42,8 +43,12 @@ class LLMChat(Block):
 
     def execute(self, **kwargs) -> Dict[str, Any]:
         prompt = kwargs["prompt"]
-        llm = self.container.resolve(LLMManager).get_llm('deepseek-r1')
-        req = LLMChatRequest(messages=prompt, model='DeepSeek-R1')
+        llm_manager = self.container.resolve(LLMManager)
+        config = self.container.resolve(GlobalConfig)
+        
+        default_model = config.defaults.llm_model
+        llm = llm_manager.get_llm(default_model)
+        req = LLMChatRequest(messages=prompt, model=default_model)
         return {"resp": llm.chat(req)}
 
 class LLMToMessage(Block):
