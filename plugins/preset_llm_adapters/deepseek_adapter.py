@@ -1,54 +1,8 @@
-from pydantic import BaseModel
-import requests
-from framework.llm.adapter import LLMBackendAdapter
-from framework.llm.format.request import LLMChatRequest
-from framework.llm.format.response import LLMChatResponse
+from .openai_adapter import OpenAIConfig, OpenAIAdapter
 
-class DeepSeekConfig(BaseModel):
-    api_key: str
+class DeepSeekConfig(OpenAIConfig):
     api_base: str = "https://api.deepseek.com/"
-    class Config:
-        frozen = True
 
-class DeepSeekAdapter(LLMBackendAdapter):
+class DeepSeekAdapter(OpenAIAdapter):
     def __init__(self, config: DeepSeekConfig):
-        self.config = config
-
-
-    def chat(self, req: LLMChatRequest) -> LLMChatResponse:
-        api_url = f"{self.config.api_base}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json"
-        }
-
-        data = {
-            "messages": [msg.model_dump(mode='json') for msg in req.messages],
-            "model": req.model,
-            "frequency_penalty": req.frequency_penalty,
-            "max_tokens": req.max_tokens,
-            "presence_penalty": req.presence_penalty,
-            "response_format": req.response_format,
-            "stop": req.stop,
-            "stream": req.stream,
-            "stream_options": req.stream_options,
-            "temperature": req.temperature,
-            "top_p": req.top_p,
-            "tools": req.tools,
-            "tool_choice": req.tool_choice,
-            "logprobs": req.logprobs,
-            "top_logprobs": req.top_logprobs,
-        }
-
-        # 移除值为 None 的字段
-        data = {k: v for k, v in data.items() if v is not None}
-        
-        response = requests.post(api_url, json=data, headers=headers)
-        try:
-            response.raise_for_status()
-            response_data = response.json()
-        except Exception as e:
-            print(f"API Response: {response.text}")
-            raise e
-        print(response_data)
-        return LLMChatResponse(**response_data)
+        super().__init__(config)

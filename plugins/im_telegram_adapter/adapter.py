@@ -3,9 +3,24 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
-from framework.im.telegram.config import TelegramConfig
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any
+
+class TelegramConfig(BaseModel):
+    """
+    Telegram 配置文件模型。
+    """
+    token: str = Field(description="Telegram Bot Token")
+
+    class Config:
+        # 允许动态添加字段
+        extra = "allow"
+
+    def __repr__(self):
+        return f"TelegramConfig(token={self.token})"
+    
 class TelegramAdapter(IMAdapter):
     """
     Telegram Adapter，包含 Telegram Bot 的所有逻辑。
