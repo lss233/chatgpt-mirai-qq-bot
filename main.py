@@ -25,9 +25,6 @@ def _signal_handler(*args):
     raise GracefulExit()
 
 def main():
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
-
     loop = asyncio.new_event_loop()
     
     logger.info("Starting application...")
@@ -88,10 +85,16 @@ def main():
     # 启动插件
     plugin_loader.start_plugins()
 
+    # 注册信号处理函数
+    signal.signal(signal.SIGINT, _signal_handler)
+    signal.signal(signal.SIGTERM, _signal_handler)
+
     try:
         # 保持程序运行
         logger.info("Application started. Waiting for events...")
         loop.run_forever()
+    except GracefulExit:
+        logger.info("Graceful exit requested")
     finally:
         # 停止所有 adapter
         im_manager.stop_adapters(loop=loop)

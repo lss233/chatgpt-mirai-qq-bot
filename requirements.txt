@@ -5,3 +5,4 @@ python-telegram-bot
 loguru
 aiohttp
 requests
+quart
