@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 import requests
 from framework.llm.adapter import LLMBackendAdapter
+from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
 
@@ -9,6 +10,12 @@ class GeminiConfig(BaseModel):
     api_base: str = "https://generativelanguage.googleapis.com/v1beta"
     class Config:
         frozen = True
+
+def convert_llm_chat_message_to_gemini_message(msg: LLMChatMessage) -> dict:
+    return {
+        "role": "model" if msg.role == "assistant" else "user",
+        "parts": [{"text": msg.content}]
+    }
 
 class GeminiAdapter(LLMBackendAdapter):
     def __init__(self, config: GeminiConfig):
@@ -22,10 +29,7 @@ class GeminiAdapter(LLMBackendAdapter):
         }
 
         data = {
-            "contents": [{
-                "role": msg.role,
-                "parts": [{"text": msg.content}]
-            } for msg in req.messages],
+            "contents": [convert_llm_chat_message_to_gemini_message(msg) for msg in req.messages],
             "generationConfig": {
                 "temperature": req.temperature,
                 "topP": req.top_p,

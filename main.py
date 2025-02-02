@@ -9,6 +9,7 @@ from framework.im.manager import IMManager
 from framework.ioc.container import DependencyContainer
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
+from framework.memory.memory_adapter import MemoryAdapter
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.logger import get_logger
@@ -65,6 +66,9 @@ def main():
     
     workflow_dispatcher = WorkflowDispatcher(container)
     container.register(WorkflowDispatcher, workflow_dispatcher)
+
+    memory_adapter = MemoryAdapter(container)
+    container.register(MemoryAdapter, memory_adapter)
     
     # 发现并加载内部插件
     logger.info("Discovering plugins...")

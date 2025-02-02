@@ -1,54 +1,62 @@
-import asyncio
 from typing import Any, Dict, List
-from framework.im.adapter import EditStateAdapter, IMAdapter
 from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
 from framework.llm.llm_manager import LLMManager
 from framework.workflow_executor.builder import WorkflowBuilder
-from framework.workflow_executor.workflow import Wire, Workflow
+from framework.workflow_executor.workflow import Workflow
 from framework.im.message import IMMessage, TextMessage
 from framework.ioc.container import DependencyContainer
 from framework.workflow_executor.block import Block
 from framework.workflow_executor.input_output import Input, Output
 from framework.config.global_config import GlobalConfig
+from framework.workflows.blocks.im.messages import GetIMMessage, SendIMMessage
+from framework.workflows.blocks.im.states import ToggleEditState
+from framework.memory.memory_adapter import MemoryAdapter
 
-class MessageInput(Block):
-    def __init__(self, container: DependencyContainer):
-        outputs = {"msg": Output("msg", IMMessage, "Input message")}
-        super().__init__("msg_input", {}, outputs)
-        self.container = container
 
-    def execute(self, **kwargs) -> Dict[str, Any]:
-        msg = self.container.resolve(IMMessage)
-        return {"msg": msg}
-
-# Toggle edit state
-class ToggleEditState(Block):
-    def __init__(self, container: DependencyContainer, is_editing: bool):
+class QueryChatMemory(Block):
+    def __init__(self, container: DependencyContainer, memory_adapter: MemoryAdapter):
         inputs = {"msg": Input("msg", IMMessage, "Input message")}
-        outputs = {}
-        super().__init__("toggle_edit_state", inputs, outputs)
+        outputs = {"memory_content": Output("memory_content", str, "memory messages")}
+        super().__init__("query_chat_memory", inputs, outputs)
         self.container = container
-        self.is_editing = is_editing
+        self.memory_adapter = memory_adapter
+
+    def execute(self, msg: IMMessage) -> Dict[str, Any]:
+        # 从消息中获取发送者和内容
+        sender = msg.sender
+        content = msg.content
+        
+        # 使用 memory adapter 查询历史记忆
+        memory_content = self.memory_adapter.query(sender=sender, content=content)
+        return {"memory_content": memory_content}
     
-    def execute(self, msg: IMMessage) -> Dict[str, Any]:
-        im_adapter = self.container.resolve(IMAdapter)
-        if isinstance(im_adapter, EditStateAdapter):
-            loop: asyncio.AbstractEventLoop = self.container.resolve(asyncio.AbstractEventLoop)
-            loop.create_task(im_adapter.set_chat_editing_state(msg.sender, self.is_editing))
-        return {}
-
-class MessageToLLM(Block):
-    def __init__(self, container: DependencyContainer):
-        inputs = {"msg": Input("msg", IMMessage, "Input message")}
+class ConstructLLMMessage(Block):
+    def __init__(self, container: DependencyContainer, system_prompt_format: str, user_prompt_format: str):
+        inputs = {
+            "user_msg": Input("user_msg", IMMessage, "Input message"),
+            "memory_content": Input("memory_content", str, "Memory content")
+        }
         outputs = {"llm_msg": Output("llm_msg", List[LLMChatMessage], "LLM message")}
-        super().__init__("msg_to_llm", inputs, outputs)
+        super().__init__("construct_llm_message", inputs, outputs)
         self.container = container
+        self.system_prompt_format = system_prompt_format
+        self.user_prompt_format = user_prompt_format
 
-    def execute(self, msg: IMMessage) -> Dict[str, Any]:
-        llm_msg = LLMChatMessage(role='user', content=msg.content)
-        return {"llm_msg": [llm_msg]}
+    def execute(self, user_msg: IMMessage, memory_content: str) -> Dict[str, Any]:
+        # 替换提示模板中的变量
+        system_prompt = self.system_prompt_format.replace("{user_msg}", user_msg.content)
+        system_prompt = system_prompt.replace("{memory_content}", memory_content)
+        
+        user_prompt = self.user_prompt_format.replace("{user_msg}", user_msg.content)
+        user_prompt = user_prompt.replace("{memory_content}", memory_content)
+        
+        llm_msg = [
+            LLMChatMessage(role='system', content=system_prompt),
+            LLMChatMessage(role='user', content=user_prompt)
+        ]
+        return {"llm_msg": llm_msg}
 
 class LLMChat(Block):
     def __init__(self, container: DependencyContainer):
@@ -84,33 +92,58 @@ class LLMToMessage(Block):
         )
         return {"msg": msg}
 
-class MessageSender(Block):
-    def __init__(self, container: DependencyContainer):
-        inputs = {"msg": Input("msg", IMMessage, "Message to send")}
-        super().__init__("msg_sender", inputs, {})
+class StoreMemory(Block):
+    def __init__(self, container: DependencyContainer, memory_adapter: MemoryAdapter):
+        inputs = {
+            "user_msg": Input("user_msg", IMMessage, "User message"),
+            "llm_resp": Input("llm_resp", LLMChatResponse, "LLM response message")
+        }
+        outputs = {}  # 不需要输出
+        super().__init__("store_memory", inputs, outputs)
         self.container = container
+        self.memory_adapter = memory_adapter
 
-    def execute(self, msg: IMMessage) -> Dict[str, Any]:
-        src_msg = self.container.resolve(IMMessage)
-        adapter = self.container.resolve(IMAdapter)
-        loop: asyncio.AbstractEventLoop = self.container.resolve(asyncio.AbstractEventLoop)
-        loop.create_task(adapter.send_message(msg, src_msg.sender))
-        # return {"ok": True}
+    def execute(self, user_msg: IMMessage, llm_resp: LLMChatResponse) -> Dict[str, Any]:
+        # 存储用户消息
+        self.memory_adapter.store(
+            sender=user_msg.sender,
+            content=user_msg.content
+        )
+        
+        # 存储 LLM 响应
+        self.memory_adapter.store(
+            sender=llm_resp.choices[0].message.role,
+            content=llm_resp.choices[0].message.content
+        )
+        
+        return {}
 
 def create_default_workflow(container: DependencyContainer) -> Workflow:
     """使用 DSL 创建默认工作流"""
+    memory_adapter = container.resolve(MemoryAdapter)
+    
+    system_prompt = """你是一个智能助手。以下是之前的对话历史：
+{memory_content}
+
+请基于以上历史记忆，回答用户的问题。"""
+
+    user_prompt = """{user_msg}"""
+    
     return (WorkflowBuilder("default_workflow", container)
-        .use(MessageInput)
-        # 启用编辑状态和消息处理并行执行
+        .use(GetIMMessage, name="get_message")
         .parallel([
             (ToggleEditState, {"is_editing": True}),
-            MessageToLLM
+            (QueryChatMemory, "query_memory", {"memory_adapter": memory_adapter})
         ])
-        .merge(LLMChat)
+        .chain(ConstructLLMMessage,
+               wire_from=["query_memory", "get_message"],
+               system_prompt_format=system_prompt,
+               user_prompt_format=user_prompt)
+        .chain(LLMChat, name="llm_chat")
         .chain(LLMToMessage)
-        # 发送消息和关闭编辑状态并行执行
         .parallel([
-            MessageSender,
+            SendIMMessage,
+            (StoreMemory, {"memory_adapter": memory_adapter}, ["get_message", "llm_chat"]),
             (ToggleEditState, {"is_editing": False})
         ])
         .build())
