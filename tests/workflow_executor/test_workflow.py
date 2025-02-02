@@ -14,7 +14,7 @@ wire = Wire(source_block=input_block, source_output="output1", target_block=proc
 
 def test_workflow_creation():
     """Test workflow creation."""
-    workflow = Workflow(blocks=[input_block, process_block], wires=[wire])
+    workflow = Workflow(name="test_workflow", blocks=[input_block, process_block], wires=[wire])
     assert len(workflow.blocks) == 2
     assert len(workflow.wires) == 1
     assert workflow.wires[0].source_block == input_block

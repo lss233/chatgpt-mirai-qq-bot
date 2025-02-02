@@ -1,5 +1,7 @@
+import asyncio
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import functools
 from typing import Dict, Any, List
 
 from framework.logger import get_logger
@@ -42,30 +44,36 @@ class WorkflowExecutor:
         self.logger.info("Workflow compilation completed successfully.")
         return dependencies
 
-    def run(self) -> Dict[str, Any]:
+    async def run(self) -> Dict[str, Any]:
         """
         执行工作流，返回每个块的执行结果。
-        
+
         :return: 包含每个块执行结果的字典，键为块名，值为块的输出
         """
         results = defaultdict(dict)
         futures = {}
 
+        loop = asyncio.get_event_loop()
+        
+        self.logger.debug(f"Workflow ({self.workflow.name}) execution started")
+
         with ThreadPoolExecutor() as executor:
             # 提交没有输入依赖的块到线程池
             for block in self.workflow.blocks:
                 if not block.inputs:
-                    futures[executor.submit(block.execute)] = block
+                    future = loop.run_in_executor(executor, block.execute)
+                    futures[future] = block
                     self.logger.debug(f"Submitted block '{block.name}' with no inputs.")
 
             # 处理已完成的块并提交依赖它的块
             while futures:
-                completed_future = next(as_completed(futures))
+                completed_future, *pending_futures = await asyncio.wait(futures.keys(), return_when=asyncio.FIRST_COMPLETED)
+                completed_future = completed_future.pop()
                 completed_block = futures.pop(completed_future)
 
                 try:
-                    block_outputs = completed_future.result()
-                    self.logger.info(f"Block '{completed_block.name}' executed successfully.")
+                    block_outputs = await completed_future
+                    self.logger.debug(f"Block '{completed_block.name}' executed successfully.")
                 except Exception as e:
                     self.logger.error(f"Block '{completed_block.name}' execution failed: {e}")
                     raise RuntimeError(f"Block {completed_block.name} execution failed: {e}")
@@ -89,8 +97,9 @@ class WorkflowExecutor:
                             break
 
                     if all_inputs_satisfied:
-                        futures[executor.submit(dependent_block.execute, **block_inputs)] = dependent_block
+                        future = loop.run_in_executor(executor, functools.partial(dependent_block.execute, **block_inputs))
+                        futures[future] = dependent_block
                         self.logger.debug(f"Submitted dependent block '{dependent_block.name}' with inputs: {block_inputs}")
 
-        self.logger.info("Workflow execution completed successfully.")
+        self.logger.debug(f"Workflow ({self.workflow.name}) execution completed successfully.")
         return results

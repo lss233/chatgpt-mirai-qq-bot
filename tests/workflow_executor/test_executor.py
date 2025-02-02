@@ -20,6 +20,7 @@ wire2 = Wire(source_block=process_block1, source_output="output1",
 
 # Define test workflow
 workflow = Workflow(
+    name="test_workflow",
     blocks=[input_block, process_block1, process_block2], wires=[wire1, wire2])
 
 # Define a block with a failing execution
@@ -34,14 +35,15 @@ failing_block = FailingBlock(name="FailingBlock", inputs={"input1": Input(name="
                              "output1": Output(name="output1", data_type=str, description="Failing output")})
 
 # Define a workflow with a failing block
-failing_workflow = Workflow(blocks=[input_block, failing_block], wires=[Wire(
+failing_workflow = Workflow(name="failing_workflow", blocks=[input_block, failing_block], wires=[Wire(
     source_block=input_block, source_output="output1", target_block=failing_block, target_input="input1")])
 
 
-def test_executor_run():
+@pytest.mark.asyncio
+async def test_executor_run():
     """Test workflow executor run."""
     executor = WorkflowExecutor(workflow)
-    results = executor.run()
+    results = await executor.run()
 
     # Check results
     assert "InputBlock" in results
@@ -68,29 +70,32 @@ def test_executor_type_mismatch():
     )
     # Create a workflow with mismatched wire
     mismatched_workflow = Workflow(
+        name="mismatched_workflow",
         blocks=[input_block, wrong_process_block], wires=[mismatched_wire])
 
     with pytest.raises(TypeError):
         WorkflowExecutor(mismatched_workflow)
 
 
-def test_executor_with_failing_block():
+@pytest.mark.asyncio
+async def test_executor_with_failing_block():
     """Test workflow executor with a failing block."""
     executor = WorkflowExecutor(failing_workflow)
     with pytest.raises(RuntimeError) as exc_info:
-        executor.run()
+        await executor.run()
 
-
-def test_executor_with_no_blocks():
+@pytest.mark.asyncio
+async def test_executor_with_no_blocks():
     """Test workflow executor with no blocks."""
-    empty_workflow = Workflow(blocks=[], wires=[])
+    empty_workflow = Workflow(name="empty_workflow", blocks=[], wires=[])
     executor = WorkflowExecutor(empty_workflow)
-    results = executor.run()
+    results = await executor.run()
 
     # Check that the results are empty
     assert results == {}
 
-def test_executor_with_multiple_outputs():
+@pytest.mark.asyncio
+async def test_executor_with_multiple_outputs():
     """Test workflow executor with a block that has multiple outputs."""
     # Define a block with multiple outputs
     multi_output_block = Block(
@@ -105,13 +110,14 @@ def test_executor_with_multiple_outputs():
 
     # Define a workflow with the multi-output block
     multi_output_workflow = Workflow(
+        name="multi_output_workflow",
         blocks=[input_block, multi_output_block],
         wires=[Wire(source_block=input_block, source_output="output1",
                     target_block=multi_output_block, target_input="input1")]
     )
 
     executor = WorkflowExecutor(multi_output_workflow)
-    results = executor.run()
+    results = await executor.run()
 
     # Check results
     assert "InputBlock" in results

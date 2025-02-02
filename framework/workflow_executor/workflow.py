@@ -3,7 +3,8 @@ from typing import List
 from .block import Block
 
 class Workflow:
-    def __init__(self, blocks: List['Block'], wires: List['Wire']):
+    def __init__(self, name: str, blocks: List['Block'], wires: List['Wire']):
+        self.name = name
         self.blocks = blocks
         self.wires = wires
 

@@ -31,8 +31,7 @@ class ToggleEditState(Block):
         self.container = container
         self.is_editing = is_editing
     
-    def execute(self, **kwargs) -> Dict[str, Any]:
-        msg = kwargs["msg"]
+    def execute(self, msg: IMMessage) -> Dict[str, Any]:
         im_adapter = self.container.resolve(IMAdapter)
         if isinstance(im_adapter, EditStateAdapter):
             loop: asyncio.AbstractEventLoop = self.container.resolve(asyncio.AbstractEventLoop)
@@ -46,8 +45,7 @@ class MessageToLLM(Block):
         super().__init__("msg_to_llm", inputs, outputs)
         self.container = container
 
-    def execute(self, **kwargs) -> Dict[str, Any]:
-        msg = kwargs["msg"]
+    def execute(self, msg: IMMessage) -> Dict[str, Any]:
         llm_msg = LLMChatMessage(role='user', content=msg.content)
         return {"llm_msg": [llm_msg]}
 
@@ -58,8 +56,7 @@ class LLMChat(Block):
         super().__init__("llm_chat", inputs, outputs)
         self.container = container
 
-    def execute(self, **kwargs) -> Dict[str, Any]:
-        prompt = kwargs["prompt"]
+    def execute(self, prompt: List[LLMChatMessage]) -> Dict[str, Any]:
         llm_manager = self.container.resolve(LLMManager)
         config = self.container.resolve(GlobalConfig)
         
@@ -75,8 +72,7 @@ class LLMToMessage(Block):
         super().__init__("llm_to_msg", inputs, outputs)
         self.container = container
 
-    def execute(self, **kwargs) -> Dict[str, Any]:
-        resp = kwargs["resp"]
+    def execute(self, resp: LLMChatResponse) -> Dict[str, Any]:
         content = ""
         if resp.choices and resp.choices[0].message:
             content = resp.choices[0].message.content
@@ -93,8 +89,7 @@ class MessageSender(Block):
         super().__init__("msg_sender", inputs, {})
         self.container = container
 
-    def execute(self, **kwargs) -> Dict[str, Any]:
-        msg = kwargs["msg"]
+    def execute(self, msg: IMMessage) -> Dict[str, Any]:
         src_msg = self.container.resolve(IMMessage)
         adapter = self.container.resolve(IMAdapter)
         loop: asyncio.AbstractEventLoop = self.container.resolve(asyncio.AbstractEventLoop)
@@ -120,6 +115,7 @@ class DefaultWorkflow(Workflow):
         ]
 
         super().__init__(
+            "default_workflow",
             [msg_input, msg_to_llm, llm_chat, llm_to_msg, msg_sender, enable_edit_state, disable_edit_state],
             wires
         )

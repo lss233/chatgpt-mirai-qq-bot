@@ -38,7 +38,7 @@ class WorkflowDispatcher:
                     scoped_container.register(IMMessage, message)
                     workflow = rule.get_workflow(scoped_container)
                     executor = WorkflowExecutor(workflow)
-                    return executor.run()
+                    return await executor.run()
                 
         self.logger.debug("No matching rule found for message")
         return None
