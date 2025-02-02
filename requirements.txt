@@ -8,3 +8,4 @@ aiohttp
 requests
 quart
 wechatpy
+pycryptodome
