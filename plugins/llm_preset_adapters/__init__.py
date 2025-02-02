@@ -1,12 +1,12 @@
 from framework.llm.llm_registry import LLMAbility
 from framework.logger import get_logger
 from framework.plugin_manager.plugin import Plugin
-from preset_llm_adapters.gemini_adapter import GeminiAdapter, GeminiConfig
-from preset_llm_adapters.deepseek_adapter import DeepSeekAdapter, DeepSeekConfig
-from preset_llm_adapters.openai_adapter import OpenAIAdapter, OpenAIConfig
+from llm_preset_adapters.gemini_adapter import GeminiAdapter, GeminiConfig
+from llm_preset_adapters.deepseek_adapter import DeepSeekAdapter, DeepSeekConfig
+from llm_preset_adapters.openai_adapter import OpenAIAdapter, OpenAIConfig
 
-logger = get_logger("PresetLLMAdapters")
-class PresetLLMAdaptersPlugin(Plugin):
+logger = get_logger("LLMPresetAdapters")
+class LLMPresetAdaptersPlugin(Plugin):
     def __init__(self):
         pass
 
@@ -14,10 +14,10 @@ class PresetLLMAdaptersPlugin(Plugin):
         self.llm_registry.register("openai", OpenAIAdapter, OpenAIConfig, LLMAbility.TextChat)
         self.llm_registry.register("deepseek", DeepSeekAdapter, DeepSeekConfig, LLMAbility.TextChat)
         self.llm_registry.register("gemini", GeminiAdapter, GeminiConfig, LLMAbility.TextChat)
-        logger.info("PresetLLMAdaptersPlugin loaded")
+        logger.info("LLMPresetAdaptersPlugin loaded")
 
     def on_start(self):
-        logger.info("PresetLLMAdaptersPlugin started")
+        logger.info("LLMPresetAdaptersPlugin started")
 
     def on_stop(self):
-        logger.info("PresetLLMAdaptersPlugin stopped")
+        logger.info("LLMPresetAdaptersPlugin stopped")
