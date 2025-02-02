@@ -2,6 +2,7 @@ import asyncio
 from typing import Dict
 
 from framework.config.global_config import GlobalConfig
+from framework.im.adapter import IMAdapter
 from framework.im.im_registry import IMRegistry
 from framework.ioc.container import DependencyContainer
 from framework.ioc.inject import Inject
@@ -78,6 +79,14 @@ class IMManager:
         :return: 已启动的 adapter 字典。
         """
         return self.adapters
+    
+    def get_adapter(self, key: str) -> IMAdapter:
+        """
+        获取指定 key 的 adapter。
+        :param key: adapter 的 key
+        :return: 指定 key 的 adapter
+        """
+        return self.adapters[key]
     
     async def _start_adapter(self, key, adapter, loop):
         logger.info(f"Starting adapter: {key}")
