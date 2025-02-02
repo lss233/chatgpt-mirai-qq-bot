@@ -1,8 +1,22 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Protocol
+from typing_extensions import runtime_checkable
 from framework.im.message import IMMessage
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
+
+@runtime_checkable
+class EditStateAdapter(Protocol):
+    """
+    编辑状态适配器接口，定义了如何设置或取消对话的编辑状态
+    """
+    async def set_chat_editing_state(self, chat_id: int, is_editing: bool = True):
+        """
+        设置或取消对话的编辑状态
+        :param chat_id: Telegram 聊天 ID
+        :param is_editing: True 表示正在编辑，False 表示取消编辑状态
+        """
+        pass
 
 class IMAdapter(ABC):
     """

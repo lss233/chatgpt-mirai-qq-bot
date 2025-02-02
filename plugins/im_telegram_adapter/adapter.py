@@ -1,12 +1,14 @@
+import re
 from typing import Any
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
+from framework.logger import get_logger
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any
+import telegramify_markdown
 
 class TelegramConfig(BaseModel):
     """
@@ -38,6 +40,7 @@ class TelegramAdapter(IMAdapter):
         # 注册命令处理器和消息处理器
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(MessageHandler(filters.TEXT | filters.VOICE | filters.PHOTO, self.handle_message))
+        self.logger = get_logger("Telegram-Adapter")
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """处理 /start 命令"""
@@ -97,11 +100,12 @@ class TelegramAdapter(IMAdapter):
         
         for element in message.message_elements:
             if isinstance(element, TextMessage):
-                await self.application.bot.send_message(chat_id=chat_id, text=element.text)
+                text = telegramify_markdown.markdownify(element.text)
+                await self.application.bot.send_message(chat_id=chat_id, text=text, parse_mode="MarkdownV2")
             elif isinstance(element, ImageMessage):
-                await self.application.bot.send_photo(chat_id=chat_id, photo=element.url)
+                await self.application.bot.send_photo(chat_id=chat_id, photo=element.url, parse_mode="MarkdownV2")
             elif isinstance(element, VoiceMessage):
-                await self.application.bot.send_voice(chat_id=chat_id, voice=element.url)
+                await self.application.bot.send_voice(chat_id=chat_id, voice=element.url, parse_mode="MarkdownV2")
 
     async def start(self):
         """启动 Bot"""
@@ -114,3 +118,20 @@ class TelegramAdapter(IMAdapter):
         await self.application.updater.stop()
         await self.application.stop()
         await self.application.shutdown()
+    
+    async def set_chat_editing_state(self, chat_id: int, is_editing: bool = True):
+        """
+        设置或取消对话的编辑状态
+        :param chat_id: Telegram 聊天 ID
+        :param is_editing: True 表示正在编辑，False 表示取消编辑状态
+        """
+        action = "typing" if is_editing else "cancel"
+        try:
+            self.logger.debug(f"Setting chat editing state to {is_editing} for chat_id {chat_id}")
+            if is_editing:
+                await self.application.bot.send_chat_action(chat_id=chat_id, action=action)
+            else:
+                # 取消编辑状态时发送一个空操作
+                await self.application.bot.send_chat_action(chat_id=chat_id, action=action)
+        except Exception as e:
+            self.logger.warning(f"Failed to set chat editing state: {str(e)}")

@@ -1,6 +1,6 @@
 import asyncio
 from typing import Any, Dict, List
-from framework.im.adapter import IMAdapter
+from framework.im.adapter import EditStateAdapter, IMAdapter
 from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
@@ -21,6 +21,23 @@ class MessageInput(Block):
     def execute(self, **kwargs) -> Dict[str, Any]:
         msg = self.container.resolve(IMMessage)
         return {"msg": msg}
+
+# Toggle edit state
+class ToggleEditState(Block):
+    def __init__(self, container: DependencyContainer, is_editing: bool):
+        inputs = {"msg": Input("msg", IMMessage, "Input message")}
+        outputs = {}
+        super().__init__("toggle_edit_state", inputs, outputs)
+        self.container = container
+        self.is_editing = is_editing
+    
+    def execute(self, **kwargs) -> Dict[str, Any]:
+        msg = kwargs["msg"]
+        im_adapter = self.container.resolve(IMAdapter)
+        if isinstance(im_adapter, EditStateAdapter):
+            loop: asyncio.AbstractEventLoop = self.container.resolve(asyncio.AbstractEventLoop)
+            loop.create_task(im_adapter.set_chat_editing_state(msg.sender, self.is_editing))
+        return {}
 
 class MessageToLLM(Block):
     def __init__(self, container: DependencyContainer):
@@ -91,16 +108,19 @@ class DefaultWorkflow(Workflow):
         llm_chat = LLMChat(container)
         llm_to_msg = LLMToMessage(container)
         msg_sender = MessageSender(container)
-
+        enable_edit_state = ToggleEditState(container, True)
+        disable_edit_state = ToggleEditState(container, False)
         wires = [
+            Wire(msg_input, "msg", enable_edit_state, "msg"),
             Wire(msg_input, "msg", msg_to_llm, "msg"),
             Wire(msg_to_llm, "llm_msg", llm_chat, "prompt"),
             Wire(llm_chat, "resp", llm_to_msg, "resp"),
-            Wire(llm_to_msg, "msg", msg_sender, "msg")
+            Wire(llm_to_msg, "msg", msg_sender, "msg"),
+            Wire(llm_to_msg, "msg", disable_edit_state, "msg"),
         ]
 
         super().__init__(
-            [msg_input, msg_to_llm, llm_chat, llm_to_msg, msg_sender],
+            [msg_input, msg_to_llm, llm_chat, llm_to_msg, msg_sender, enable_edit_state, disable_edit_state],
             wires
         )
         

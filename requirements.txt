@@ -2,6 +2,7 @@ pydantic
 ruamel.yaml
 pytest
 python-telegram-bot
+telegramify-markdown
 loguru
 aiohttp
 requests
