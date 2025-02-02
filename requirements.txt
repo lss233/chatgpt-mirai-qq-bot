@@ -1,6 +1,7 @@
 pydantic
 ruamel.yaml
 pytest
+pytest-asyncio
 python-telegram-bot
 telegramify-markdown
 loguru

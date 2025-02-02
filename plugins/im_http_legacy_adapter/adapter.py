@@ -150,13 +150,13 @@ class HttpLegacyAdapter(IMAdapter):
 
     async def start(self):
         """启动HTTP服务器"""
-        from framework.logger import get_logger
+        from framework.logger import get_async_logger
         
         # 使用 hypercorn 配置来正确处理关闭信号
         from hypercorn.config import Config
         config = Config()
         config.bind = [f"{self.config.host}:{self.config.port}"]
-        config._log = get_logger("HTTP-Legacy-API")
+        config._log = get_async_logger("HTTP-Legacy-API")
         from hypercorn.asyncio import serve
         self.server_task = asyncio.create_task(
             serve(self.app, config)

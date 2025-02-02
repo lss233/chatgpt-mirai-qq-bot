@@ -1,7 +1,19 @@
 import pytest
 import json
 import asyncio
+import sys, os
+
+from framework.im.adapter import IMAdapter
+from framework.im.message import IMMessage
+from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
+from framework.ioc.container import DependencyContainer
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from im_http_legacy_adapter.adapter import HttpLegacyAdapter, HttpLegacyConfig, ResponseResult
+
+class FakeWorkflowDispatcher(WorkflowDispatcher):
+    async def dispatch(self, source: IMAdapter, message: IMMessage):
+        return None
 
 @pytest.fixture
 def config():
@@ -13,7 +25,11 @@ def config():
 
 @pytest.fixture
 def adapter(config):
-    return HttpLegacyAdapter(config)
+    container = DependencyContainer()
+    container.register(WorkflowDispatcher, FakeWorkflowDispatcher(container))
+    adapter = HttpLegacyAdapter(config)
+    adapter.dispatcher = container.resolve(WorkflowDispatcher)
+    return adapter
 
 @pytest.mark.asyncio
 async def test_chat_endpoint(adapter):

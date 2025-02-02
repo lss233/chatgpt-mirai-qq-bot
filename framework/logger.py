@@ -1,3 +1,4 @@
+from typing import Any
 from loguru import logger
 import os
 from datetime import datetime
@@ -48,3 +49,36 @@ def get_logger(tag: str):
     :return: 日志记录器
     """
     return _global_logger.bind(tag=tag)
+
+class AsyncLogger:
+    def __init__(self, logger):
+        self.logger = logger
+
+    async def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.critical(message, *args, **kwargs)
+
+    async def error(self, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.error(message, *args, **kwargs)
+
+    async def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.warning(message, *args, **kwargs)
+
+    async def info(self, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.info(message, *args, **kwargs)
+
+    async def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.debug(message, *args, **kwargs)
+
+    async def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.exception(message, *args, **kwargs)
+
+    async def log(self, level: int, message: str, *args: Any, **kwargs: Any) -> None:
+        self.logger.log(level, message, *args, **kwargs)
+
+def get_async_logger(tag: str):
+    """
+    获取带有特定标签的日志记录器
+    :param tag: 日志标签
+    :return: 日志记录器
+    """
+    return AsyncLogger(_global_logger.bind(tag=tag))
