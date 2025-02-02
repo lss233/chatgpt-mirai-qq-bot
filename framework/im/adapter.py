@@ -3,7 +3,6 @@ from typing import Any, Protocol
 from typing_extensions import runtime_checkable
 from framework.im.message import IMMessage
 from framework.llm.llm_manager import LLMManager
-from framework.llm.llm_registry import LLMBackendRegistry
 
 @runtime_checkable
 class EditStateAdapter(Protocol):

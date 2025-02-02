@@ -14,3 +14,6 @@ class Wire:
         self.source_output = source_output
         self.target_block = target_block
         self.target_input = target_input
+    
+    def __repr__(self):
+        return f"Wire(source_block={self.source_block.name}, source_output={self.source_output}, target_block={self.target_block.name}, target_input={self.target_input})"

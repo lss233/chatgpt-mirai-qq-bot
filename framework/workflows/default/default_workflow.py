@@ -5,6 +5,7 @@ from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
 from framework.llm.llm_manager import LLMManager
+from framework.workflow_executor.builder import WorkflowBuilder
 from framework.workflow_executor.workflow import Wire, Workflow
 from framework.im.message import IMMessage, TextMessage
 from framework.ioc.container import DependencyContainer
@@ -96,28 +97,20 @@ class MessageSender(Block):
         loop.create_task(adapter.send_message(msg, src_msg.sender))
         # return {"ok": True}
 
-class DefaultWorkflow(Workflow):
-    def __init__(self, container: DependencyContainer):
-        msg_input = MessageInput(container)
-        msg_to_llm = MessageToLLM(container) 
-        llm_chat = LLMChat(container)
-        llm_to_msg = LLMToMessage(container)
-        msg_sender = MessageSender(container)
-        enable_edit_state = ToggleEditState(container, True)
-        disable_edit_state = ToggleEditState(container, False)
-        wires = [
-            Wire(msg_input, "msg", enable_edit_state, "msg"),
-            Wire(msg_input, "msg", msg_to_llm, "msg"),
-            Wire(msg_to_llm, "llm_msg", llm_chat, "prompt"),
-            Wire(llm_chat, "resp", llm_to_msg, "resp"),
-            Wire(llm_to_msg, "msg", msg_sender, "msg"),
-            Wire(llm_to_msg, "msg", disable_edit_state, "msg"),
-        ]
-
-        super().__init__(
-            "default_workflow",
-            [msg_input, msg_to_llm, llm_chat, llm_to_msg, msg_sender, enable_edit_state, disable_edit_state],
-            wires
-        )
-        
-        self.container = container
+def create_default_workflow(container: DependencyContainer) -> Workflow:
+    """使用 DSL 创建默认工作流"""
+    return (WorkflowBuilder("default_workflow", container)
+        .use(MessageInput)
+        # 启用编辑状态和消息处理并行执行
+        .parallel([
+            (ToggleEditState, {"is_editing": True}),
+            MessageToLLM
+        ])
+        .merge(LLMChat)
+        .chain(LLMToMessage)
+        # 发送消息和关闭编辑状态并行执行
+        .parallel([
+            MessageSender,
+            (ToggleEditState, {"is_editing": False})
+        ])
+        .build())

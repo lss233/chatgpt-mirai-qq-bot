@@ -16,7 +16,7 @@ class WorkflowDispatcher:
 
     def __init_fallback(self):
         """初始化默认的兜底规则"""
-        from framework.workflow_factory.default_workflow_factory import DefaultWorkflowFactory
+        from framework.workflows.default.factory import DefaultWorkflowFactory
         fallback_factory = DefaultWorkflowFactory()
         self.dispatch_rules.append(FallbackMatchRule(fallback_factory))
         self.logger.info("Registered fallback dispatch rule")
@@ -36,6 +36,7 @@ class WorkflowDispatcher:
                 with self.container.scoped() as scoped_container:
                     scoped_container.register(IMAdapter, source)
                     scoped_container.register(IMMessage, message)
+                    # 此处构造出实际的 workflow 对象，使用的容器是注入了当前上下文的 container
                     workflow = rule.get_workflow(scoped_container)
                     executor = WorkflowExecutor(workflow)
                     return await executor.run()
