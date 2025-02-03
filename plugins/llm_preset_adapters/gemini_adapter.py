@@ -4,6 +4,7 @@ from framework.llm.adapter import LLMBackendAdapter
 from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
+from framework.logger import get_logger
 
 class GeminiConfig(BaseModel):
     api_key: str
@@ -19,6 +20,7 @@ def convert_llm_chat_message_to_gemini_message(msg: LLMChatMessage) -> dict:
 class GeminiAdapter(LLMBackendAdapter):
     def __init__(self, config: GeminiConfig):
         self.config = config
+        self.logger = get_logger("GeminiAdapter")
 
     def chat(self, req: LLMChatRequest) -> LLMChatResponse:
         api_url = f"{self.config.api_base}/models/{req.model}:generateContent"
@@ -39,6 +41,7 @@ class GeminiAdapter(LLMBackendAdapter):
             "safetySettings": []
         }
 
+        self.logger.debug(f"Contents: {data['contents']}")
         # Remove None fields
         data = {k: v for k, v in data.items() if v is not None}
         

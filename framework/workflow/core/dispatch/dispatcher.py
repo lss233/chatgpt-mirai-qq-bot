@@ -25,7 +25,7 @@ class WorkflowDispatcher:
     def __init_fallback(self):
         """初始化默认的兜底规则"""
         fallback_factory = DefaultWorkflowFactory()
-        self.dispatch_registry.register(FallbackMatchRule(fallback_factory.create_workflow))
+        self.dispatch_registry.register(FallbackMatchRule(fallback_factory.create_default_workflow))
         self.logger.info("Registered fallback dispatch rule")
 
     def register_rule(self, rule: DispatchRule):

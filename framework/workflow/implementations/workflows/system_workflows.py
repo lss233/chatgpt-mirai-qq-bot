@@ -17,6 +17,6 @@ def register_system_workflows(registry: WorkflowRegistry):
     registry.register("system", "settings", SystemWorkflowFactory.create_help_workflow)  # 暂时用help代替
     
     # 聊天相关工作流
-    registry.register("chat", "normal", DefaultWorkflowFactory.create_workflow)
-    registry.register("chat", "creative", DefaultWorkflowFactory.create_workflow)  # 暂时用默认的
-    registry.register("chat", "roleplay", DefaultWorkflowFactory.create_workflow)  # 暂时用默认的 
+    registry.register("chat", "normal", DefaultWorkflowFactory.create_default_workflow)
+    registry.register("chat", "creative", DefaultWorkflowFactory.create_default_workflow)  # 暂时用默认的
+    registry.register("chat", "roleplay", DefaultWorkflowFactory.create_default_workflow)  # 暂时用默认的 
