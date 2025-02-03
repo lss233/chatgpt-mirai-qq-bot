@@ -53,7 +53,7 @@ class DispatchRuleRegistry:
         """从规则数据创建调度规则实例"""
         rule_type = rule_data.get('type')
         workflow_name = rule_data.get('workflow')
-        
+        description = rule_data.get('description')
 
         if not rule_type or not workflow_name:
             raise ValueError("Rule must specify 'type' and 'workflow'")
@@ -62,28 +62,33 @@ class DispatchRuleRegistry:
         workflow_builder = self.workflow_registry.get(workflow_name)
         if not workflow_builder:
             raise ValueError(f"Workflow {workflow_name} not found")
-            
-        # 根据规则类型创建相应的规则实例
-        if rule_type == 'prefix':
-            prefix = rule_data.get('prefix')
-            if not prefix:
-                raise ValueError("Prefix rule must specify 'prefix'")
-            return PrefixMatchRule(prefix, workflow_builder)
-            
-        elif rule_type == 'keyword':
-            keywords = rule_data.get('keywords')
-            if not keywords or not isinstance(keywords, list):
-                raise ValueError("Keyword rule must specify 'keywords' as list")
-            return KeywordMatchRule(keywords, workflow_builder)
-            
-        elif rule_type == 'regex':
-            pattern = rule_data.get('pattern')
-            if not pattern:
-                raise ValueError("Regex rule must specify 'pattern'")
-            return RegexMatchRule(pattern, workflow_builder)
-            
-        else:
+
+        # 规则类型到构造函数的映射
+        rule_constructors = {
+            'prefix': (PrefixMatchRule, 'prefix', str),
+            'keyword': (KeywordMatchRule, 'keywords', list),
+            'regex': (RegexMatchRule, 'pattern', str)
+        }
+
+        if rule_type not in rule_constructors:
             raise ValueError(f"Unknown rule type: {rule_type}")
+
+        # 获取构造信息
+        constructor, param_name, param_type = rule_constructors[rule_type]
+        param_value = rule_data.get(param_name)
+
+        # 验证参数
+        if not param_value or not isinstance(param_value, param_type):
+            raise ValueError(f"{rule_type} rule must specify '{param_name}' as {param_type.__name__}")
+
+        # 创建规则实例
+        rule = constructor(param_value, workflow_builder)
+        
+        # 如果有描述信息,添加到规则实例
+        if description:
+            rule.description = description
+
+        return rule
             
     def get_rules(self) -> List[DispatchRule]:
         """获取所有已注册的规则"""
