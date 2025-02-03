@@ -16,12 +16,12 @@ from framework.memory.memory_adapter import MemoryAdapter
 
 
 class QueryChatMemory(Block):
-    def __init__(self, container: DependencyContainer, memory_adapter: MemoryAdapter):
+    def __init__(self, container: DependencyContainer, memory_adapter: str):
         inputs = {"msg": Input("msg", IMMessage, "Input message")}
         outputs = {"memory_content": Output("memory_content", str, "memory messages")}
         super().__init__("query_chat_memory", inputs, outputs)
         self.container = container
-        self.memory_adapter = memory_adapter
+        self.memory_adapter = MemoryAdapter(container)
 
     def execute(self, msg: IMMessage) -> Dict[str, Any]:
         # 从消息中获取发送者和内容
@@ -93,7 +93,7 @@ class LLMToMessage(Block):
         return {"msg": msg}
 
 class StoreMemory(Block):
-    def __init__(self, container: DependencyContainer, memory_adapter: MemoryAdapter):
+    def __init__(self, container: DependencyContainer, memory_adapter: str):
         inputs = {
             "user_msg": Input("user_msg", IMMessage, "User message"),
             "llm_resp": Input("llm_resp", LLMChatResponse, "LLM response message")
@@ -101,7 +101,7 @@ class StoreMemory(Block):
         outputs = {}  # 不需要输出
         super().__init__("store_memory", inputs, outputs)
         self.container = container
-        self.memory_adapter = memory_adapter
+        self.memory_adapter = MemoryAdapter(container)
 
     def execute(self, user_msg: IMMessage, llm_resp: LLMChatResponse) -> Dict[str, Any]:
         # 存储用户消息
@@ -119,9 +119,7 @@ class StoreMemory(Block):
         return {}
 
 def create_default_workflow(container: DependencyContainer) -> Workflow:
-    """使用 DSL 创建默认工作流"""
-    memory_adapter = container.resolve(MemoryAdapter)
-    
+    """使用 DSL 创建默认工作流"""    
     system_prompt = """你是一个智能助手。以下是之前的对话历史：
 {memory_content}
 
@@ -133,7 +131,7 @@ def create_default_workflow(container: DependencyContainer) -> Workflow:
         .use(GetIMMessage, name="get_message")
         .parallel([
             (ToggleEditState, {"is_editing": True}),
-            (QueryChatMemory, "query_memory", {"memory_adapter": memory_adapter})
+            (QueryChatMemory, "query_memory", {"memory_adapter": 'default_memory_adapter'})
         ])
         .chain(ConstructLLMMessage,
                wire_from=["query_memory", "get_message"],
@@ -143,7 +141,7 @@ def create_default_workflow(container: DependencyContainer) -> Workflow:
         .chain(LLMToMessage)
         .parallel([
             SendIMMessage,
-            (StoreMemory, {"memory_adapter": memory_adapter}, ["get_message", "llm_chat"]),
+            (StoreMemory, {"memory_adapter": 'default_memory_adapter'}, ["get_message", "llm_chat"]),
             (ToggleEditState, {"is_editing": False})
         ])
         .build())

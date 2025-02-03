@@ -1,8 +1,11 @@
-from typing import List, Type, Union, Callable, Dict, Any, Optional
+from typing import List, Type, Union, Callable, Dict, Any, Optional, TextIO
 from dataclasses import dataclass
 from .block import Block
 from .workflow import Workflow, Wire
 from .control_blocks import ConditionBlock, LoopBlock, LoopEndBlock
+import importlib
+from inspect import signature, Parameter
+from ruamel.yaml import YAML
 
 @dataclass
 class Node:
@@ -123,7 +126,10 @@ class WorkflowBuilder:
 
     def use(self, block_class: Type[Block], name: str = None, **kwargs) -> 'WorkflowBuilder':
         block = block_class(self.container, **kwargs)
-        node = Node(block=block, name=name)
+        # 如果提供了名称，使用提供的名称
+        if name:
+            block.name = name
+        node = Node(block=block, name=name or block.name)
         self.blocks.append(block)
         self.nodes_by_name[node.name] = node
         self.head = node
@@ -132,16 +138,23 @@ class WorkflowBuilder:
 
     def chain(self, block_class: Type[Block], name: str = None, wire_from: List[str] = None, **kwargs) -> 'WorkflowBuilder':
         block = block_class(self.container, **kwargs)
-        node = Node(block=block, name=name)
+        if name:
+            block.name = name
+        node = Node(block=block, name=name or block.name)
         self.blocks.append(block)
         self.nodes_by_name[node.name] = node
         
         if wire_from:
+            # 确保 wire_from 是列表
+            if isinstance(wire_from, str):
+                wire_from = [wire_from]
+            # 连接所有指定的源节点
             for source_name in wire_from:
                 source_node = self.nodes_by_name.get(source_name)
                 if source_node:
                     self._connect_blocks(source_node.block, block)
         else:
+            # 如果没有指定 wire_from，则连接到当前节点
             self._connect_blocks(self.current.block, block)
             
         self.current.next_nodes.append(node)
@@ -150,46 +163,41 @@ class WorkflowBuilder:
         return self
 
     def parallel(self, block_specs: List[Union[Type[Block], tuple]]) -> 'WorkflowBuilder':
-        """并行添加多个节点
-        支持的 block_specs 格式:
-        - BlockClass
-        - (BlockClass, name)
-        - (BlockClass, kwargs)
-        - (BlockClass, wire_from)
-        - (BlockClass, name, kwargs)
-        - (BlockClass, kwargs, wire_from)
-        - (BlockClass, name, kwargs, wire_from)
-        """
         parallel_nodes = []
-        # 初始化变量
-        block_class, kwargs, name, wire_from = None, None, None, None
-
+        
         for block_spec in block_specs:
+            # 初始化变量
+            block_class = None
+            name = None
+            kwargs = {}
+            wire_from = None
+
             if isinstance(block_spec, tuple):
                 if len(block_spec) == 4:  # (BlockClass, name, kwargs, wire_from)
                     block_class, name, kwargs, wire_from = block_spec
                 elif len(block_spec) == 3:  # (BlockClass, name, kwargs) or (BlockClass, kwargs, wire_from)
                     block_class, second, third = block_spec
-                    if isinstance(second, dict): # (BlockClass, kwargs, wire_from)
-                        kwargs, name, wire_from = second, None, third
-                    else: # (BlockClass, name, kwargs)
-                        kwargs, name, wire_from = third, second, None
-                elif len(block_spec) == 2:  # (BlockClass, kwargs) or (BlockClass, name) or (BlockClass, wire_from)
+                    if isinstance(second, dict):  # (BlockClass, kwargs, wire_from)
+                        kwargs, wire_from = second, third
+                    else:  # (BlockClass, name, kwargs)
+                        name, kwargs = second, third
+                elif len(block_spec) == 2:  # (BlockClass, name) or (BlockClass, kwargs)
                     block_class, second = block_spec
-                    if isinstance(second, dict): # (BlockClass, kwargs)
-                        kwargs, name, wire_from = second, None, None
-                    elif isinstance(second, str): # (BlockClass, wire_from)
-                        kwargs, name, wire_from = {}, None, second
-                    else: # (BlockClass, name)
-                        kwargs, name, wire_from = {}, second, None
+                    if isinstance(second, dict):
+                        kwargs = second
+                    else:
+                        name = second
             else:
-                block_class, kwargs, name, wire_from = block_spec, {}, None, None
+                block_class = block_spec
+
             block = block_class(self.container, **kwargs)
-            node = Node(block=block, name=name, is_parallel=True)
+            # 如果提供了名称，使用提供的名称
+            if name:
+                block.name = name
+            node = Node(block=block, name=name or block.name, is_parallel=True)
             self.blocks.append(block)
             self.nodes_by_name[node.name] = node
             
-            # 处理连接
             if wire_from:
                 if isinstance(wire_from, str):
                     wire_from = [wire_from]
@@ -197,8 +205,8 @@ class WorkflowBuilder:
                     source_node = self.nodes_by_name.get(source_name)
                     if source_node:
                         self._connect_blocks(source_node.block, block)
-            # else:
-            self._connect_blocks(self.current.block, block)
+            else:
+                self._connect_blocks(self.current.block, block)
                 
             node.parent = self.current
             parallel_nodes.append(node)
@@ -274,13 +282,17 @@ class WorkflowBuilder:
         """连接两个块，自动处理输入输出匹配"""
         for output_name, output in source_block.outputs.items():
             for input_name, input in target_block.inputs.items():
-                # 遵循先到先得的原则，如果这个 input 已经存在了 wire，则直接跳过
-                if any(wire.target_block == target_block and wire.target_input == input_name for wire in self.wires):
-                    continue
+                # 检查数据类型是否匹配
                 if output.data_type == input.data_type:
+                    # 创建新的连线
                     wire = Wire(source_block, output_name, target_block, input_name)
-                    self.wires.append(wire)
-                    break
+                    # 检查是否已存在相同的连线
+                    if not any(w.source_block == wire.source_block and 
+                             w.target_block == wire.target_block and
+                             w.source_output == wire.source_output and
+                             w.target_input == wire.target_input 
+                             for w in self.wires):
+                        self.wires.append(wire)
 
     def _find_parallel_nodes(self, start_node: Node) -> List[Node]:
         """查找所有并行节点"""
@@ -301,4 +313,115 @@ class WorkflowBuilder:
         for block in self.blocks:
             if not block.name:
                 block.name = f"{block.__class__.__name__}_{id(block)}"
-        return Workflow(self.name, self.blocks, self.wires) 
+        return Workflow(self.name, self.blocks, self.wires)
+
+    def save_to_yaml(self, file_path: str):
+        """将工作流保存为 YAML 格式"""
+        yaml = YAML()
+        yaml.indent(mapping=2, sequence=4, offset=2)
+        yaml.width = 4096
+        
+        workflow_data = {
+            'name': self.name,
+            'blocks': []
+        }
+        
+        def serialize_node(node: Node) -> dict:
+            block_data = {
+                'type': f"{node.block.__class__.__module__}.{node.block.__class__.__name__}",
+                'name': node.block.name,  # 使用 block 的 name
+                'params': {}
+            }
+            
+            # 获取构造函数的参数信息
+            sig = signature(node.block.__class__.__init__)
+            params = {
+                name: param 
+                for name, param in sig.parameters.items() 
+                if name not in ['self', 'container']
+            }
+            
+            # 只序列化在 __init__ 中定义的参数
+            for param_name in params:
+                if hasattr(node.block, param_name):
+                    value = getattr(node.block, param_name)
+                    if isinstance(value, (str, int, float, bool, list, dict)):
+                        block_data['params'][param_name] = value
+                
+            if node.is_parallel:
+                block_data['parallel'] = True
+                
+            # 添加连接信息
+            connected_to = []
+            for wire in self.wires:
+                if wire.source_block == node.block:
+                    target_node = next(n for n in self.nodes_by_name.values() if n.block == wire.target_block)
+                    connected_to.append({
+                        'target': target_node.block.name,  # 使用 block 的 name
+                        'mapping': {
+                            'from': wire.source_output,
+                            'to': wire.target_input
+                        }
+                    })
+            if connected_to:
+                block_data['connected_to'] = connected_to
+                
+            return block_data
+            
+        # 序列化所有节点
+        for node in self.nodes_by_name.values():
+            workflow_data['blocks'].append(serialize_node(node))
+            
+        # 保存到文件
+        with open(file_path, 'w', encoding='utf-8') as f:
+            yaml.dump(workflow_data, f)
+        return self
+    
+
+    @classmethod
+    def load_from_yaml(cls, file_path: str, container) -> 'WorkflowBuilder':
+        """从 YAML 文件加载工作流
+        
+        Args:
+            file_path: YAML 文件路径
+            container: 依赖注入容器
+            
+        Returns:
+            WorkflowBuilder 实例
+        """
+        yaml = YAML(typ='safe')
+        with open(file_path, 'r', encoding='utf-8') as f:
+            workflow_data = yaml.load(f)
+            
+        builder = cls(workflow_data['name'], container)
+        
+        def import_class(class_path: str) -> Type:
+            module_path, class_name = class_path.rsplit('.', 1)
+            module = importlib.import_module(module_path)
+            return getattr(module, class_name)
+        
+        # 第一遍：创建所有块
+        for block_data in workflow_data['blocks']:
+            block_class = import_class(block_data['type'])
+            params = block_data.get('params', {})
+            
+            if block_data.get('parallel'):
+                # 处理并行节点
+                parallel_blocks = [(block_class, block_data['name'], params)]
+                builder.parallel(parallel_blocks)
+            else:
+                # 处理普通节点
+                if builder.head is None:
+                    builder.use(block_class, name=block_data['name'], **params)
+                else:
+                    builder.chain(block_class, name=block_data['name'], **params)
+        
+        # 第二遍：建立连接
+        for block_data in workflow_data['blocks']:
+            if 'connected_to' in block_data:
+                source_node = builder.nodes_by_name[block_data['name']]
+                for connection in block_data['connected_to']:
+                    target_node = builder.nodes_by_name[connection['target']]
+                    builder._connect_blocks(source_node.block, target_node.block)
+                    
+        return builder 
