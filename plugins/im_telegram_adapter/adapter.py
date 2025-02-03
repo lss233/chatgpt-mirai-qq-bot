@@ -5,8 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.logger import get_logger
-from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
-
+from framework.workflow.core.dispatch import WorkflowDispatcher
 from pydantic import ConfigDict, BaseModel, Field
 import telegramify_markdown
 

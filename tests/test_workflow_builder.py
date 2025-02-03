@@ -1,12 +1,14 @@
 import pytest
-from framework.workflow_executor.builder import WorkflowBuilder
-from framework.workflow_executor.block import Block
-from framework.workflow_executor.input_output import Input, Output
-from framework.ioc.container import DependencyContainer
 import os
 from typing import Dict, Any
-from framework.workflow_executor.block_registry import BlockRegistry
 import warnings
+
+from framework.ioc.container import DependencyContainer
+from framework.workflow.core.block import Block
+from framework.workflow.core.block.registry import BlockRegistry
+from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.workflow.builder import WorkflowBuilder
+
 
 # 测试用的 Block 类
 class SimpleInputBlock(Block):

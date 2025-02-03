@@ -5,12 +5,12 @@ import sys, os
 
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
-from framework.workflow_dispatcher.dispatch_rule_registry import DispatchRuleRegistry
-from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
+from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
+from framework.workflow.core.dispatch.dispatcher import WorkflowDispatcher
 from framework.ioc.container import DependencyContainer
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from framework.workflow_executor.workflow_registry import WorkflowRegistry
+from framework.workflow.core.workflow.registry import WorkflowRegistry
 from im_http_legacy_adapter.adapter import HttpLegacyAdapter, HttpLegacyConfig, ResponseResult
 
 class FakeWorkflowDispatcher(WorkflowDispatcher):

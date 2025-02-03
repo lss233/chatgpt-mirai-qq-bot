@@ -11,13 +11,13 @@ from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
 from framework.memory.memory_adapter import MemoryAdapter
 from framework.plugin_manager.plugin_loader import PluginLoader
-from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
+from framework.workflow.core.dispatch import WorkflowDispatcher
 from framework.logger import get_logger
-from framework.workflow_executor.block_registry import BlockRegistry
-from framework.workflow_executor.system_blocks import register_system_blocks
-from framework.workflow_executor.workflow_registry import WorkflowRegistry
-from framework.workflow_dispatcher.dispatch_rule_registry import DispatchRuleRegistry
-from framework.workflow_executor.system_workflows import register_system_workflows
+from framework.workflow.core.block import BlockRegistry
+from framework.workflow.core.dispatch import DispatchRuleRegistry
+from framework.workflow.core.workflow import WorkflowRegistry
+from framework.workflow.implementations.blocks import register_system_blocks
+from framework.workflow.implementations.workflows import register_system_workflows
 
 logger = get_logger("Entrypoint")
 

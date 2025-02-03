@@ -1,7 +1,7 @@
 import pytest
-from framework.workflow_executor.workflow import Workflow, Wire
-from framework.workflow_executor.block import Block
-from framework.workflow_executor.input_output import Input, Output
+from framework.workflow.core.block import Block
+from framework.workflow.core.workflow import Wire, Workflow
+from framework.workflow.core.workflow.input_output import Input, Output
 
 # Define test blocks
 input_block = Block(name="InputBlock", inputs={}, outputs={"output1": Output(name="output1", data_type=str, description="Input data")})

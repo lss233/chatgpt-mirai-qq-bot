@@ -7,7 +7,7 @@ from quart import Quart, request
 from pydantic import ConfigDict, BaseModel, Field
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
-from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
+from framework.workflow.core.dispatch import WorkflowDispatcher
 
 class HttpLegacyConfig(BaseModel):
     """HTTP Legacy API 配置"""

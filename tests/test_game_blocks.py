@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import MagicMock
-from framework.workflows.blocks.game.dice import DiceRoll
-from framework.workflows.blocks.game.gacha import GachaSimulator
 from framework.ioc.container import DependencyContainer
 from framework.im.message import IMMessage, TextMessage
+from framework.workflow.implementations.blocks.game.dice import DiceRoll
+from framework.workflow.implementations.blocks.game.gacha import GachaSimulator
 
 @pytest.fixture
 def container():

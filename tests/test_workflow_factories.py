@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
 from framework.ioc.container import DependencyContainer
-from framework.workflows.game.factory import GameWorkflowFactory
-from framework.workflows.system.factory import SystemWorkflowFactory
+from framework.workflow.implementations.factories.game_factory import GameWorkflowFactory
+from framework.workflow.implementations.factories.system_factory import SystemWorkflowFactory
 
 @pytest.fixture
 def container():

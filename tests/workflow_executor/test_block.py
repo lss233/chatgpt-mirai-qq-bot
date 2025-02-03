@@ -1,5 +1,5 @@
-from framework.workflow_executor.block import Block
-from framework.workflow_executor.input_output import Input, Output
+from framework.workflow.core.block import Block
+from framework.workflow.core.workflow.input_output import Input, Output
 
 # Define test inputs and outputs
 input_data = Input(name="input1", data_type=str, description="Input data")

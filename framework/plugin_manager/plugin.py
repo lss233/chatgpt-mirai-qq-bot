@@ -5,7 +5,7 @@ from framework.im.manager import IMManager
 from framework.ioc.inject import Inject
 from framework.llm.llm_registry import LLMBackendRegistry
 from framework.plugin_manager.plugin_event_bus import PluginEventBus
-from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
+from framework.workflow.core.dispatch import WorkflowDispatcher
 
 class Plugin(ABC):
     event_bus: PluginEventBus

@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import MagicMock, patch
-from framework.workflows.blocks.system.help import GenerateHelp
+from unittest.mock import MagicMock
+from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
+from framework.workflow.core.dispatch.rule import PrefixMatchRule
+from framework.workflow.implementations.blocks.system.help import GenerateHelp
 from framework.ioc.container import DependencyContainer
-from framework.workflow_dispatcher.dispatch_rule_registry import DispatchRuleRegistry
-from framework.workflow_dispatcher.dispatch_rule import PrefixMatchRule
 from framework.im.message import IMMessage
 
 @pytest.fixture

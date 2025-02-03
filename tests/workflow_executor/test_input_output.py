@@ -1,4 +1,5 @@
-from framework.workflow_executor.input_output import Input, Output
+from framework.workflow.core.block import Block
+from framework.workflow.core.workflow.input_output import Input, Output
 
 def test_input_validation():
     """Test input validation."""
