@@ -15,6 +15,9 @@ from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.logger import get_logger
 from framework.workflow_executor.block_registry import BlockRegistry
 from framework.workflow_executor.system_blocks import register_system_blocks
+from framework.workflow_executor.workflow_registry import WorkflowRegistry
+from framework.workflow_dispatcher.dispatch_rule_registry import DispatchRuleRegistry
+from framework.workflow_executor.system_workflows import register_system_workflows
 
 logger = get_logger("Entrypoint")
 
@@ -26,6 +29,23 @@ class GracefulExit(SystemExit):
 def _signal_handler(*args):
     logger.warning("Interrupt signal received. Stopping application...")
     raise GracefulExit()
+
+def init_container() -> DependencyContainer:
+    container = DependencyContainer()
+    container.register(DependencyContainer, container)
+    
+    # 注册工作流注册表
+    workflow_registry = WorkflowRegistry(container)
+    register_system_workflows(workflow_registry)  # 注册系统工作流
+    workflow_registry.load_workflows()  # 加载自定义工作流
+    container.register(WorkflowRegistry, workflow_registry)
+    
+    # 注册调度规则注册表
+    dispatch_registry = DispatchRuleRegistry(container)
+    dispatch_registry.load_rules()  # 加载调度规则
+    container.register(DispatchRuleRegistry, dispatch_registry)
+    
+    return container
 
 def main():
     loop = asyncio.new_event_loop()
@@ -45,8 +65,7 @@ def main():
         logger.warning("Please create a configuration file by copying config.yaml.example to config.yaml and modify it according to your needs")
         config = GlobalConfig()
     
-    container = DependencyContainer()
-    container.register(DependencyContainer, container)
+    container = init_container()
     
     container.register(asyncio.AbstractEventLoop, loop)
     

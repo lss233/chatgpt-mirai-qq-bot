@@ -8,6 +8,9 @@ from framework.workflows.default.default_workflow import (
     LLMToMessage,
     StoreMemory
 )
+from framework.workflows.blocks.game.dice import DiceRoll
+from framework.workflows.blocks.game.gacha import GachaSimulator
+from framework.workflows.blocks.system.help import GenerateHelp
 
 def register_system_blocks(registry: BlockRegistry):
     """注册系统自带的 block"""
@@ -21,4 +24,11 @@ def register_system_blocks(registry: BlockRegistry):
     registry.register("construct_llm_message", "internal", ConstructLLMMessage)
     registry.register("llm_chat", "internal", LLMChat)
     registry.register("llm_to_message", "internal", LLMToMessage)
-    registry.register("store_memory", "internal", StoreMemory) 
+    registry.register("store_memory", "internal", StoreMemory)
+    
+    # 游戏相关 blocks
+    registry.register("dice_roll", "game", DiceRoll)
+    registry.register("gacha_simulator", "game", GachaSimulator)
+    
+    # 系统相关 blocks
+    registry.register("generate_help", "system", GenerateHelp) 

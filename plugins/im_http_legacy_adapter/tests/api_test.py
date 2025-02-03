@@ -5,10 +5,12 @@ import sys, os
 
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
+from framework.workflow_dispatcher.dispatch_rule_registry import DispatchRuleRegistry
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.ioc.container import DependencyContainer
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from framework.workflow_executor.workflow_registry import WorkflowRegistry
 from im_http_legacy_adapter.adapter import HttpLegacyAdapter, HttpLegacyConfig, ResponseResult
 
 class FakeWorkflowDispatcher(WorkflowDispatcher):
@@ -26,10 +28,14 @@ def config():
 @pytest.fixture
 def adapter(config):
     container = DependencyContainer()
+    container.register(DependencyContainer, container)
+    container.register(WorkflowRegistry, WorkflowRegistry(container))
+    container.register(DispatchRuleRegistry, DispatchRuleRegistry(container))
     container.register(WorkflowDispatcher, FakeWorkflowDispatcher(container))
     adapter = HttpLegacyAdapter(config)
     adapter.dispatcher = container.resolve(WorkflowDispatcher)
     return adapter
+
 
 @pytest.mark.asyncio
 async def test_chat_endpoint(adapter):
