@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 import requests
 from framework.llm.adapter import LLMBackendAdapter
 from framework.llm.format.message import LLMChatMessage
@@ -8,8 +8,7 @@ from framework.llm.format.response import LLMChatResponse
 class GeminiConfig(BaseModel):
     api_key: str
     api_base: str = "https://generativelanguage.googleapis.com/v1beta"
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 def convert_llm_chat_message_to_gemini_message(msg: LLMChatMessage) -> dict:
     return {

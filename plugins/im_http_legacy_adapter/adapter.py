@@ -4,7 +4,7 @@ import json
 import time
 import re
 from quart import Quart, request
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
@@ -14,9 +14,7 @@ class HttpLegacyConfig(BaseModel):
     host: str = Field(default="127.0.0.1", description="HTTP服务器监听地址")
     port: int = Field(default=8080, description="HTTP服务器监听端口")
     debug: bool = Field(default=False, description="是否开启调试模式")
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 class ResponseResult:
     def __init__(self, message=None, voice=None, image=None, result_status="SUCCESS"):

@@ -6,7 +6,7 @@ from wechatpy.exceptions import InvalidSignatureException
 from wechatpy.work.exceptions import InvalidCorpIdException
 from wechatpy.work import parse_message, create_reply
 from quart import Quart, request, abort
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.logger import get_logger
@@ -28,9 +28,7 @@ class WecomConfig(BaseModel):
     host: str = Field(default="127.0.0.1", description="HTTP服务器监听地址")
     port: int = Field(default=8080, description="HTTP服务器监听端口")
     debug: bool = Field(default=False, description="是否开启调试模式")
-
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
 class WecomAdapter(IMAdapter):
     """企业微信适配器"""

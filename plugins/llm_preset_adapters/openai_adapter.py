@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 import requests
 from framework.llm.adapter import LLMBackendAdapter
 from framework.llm.format.request import LLMChatRequest
@@ -7,8 +7,7 @@ from framework.llm.format.response import LLMChatResponse
 class OpenAIConfig(BaseModel):
     api_key: str
     api_base: str = "https://api.openai.com/v1"
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 class OpenAIAdapter(LLMBackendAdapter):
     def __init__(self, config: OpenAIConfig):

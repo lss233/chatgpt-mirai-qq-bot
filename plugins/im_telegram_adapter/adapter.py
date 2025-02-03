@@ -7,7 +7,7 @@ from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMess
 from framework.logger import get_logger
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 import telegramify_markdown
 
 class TelegramConfig(BaseModel):
@@ -15,10 +15,7 @@ class TelegramConfig(BaseModel):
     Telegram 配置文件模型。
     """
     token: str = Field(description="Telegram Bot Token")
-
-    class Config:
-        # 允许动态添加字段
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")
 
     def __repr__(self):
         return f"TelegramConfig(token={self.token})"
