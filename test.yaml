@@ -1,0 +1,6 @@
+name: test_workflow
+blocks:
+  - type: test:simple_input
+    name: simple_input_8bxjf2
+    params:
+      param1: default

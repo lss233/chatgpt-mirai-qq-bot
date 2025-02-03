@@ -13,6 +13,8 @@ from framework.memory.memory_adapter import MemoryAdapter
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 from framework.logger import get_logger
+from framework.workflow_executor.block_registry import BlockRegistry
+from framework.workflow_executor.system_blocks import register_system_blocks
 
 logger = get_logger("Entrypoint")
 
@@ -52,6 +54,7 @@ def main():
     
     container.register(GlobalConfig, config)
     
+    container.register(BlockRegistry, BlockRegistry())
     container.register(IMRegistry, IMRegistry())
     container.register(LLMBackendRegistry, LLMBackendRegistry())
     
@@ -69,10 +72,14 @@ def main():
 
     memory_adapter = MemoryAdapter(container)
     container.register(MemoryAdapter, memory_adapter)
+
+    # 注册系统 blocks
+    register_system_blocks(container.resolve(BlockRegistry))
     
     # 发现并加载内部插件
     logger.info("Discovering plugins...")
     plugin_loader.discover_internal_plugins("plugins")
+
 
     # 初始化插件
     logger.info("Loading plugins")

@@ -5,6 +5,8 @@ from framework.workflow_executor.input_output import Input, Output
 from framework.ioc.container import DependencyContainer
 import os
 from typing import Dict, Any
+from framework.workflow_executor.block_registry import BlockRegistry
+import warnings
 
 # 测试用的 Block 类
 class SimpleInputBlock(Block):
@@ -27,10 +29,27 @@ class SimpleProcessBlock(Block):
     def execute(self, in1: str) -> Dict[str, Any]:
         return {"out1": in1 * self.multiplier}
 
+def setup_module(module):
+    """测试模块开始前的设置"""
+    registry = BlockRegistry()
+    # 注册测试用的 block
+    registry.register("simple_input", "test", SimpleInputBlock)
+    registry.register("simple_process", "test", SimpleProcessBlock)
+
+def teardown_module(module):
+    """测试模块结束后的清理"""
+    BlockRegistry().clear()
+
 class TestWorkflowBuilder:
     @pytest.fixture
     def container(self):
-        return DependencyContainer()
+        container = DependencyContainer()
+        registry = BlockRegistry()
+        container.register(BlockRegistry, registry)
+        # 注册测试用的 block
+        registry.register("simple_input", "test", SimpleInputBlock)
+        registry.register("simple_process", "test", SimpleProcessBlock)
+        return container
     
     @pytest.fixture
     def yaml_path(self):
@@ -152,3 +171,26 @@ class TestWorkflowBuilder:
         merger_block = next(b for b in workflow.blocks if b.name == "merger")
         input_wires = [w for w in workflow.wires if w.target_block == merger_block]
         assert len(input_wires) == 2 
+
+    def test_unregistered_block_warning(self, container, yaml_path):
+        """测试未注册 block 的警告"""
+        # 获取 registry 并清空
+        registry = container.resolve(BlockRegistry)
+        registry.clear()
+        
+        with pytest.warns(UserWarning):
+            builder = (WorkflowBuilder("test_workflow", container)
+                .use(SimpleInputBlock))
+            builder.save_to_yaml(yaml_path)
+            
+    def test_registered_block_no_warning(self, container, yaml_path):
+        """测试已注册 block 不会产生警告"""
+        registry = container.resolve(BlockRegistry)
+        registry.clear()
+        registry.register("simple_input", "test", SimpleInputBlock)
+        
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            builder = (WorkflowBuilder("test_workflow", container)
+                .use(SimpleInputBlock))
+            builder.save_to_yaml(yaml_path) 
