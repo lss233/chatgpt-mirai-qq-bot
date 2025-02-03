@@ -9,7 +9,8 @@ from framework.im.manager import IMManager
 from framework.ioc.container import DependencyContainer
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
-from framework.memory.memory_adapter import MemoryAdapter
+from framework.memory.memory_manager import MemoryManager
+from framework.memory.memory_adapter import MemberScope, GroupScope, GlobalScope, DefaultMemoryComposer, DefaultMemoryDecomposer
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from framework.logger import get_logger
@@ -46,6 +47,22 @@ def init_container() -> DependencyContainer:
     container.register(DispatchRuleRegistry, dispatch_registry)
     
     return container
+
+def init_memory_system(container: DependencyContainer):
+    """初始化记忆系统"""
+    memory_manager = MemoryManager(container)
+    
+    # 注册默认作用域
+    memory_manager.register_scope("member", MemberScope)
+    memory_manager.register_scope("group", GroupScope)
+    memory_manager.register_scope("global", GlobalScope)
+    
+    # 注册默认组合器和解析器
+    memory_manager.register_composer("default", DefaultMemoryComposer)
+    memory_manager.register_decomposer("default", DefaultMemoryDecomposer)
+    
+    container.register(MemoryManager, memory_manager)
+    return memory_manager
 
 def main():
     loop = asyncio.new_event_loop()
@@ -89,8 +106,9 @@ def main():
     workflow_dispatcher = WorkflowDispatcher(container)
     container.register(WorkflowDispatcher, workflow_dispatcher)
 
-    memory_adapter = MemoryAdapter(container)
-    container.register(MemoryAdapter, memory_adapter)
+    # 初始化记忆系统
+    logger.info("Initializing memory system...")
+    memory_manager = init_memory_system(container)
 
     # 注册系统 blocks
     register_system_blocks(container.resolve(BlockRegistry))
@@ -98,7 +116,6 @@ def main():
     # 发现并加载内部插件
     logger.info("Discovering plugins...")
     plugin_loader.discover_internal_plugins("plugins")
-
 
     # 初始化插件
     logger.info("Loading plugins")
@@ -126,6 +143,10 @@ def main():
     except GracefulExit:
         logger.info("Graceful exit requested")
     finally:
+        # 关闭记忆系统
+        logger.info("Shutting down memory system...")
+        memory_manager.shutdown()
+        
         # 停止所有 adapter
         im_manager.stop_adapters(loop=loop)
         # 停止插件

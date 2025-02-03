@@ -4,6 +4,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
+from framework.im.sender import ChatSender, ChatType
 from framework.logger import get_logger
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from pydantic import ConfigDict, BaseModel, Field
@@ -57,7 +58,11 @@ class TelegramAdapter(IMAdapter):
         :param raw_message: Telegram 的 Update 对象。
         :return: 转换后的 Message 对象。
         """
-        sender = raw_message.message.chat_id
+        if raw_message.message.chat.type == "group":
+            sender = ChatSender.from_group_chat(user_id=raw_message.message.chat_id, group_id=raw_message.message.chat_id)
+        else:   
+            sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id)
+            
         message_elements = []
         raw_message_dict = raw_message.message.to_dict()
 
@@ -86,13 +91,18 @@ class TelegramAdapter(IMAdapter):
         message = IMMessage(sender=sender, message_elements=message_elements, raw_message=raw_message_dict)
         return message
 
-    async def send_message(self, message: IMMessage, recipient: Any):
+    async def send_message(self, message: IMMessage, recipient: ChatSender):
         """
         发送消息到 Telegram。
         :param message: 要发送的消息对象。
         :param recipient: 接收消息的目标对象，这里应该是 chat_id。
         """
-        chat_id = recipient
+        if recipient.chat_type == ChatType.C2C:
+            chat_id = recipient.user_id
+        elif recipient.chat_type == ChatType.GROUP:
+            chat_id = recipient.group_id
+        else:
+            raise ValueError(f"Unsupported chat type: {recipient.chat_type}")
         
         for element in message.message_elements:
             if isinstance(element, TextMessage):

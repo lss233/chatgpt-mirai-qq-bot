@@ -38,7 +38,7 @@ class DefaultWorkflowFactory:
             .use(GetIMMessage, name="get_message")
             .parallel([
                 (ToggleEditState, {"is_editing": True}),
-                (ChatMemoryQuery, "query_memory", {"memory_adapter": 'default_memory_adapter'})
+                (ChatMemoryQuery, "query_memory", {"scope_type": 'member'})
             ])
             .chain(ChatMessageConstructor,
                 wire_from=["query_memory", "get_message"],
@@ -48,7 +48,7 @@ class DefaultWorkflowFactory:
             .chain(ChatResponseConverter)
             .parallel([
                 SendIMMessage,
-                (ChatMemoryStore, {"memory_adapter": 'default_memory_adapter'}, ["get_message", "llm_chat"]),
+                (ChatMemoryStore, {"scope_type": 'member'}, ["get_message", "llm_chat"]),
                 (ToggleEditState, {"is_editing": False}, ["get_message"])
             ])
             .build())

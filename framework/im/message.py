@@ -1,7 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from abc import ABC, abstractmethod
 import os
 import base64
+from dataclasses import dataclass
+from framework.im.sender import ChatSender
 
 # 定义消息元素的基类
 class MessageElement(ABC):
@@ -106,7 +108,7 @@ class IMMessage:
         images: 消息中的图片列表
         voices: 消息中的语音列表
     """
-    sender: str
+    sender: ChatSender
     message_elements: List[MessageElement]
     raw_message: Optional[dict]
     
@@ -125,7 +127,7 @@ class IMMessage:
         """获取消息中的所有语音"""
         return [element for element in self.message_elements if isinstance(element, VoiceMessage)]
     
-    def __init__(self, sender: str, message_elements: List[MessageElement], raw_message: dict = None):
+    def __init__(self, sender: ChatSender, message_elements: List[MessageElement], raw_message: dict = None):
         self.sender = sender
         self.message_elements = message_elements
         self.raw_message = raw_message
@@ -147,7 +149,7 @@ if __name__ == "__main__":
 
     # 创建消息对象
     message = IMMessage(
-        sender="user123",
+        sender=ChatSender.from_c2c_chat("user123"),
         message_elements=[text_element, voice_element, image_element],
         raw_message={"platform": "example_chat", "timestamp": "2023-10-01T12:00:00Z"}
     )

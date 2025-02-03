@@ -10,3 +10,4 @@ requests
 quart
 wechatpy
 pycryptodome
+redis[hiredis]

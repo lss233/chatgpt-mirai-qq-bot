@@ -1,0 +1,40 @@
+from dataclasses import dataclass
+from typing import Dict, Any, Optional
+from enum import Enum
+
+class ChatType(Enum):
+    C2C = "c2c"
+    GROUP = "group"
+
+@dataclass
+class ChatSender:
+    """聊天发送者信息封装"""
+    user_id: str
+    chat_type: ChatType
+    group_id: Optional[str] = None
+    raw_metadata: Dict[str, Any] = None
+    
+    @classmethod
+    def from_group_chat(cls, user_id: str, group_id: str, metadata: Dict[str, Any] = None) -> 'ChatSender':
+        """创建群聊发送者"""
+        return cls(
+            user_id=user_id,
+            chat_type=ChatType.GROUP,
+            group_id=group_id,
+            raw_metadata=metadata or {}
+        )
+    
+    @classmethod
+    def from_c2c_chat(cls, user_id: str, metadata: Dict[str, Any] = None) -> 'ChatSender':
+        """创建私聊发送者"""
+        return cls(
+            user_id=user_id,
+            chat_type=ChatType.C2C,
+            raw_metadata=metadata or {}
+        )
+        
+    def __str__(self) -> str:
+        if self.chat_type == ChatType.GROUP:
+            return f"{self.group_id}:{self.user_id}"
+        else:
+            return f"c2c:{self.user_id}" 

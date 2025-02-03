@@ -7,6 +7,7 @@ from quart import Quart, request
 from pydantic import ConfigDict, BaseModel, Field
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
+from framework.im.sender import ChatSender
 from framework.workflow.core.dispatch import WorkflowDispatcher
 
 class HttpLegacyConfig(BaseModel):
@@ -71,9 +72,18 @@ class HttpLegacyAdapter(IMAdapter):
         username = data.get('username', '某人')
         message_text = data.get('message', '')
         session_id = data.get('session_id', 'friend-default_session')
+
+        if session_id.startswith("group-") and \
+            len(session_id.split("-")) == 2 and \
+                ":" in session_id.split("-")[1]: 
+            # group-group_id:user_id
+            ids = session_id.split("-")[1].split(":")
+            sender = ChatSender.from_group_chat(user_id=ids[1], group_id=ids[0])
+        else:
+            sender = ChatSender.from_c2c_chat(user_id=session_id)
         
         return IMMessage(
-            sender=Sender(username, None),
+            sender=sender,
             message_elements=[TextMessage(text=message_text)],
             raw_message={"session_id": session_id, **data}
         )
