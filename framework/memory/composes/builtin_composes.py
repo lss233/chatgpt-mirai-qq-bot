@@ -27,6 +27,8 @@ class DefaultMemoryComposer(MemoryComposer):
 
 class DefaultMemoryDecomposer(MemoryDecomposer):
     def decompose(self, entries: List[MemoryEntry]) -> str:
+        if len(entries) == 0:
+            return "<空>"
         # 7秒前，<记忆内容>
         memory_texts = []
         for entry in entries[-10:]:

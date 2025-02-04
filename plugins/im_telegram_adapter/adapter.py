@@ -1,3 +1,5 @@
+import asyncio
+import random
 import re
 from typing import Any
 from telegram import Update
@@ -110,13 +112,22 @@ class TelegramAdapter(IMAdapter):
         
         for element in message.message_elements:
             if isinstance(element, TextMessage):
+                await self.application.bot.send_chat_action(chat_id=chat_id, action="typing")
                 text = telegramify_markdown.markdownify(element.text)
+                # 如果是非首条消息，适当停顿，模拟打字
+                if message.message_elements.index(element) > 0:
+                    # 停顿通常和字数有关，但是会带一些随机
+                    duration = len(element.text) * 0.1 + random.uniform(0, 1) * 0.1
+                    await asyncio.sleep(duration)
                 await self.application.bot.send_message(chat_id=chat_id, text=text, parse_mode="MarkdownV2")
+
             elif isinstance(element, ImageMessage):
+                await self.application.bot.send_chat_action(chat_id=chat_id, action="upload_photo")
                 await self.application.bot.send_photo(chat_id=chat_id, photo=element.url, parse_mode="MarkdownV2")
             elif isinstance(element, VoiceMessage):
+                await self.application.bot.send_chat_action(chat_id=chat_id, action="upload_voice")
                 await self.application.bot.send_voice(chat_id=chat_id, voice=element.url, parse_mode="MarkdownV2")
-
+    
     async def start(self):
         """启动 Bot"""
         await self.application.initialize()

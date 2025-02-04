@@ -61,9 +61,14 @@ class ChatResponseConverter(Block):
         content = ""
         if resp.choices and resp.choices[0].message:
             content = resp.choices[0].message.content
-            
+        
+        # 通过 <break> 将回答分为不同的 TextMessage
+        message_elements = []
+        for element in content.split("<break>"):
+            if element.strip():
+                message_elements.append(TextMessage(element))
         msg = IMMessage(
             sender="<@llm>",
-            message_elements=[TextMessage(content)]
+            message_elements=message_elements
         )
         return {"msg": msg} 

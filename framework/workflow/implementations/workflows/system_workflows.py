@@ -15,6 +15,7 @@ def register_system_workflows(registry: WorkflowRegistry):
     registry.register("system", "admin", SystemWorkflowFactory.create_help_workflow)  # 暂时用help代替
     registry.register("system", "status", SystemWorkflowFactory.create_help_workflow)  # 暂时用help代替
     registry.register("system", "settings", SystemWorkflowFactory.create_help_workflow)  # 暂时用help代替
+    registry.register("system", "clear_memory", SystemWorkflowFactory.create_clear_memory_workflow)
     
     # 聊天相关工作流
     registry.register("chat", "normal", DefaultWorkflowFactory.create_default_workflow)

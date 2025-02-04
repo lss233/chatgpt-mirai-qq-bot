@@ -100,3 +100,18 @@ class MemoryManager:
             self.persistence.save(scope_key, entries)
         # 执行持久化层的flush操作
         self.persistence.stop()
+
+    def clear_memory(self, scope: MemoryScope, sender: str) -> None:
+        """清空指定作用域和发送者的记忆
+        
+        Args:
+            scope: 记忆作用域
+            sender: 发送者标识
+        """
+        scope_key = scope.get_scope_key(sender)
+        
+        # 清空内存中的记录
+        self.memories[scope_key] = []
+        
+        # 保存空记录到持久化层
+        self.persistence.save(scope_key, [])

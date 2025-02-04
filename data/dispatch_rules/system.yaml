@@ -23,4 +23,10 @@
 - type: prefix
   workflow: system:settings
   prefix: "/settings"
-  description: "修改系统设置" 
+  description: "修改系统设置"
+
+# 清空记忆
+- type: prefix
+  workflow: system:clear_memory
+  prefix: "/清空记忆"
+  description: "清空当前对话的记忆" 
