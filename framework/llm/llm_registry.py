@@ -91,3 +91,10 @@ class LLMBackendRegistry:
         if name not in self._ability_registry:
             raise ValueError(f"LLMAdapter with name '{name}' is not registered.")
         return self._ability_registry[name]
+
+    def get_all_adapters(self) -> Dict[str, Type[LLMBackendAdapter]]:
+        """
+        获取所有已注册的 LLM 适配器。
+        :return: 所有已注册的 LLM 适配器字典。
+        """
+        return self._registry.copy()

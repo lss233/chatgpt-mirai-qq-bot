@@ -20,6 +20,7 @@ from framework.workflow.core.dispatch import DispatchRuleRegistry
 from framework.workflow.core.workflow import WorkflowRegistry
 from framework.workflow.implementations.blocks import register_system_blocks
 from framework.workflow.implementations.workflows import register_system_workflows
+from framework.web.app import WebServer
 
 logger = get_logger("Entrypoint")
 
@@ -133,6 +134,12 @@ def main():
     # 启动插件
     plugin_loader.start_plugins()
 
+    # 初始化并启动Web服务器
+    logger.info("Starting web server...")
+    web_server = WebServer(container)
+    container.register(WebServer, web_server)
+    loop.run_until_complete(web_server.start())
+
     # 注册信号处理函数
     signal.signal(signal.SIGINT, _signal_handler)
     signal.signal(signal.SIGTERM, _signal_handler)
@@ -147,6 +154,10 @@ def main():
         # 关闭记忆系统
         logger.info("Shutting down memory system...")
         memory_manager.shutdown()
+        
+        # 停止Web服务器
+        logger.info("Stopping web server...")
+        loop.run_until_complete(web_server.stop())
         
         # 停止所有 adapter
         im_manager.stop_adapters(loop=loop)

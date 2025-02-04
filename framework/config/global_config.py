@@ -40,8 +40,15 @@ class MemoryConfig(BaseModel):
     max_entries: int = Field(default=100, description="每个作用域最大记忆条目数")
     default_scope: str = Field(default="member", description="默认作用域类型")
     
+class WebConfig(BaseModel):
+    host: str = Field(default="127.0.0.1", description="Web服务绑定的IP地址")
+    port: int = Field(default=8080, description="Web服务端口号")
+    secret_key: str = Field(default="", description="Web服务的密钥，用于JWT等加密")
+    password_file: str = Field(default="./data/web/password.hash", description="密码哈希存储路径")
+
 class GlobalConfig(BaseModel):
     ims: IMConfig = IMConfig()
     llms: LLMConfig = LLMConfig()
     defaults: DefaultConfig = DefaultConfig()
     memory: MemoryConfig = MemoryConfig()
+    web: WebConfig = WebConfig()

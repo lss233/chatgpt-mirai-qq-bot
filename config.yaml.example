@@ -7,3 +7,8 @@ ims:
 
 plugins:
   enable: []
+
+web:
+  host: "127.0.0.1"
+  port: 8080
+  secret_key: "please-change-this-to-a-secure-secret-key"

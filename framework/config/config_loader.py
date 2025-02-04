@@ -1,6 +1,8 @@
 from ruamel.yaml import YAML
 from pydantic import BaseModel, ValidationError
 from typing import Type
+import shutil
+import os
 
 class ConfigLoader:
     """
@@ -34,4 +36,16 @@ class ConfigLoader:
         :param config_object: 配置对象。
         """
         with open(config_path, "w", encoding="utf-8") as f:
-            ConfigLoader.yaml.dump(config_object.dict(), f)
+            ConfigLoader.yaml.dump(config_object.model_dump(), f)
+    
+    @staticmethod
+    def save_config_with_backup(config_path: str, config_object: BaseModel):
+        """
+        将配置对象保存到 YAML 文件中，并在保存前创建备份。
+        :param config_path: 配置文件路径。
+        :param config_object: 配置对象。
+        """
+        if os.path.exists(config_path):
+            backup_path = f"{config_path}.bak"
+            shutil.copy2(config_path, backup_path)
+        ConfigLoader.save_config(config_path, config_object)
