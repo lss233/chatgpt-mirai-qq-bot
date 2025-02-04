@@ -93,7 +93,116 @@ class ImageMessage(MediaMessage):
         
     def to_plain(self):
         return "[ImageMessage]"
+
+# 定义@消息元素
+class AtElement(MessageElement):
+    def __init__(self, user_id: str, nickname: str = ""):
+        self.user_id = user_id
+        self.nickname = nickname
+
+    def to_dict(self):
+        return {
+            "type": "at",
+            "data": {
+
+                "qq": self.user_id,
+                "nickname": self.nickname
+            }
+        }
     
+    def to_plain(self):
+        return f"@{self.nickname or self.user_id}"
+
+
+# 定义回复消息元素
+class ReplyElement(MessageElement):
+    def __init__(self, message_id: str):
+        self.message_id = message_id
+
+    def to_dict(self):
+
+        return {
+            "type": "reply",
+            "data": {
+                "id": self.message_id
+            }
+        }
+    
+    def to_plain(self):
+        return f"[Reply:{self.message_id}]"
+
+
+# 定义文件消息元素
+class FileElement(MessageElement):
+    def __init__(self, file_name: str):
+        self.file_name = file_name
+
+    def to_dict(self):
+
+        return {
+            "type": "file",
+            "data": {
+                "file": self.file_name
+            }
+        }
+    
+    def to_plain(self) -> str:
+        return f"[File:{self.file_name}]"
+
+# 定义JSON消息元素
+class JsonElement(MessageElement):
+    def __init__(self, data: str):
+        self.data = data
+
+    def to_dict(self):
+        return {
+            "type": "json",
+            "data": {
+                "data": self.data
+            }
+        }
+
+    
+    def to_plain(self):
+        return "[JSON Message]"
+
+
+# 定义表情消息元素
+class FaceElement(MessageElement):
+    def __init__(self, face_id: str):
+        self.face_id = face_id
+
+    def to_dict(self):
+
+        return {
+            "type": "face",
+            "data": {
+                "id": self.face_id
+            }
+        }
+    
+    def to_plain(self):
+        return f"[Face:{self.face_id}]"
+
+
+# 定义视频消息元素
+class VideoElement(MessageElement):
+    def __init__(self, file: str):
+        self.file = file
+
+    def to_dict(self):
+
+        return {
+            "type": "video",
+            "data": {
+                "file": self.file
+            }
+        }
+    
+    def to_plain(self):
+        return "[Video Message]"
+
+
 # 定义消息类
 class IMMessage:
     """
