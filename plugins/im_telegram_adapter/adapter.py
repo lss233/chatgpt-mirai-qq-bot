@@ -1,8 +1,7 @@
 import asyncio
 import random
-import re
 from typing import Any
-from telegram import Update
+from telegram import Update, User
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
@@ -12,12 +11,21 @@ from framework.workflow.core.dispatch import WorkflowDispatcher
 from pydantic import ConfigDict, BaseModel, Field
 import telegramify_markdown
 
+def get_display_name(user: User):
+    if user.username:
+        return user.username
+    elif user.first_name or user.last_name:
+        return f"{user.first_name} {user.last_name}".strip()
+    else:
+        return user.id
+
 class TelegramConfig(BaseModel):
     """
     Telegram 配置文件模型。
     """
     token: str = Field(description="Telegram Bot Token")
     model_config = ConfigDict(extra="allow")
+
 
     def __repr__(self):
         return f"TelegramConfig(token={self.token})"
@@ -60,13 +68,14 @@ class TelegramAdapter(IMAdapter):
         :param raw_message: Telegram 的 Update 对象。
         :return: 转换后的 Message 对象。
         """
-        if raw_message.message.chat.type == "group":
+        if raw_message.message.chat.type == "group" or raw_message.message.chat.type == "supergroup":
             sender = ChatSender.from_group_chat(user_id=raw_message.message.sender_chat.id, 
                                                 group_id=raw_message.message.chat_id,
-                                                display_name=raw_message.message.sender_chat.username)
+                                                display_name=get_display_name(raw_message.message.from_user))
         else:   
             sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id,
-                                              display_name=raw_message.message.chat.username)
+                                              display_name=get_display_name(raw_message.message.from_user))
+
             
 
         message_elements = []
