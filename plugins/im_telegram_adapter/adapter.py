@@ -59,10 +59,14 @@ class TelegramAdapter(IMAdapter):
         :return: 转换后的 Message 对象。
         """
         if raw_message.message.chat.type == "group":
-            sender = ChatSender.from_group_chat(user_id=raw_message.message.chat_id, group_id=raw_message.message.chat_id)
+            sender = ChatSender.from_group_chat(user_id=raw_message.message.chat_id, 
+                                                group_id=raw_message.message.chat_id,
+                                                display_name=raw_message.message.chat.username)
         else:   
-            sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id)
+            sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id,
+                                              display_name=raw_message.message.chat.username)
             
+
         message_elements = []
         raw_message_dict = raw_message.message.to_dict()
 

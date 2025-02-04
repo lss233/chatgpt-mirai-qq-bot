@@ -9,10 +9,24 @@ from framework.im.sender import ChatSender, ChatType
 from framework.memory.entry import MemoryEntry
 from framework.memory.persistences import FileMemoryPersistence, RedisMemoryPersistence
 
+# ==================== 常量区 ====================
+TEST_USER_1 = "user1"
+TEST_USER_2 = "user2"
+TEST_GROUP = "group1"
+TEST_DISPLAY_NAME = "john"
+TEST_CONTENT_1 = "test message 1"
+TEST_CONTENT_2 = "test message 2"
+TEST_METADATA_TEXT = {"type": "text"}
+TEST_METADATA_IMAGE = {"type": "image"}
+TEST_TIMESTAMP_1 = datetime(2024, 1, 1, 12, 0)
+TEST_TIMESTAMP_2 = datetime(2024, 1, 1, 12, 1)
+TEST_SCOPE = "test_scope"
+INVALID_PATH = "\\\\?\\CON\\AUX\\NUL\\COM1\\LPT1"  # Windows 上的无效路径
+
+# ==================== Fixtures ====================
 @pytest.fixture
 def test_dir():
     temp_dir = tempfile.mkdtemp()
-
     yield temp_dir
     shutil.rmtree(temp_dir)
 
@@ -21,36 +35,50 @@ def file_persistence(test_dir):
     return FileMemoryPersistence(test_dir)
 
 @pytest.fixture
-def test_entries():
-    sender1 = ChatSender.from_group_chat("user1", "group1")
-    sender2 = ChatSender.from_c2c_chat("user2")
-    
+def chat_senders():
+    sender1 = ChatSender.from_group_chat(TEST_USER_1, TEST_GROUP, TEST_DISPLAY_NAME)
+    sender2 = ChatSender.from_c2c_chat(TEST_USER_2, TEST_DISPLAY_NAME)
+    return sender1, sender2
+
+@pytest.fixture
+def test_entries(chat_senders):
+    sender1, sender2 = chat_senders
     return [
         MemoryEntry(
             sender=sender1,
-            content="test message 1",
-            timestamp=datetime(2024, 1, 1, 12, 0),
-            metadata={"type": "text"}
+            content=TEST_CONTENT_1,
+            timestamp=TEST_TIMESTAMP_1,
+            metadata=TEST_METADATA_TEXT
         ),
         MemoryEntry(
             sender=sender2,
-            content="test message 2",
-            timestamp=datetime(2024, 1, 1, 12, 1),
-            metadata={"type": "image"}
+            content=TEST_CONTENT_2,
+            timestamp=TEST_TIMESTAMP_2,
+            metadata=TEST_METADATA_IMAGE
         )
     ]
 
+@pytest.fixture
+def redis_mock():
+    return MagicMock()
+
+@pytest.fixture
+def redis_persistence(redis_mock):
+    with patch('redis.Redis', return_value=redis_mock):
+        return RedisMemoryPersistence(host='localhost')
+
+# ==================== 测试逻辑 ====================
 class TestFileMemoryPersistence:
     def test_save_and_load(self, file_persistence, test_entries, test_dir):
         # 测试保存
-        file_persistence.save("test_scope", test_entries)
+        file_persistence.save(TEST_SCOPE, test_entries)
         
         # 验证文件是否创建
-        file_path = os.path.join(test_dir, "test_scope.json")
+        file_path = os.path.join(test_dir, f"{TEST_SCOPE}.json")
         assert os.path.exists(file_path)
         
         # 测试加载
-        loaded_entries = file_persistence.load("test_scope")
+        loaded_entries = file_persistence.load(TEST_SCOPE)
         
         # 验证加载的数据
         assert len(loaded_entries) == len(test_entries)
@@ -67,31 +95,22 @@ class TestFileMemoryPersistence:
         assert entries == []
         
     def test_save_with_invalid_path(self):
-        # 在Windows上，这些字符是不允许用在文件名中的
+        # 测试无效路径
         with pytest.raises(Exception):
-            invalid_persistence = FileMemoryPersistence("\\\\?\\CON\\AUX\\NUL\\COM1\\LPT1")
-            invalid_persistence.save("test_scope", [])
+            invalid_persistence = FileMemoryPersistence(INVALID_PATH)
+            invalid_persistence.save(TEST_SCOPE, [])
 
 class TestRedisMemoryPersistence:
-    @pytest.fixture
-    def redis_mock(self):
-        return MagicMock()
-        
-    @pytest.fixture
-    def redis_persistence(self, redis_mock):
-        with patch('redis.Redis', return_value=redis_mock):
-            return RedisMemoryPersistence(host='localhost')
-            
     def test_save(self, redis_persistence, redis_mock, test_entries):
         # 测试保存
-        redis_persistence.save("test_scope", test_entries)
+        redis_persistence.save(TEST_SCOPE, test_entries)
         redis_mock.set.assert_called_once()
         
-    def test_load_with_data(self, redis_persistence, redis_mock):
-        # Mock Redis返回数据
+    def test_load_with_data(self, redis_persistence, redis_mock, chat_senders):
+        # Mock Redis 返回数据
         import json
         from framework.memory.persistences.codecs import MemoryJSONEncoder
-        sender = ChatSender.from_group_chat("user1", "group1")
+        sender, _ = chat_senders
         serialized_data = [
             {
                 "sender": {
@@ -99,27 +118,29 @@ class TestRedisMemoryPersistence:
                     "user_id": sender.user_id,
                     "chat_type": sender.chat_type.value,
                     "group_id": sender.group_id,
+                    "display_name": sender.display_name,
                     "raw_metadata": {}
                 },
-                "content": "test message",
-                "timestamp": "2024-01-01T12:00:00",
-                "metadata": {"type": "text"}
+                "content": TEST_CONTENT_1,
+                "timestamp": TEST_TIMESTAMP_1.isoformat(),
+                "metadata": TEST_METADATA_TEXT
             }
         ]
         redis_mock.get.return_value = json.dumps(serialized_data, cls=MemoryJSONEncoder)
         
         # 测试加载
-        loaded_entries = redis_persistence.load("test_scope")
+        loaded_entries = redis_persistence.load(TEST_SCOPE)
         
         # 验证数据
         assert len(loaded_entries) == 1
         entry = loaded_entries[0]
-        assert entry.sender.user_id == "user1"
+        assert entry.sender.user_id == TEST_USER_1
         assert entry.sender.chat_type == ChatType.GROUP
-        assert entry.sender.group_id == "group1"
-        assert entry.content == "test message"
-        assert entry.metadata == {"type": "text"}
-        
+        assert entry.sender.group_id == TEST_GROUP
+        assert entry.sender.display_name == TEST_DISPLAY_NAME
+        assert entry.content == TEST_CONTENT_1
+        assert entry.metadata == TEST_METADATA_TEXT
+
     def test_load_no_data(self, redis_persistence, redis_mock):
         redis_mock.get.return_value = None
-        assert redis_persistence.load("test_scope") == [] 
+        assert redis_persistence.load(TEST_SCOPE) == []

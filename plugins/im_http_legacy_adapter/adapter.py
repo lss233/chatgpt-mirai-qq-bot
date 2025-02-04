@@ -78,10 +78,10 @@ class HttpLegacyAdapter(IMAdapter):
                 ":" in session_id.split("-")[1]: 
             # group-group_id:user_id
             ids = session_id.split("-")[1].split(":")
-            sender = ChatSender.from_group_chat(user_id=ids[1], group_id=ids[0])
+            sender = ChatSender.from_group_chat(user_id=ids[1], group_id=ids[0], display_name=username)
         else:
-            sender = ChatSender.from_c2c_chat(user_id=session_id)
-        
+            sender = ChatSender.from_c2c_chat(user_id=session_id, display_name=username)
+
         return IMMessage(
             sender=sender,
             message_elements=[TextMessage(text=message_text)],

@@ -1,15 +1,21 @@
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any, List, Union
+from framework.im.message import IMMessage
+from framework.im.sender import ChatSender
+from framework.llm.format.message import LLMChatMessage
+from framework.llm.format.response import Message
 from framework.memory.entry import MemoryEntry
 
+# 可组合的消息类型
+ComposableMessageType = Union[IMMessage, LLMChatMessage, Message, str]
 
 class MemoryComposer(ABC):
     """记忆组合器抽象类"""
     @abstractmethod
-    def compose(self, message: Any) -> MemoryEntry:
-
+    def compose(self, sender: ChatSender, message: List[ComposableMessageType]) -> MemoryEntry:
         """将消息转换为记忆条目"""
         pass
+
 
 class MemoryDecomposer(ABC):
     """记忆解析器抽象类"""

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Any
 from framework.im.sender import ChatSender
 from datetime import datetime
@@ -9,5 +9,5 @@ class MemoryEntry:
 
     sender: ChatSender
     content: str
-    timestamp: datetime
-    metadata: Dict[str, Any]
+    timestamp: datetime = field(default_factory=datetime.now)
+    metadata: Dict[str, Any] = field(default_factory=dict)

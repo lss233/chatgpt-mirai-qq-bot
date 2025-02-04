@@ -1,35 +1,47 @@
-from .base import MemoryComposer, MemoryDecomposer
+from framework.llm.format.response import Message
+from .base import MemoryComposer, MemoryDecomposer, ComposableMessageType
 from framework.memory.entry import MemoryEntry
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
-from datetime import datetime
-from typing import Any, List
+from datetime import datetime, timedelta
+from typing import Any, List, Union
+from framework.llm.format.message import LLMChatMessage
 
 class DefaultMemoryComposer(MemoryComposer):
-    def compose(self, message: Any) -> MemoryEntry:
-        if isinstance(message, IMMessage):
-            # For IMMessage, use the type of the first message element
-            message_type = message.message_elements[0].to_dict()["type"] if message.message_elements else "unknown"
-            return MemoryEntry(
-                sender=message.sender,
-                content=message.content,
-                timestamp=datetime.now(),
-                metadata={"type": message_type}
-            )
-        else:  # LLMChatResponse
-            # For LLM response, create a ChatSender for the assistant
-            sender = ChatSender.from_c2c_chat(user_id="assistant")
-            return MemoryEntry(
-                sender=sender,
-                content=message.choices[0].message.content,
-                timestamp=datetime.now(),
-                metadata={"type": "llm_response"}
-            )
+    def compose(self, sender: ChatSender, message: List[ComposableMessageType]) -> MemoryEntry:
+        composed_message = ""
+        for msg in message:
+            if isinstance(msg, IMMessage):
+                composed_message += f"{sender.display_name} 说: {msg.content}\n"
+            elif isinstance(msg, LLMChatMessage) or isinstance(msg, Message):
+                composed_message += f"<@LLM> 说: {msg.content}\n"
+                
+        composed_message = composed_message.strip()
+        composed_at = datetime.now()
+        return MemoryEntry(
+            sender=sender,
+            content=composed_message,
+            timestamp=composed_at,
+        )
+
 
 class DefaultMemoryDecomposer(MemoryDecomposer):
     def decompose(self, entries: List[MemoryEntry]) -> str:
-        memory_texts = [
-            f"[{m.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {m.sender}: {m.content}"
-            for m in entries[-5:]  # 只返回最近5条
-        ]
+        # 7秒前，<记忆内容>
+        memory_texts = []
+        for entry in entries[-10:]:
+            time_diff = datetime.now() - entry.timestamp
+            time_str = self.get_time_str(time_diff)
+            memory_texts.append(f"{time_str}，{entry.content}")
+
         return "\n".join(memory_texts)
+    
+    def get_time_str(self, time_diff: timedelta) -> str:
+        if time_diff.days > 0:
+            return f"{time_diff.days}天前"
+        elif time_diff.seconds > 3600:
+            return f"{time_diff.seconds // 3600}小时前"
+        elif time_diff.seconds > 60:
+            return f"{time_diff.seconds // 60}分钟前"
+        else:
+            return "刚刚"

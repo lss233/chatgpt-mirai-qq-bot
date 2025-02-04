@@ -9,6 +9,7 @@ class MemoryJSONEncoder(json.JSONEncoder):
                 "user_id": obj.user_id,
                 "chat_type": obj.chat_type.value,
                 "group_id": obj.group_id,
+                "display_name": obj.display_name,
                 "raw_metadata": obj.raw_metadata
             }
         elif isinstance(obj, ChatType):
@@ -24,6 +25,7 @@ def memory_json_decoder(obj):
                 user_id=obj["user_id"],
                 chat_type=ChatType(obj["chat_type"]),
                 group_id=obj["group_id"],
+                display_name=obj["display_name"],
                 raw_metadata=obj["raw_metadata"]
             )
     return obj

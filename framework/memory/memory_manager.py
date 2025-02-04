@@ -77,9 +77,14 @@ class MemoryManager:
     def query(self, scope: MemoryScope, sender: str) -> List[MemoryEntry]:
         """查询历史记忆"""
         relevant_memories = []
+        scope_key = scope.get_scope_key(sender)
+
+        if scope_key not in self.memories:
+            self.memories[scope_key] = self.persistence.load(scope_key)
         
         # 遍历所有记忆，找出作用域内的记忆
         for scope_key, entries in self.memories.items():
+
             for entry in entries:
                 if scope.is_in_scope(entry.sender, sender):
                     relevant_memories.append(entry)
