@@ -23,3 +23,9 @@ class MemoryDecomposer(ABC):
     def decompose(self, entries: List[MemoryEntry]) -> str:
         """将记忆条目转换为字符串"""
         pass
+
+    @property
+    def empty_message(self) -> str:
+        """空记忆消息"""
+        return "<空记忆>"
+

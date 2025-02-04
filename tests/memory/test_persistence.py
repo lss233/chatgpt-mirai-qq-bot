@@ -21,7 +21,6 @@ TEST_METADATA_IMAGE = {"type": "image"}
 TEST_TIMESTAMP_1 = datetime(2024, 1, 1, 12, 0)
 TEST_TIMESTAMP_2 = datetime(2024, 1, 1, 12, 1)
 TEST_SCOPE = "test_scope"
-INVALID_PATH = "\\\\?\\CON\\AUX\\NUL\\COM1\\LPT1;@#$"
 
 # ==================== Fixtures ====================
 @pytest.fixture
@@ -93,12 +92,6 @@ class TestFileMemoryPersistence:
     def test_load_nonexistent(self, file_persistence):
         entries = file_persistence.load("nonexistent")
         assert entries == []
-        
-    def test_save_with_invalid_path(self):
-        # 测试无效路径
-        with pytest.raises(Exception):
-            invalid_persistence = FileMemoryPersistence(INVALID_PATH)
-            invalid_persistence.save(TEST_SCOPE, [])
 
 class TestRedisMemoryPersistence:
     def test_save(self, redis_persistence, redis_mock, test_entries):

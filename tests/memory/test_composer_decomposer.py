@@ -41,9 +41,10 @@ class TestDefaultMemoryComposer:
         
         entry = composer.compose(group_sender, [message])
         
-        assert "group1:user1 说: test message" in entry.content
+        assert f"{group_sender.display_name} 说: {message.content}" in entry.content
         assert isinstance(entry.timestamp, datetime)
         
+
     def test_compose_c2c_message(self, composer, c2c_sender):
         message = IMMessage(
             sender=c2c_sender,
@@ -52,7 +53,7 @@ class TestDefaultMemoryComposer:
         
         entry = composer.compose(c2c_sender, [message])
         
-        assert "c2c:user1 说: test message" in entry.content
+        assert f"{c2c_sender.display_name} 说: {message.content}" in entry.content
         assert isinstance(entry.timestamp, datetime)
         
     def test_compose_llm_response(self, composer, c2c_sender):
@@ -60,8 +61,9 @@ class TestDefaultMemoryComposer:
         
         entry = composer.compose(c2c_sender, [chat_message])
         
-        assert "<@LLM> 说: test response" in entry.content
+        assert f"<@LLM> 说: {chat_message.content}" in entry.content
         assert isinstance(entry.timestamp, datetime)
+
 
 class TestDefaultMemoryDecomposer:
     def test_decompose_mixed_entries(self, decomposer, group_sender, c2c_sender):
@@ -87,7 +89,7 @@ class TestDefaultMemoryDecomposer:
         
     def test_decompose_empty(self, decomposer):
         result = decomposer.decompose([])
-        assert result == ""
+        assert result == decomposer.empty_message
         
     def test_decompose_max_entries(self, decomposer, c2c_sender):
         # 创建超过10条的记录
