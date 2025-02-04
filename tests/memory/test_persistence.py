@@ -5,13 +5,14 @@ import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from framework.memory.memory_adapter import MemoryEntry
 from framework.im.sender import ChatSender, ChatType
-from framework.memory.persistence import FileMemoryPersistence, RedisMemoryPersistence
+from framework.memory.entry import MemoryEntry
+from framework.memory.persistences import FileMemoryPersistence, RedisMemoryPersistence
 
 @pytest.fixture
 def test_dir():
     temp_dir = tempfile.mkdtemp()
+
     yield temp_dir
     shutil.rmtree(temp_dir)
 
@@ -89,7 +90,7 @@ class TestRedisMemoryPersistence:
     def test_load_with_data(self, redis_persistence, redis_mock):
         # Mock Redis返回数据
         import json
-        from framework.memory.persistence import MemoryJSONEncoder
+        from framework.memory.persistences.codecs import MemoryJSONEncoder
         sender = ChatSender.from_group_chat("user1", "group1")
         serialized_data = [
             {

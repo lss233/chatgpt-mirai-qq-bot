@@ -10,7 +10,8 @@ from framework.ioc.container import DependencyContainer
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
 from framework.memory.memory_manager import MemoryManager
-from framework.memory.memory_adapter import MemberScope, GroupScope, GlobalScope, DefaultMemoryComposer, DefaultMemoryDecomposer
+from framework.memory.scopes import MemberScope, GroupScope, GlobalScope
+from framework.memory.composes import DefaultMemoryComposer, DefaultMemoryDecomposer
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from framework.logger import get_logger

@@ -3,13 +3,16 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 
 from framework.ioc.container import DependencyContainer
-from framework.config.global_config import GlobalConfig, MemoryConfig
+from framework.config.global_config import GlobalConfig
 from framework.memory.memory_manager import MemoryManager
-from framework.memory.memory_adapter import MemoryEntry, MemoryScope, MemoryComposer, MemoryDecomposer
+from framework.memory.scopes import MemoryScope
+from framework.memory.composes import MemoryComposer, MemoryDecomposer
+from framework.memory.entry import MemoryEntry
 
 class TestMemoryManager(unittest.TestCase):
     def setUp(self):
         # 创建模拟的容器和配置
+
         self.container = MagicMock(spec=DependencyContainer)
         self.config = GlobalConfig()
         self.container.resolve.return_value = self.config
@@ -28,15 +31,23 @@ class TestMemoryManager(unittest.TestCase):
         
         # 初始化管理器
         self.manager = MemoryManager(self.container)
+        self.internal_persistence = self.manager.persistence
         
+    def tearDown(self):
+        if self.internal_persistence:
+            self.internal_persistence.stop()
+            self.internal_persistence = None
+
     def test_init_file_persistence(self):
         # 测试文件持久化初始化
         config = GlobalConfig()
         config.memory.persistence.type = "file"
         self.container.resolve.return_value = config
         
+
         manager = MemoryManager(self.container)
         self.assertIsNotNone(manager.persistence)
+        manager.persistence.stop()
         
     def test_init_redis_persistence(self):
         # 测试Redis持久化初始化
@@ -44,7 +55,7 @@ class TestMemoryManager(unittest.TestCase):
         config.memory.persistence.type = "redis"
         self.container.resolve.return_value = config
         
-        with patch('framework.memory.persistence.RedisMemoryPersistence'):
+        with patch('framework.memory.persistences.RedisMemoryPersistence'):
             manager = MemoryManager(self.container)
             self.assertIsNotNone(manager.persistence)
             
@@ -55,8 +66,10 @@ class TestMemoryManager(unittest.TestCase):
         self.container.resolve.return_value = config
         
         with self.assertRaises(ValueError):
-            MemoryManager(self.container)
+            manager = MemoryManager(self.container)
+            manager.persistence.stop()
             
+
     def test_register_scope(self):
         # 测试注册作用域
         mock_scope_class = MagicMock(spec=MemoryScope)
@@ -171,5 +184,3 @@ class TestMemoryManager(unittest.TestCase):
             self.manager.persistence.save.call_count,
             2
         )
-        # 验证执行了flush
-        self.manager.persistence.flush.assert_called_once() 

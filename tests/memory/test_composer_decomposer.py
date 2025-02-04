@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 from framework.llm.format.message import LLMChatMessage
-from framework.memory.memory_adapter import DefaultMemoryComposer, DefaultMemoryDecomposer
+from framework.memory.composes import DefaultMemoryComposer, DefaultMemoryDecomposer
 from framework.im.sender import ChatSender, ChatType
 from framework.im.message import IMMessage, TextMessage
 from framework.llm.format.response import LLMChatResponse, LLMChatResponseContent, Usage, Message

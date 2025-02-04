@@ -1,9 +1,14 @@
 from typing import Dict, List, Optional, Type
 from framework.ioc.container import DependencyContainer
 from framework.config.global_config import GlobalConfig
-from .memory_adapter import MemoryEntry, MemoryScope, MemoryComposer, MemoryDecomposer
-from .persistence import FileMemoryPersistence, RedisMemoryPersistence
+from framework.memory.persistences.base import AsyncMemoryPersistence
+from framework.memory.persistences.file_persistence import FileMemoryPersistence
+from framework.memory.persistences.redis_persistence import RedisMemoryPersistence
+from .entry import MemoryEntry
+from .scopes import MemoryScope
+from .composes import MemoryComposer, MemoryDecomposer
 from .registry import ScopeRegistry, ComposerRegistry, DecomposerRegistry
+
 
 class MemoryManager:
     """记忆系统管理器，负责整个记忆系统的生命周期管理"""
@@ -40,7 +45,9 @@ class MemoryManager:
             self.persistence = RedisMemoryPersistence(**redis_config)
         else:
             raise ValueError(f"Unsupported persistence type: {persistence_type}")
-            
+        
+        self.persistence = AsyncMemoryPersistence(self.persistence)
+
     def register_scope(self, name: str, scope_class: Type[MemoryScope]):
         """注册新的作用域类型"""
         self.scope_registry.register(name, scope_class)
@@ -87,4 +94,4 @@ class MemoryManager:
         for scope_key, entries in self.memories.items():
             self.persistence.save(scope_key, entries)
         # 执行持久化层的flush操作
-        self.persistence.flush() 
+        self.persistence.stop()

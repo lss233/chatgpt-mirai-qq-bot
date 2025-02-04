@@ -1,5 +1,5 @@
 import pytest
-from framework.memory.memory_adapter import MemberScope, GroupScope, GlobalScope
+from framework.memory.scopes import MemberScope, GroupScope, GlobalScope
 from framework.im.sender import ChatSender
 
 @pytest.fixture
