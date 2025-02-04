@@ -1,5 +1,5 @@
 ---
-description: 用于创建 Workflow
+description: 创建 Workflow
 globs: 
 ---
 You are an expert in Python, writing an AI application called chatgpt-mirai-qq-bot. it's a workflow based chatbot system. 
@@ -56,4 +56,4 @@ Highlights on Workflow:
 
 Key Conventions
 1. Rely on App's dependency injection system for managing state and shared resources.
-
+2. Respond in Chinese

@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional
+import re
 from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
@@ -8,6 +9,7 @@ from framework.workflow.core.block import Block
 from framework.workflow.core.workflow.input_output import Input, Output
 from framework.config.global_config import GlobalConfig
 from framework.im.message import IMMessage, TextMessage
+from framework.workflow.core.execution.executor import WorkflowExecutor
 
 class ChatMessageConstructor(Block):
     def __init__(self, container: DependencyContainer, system_prompt_format: str, user_prompt_format: str):
@@ -21,12 +23,34 @@ class ChatMessageConstructor(Block):
         self.system_prompt_format = system_prompt_format
         self.user_prompt_format = user_prompt_format
 
-    def execute(self, user_msg: IMMessage, memory_content: str) -> Dict[str, Any]:
-        system_prompt = self.system_prompt_format.replace("{user_msg}", user_msg.content)
-        system_prompt = system_prompt.replace("{memory_content}", memory_content)
+    def substitute_variables(self, text: str, executor: WorkflowExecutor) -> str:
+        """
+        替换文本中的变量占位符
         
-        user_prompt = self.user_prompt_format.replace("{user_msg}", user_msg.content)
-        user_prompt = user_prompt.replace("{memory_content}", memory_content)
+        :param text: 包含变量占位符的文本，格式为 {variable_name}
+        :param executor: 工作流执行器实例
+        :return: 替换后的文本
+        """
+        def replace_var(match):
+            var_name = match.group(1)
+            return str(executor.get_variable(var_name, match.group(0)))
+            
+        return re.sub(r'\{([^}]+)\}', replace_var, text)
+
+    def execute(self, user_msg: IMMessage, memory_content: str) -> Dict[str, Any]:
+        # 获取当前执行器
+        executor = self.container.resolve(WorkflowExecutor)
+        
+        # 先替换自有的两个变量
+        system_prompt_format = self.system_prompt_format.replace("{user_msg}", user_msg.content)
+        system_prompt_format = system_prompt_format.replace("{memory_content}", memory_content)
+        
+        user_prompt_format = self.user_prompt_format.replace("{user_msg}", user_msg.content)
+        user_prompt_format = user_prompt_format.replace("{memory_content}", memory_content)
+        
+        # 再替换其他变量
+        system_prompt = self.substitute_variables(system_prompt_format, executor)
+        user_prompt = self.substitute_variables(user_prompt_format, executor)
         
         llm_msg = [
             LLMChatMessage(role='system', content=system_prompt),

@@ -2,6 +2,7 @@ from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
+from framework.workflow.core.workflow.base import Workflow
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.workflow.core.dispatch.rule import DispatchRule, FallbackMatchRule
@@ -45,6 +46,8 @@ class WorkflowDispatcher:
                     scoped_container.register(IMMessage, message)
                     workflow = rule.get_workflow(scoped_container)
                     executor = WorkflowExecutor(workflow)
+                    scoped_container.register(Workflow, workflow)
+                    scoped_container.register(WorkflowExecutor, executor)
                     return await executor.run()
                 
         self.logger.debug("No matching rule found for message")

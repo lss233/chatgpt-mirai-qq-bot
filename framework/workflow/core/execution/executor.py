@@ -19,6 +19,7 @@ class WorkflowExecutor:
         self.logger = get_logger("WorkflowExecutor")
         self.workflow = workflow
         self.results = defaultdict(dict)
+        self.variables = {}  # 存储工作流变量
         self.logger.info(f"Initializing WorkflowExecutor for workflow '{workflow.name}'")
         # self.logger.debug(f"Workflow has {len(workflow.blocks)} blocks and {len(workflow.wires)} wires")
         self._build_execution_graph()
@@ -204,3 +205,22 @@ class WorkflowExecutor:
         
         # self.logger.debug(f"Collected {len(inputs)} inputs")
         return inputs
+
+    def set_variable(self, name: str, value: Any) -> None:
+        """
+        设置工作流变量
+        
+        :param name: 变量名
+        :param value: 变量值
+        """
+        self.variables[name] = value
+        
+    def get_variable(self, name: str, default: Any = None) -> Any:
+        """
+        获取工作流变量
+        
+        :param name: 变量名
+        :param default: 默认值，如果变量不存在则返回此值
+        :return: 变量值
+        """
+        return self.variables.get(name, default)
