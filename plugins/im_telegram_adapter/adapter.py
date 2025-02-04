@@ -59,9 +59,9 @@ class TelegramAdapter(IMAdapter):
         :return: 转换后的 Message 对象。
         """
         if raw_message.message.chat.type == "group":
-            sender = ChatSender.from_group_chat(user_id=raw_message.message.chat_id, 
+            sender = ChatSender.from_group_chat(user_id=raw_message.message.sender_chat.id, 
                                                 group_id=raw_message.message.chat_id,
-                                                display_name=raw_message.message.chat.username)
+                                                display_name=raw_message.message.sender_chat.username)
         else:   
             sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id,
                                               display_name=raw_message.message.chat.username)
@@ -129,13 +129,14 @@ class TelegramAdapter(IMAdapter):
         await self.application.stop()
         await self.application.shutdown()
     
-    async def set_chat_editing_state(self, chat_id: int, is_editing: bool = True):
+    async def set_chat_editing_state(self, chat_sender: ChatSender, is_editing: bool = True):
         """
         设置或取消对话的编辑状态
-        :param chat_id: Telegram 聊天 ID
+        :param chat_sender: 对话的发送者
         :param is_editing: True 表示正在编辑，False 表示取消编辑状态
         """
         action = "typing" if is_editing else "cancel"
+        chat_id = chat_sender.user_id if chat_sender.chat_type == ChatType.C2C else chat_sender.group_id
         try:
             self.logger.debug(f"Setting chat editing state to {is_editing} for chat_id {chat_id}")
             if is_editing:
@@ -145,3 +146,4 @@ class TelegramAdapter(IMAdapter):
                 await self.application.bot.send_chat_action(chat_id=chat_id, action=action)
         except Exception as e:
             self.logger.warning(f"Failed to set chat editing state: {str(e)}")
+
