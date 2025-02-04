@@ -133,21 +133,18 @@ class ReplyElement(MessageElement):
 
 
 # 定义文件消息元素
-class FileElement(MessageElement):
-    def __init__(self, file_name: str):
-        self.file_name = file_name
-
+class FileElement(MediaMessage):
     def to_dict(self):
-
         return {
             "type": "file",
-            "data": {
-                "file": self.file_name
-            }
+            "url": self.url,
+            "path": self.path,
+            "data": base64.b64encode(self.data).decode() if self.data else None,
+            "format": self.format
         }
     
-    def to_plain(self) -> str:
-        return f"[File:{self.file_name}]"
+    def to_plain(self):
+        return f"[File:{self.path or self.url or 'unnamed'}]"
 
 # 定义JSON消息元素
 class JsonElement(MessageElement):
