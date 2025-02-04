@@ -79,7 +79,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 接下来，请你扮演以上的角色，与用户继续交流。
 """.strip()
 
-        user_prompt = """{user_msg}"""
+        user_prompt = """{user_name}说：{user_msg}"""
         
         return (WorkflowBuilder("default_workflow", container)
             .use(GetIMMessage, name="get_message")

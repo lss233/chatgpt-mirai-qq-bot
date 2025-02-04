@@ -1,15 +1,17 @@
 import asyncio
 import random
 from typing import Any
+from functools import lru_cache
 from telegram import Update, User
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-from framework.im.adapter import IMAdapter
+from framework.im.adapter import EditStateAdapter, IMAdapter, UserProfileAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.im.sender import ChatSender, ChatType
 from framework.logger import get_logger
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from pydantic import ConfigDict, BaseModel, Field
 import telegramify_markdown
+from framework.im.profile import UserProfile, Gender
 
 def get_display_name(user: User):
     if user.username:
@@ -30,7 +32,7 @@ class TelegramConfig(BaseModel):
     def __repr__(self):
         return f"TelegramConfig(token={self.token})"
     
-class TelegramAdapter(IMAdapter):
+class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
     """
     Telegram Adapter，包含 Telegram Bot 的所有逻辑。
     """
@@ -166,4 +168,58 @@ class TelegramAdapter(IMAdapter):
                 await self.application.bot.send_chat_action(chat_id=chat_id, action=action)
         except Exception as e:
             self.logger.warning(f"Failed to set chat editing state: {str(e)}")
+
+    @lru_cache(maxsize=10)
+    async def _cached_get_chat(self, user_id):
+        """
+        带缓存的获取用户信息方法
+        :param user_id: 用户ID
+        :return: 用户对象
+        """
+        return await self.application.bot.get_chat(user_id)
+
+    async def query_user_profile(self, chat_sender: ChatSender) -> UserProfile:
+        """
+        查询 Telegram 用户资料
+        :param chat_sender: 用户的聊天发送者信息
+        :return: 用户资料
+        """
+        try:
+            # 获取用户 ID
+            user_id = chat_sender.user_id
+            # 获取用户对象（使用缓存）
+            user = await self._cached_get_chat(user_id)
+            
+            # 确定性别
+            gender = Gender.UNKNOWN
+            if hasattr(user, 'gender'):
+                if user.gender == 'male':
+                    gender = Gender.MALE
+                elif user.gender == 'female':
+                    gender = Gender.FEMALE
+
+            # 构建用户资料
+            profile = UserProfile(
+                user_id=str(user_id),
+                username=user.username,
+                display_name=get_display_name(user),
+                full_name=f"{user.first_name or ''} {user.last_name or ''}".strip(),
+                gender=gender,
+                avatar_url=None,  # Telegram 需要额外处理获取头像
+                language=user.language_code,
+                extra_info={
+                    'is_bot': user.is_bot,
+                    'is_premium': getattr(user, 'is_premium', False)
+                }
+            )
+            
+            return profile
+        
+        except Exception as e:
+            self.logger.warning(f"Failed to query user profile: {str(e)}")
+            # 返回部分信息
+            return UserProfile(
+                user_id=str(chat_sender.user_id),
+                display_name=chat_sender.display_name
+            )
 

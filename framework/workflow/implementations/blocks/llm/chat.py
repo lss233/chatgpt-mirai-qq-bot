@@ -25,15 +25,36 @@ class ChatMessageConstructor(Block):
 
     def substitute_variables(self, text: str, executor: WorkflowExecutor) -> str:
         """
-        替换文本中的变量占位符
+        替换文本中的变量占位符，支持对象属性和字典键的访问
         
-        :param text: 包含变量占位符的文本，格式为 {variable_name}
+        :param text: 包含变量占位符的文本，格式为 {variable_name} 或 {variable_name.attribute}
         :param executor: 工作流执行器实例
         :return: 替换后的文本
         """
         def replace_var(match):
-            var_name = match.group(1)
-            return str(executor.get_variable(var_name, match.group(0)))
+            var_path = match.group(1).split('.')
+            var_name = var_path[0]
+            
+            # 获取基础变量
+            value = executor.get_variable(var_name, match.group(0))
+            
+            # 如果有属性/键访问
+            for attr in var_path[1:]:
+                try:
+                    # 尝试字典键访问
+                    if isinstance(value, dict):
+                        value = value.get(attr, match.group(0))
+                    # 尝试对象属性访问
+                    elif hasattr(value, attr):
+                        value = getattr(value, attr)
+                    else:
+                        # 如果无法访问，返回原始占位符
+                        return match.group(0)
+                except Exception:
+                    # 任何异常都返回原始占位符
+                    return match.group(0)
+            
+            return str(value)
             
         return re.sub(r'\{([^}]+)\}', replace_var, text)
 
@@ -43,9 +64,11 @@ class ChatMessageConstructor(Block):
         
         # 先替换自有的两个变量
         system_prompt_format = self.system_prompt_format.replace("{user_msg}", user_msg.content)
+        system_prompt_format = system_prompt_format.replace("{user_name}", user_msg.sender.display_name)
         system_prompt_format = system_prompt_format.replace("{memory_content}", memory_content)
         
         user_prompt_format = self.user_prompt_format.replace("{user_msg}", user_msg.content)
+        user_prompt_format = user_prompt_format.replace("{user_name}", user_msg.sender.display_name)
         user_prompt_format = user_prompt_format.replace("{memory_content}", memory_content)
         
         # 再替换其他变量

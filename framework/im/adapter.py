@@ -4,6 +4,7 @@ from typing_extensions import runtime_checkable
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
 from framework.llm.llm_manager import LLMManager
+from .profile import UserProfile
 
 @runtime_checkable
 class EditStateAdapter(Protocol):
@@ -18,6 +19,18 @@ class EditStateAdapter(Protocol):
         """
         pass
 
+@runtime_checkable
+class UserProfileAdapter(Protocol):
+    """
+    用户资料查询适配器接口，定义了如何获取用户资料
+    """
+    async def query_user_profile(self, chat_sender: ChatSender) -> UserProfile:
+        """
+        查询用户资料
+        :param chat_sender: 用户的聊天发送者信息
+        :return: 用户资料
+        """
+        pass
 
 class IMAdapter(ABC):
     """
