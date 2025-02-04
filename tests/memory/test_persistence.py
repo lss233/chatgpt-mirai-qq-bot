@@ -21,7 +21,7 @@ TEST_METADATA_IMAGE = {"type": "image"}
 TEST_TIMESTAMP_1 = datetime(2024, 1, 1, 12, 0)
 TEST_TIMESTAMP_2 = datetime(2024, 1, 1, 12, 1)
 TEST_SCOPE = "test_scope"
-INVALID_PATH = "\\\\?\\CON\\AUX\\NUL\\COM1\\LPT1"  # Windows 上的无效路径
+INVALID_PATH = "\\\\?\\CON\\AUX\\NUL\\COM1\\LPT1;@#$"  # Windows 上的无效路径
 
 # ==================== Fixtures ====================
 @pytest.fixture
