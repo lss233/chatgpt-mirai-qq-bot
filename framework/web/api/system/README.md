@@ -7,7 +7,7 @@
 ### 获取系统状态
 
 ```http
-GET /api/system/status
+GET/backend-api/api/system/status
 ```
 
 获取系统的当前运行状态，包括版本信息、运行时间、资源使用情况等。
@@ -35,7 +35,7 @@ GET /api/system/status
 ### 获取系统配置
 
 ```http
-GET /api/system/config
+GET/backend-api/api/system/config
 ```
 
 获取系统当前配置。
@@ -43,7 +43,7 @@ GET /api/system/config
 ### 更新系统配置
 
 ```http
-PUT /api/system/config
+PUT/backend-api/api/system/config
 ```
 
 更新系统配置。
@@ -64,7 +64,7 @@ PUT /api/system/config
 ### 获取系统日志
 
 ```http
-GET /api/system/logs
+GET/backend-api/api/system/logs
 ```
 
 获取系统日志。支持分页和过滤。
@@ -79,7 +79,7 @@ GET /api/system/logs
 ### 获取用户列表
 
 ```http
-GET /api/system/users
+GET/backend-api/api/system/users
 ```
 
 获取系统用户列表。
@@ -87,7 +87,7 @@ GET /api/system/users
 ### 创建用户
 
 ```http
-POST /api/system/users
+POST/backend-api/api/system/users
 ```
 
 创建新用户。
@@ -105,7 +105,7 @@ POST /api/system/users
 ### 更新用户
 
 ```http
-PUT /api/system/users/{username}
+PUT/backend-api/api/system/users/{username}
 ```
 
 更新用户信息。
@@ -113,7 +113,7 @@ PUT /api/system/users/{username}
 ### 删除用户
 
 ```http
-DELETE /api/system/users/{username}
+DELETE/backend-api/api/system/users/{username}
 ```
 
 删除指定用户。

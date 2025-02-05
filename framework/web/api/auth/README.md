@@ -7,7 +7,7 @@
 ### 登录
 
 ```http
-POST /api/auth/login
+POST/backend-api/api/auth/login
 ```
 
 登录系统并获取访问令牌。首次登录时会设置管理员密码。
@@ -30,7 +30,7 @@ POST /api/auth/login
 ### 修改密码
 
 ```http
-POST /api/auth/change-password
+POST/backend-api/api/auth/change-password
 ```
 
 修改管理员密码。需要提供当前密码和新密码。

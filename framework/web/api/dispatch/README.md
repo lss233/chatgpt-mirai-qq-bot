@@ -7,7 +7,7 @@
 ### 获取规则列表
 
 ```http
-GET /api/dispatch/rules
+GET/backend-api/api/dispatch/rules
 ```
 
 获取所有已配置的调度规则。
@@ -38,7 +38,7 @@ GET /api/dispatch/rules
 ### 获取特定规则
 
 ```http
-GET /api/dispatch/rules/{rule_id}
+GET/backend-api/api/dispatch/rules/{rule_id}
 ```
 
 获取指定规则的详细信息。
@@ -46,7 +46,7 @@ GET /api/dispatch/rules/{rule_id}
 ### 创建规则
 
 ```http
-POST /api/dispatch/rules
+POST/backend-api/api/dispatch/rules
 ```
 
 创建新的调度规则。
@@ -73,7 +73,7 @@ POST /api/dispatch/rules
 ### 更新规则
 
 ```http
-PUT /api/dispatch/rules/{rule_id}
+PUT/backend-api/api/dispatch/rules/{rule_id}
 ```
 
 更新现有规则。
@@ -81,7 +81,7 @@ PUT /api/dispatch/rules/{rule_id}
 ### 删除规则
 
 ```http
-DELETE /api/dispatch/rules/{rule_id}
+DELETE/backend-api/api/dispatch/rules/{rule_id}
 ```
 
 删除指定规则。
@@ -89,7 +89,7 @@ DELETE /api/dispatch/rules/{rule_id}
 ### 启用规则
 
 ```http
-POST /api/dispatch/rules/{rule_id}/enable
+POST/backend-api/api/dispatch/rules/{rule_id}/enable
 ```
 
 启用指定规则。
@@ -97,7 +97,7 @@ POST /api/dispatch/rules/{rule_id}/enable
 ### 禁用规则
 
 ```http
-POST /api/dispatch/rules/{rule_id}/disable
+POST/backend-api/api/dispatch/rules/{rule_id}/disable
 ```
 
 禁用指定规则。

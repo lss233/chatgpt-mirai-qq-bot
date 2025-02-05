@@ -79,7 +79,7 @@ Authorization: Bearer <your-jwt-token>
 
 获取令牌：
 ```http
-POST /api/auth/login
+POST/backend-api/api/auth/login
 Content-Type: application/json
 
 {

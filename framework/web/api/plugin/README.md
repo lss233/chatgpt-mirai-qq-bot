@@ -7,7 +7,7 @@
 ### 获取所有插件
 
 ```http
-GET /api/plugin/plugins
+GET/backend-api/api/plugin/plugins
 ```
 
 获取所有已安装的插件列表。
@@ -38,7 +38,7 @@ GET /api/plugin/plugins
 ### 获取特定插件
 
 ```http
-GET /api/plugin/plugins/{plugin_name}
+GET/backend-api/api/plugin/plugins/{plugin_name}
 ```
 
 获取指定插件的详细信息。
@@ -67,7 +67,7 @@ GET /api/plugin/plugins/{plugin_name}
 ### 安装插件
 
 ```http
-POST /api/plugin/plugins
+POST/backend-api/api/plugin/plugins
 ```
 
 安装新的插件。
@@ -83,7 +83,7 @@ POST /api/plugin/plugins
 ### 卸载插件
 
 ```http
-DELETE /api/plugin/plugins/{plugin_name}
+DELETE/backend-api/api/plugin/plugins/{plugin_name}
 ```
 
 卸载指定的插件。注意：内部插件不能被卸载。
@@ -91,7 +91,7 @@ DELETE /api/plugin/plugins/{plugin_name}
 ### 启用插件
 
 ```http
-POST /api/plugin/plugins/{plugin_name}/enable
+POST/backend-api/api/plugin/plugins/{plugin_name}/enable
 ```
 
 启用指定的插件。
@@ -99,7 +99,7 @@ POST /api/plugin/plugins/{plugin_name}/enable
 ### 禁用插件
 
 ```http
-POST /api/plugin/plugins/{plugin_name}/disable
+POST/backend-api/api/plugin/plugins/{plugin_name}/disable
 ```
 
 禁用指定的插件。
@@ -107,7 +107,7 @@ POST /api/plugin/plugins/{plugin_name}/disable
 ### 更新插件
 
 ```http
-PUT /api/plugin/plugins/{plugin_name}
+PUT/backend-api/api/plugin/plugins/{plugin_name}
 ```
 
 更新插件到最新版本。注意：内部插件不支持更新。

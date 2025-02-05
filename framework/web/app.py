@@ -26,14 +26,14 @@ def create_app(container: DependencyContainer) -> Quart:
     app.config['SECRET_KEY'] = config.web.secret_key
     
     # 注册蓝图
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(im_bp, url_prefix='/api/im')
-    app.register_blueprint(llm_bp, url_prefix='/api/llm')
-    app.register_blueprint(dispatch_bp, url_prefix='/api/dispatch')
-    app.register_blueprint(block_bp, url_prefix='/api/block')
-    app.register_blueprint(workflow_bp, url_prefix='/api/workflow')
-    app.register_blueprint(plugin_bp, url_prefix='/api/plugin')
-    app.register_blueprint(system_bp, url_prefix='/api/system')
+    app.register_blueprint(auth_bp, url_prefix='/backend-api/api/auth')
+    app.register_blueprint(im_bp, url_prefix='/backend-api/api/im')
+    app.register_blueprint(llm_bp, url_prefix='/backend-api/api/llm')
+    app.register_blueprint(dispatch_bp, url_prefix='/backend-api/api/dispatch')
+    app.register_blueprint(block_bp, url_prefix='/backend-api/api/block')
+    app.register_blueprint(workflow_bp, url_prefix='/backend-api/api/workflow')
+    app.register_blueprint(plugin_bp, url_prefix='/backend-api/api/plugin')
+    app.register_blueprint(system_bp, url_prefix='/backend-api/api/system')
     
     # 在每个请求前将容器注入到上下文
     @app.before_request

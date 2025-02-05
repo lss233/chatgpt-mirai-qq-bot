@@ -7,7 +7,7 @@
 ### 获取所有工作流
 
 ```http
-GET /api/workflow
+GET/backend-api/api/workflow
 ```
 
 获取所有已注册的工作流基本信息。
@@ -34,7 +34,7 @@ GET /api/workflow
 ### 获取特定工作流
 
 ```http
-GET /api/workflow/{group_id}/{workflow_id}
+GET/backend-api/api/workflow/{group_id}/{workflow_id}
 ```
 
 获取指定工作流的详细信息。
@@ -111,7 +111,7 @@ GET /api/workflow/{group_id}/{workflow_id}
 ### 创建工作流
 
 ```http
-POST /api/workflow/{group_id}/{workflow_id}
+POST/backend-api/api/workflow/{group_id}/{workflow_id}
 ```
 
 创建新的工作流。
@@ -186,7 +186,7 @@ POST /api/workflow/{group_id}/{workflow_id}
 ### 更新工作流
 
 ```http
-PUT /api/workflow/{group_id}/{workflow_id}
+PUT/backend-api/api/workflow/{group_id}/{workflow_id}
 ```
 
 更新现有工作流。请求体格式与创建工作流相同。
@@ -194,7 +194,7 @@ PUT /api/workflow/{group_id}/{workflow_id}
 ### 删除工作流
 
 ```http
-DELETE /api/workflow/{group_id}/{workflow_id}
+DELETE/backend-api/api/workflow/{group_id}/{workflow_id}
 ```
 
 删除指定工作流。成功时返回：

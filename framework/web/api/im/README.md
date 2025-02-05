@@ -7,7 +7,7 @@
 ### 获取适配器类型
 
 ```http
-GET /api/im/types
+GET/backend-api/api/im/types
 ```
 
 获取所有可用的 IM 适配器类型。
@@ -26,7 +26,7 @@ GET /api/im/types
 ### 获取所有适配器
 
 ```http
-GET /api/im/adapters
+GET/backend-api/api/im/adapters
 ```
 
 获取所有已配置的 IM 适配器信息。
@@ -51,7 +51,7 @@ GET /api/im/adapters
 ### 获取特定适配器
 
 ```http
-GET /api/im/adapters/{adapter_id}
+GET/backend-api/api/im/adapters/{adapter_id}
 ```
 
 获取指定适配器的详细信息。
@@ -74,7 +74,7 @@ GET /api/im/adapters/{adapter_id}
 ### 创建适配器
 
 ```http
-POST /api/im/adapters
+POST/backend-api/api/im/adapters
 ```
 
 注册新的 IM 适配器。
@@ -94,7 +94,7 @@ POST /api/im/adapters
 ### 更新适配器
 
 ```http
-PUT /api/im/adapters/{adapter_id}
+PUT/backend-api/api/im/adapters/{adapter_id}
 ```
 
 更新现有适配器的配置。如果适配器正在运行，会自动重启以应用新配置。
@@ -115,7 +115,7 @@ PUT /api/im/adapters/{adapter_id}
 ### 删除适配器
 
 ```http
-DELETE /api/im/adapters/{adapter_id}
+DELETE/backend-api/api/im/adapters/{adapter_id}
 ```
 
 删除指定的适配器。如果适配器正在运行，会先自动停止。
@@ -123,7 +123,7 @@ DELETE /api/im/adapters/{adapter_id}
 ### 启动适配器
 
 ```http
-POST /api/im/adapters/{adapter_id}/start
+POST/backend-api/api/im/adapters/{adapter_id}/start
 ```
 
 启动指定的适配器。
@@ -131,7 +131,7 @@ POST /api/im/adapters/{adapter_id}/start
 ### 停止适配器
 
 ```http
-POST /api/im/adapters/{adapter_id}/stop
+POST/backend-api/api/im/adapters/{adapter_id}/stop
 ```
 
 停止指定的适配器。

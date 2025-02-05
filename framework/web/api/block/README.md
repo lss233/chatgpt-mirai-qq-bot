@@ -8,7 +8,7 @@
 ### 获取所有区块类型
 
 ```http
-GET /api/block/types
+GET/backend-api/api/block/types
 ```
 
 获取所有可用的区块类型列表。
@@ -53,7 +53,7 @@ GET /api/block/types
 ### 获取特定区块类型
 
 ```http
-GET /api/block/types/{type_name}
+GET/backend-api/api/block/types/{type_name}
 ```
 
 获取指定区块类型的详细信息。
@@ -103,7 +103,7 @@ GET /api/block/types/{type_name}
 ### 注册区块类型
 
 ```http
-POST /api/block/types
+POST/backend-api/api/block/types
 ```
 
 注册新的区块类型。
@@ -151,7 +151,7 @@ POST /api/block/types
 ### 更新区块类型
 
 ```http
-PUT /api/block/types/{type}
+PUT/backend-api/api/block/types/{type}
 ```
 
 更新现有区块类型。
@@ -159,7 +159,7 @@ PUT /api/block/types/{type}
 ### 删除区块类型
 
 ```http
-DELETE /api/block/types/{type}
+DELETE/backend-api/api/block/types/{type}
 ```
 
 删除指定区块类型。
@@ -167,7 +167,7 @@ DELETE /api/block/types/{type}
 ### 获取区块实例
 
 ```http
-GET /api/block/instances/{workflow_id}
+GET/backend-api/api/block/instances/{workflow_id}
 ```
 
 获取指定工作流中的所有区块实例。
@@ -196,7 +196,7 @@ GET /api/block/instances/{workflow_id}
 ### 获取特定区块实例
 
 ```http
-GET /api/block/instances/{workflow_id}/{block_id}
+GET/backend-api/api/block/instances/{workflow_id}/{block_id}
 ```
 
 获取指定区块实例的详细信息。
@@ -204,7 +204,7 @@ GET /api/block/instances/{workflow_id}/{block_id}
 ### 更新区块实例
 
 ```http
-PUT /api/block/instances/{workflow_id}/{block_id}
+PUT/backend-api/api/block/instances/{workflow_id}/{block_id}
 ```
 
 更新区块实例的配置。

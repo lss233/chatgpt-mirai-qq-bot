@@ -7,7 +7,7 @@
 ### 获取适配器类型
 
 ```http
-GET /api/llm/types
+GET/backend-api/api/llm/types
 ```
 
 获取所有可用的 LLM 适配器类型。
@@ -27,7 +27,7 @@ GET /api/llm/types
 ### 获取所有后端
 
 ```http
-GET /api/llm/backends
+GET/backend-api/api/llm/backends
 ```
 
 获取所有已注册的 LLM 后端信息。
@@ -55,7 +55,7 @@ GET /api/llm/backends
 ### 获取特定后端
 
 ```http
-GET /api/llm/backends/{backend_name}
+GET/backend-api/api/llm/backends/{backend_name}
 ```
 
 获取指定后端的详细信息。
@@ -79,7 +79,7 @@ GET /api/llm/backends/{backend_name}
 ### 创建后端
 
 ```http
-POST /api/llm/backends
+POST/backend-api/api/llm/backends
 ```
 
 注册新的 LLM 后端。
@@ -101,7 +101,7 @@ POST /api/llm/backends
 ### 更新后端
 
 ```http
-PUT /api/llm/backends/{backend_name}
+PUT/backend-api/api/llm/backends/{backend_name}
 ```
 
 更新现有后端的配置。
@@ -124,7 +124,7 @@ PUT /api/llm/backends/{backend_name}
 ### 删除后端
 
 ```http
-DELETE /api/llm/backends/{backend_name}
+DELETE/backend-api/api/llm/backends/{backend_name}
 ```
 
 删除指定的后端。如果后端当前已启用，会先自动卸载。
