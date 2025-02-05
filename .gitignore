@@ -10,4 +10,5 @@ Dockerfile.dev
 venv/
 .vscode/
 config.yaml
+config.yaml.bak
 logs/

@@ -335,20 +335,7 @@ class WorkflowBuilder:
         yaml = YAML()
         yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.width = 4096
-        
-        def get_block_type_name(block_class: Type[Block]) -> str:
-            """获取 block 的类型名称，优先使用注册名称"""
-            # 遍历注册表查找匹配的 block 类
-            for full_name, registered_class in self.registry._blocks.items():
-                if registered_class == block_class:
-                    return full_name
-                    
-            warnings.warn(
-                f"Block class {block_class.__name__} is not registered. Using class path instead.",
-                UserWarning
-            )
-            return f"!!{block_class.__module__}.{block_class.__name__}"
-        
+                
         workflow_data = {
             'name': self.name,
             'blocks': []
@@ -356,7 +343,7 @@ class WorkflowBuilder:
         
         def serialize_node(node: Node) -> dict:
             block_data = {
-                'type': get_block_type_name(node.block.__class__),
+                'type': self.registry.get_block_type_name(node.block.__class__),
                 'name': node.block.name,
                 'params': {}
             }

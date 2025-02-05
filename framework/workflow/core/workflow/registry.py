@@ -9,11 +9,20 @@ from framework.workflow.core.workflow.builder import WorkflowBuilder
 class WorkflowRegistry:
     """工作流注册表，管理工作流的注册和获取"""
     
+    WORKFLOWS_DIR = "data/workflows"
+    
     def __init__(self, container: DependencyContainer):
         self._workflows: Dict[str, Type[WorkflowBuilder]] = {}
         self.logger = get_logger("WorkflowRegistry")
         self.container = container
         
+    @classmethod
+    def get_workflow_path(cls, group_id: str, workflow_id: str) -> str:
+        """获取工作流文件路径"""
+        group_dir = os.path.join(cls.WORKFLOWS_DIR, group_id)
+        if not os.path.exists(group_dir):
+            os.makedirs(group_dir)
+        return os.path.join(group_dir, f"{workflow_id}.yaml")
 
     def register(self, group_id: str, workflow_id: str, workflow_builder: Type[WorkflowBuilder]):
         """注册一个工作流"""
@@ -27,34 +36,28 @@ class WorkflowRegistry:
         """获取工作流构建器"""
         return self._workflows.get(name)
         
-    def load_workflows(self, workflows_dir: str = "data/workflows"):
+    def load_workflows(self, workflows_dir: str = None):
         """从指定目录加载所有工作流定义"""
+        workflows_dir = workflows_dir or self.WORKFLOWS_DIR
         if not os.path.exists(workflows_dir):
             os.makedirs(workflows_dir)
                     
-        for file_name in os.listdir(workflows_dir):
-            if not file_name.endswith('.yaml'):
+        # 遍历所有组目录
+        for group_id in os.listdir(workflows_dir):
+            group_dir = os.path.join(workflows_dir, group_id)
+            if not os.path.isdir(group_dir):
                 continue
                 
-            file_path = os.path.join(workflows_dir, file_name)
-            try:
-                workflow = WorkflowBuilder.load_from_yaml(file_path, self.container)
-                # 从文件名解析 group_id 和 workflow_id
-                name_without_ext = os.path.splitext(file_name)[0]
-                if ':' not in name_without_ext:
-                    self.logger.warning(f"Invalid workflow file name {file_name}, skipping")
+            # 遍历组内的工作流文件
+            for file_name in os.listdir(group_dir):
+                if not file_name.endswith('.yaml'):
                     continue
                     
-                group_id, workflow_id = name_without_ext.split(':', 1)
-                self.register(group_id, workflow_id, workflow)
+                workflow_id = os.path.splitext(file_name)[0]
+                file_path = os.path.join(group_dir, file_name)
                 
-            except Exception as e:
-                self.logger.error(f"Failed to load workflow from {file_path}: {str(e)}")
-                
-    def create_workflow(self, name: str) -> Optional[Workflow]:
-        """创建工作流实例"""
-        builder = self.get(name)
-        if not builder:
-            return None
-            
-        return builder.build() 
+                try:
+                    workflow = WorkflowBuilder.load_from_yaml(file_path, self.container)
+                    self.register(group_id, workflow_id, workflow)
+                except Exception as e:
+                    self.logger.error(f"Failed to load workflow from {file_path}: {str(e)}")

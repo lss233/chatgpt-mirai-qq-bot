@@ -2,13 +2,12 @@ name: Windows Quickstart Dev (go-cqhttp)
 
 on:
   workflow_dispatch:
-  pull_request:
   push:
     branches:
       - 'browser-version-dev'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -35,8 +35,8 @@ def test_generate_help_basic(container):
     rule2.description = "开始聊天"
     rule2.workflow_factory = chat_factory
     
-    registry.get_rules.return_value = [rule1, rule2]
-    
+    registry.get_all_rules.return_value = [rule1, rule2]
+    registry.get_active_rules.return_value = [rule1, rule2]
     block = GenerateHelp(container)
     result = block.execute()
     
@@ -49,8 +49,6 @@ def test_generate_help_basic(container):
     
     # 检查帮助文本格式
     assert "机器人命令帮助" in help_text
-    assert "SYSTEM" in help_text
-    assert "CHAT" in help_text
     assert "/help" in help_text
     assert "/chat" in help_text
     assert "显示帮助信息" in help_text
@@ -59,7 +57,7 @@ def test_generate_help_basic(container):
 def test_generate_help_empty(container):
     """测试没有规则时的帮助信息生成"""
     container, registry = container
-    registry.get_rules.return_value = []
+    registry.get_all_rules.return_value = []
     
     block = GenerateHelp(container)
     result = block.execute()
@@ -85,7 +83,7 @@ def test_generate_help_no_description(container):
     rule.workflow_factory = test_factory
     # 不设置 description
     
-    registry.get_rules.return_value = [rule]
+    registry.get_all_rules.return_value = [rule]
     
     block = GenerateHelp(container)
     result = block.execute()

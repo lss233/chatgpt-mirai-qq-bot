@@ -1,9 +1,36 @@
 ims:
-  enable:
-    telegram: ['telegram-bot-1234']
-  configs:
-    telegram-bot-1234:
-      token: 'abcd'
+  - name: "telegram-bot-1234"
+    enable: true
+    adapter: "telegram"
+    config:
+      token: "abcd"
 
 plugins:
   enable: []
+
+web:
+  host: "127.0.0.1"
+  port: 8080
+  secret_key: "please-change-this-to-a-secure-secret-key"
+
+llms:
+  api_backends:
+    - name: "deepseek-official"
+      adapter: "deepseek"
+      enable: true
+      config:
+        api_key: "your-api-key"
+        base_url: "https://api.deepseek.com/v1"
+      models:
+        - "deepseek-chat"
+        - "deepseek-coder"
+    
+    - name: "openai-gpt4"
+      adapter: "openai"
+      enable: true
+      config:
+        api_key: "your-openai-key"
+        base_url: "https://api.openai.com/v1"
+      models:
+        - "gpt-4"
+        - "gpt-4-turbo"

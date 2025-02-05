@@ -19,7 +19,7 @@ class GenerateHelp(Block):
     def execute(self) -> Dict[str, Any]:
         # 从容器获取调度规则注册表
         registry = self.container.resolve(DispatchRuleRegistry)
-        rules = registry.get_rules()
+        rules = registry.get_active_rules()
         
         # 按类别组织命令
         commands = {}

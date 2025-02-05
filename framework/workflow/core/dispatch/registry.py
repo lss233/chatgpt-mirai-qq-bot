@@ -1,5 +1,7 @@
-from typing import List
-from framework.workflow.core.dispatch.rule import DispatchRule, PrefixMatchRule, KeywordMatchRule, RegexMatchRule
+from typing import List, Dict, Any, Optional
+from framework.workflow.core.dispatch.rule import (
+    DispatchRule, RuleConfig, RegexRuleConfig, PrefixRuleConfig, KeywordRuleConfig
+)
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
@@ -12,17 +14,105 @@ class DispatchRuleRegistry:
     def __init__(self, container: DependencyContainer):
         self.container = container
         self.workflow_registry = container.resolve(WorkflowRegistry)
-        self.rules: List[DispatchRule] = []
+        self.rules: Dict[str, DispatchRule] = {}  # 使用字典存储规则，便于查找
         self.logger = get_logger("DispatchRuleRegistry")
+        self.rules_dir = "data/dispatch_rules"
         
-
     def register(self, rule: DispatchRule):
         """注册一个调度规则"""
-        self.rules.append(rule)
+        if not rule.rule_id:
+            raise ValueError("Rule must have an ID")
+        self.rules[rule.rule_id] = rule
         self.logger.info(f"Registered dispatch rule: {rule}")
         
-    def load_rules(self, rules_dir: str = "data/dispatch_rules"):
+    def get_rule(self, rule_id: str) -> Optional[DispatchRule]:
+        """获取指定ID的规则"""
+        return self.rules.get(rule_id)
+    
+    def get_all_rules(self) -> List[DispatchRule]:
+        """获取所有已注册的规则"""
+        return list(self.rules.values())
+        
+    def get_active_rules(self) -> List[DispatchRule]:
+        """获取所有已启用的规则，按优先级降序排序"""
+        active_rules = [rule for rule in self.rules.values() if rule.enabled]
+        return sorted(active_rules, key=lambda x: x.priority, reverse=True)
+        
+    def create_rule(self, rule_id: str, name: str, description: str, rule_type: str,
+                   workflow_id: str, rule_config: Dict[str, Any], priority: int = 5,
+                   enabled: bool = True, metadata: Optional[Dict[str, Any]] = None) -> DispatchRule:
+        """创建并注册一个新的规则"""
+        # 获取工作流构建器
+        workflow_builder = self.workflow_registry.get(workflow_id)
+        if not workflow_builder:
+            raise ValueError(f"Workflow {workflow_id} not found")
+            
+        # 获取规则类型
+        rule_class = DispatchRule.get_rule_type(rule_type)
+        
+        # 创建规则配置
+        config = rule_class.config_class(**rule_config)
+        
+        # 创建规则实例
+        rule = rule_class.from_config(config, workflow_builder)
+        
+        # 设置规则属性
+        rule.rule_id = rule_id
+        rule.name = name
+        rule.description = description
+        rule.priority = priority
+        rule.workflow_id = workflow_id
+        rule.enabled = enabled
+        rule.metadata = metadata or {}
+        
+        # 注册规则
+        self.register(rule)
+        return rule
+        
+    def update_rule(self, rule_id: str, name: str, description: str, rule_type: str,
+                   workflow_id: str, rule_config: Dict[str, Any], priority: int = 5,
+                   enabled: bool = True, metadata: Optional[Dict[str, Any]] = None) -> DispatchRule:
+        """更新现有规则"""
+        if rule_id not in self.rules:
+            raise ValueError(f"Rule {rule_id} not found")
+            
+        # 创建新规则并替换
+        rule = self.create_rule(
+            rule_id=rule_id,
+            name=name,
+            description=description,
+            rule_type=rule_type,
+            workflow_id=workflow_id,
+            rule_config=rule_config,
+            priority=priority,
+            enabled=enabled,
+            metadata=metadata
+        )
+        return rule
+        
+    def delete_rule(self, rule_id: str):
+        """删除规则"""
+        if rule_id not in self.rules:
+            raise ValueError(f"Rule {rule_id} not found")
+        del self.rules[rule_id]
+        
+    def enable_rule(self, rule_id: str):
+        """启用规则"""
+        rule = self.get_rule(rule_id)
+        if not rule:
+            raise ValueError(f"Rule {rule_id} not found")
+        rule.enabled = True
+        
+    def disable_rule(self, rule_id: str):
+        """禁用规则"""
+        rule = self.get_rule(rule_id)
+        if not rule:
+            raise ValueError(f"Rule {rule_id} not found")
+        rule.enabled = False
+        
+    def load_rules(self, rules_dir: Optional[str] = None):
         """从指定目录加载所有调度规则"""
+        rules_dir = rules_dir or self.rules_dir
         if not os.path.exists(rules_dir):
             os.makedirs(rules_dir)
             
@@ -42,54 +132,64 @@ class DispatchRuleRegistry:
                     continue
                     
                 for rule_data in rules_data:
-                    rule = self._create_rule(rule_data)
-                    if rule:
-                        self.register(rule)
+                    try:
+                        # 获取规则类型
+                        rule_type = rule_data['type']
+                        rule_class = DispatchRule.get_rule_type(rule_type)
+                        
+                        # 提取规则配置
+                        config_fields = rule_class.config_class.__fields__.keys()
+                        rule_config = {k: rule_data[k] for k in config_fields if k in rule_data}
+                        
+                        rule = self.create_rule(
+                            rule_id=rule_data['rule_id'],
+                            name=rule_data['name'],
+                            description=rule_data.get('description', ''),
+                            rule_type=rule_type,
+                            workflow_id=rule_data['workflow_id'],
+                            rule_config=rule_config,
+                            priority=rule_data.get('priority', 5),
+                            enabled=rule_data.get('enabled', True),
+                            metadata=rule_data.get('metadata', {})
+                        )
+                        self.logger.info(f"Loaded rule: {rule}")
+                    except Exception as e:
+                        self.logger.error(f"Failed to load rule: {str(e)}")
                         
             except Exception as e:
                 self.logger.error(f"Failed to load rules from {file_path}: {str(e)}")
                 
-    def _create_rule(self, rule_data: dict) -> DispatchRule:
-        """从规则数据创建调度规则实例"""
-        rule_type = rule_data.get('type')
-        workflow_name = rule_data.get('workflow')
-        description = rule_data.get('description')
-
-        if not rule_type or not workflow_name:
-            raise ValueError("Rule must specify 'type' and 'workflow'")
+    def save_rules(self, rules_dir: Optional[str] = None):
+        """保存所有规则到文件"""
+        rules_dir = rules_dir or self.rules_dir
+        if not os.path.exists(rules_dir):
+            os.makedirs(rules_dir)
             
-        # 获取工作流构建器
-        workflow_builder = self.workflow_registry.get(workflow_name)
-        if not workflow_builder:
-            raise ValueError(f"Workflow {workflow_name} not found")
-
-        # 规则类型到构造函数的映射
-        rule_constructors = {
-            'prefix': (PrefixMatchRule, 'prefix', str),
-            'keyword': (KeywordMatchRule, 'keywords', list),
-            'regex': (RegexMatchRule, 'pattern', str)
-        }
-
-        if rule_type not in rule_constructors:
-            raise ValueError(f"Unknown rule type: {rule_type}")
-
-        # 获取构造信息
-        constructor, param_name, param_type = rule_constructors[rule_type]
-        param_value = rule_data.get(param_name)
-
-        # 验证参数
-        if not param_value or not isinstance(param_value, param_type):
-            raise ValueError(f"{rule_type} rule must specify '{param_name}' as {param_type.__name__}")
-
-        # 创建规则实例
-        rule = constructor(param_value, workflow_builder)
+        yaml = YAML()
+        yaml.default_flow_style = False
         
-        # 如果有描述信息,添加到规则实例
-        if description:
-            rule.description = description
-
-        return rule
+        # 将规则转换为可序列化的格式
+        rules_data = []
+        for rule in self.rules.values():
+            # 获取基本信息
+            rule_data = {
+                'rule_id': rule.rule_id,
+                'name': rule.name,
+                'description': rule.description,
+                'type': rule.type_name,
+                'priority': rule.priority,
+                'workflow_id': rule.workflow_id,
+                'enabled': rule.enabled,
+                'metadata': rule.metadata
+            }
             
-    def get_rules(self) -> List[DispatchRule]:
-        """获取所有已注册的规则"""
-        return self.rules.copy() 
+            # 添加规则配置
+            config = rule.get_config()
+            rule_data.update(config.dict())
+            
+            rules_data.append(rule_data)
+            
+        # 保存到文件
+        file_path = os.path.join(rules_dir, 'rules.yaml')
+        with open(file_path, 'w', encoding='utf-8') as f:
+            yaml.dump(rules_data, f) 

@@ -26,7 +26,12 @@ class WorkflowDispatcher:
     def __init_fallback(self):
         """初始化默认的兜底规则"""
         fallback_factory = DefaultWorkflowFactory()
-        self.dispatch_registry.register(FallbackMatchRule(fallback_factory.create_default_workflow))
+        fallback_rule = FallbackMatchRule(fallback_factory.create_default_workflow)
+        fallback_rule.rule_id = "default"
+        fallback_rule.name = "默认规则"
+        fallback_rule.description = "处理所有未匹配的消息"
+        fallback_rule.workflow_id = "default"
+        self.dispatch_registry.register(fallback_rule)
         self.logger.info("Registered fallback dispatch rule")
 
     def register_rule(self, rule: DispatchRule):
@@ -38,7 +43,10 @@ class WorkflowDispatcher:
         """
         根据消息内容选择第一个匹配的规则进行处理
         """
-        for rule in self.dispatch_registry.get_rules():
+        # 获取所有已启用的规则，按优先级排序
+        active_rules = self.dispatch_registry.get_active_rules()
+        
+        for rule in active_rules:
             if rule.match(message):
                 self.logger.debug(f"Matched rule {rule}, executing workflow")
                 with self.container.scoped() as scoped_container:
