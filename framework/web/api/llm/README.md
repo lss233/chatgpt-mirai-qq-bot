@@ -1,231 +1,272 @@
-# LLM Backend Management API
+# 大语言模型 API 🤖
 
-本文档描述了 LLM 后端管理的 API 接口。所有接口都需要认证，请在请求头中添加 `Authorization: Bearer <token>` 。
+大语言模型 API 提供了管理 LLM 后端和适配器的功能。通过这些 API，你可以注册、配置和管理不同的大语言模型服务。
 
-## 获取适配器类型
+## API 端点
 
-获取所有可用的 LLM 适配器类型。
+### 获取适配器类型
 
-```
+```http
 GET /api/llm/types
 ```
 
-### 响应
+获取所有可用的 LLM 适配器类型。
 
+**响应示例：**
 ```json
 {
-    "types": ["openai", "gemini", "anthropic"]
+  "types": [
+    "openai",
+    "anthropic",
+    "azure",
+    "local"
+  ]
 }
 ```
 
-## 获取后端列表
+### 获取所有后端
 
-获取所有已配置的 LLM 后端。
-
-```
+```http
 GET /api/llm/backends
 ```
 
-### 响应
+获取所有已注册的 LLM 后端信息。
 
+**响应示例：**
 ```json
 {
+  "data": {
     "backends": [
-        {
-            "backend_id": "openai-gpt4",
-            "adapter": "openai",
-            "enable": true,
-            "configs": [
-                {
-                    "api_key": "your-api-key",
-                    "base_url": "https://api.openai.com/v1"
-                }
-            ],
-            "models": ["gpt-4", "gpt-4-turbo"],
-            "is_available": true
-        }
+      {
+        "name": "openai",
+        "adapter": "openai",
+        "config": {
+          "api_key": "sk-xxx",
+          "api_base": "https://api.openai.com/v1"
+        },
+        "enable": true,
+        "models": ["gpt-4", "gpt-3.5-turbo"]
+      }
     ]
+  }
 }
 ```
 
-## 获取单个后端
+### 获取特定后端
 
-获取特定 LLM 后端的详细信息。
-
-```
-GET /api/llm/backends/{backend_id}
+```http
+GET /api/llm/backends/{backend_name}
 ```
 
-### 响应
+获取指定后端的详细信息。
 
+**响应示例：**
 ```json
 {
-    "backend": {
-        "backend_id": "openai-gpt4",
-        "adapter": "openai",
-        "enable": true,
-        "configs": [
-            {
-                "api_key": "your-api-key",
-                "base_url": "https://api.openai.com/v1"
-            }
-        ],
-        "models": ["gpt-4", "gpt-4-turbo"],
-        "is_available": true
-    }
+  "data": {
+    "name": "anthropic",
+    "adapter": "anthropic",
+    "config": {
+      "api_key": "sk-xxx",
+      "api_base": "https://api.anthropic.com"
+    },
+    "enable": true,
+    "models": ["claude-3-opus", "claude-3-sonnet"]
+  }
 }
 ```
 
-## 创建后端
+### 创建后端
 
-创建新的 LLM 后端。
-
-```
+```http
 POST /api/llm/backends
 ```
 
-### 请求体
+注册新的 LLM 后端。
 
+**请求体：**
 ```json
 {
-    "backend_id": "openai-gpt4",
-    "adapter": "openai",
-    "enable": true,
-    "configs": [
-        {
-            "api_key": "your-api-key",
-            "base_url": "https://api.openai.com/v1"
-        }
-    ],
-    "models": ["gpt-4", "gpt-4-turbo"]
+  "name": "anthropic",
+  "adapter": "anthropic",
+  "config": {
+    "api_key": "sk-xxx",
+    "api_base": "https://api.anthropic.com"
+  },
+  "enable": true,
+  "models": ["claude-3-opus", "claude-3-sonnet"]
 }
 ```
 
-### 响应
+### 更新后端
 
+```http
+PUT /api/llm/backends/{backend_name}
+```
+
+更新现有后端的配置。
+
+**请求体：**
 ```json
 {
-    "backend": {
-        "backend_id": "openai-gpt4",
-        "adapter": "openai",
-        "enable": true,
-        "configs": [
-            {
-                "api_key": "your-api-key",
-                "base_url": "https://api.openai.com/v1"
-            }
-        ],
-        "models": ["gpt-4", "gpt-4-turbo"],
-        "is_available": false
-    }
+  "name": "anthropic",
+  "adapter": "anthropic",
+  "config": {
+    "api_key": "sk-xxx",
+    "api_base": "https://api.anthropic.com",
+    "temperature": 0.7
+  },
+  "enable": true,
+  "models": ["claude-3-opus", "claude-3-sonnet"]
 }
 ```
 
-## 更新后端
+### 删除后端
 
-更新现有 LLM 后端的配置。
-
-```
-PUT /api/llm/backends/{backend_id}
+```http
+DELETE /api/llm/backends/{backend_name}
 ```
 
-### 请求体
+删除指定的后端。如果后端当前已启用，会先自动卸载。
+
+## 数据模型
+
+### LLMBackendInfo
+- `name`: 后端名称
+- `adapter`: 适配器类型
+- `config`: 配置信息(字典)
+- `enable`: 是否启用
+- `models`: 支持的模型列表
+
+### LLMBackendList
+- `backends`: LLM 后端列表
+
+### LLMBackendResponse
+- `error`: 错误信息(可选)
+- `data`: 后端信息(可选)
+
+### LLMBackendListResponse
+- `error`: 错误信息(可选)
+- `data`: 后端列表(可选)
+
+### LLMAdapterTypes
+- `types`: 可用的适配器类型列表
+
+## 适配器类型
+
+目前支持的适配器类型包括：
+
+### OpenAI
+- 适配器类型: `openai`
+- 支持模型: gpt-4, gpt-3.5-turbo 等
+- 配置项:
+  - `api_key`: API 密钥
+  - `api_base`: API 基础 URL
+  - `temperature`: 温度参数(可选)
+
+### Anthropic
+- 适配器类型: `anthropic`
+- 支持模型: claude-3-opus, claude-3-sonnet 等
+- 配置项:
+  - `api_key`: API 密钥
+  - `api_base`: API 基础 URL
+  - `temperature`: 温度参数(可选)
+
+### Azure OpenAI
+- 适配器类型: `azure`
+- 支持 Azure OpenAI 服务部署的各类模型
+- 配置项:
+  - `api_key`: API 密钥
+  - `api_base`: Azure 终结点
+  - `deployment_name`: 部署名称
+
+### 本地模型
+- 适配器类型: `local`
+- 支持本地部署的开源模型
+- 配置项:
+  - `model_path`: 模型路径
+  - `device`: 运行设备(cpu/cuda)
+
+## 相关代码
+
+- [LLM 管理器](../../../llm/llm_manager.py)
+- [LLM 注册表](../../../llm/llm_registry.py)
+- [适配器实现](../../../llm/adapters)
+
+## 错误处理
+
+所有 API 端点在发生错误时都会返回适当的 HTTP 状态码和错误信息：
 
 ```json
 {
-    "backend_id": "openai-gpt4",
-    "adapter": "openai",
-    "enable": true,
-    "configs": [
-        {
-            "api_key": "new-api-key",
-            "base_url": "https://api.openai.com/v1"
-        }
-    ],
-    "models": ["gpt-4", "gpt-4-turbo"]
+  "error": "错误描述信息"
 }
 ```
 
-### 响应
-
-```json
-{
-    "backend": {
-        "backend_id": "openai-gpt4",
-        "adapter": "openai",
-        "enable": true,
-        "configs": [
-            {
-                "api_key": "new-api-key",
-                "base_url": "https://api.openai.com/v1"
-            }
-        ],
-        "models": ["gpt-4", "gpt-4-turbo"],
-        "is_available": true
-    }
-}
-```
-
-## 删除后端
-
-删除指定的 LLM 后端。
-
-```
-DELETE /api/llm/backends/{backend_id}
-```
-
-### 响应
-
-```json
-{
-    "message": "Backend deleted successfully"
-}
-```
-
-## 启用后端
-
-启用指定的 LLM 后端。
-
-```
-POST /api/llm/backends/{backend_id}/enable
-```
-
-### 响应
-
-```json
-{
-    "message": "Backend enabled successfully"
-}
-```
-
-## 禁用后端
-
-禁用指定的 LLM 后端。
-
-```
-POST /api/llm/backends/{backend_id}/disable
-```
-
-### 响应
-
-```json
-{
-    "message": "Backend disabled successfully"
-}
-```
-
-## 错误响应
-
-所有接口在发生错误时都会返回相应的错误信息：
-
-```json
-{
-    "error": "错误信息"
-}
-```
-
-常见的错误状态码：
-- 400: 请求参数错误
-- 401: 未认证或认证失败
-- 404: 资源不存在
+常见状态码：
+- 400: 请求参数错误或后端配置无效
+- 404: 后端不存在
 - 500: 服务器内部错误
+
+## 使用示例
+
+### 获取适配器类型
+```python
+import requests
+
+response = requests.get(
+    'http://localhost:8080/api/llm/types',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+### 创建新后端
+```python
+import requests
+
+backend_data = {
+    "name": "anthropic",
+    "adapter": "anthropic",
+    "config": {
+        "api_key": "sk-xxx",
+        "api_base": "https://api.anthropic.com"
+    },
+    "enable": true,
+    "models": ["claude-3-opus", "claude-3-sonnet"]
+}
+
+response = requests.post(
+    'http://localhost:8080/api/llm/backends',
+    headers={'Authorization': f'Bearer {token}'},
+    json=backend_data
+)
+```
+
+### 更新后端配置
+```python
+import requests
+
+backend_data = {
+    "name": "anthropic",
+    "adapter": "anthropic",
+    "config": {
+        "api_key": "sk-xxx",
+        "api_base": "https://api.anthropic.com",
+        "temperature": 0.7
+    },
+    "enable": true,
+    "models": ["claude-3-opus", "claude-3-sonnet"]
+}
+
+response = requests.put(
+    'http://localhost:8080/api/llm/backends/anthropic',
+    headers={'Authorization': f'Bearer {token}'},
+    json=backend_data
+)
+```
+
+## 相关文档
+
+- [系统架构](../../README.md#系统架构-)
+- [API 认证](../../README.md#api认证-)
+- [LLM 适配器开发](../../../llm/README.md#适配器开发-)

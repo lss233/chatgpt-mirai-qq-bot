@@ -1,102 +1,97 @@
-# 插件管理 API
+# 插件 API 🔌
 
-插件管理API提供了对系统插件的全面管理功能，包括查看、安装、卸载、启用和禁用插件。
+插件 API 提供了管理插件的功能。插件可以扩展系统的功能，添加新的区块类型、适配器或工作流。
 
 ## API 端点
-
-### 获取插件列表
-
-```http
-GET /api/plugin
-```
-
-获取所有已安装的插件列表，包括内部插件和外部插件。
-
-**响应示例：**
-```json
-{
-  "plugins": [
-    {
-      "name": "TelegramAdapter",
-      "package_name": "chatgpt-mirai-telegram-adapter",
-      "description": "Telegram adapter for ChatGPT-Mirai",
-      "version": "1.0.0",
-      "author": "Internal",
-      "is_internal": true,
-      "is_enabled": true,
-      "metadata": null
-    }
-  ]
-}
-```
-
-### 获取可用插件列表
-
-```http
-GET /api/plugin/available
-```
-
-获取所有已安装但未启用的插件列表。
 
 ### 获取插件详情
 
 ```http
-GET /api/plugin/{package_name}
+GET /api/plugin/{plugin_name}
 ```
 
 获取指定插件的详细信息。
 
-### 安装插件
-
-```http
-POST /api/plugin/install
-```
-
-安装新插件。
-
-**请求体：**
+**响应示例：**
 ```json
 {
-  "package_name": "plugin-package-name",
-  "version": "1.0.0"  // 可选
+  "plugin": {
+    "name": "image-processing",
+    "package_name": "chatgpt-mirai-plugin-image",
+    "description": "图像处理插件",
+    "version": "1.0.0",
+    "author": "Plugin Author",
+    "is_internal": false,
+    "is_enabled": true,
+    "metadata": {
+      "homepage": "https://github.com/author/plugin",
+      "license": "MIT"
+    }
+  }
 }
 ```
-
-### 卸载插件
-
-```http
-POST /api/plugin/uninstall/{package_name}
-```
-
-卸载指定的插件。插件必须处于禁用状态才能卸载。
 
 ### 更新插件
 
 ```http
-POST /api/plugin/update/{package_name}
+POST /api/plugin/update/{plugin_name}
 ```
 
-将指定的插件更新到最新版本。
+更新指定的外部插件到最新版本。注意：内部插件不支持更新。
 
-### 启用插件
-
-```http
-POST /api/plugin/enable/{package_name}
+**响应示例：**
+```json
+{
+  "plugin": {
+    "name": "image-processing",
+    "package_name": "chatgpt-mirai-plugin-image",
+    "description": "图像处理插件",
+    "version": "1.1.0",  // 更新后的版本
+    "author": "Plugin Author",
+    "is_internal": false,
+    "is_enabled": true,
+    "metadata": {
+      "homepage": "https://github.com/author/plugin",
+      "license": "MIT"
+    }
+  }
+}
 ```
 
-启用指定的插件。
+## 数据模型
 
-### 禁用插件
+### PluginInfo
+- `name`: 插件名称
+- `package_name`: 包名(外部插件)
+- `description`: 插件描述
+- `version`: 版本号
+- `author`: 作者
+- `is_internal`: 是否为内部插件
+- `is_enabled`: 是否启用
+- `metadata`: 元数据(可选)
 
-```http
-POST /api/plugin/disable/{package_name}
-```
+## 内置插件
 
-禁用指定的插件。
+### IM 适配器
+- Telegram 适配器
+- HTTP Legacy 适配器
+- WeCom 适配器
+
+### LLM 后端
+- OpenAI 适配器
+- Anthropic 适配器
+- Google AI 适配器
+
+## 相关代码
+
+- [插件基类](../../../plugin_manager/plugin.py)
+- [插件加载器](../../../plugin_manager/plugin_loader.py)
+- [插件事件总线](../../../plugin_manager/plugin_event_bus.py)
+- [内置插件](../../../../plugins)
 
 ## 错误处理
 
-所有API端点在发生错误时都会返回适当的HTTP状态码和错误信息：
+所有 API 端点在发生错误时都会返回适当的 HTTP 状态码和错误信息：
 
 ```json
 {
@@ -105,13 +100,34 @@ POST /api/plugin/disable/{package_name}
 ```
 
 常见状态码：
-- 400: 请求参数错误或操作无效
-- 404: 插件未找到
+- 400: 请求参数错误或插件不支持更新
+- 404: 插件不存在
 - 500: 服务器内部错误
 
-## 注意事项
+## 使用示例
 
-1. 内部插件无法被禁用或卸载
-2. 启用的插件无法直接卸载，必须先禁用
-3. 插件的启用/禁用状态会被保存到配置文件中
-4. 更新插件前建议先禁用插件 
+### 获取插件信息
+```python
+import requests
+
+response = requests.get(
+    'http://localhost:8080/api/plugin/image-processing',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+### 更新插件
+```python
+import requests
+
+response = requests.post(
+    'http://localhost:8080/api/plugin/update/image-processing',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+## 相关文档
+
+- [插件系统概述](../../README.md#插件系统-)
+- [插件开发指南](../../../plugin_manager/README.md#插件开发)
+- [API 认证](../../README.md#api认证-) 

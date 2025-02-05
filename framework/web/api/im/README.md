@@ -1,201 +1,256 @@
-# IM Adapter Management API
+# 即时通讯 API 🗨️
 
-本文档描述了 IM 适配器管理的 API 接口。所有接口都需要认证，请在请求头中添加 `Authorization: Bearer <token>` 。
+即时通讯 API 提供了管理 IM 后端和适配器的功能。通过这些 API，你可以注册、配置和管理不同的 IM 平台适配器。
 
-## 获取适配器类型
+## API 端点
 
-获取所有可用的 IM 适配器类型。
+### 获取适配器类型
 
-```
+```http
 GET /api/im/types
 ```
 
-### 响应
+获取所有可用的 IM 适配器类型。
 
+**响应示例：**
 ```json
 {
-    "types": ["telegram", "http_legacy", "wechat"]
+  "types": [
+    "mirai",
+    "telegram",
+    "discord"
+  ]
 }
 ```
 
-## 获取适配器列表
+### 获取所有适配器
 
-获取所有已配置的 IM 适配器。
-
-```
+```http
 GET /api/im/adapters
 ```
 
-### 响应
+获取所有已配置的 IM 适配器信息。
 
+**响应示例：**
 ```json
 {
-    "adapters": [
-        {
-            "adapter_id": "telegram-bot-1234",
-            "adapter_type": "telegram",
-            "is_running": true,
-            "configs": {
-                "token": "your-bot-token"
-            }
-        }
-    ]
+  "adapters": [
+    {
+      "name": "mirai",
+      "adapter": "mirai",
+      "config": {
+        "host": "localhost",
+        "port": 8080,
+        "verify_key": "your-verify-key",
+        "qq": 123456789
+      },
+      "is_running": true
+    }
+  ]
 }
 ```
 
-## 获取单个适配器
+### 获取特定适配器
 
-获取特定适配器的详细信息。
-
-```
+```http
 GET /api/im/adapters/{adapter_id}
 ```
 
-### 响应
+获取指定适配器的详细信息。
 
+**响应示例：**
 ```json
 {
-    "adapter": {
-        "adapter_id": "telegram-bot-1234",
-        "adapter_type": "telegram",
-        "is_running": true,
-        "configs": {
-            "token": "your-bot-token"
-        }
-    }
+  "adapter": {
+    "name": "telegram",
+    "adapter": "telegram",
+    "config": {
+      "token": "your-bot-token",
+      "webhook_url": "https://example.com/webhook"
+    },
+    "is_running": true
+  }
 }
 ```
 
-## 创建适配器
+### 创建适配器
 
-创建新的 IM 适配器。
-
-```
+```http
 POST /api/im/adapters
 ```
 
-### 请求体
+注册新的 IM 适配器。
 
+**请求体：**
 ```json
 {
-    "adapter_id": "telegram-bot-1234",
-    "adapter_type": "telegram",
-    "configs": {
-        "token": "your-bot-token"
-    }
+  "name": "telegram",
+  "adapter": "telegram",
+  "config": {
+    "token": "your-bot-token",
+    "webhook_url": "https://example.com/webhook"
+  }
 }
 ```
 
-### 响应
+### 更新适配器
 
-```json
-{
-    "adapter": {
-        "adapter_id": "telegram-bot-1234",
-        "adapter_type": "telegram",
-        "is_running": false,
-        "configs": {
-            "token": "your-bot-token"
-        }
-    }
-}
-```
-
-## 更新适配器
-
-更新现有适配器的配置。
-
-```
+```http
 PUT /api/im/adapters/{adapter_id}
 ```
 
-### 请求体
+更新现有适配器的配置。如果适配器正在运行，会自动重启以应用新配置。
 
+**请求体：**
 ```json
 {
-    "adapter_id": "telegram-bot-1234",
-    "adapter_type": "telegram",
-    "configs": {
-        "token": "new-bot-token"
-    }
+  "name": "telegram",
+  "adapter": "telegram",
+  "config": {
+    "token": "your-bot-token",
+    "webhook_url": "https://example.com/webhook",
+    "proxy": "http://proxy.example.com:8080"
+  }
 }
 ```
 
-### 响应
+### 删除适配器
 
-```json
-{
-    "adapter": {
-        "adapter_id": "telegram-bot-1234",
-        "adapter_type": "telegram",
-        "is_running": true,
-        "configs": {
-            "token": "new-bot-token"
-        }
-    }
-}
-```
-
-## 删除适配器
-
-删除指定的适配器。
-
-```
+```http
 DELETE /api/im/adapters/{adapter_id}
 ```
 
-### 响应
+删除指定的适配器。如果适配器正在运行，会先自动停止。
 
-```json
-{
-    "message": "Adapter deleted successfully"
-}
-```
+### 启动适配器
 
-## 启动适配器
-
-启动指定的适配器。
-
-```
+```http
 POST /api/im/adapters/{adapter_id}/start
 ```
 
-### 响应
+启动指定的适配器。
 
-```json
-{
-    "message": "Adapter started successfully"
-}
-```
+### 停止适配器
 
-## 停止适配器
-
-停止指定的适配器。
-
-```
+```http
 POST /api/im/adapters/{adapter_id}/stop
 ```
 
-### 响应
+停止指定的适配器。
+
+## 数据模型
+
+### IMAdapterConfig
+- `name`: 适配器名称
+- `adapter`: 适配器类型
+- `config`: 配置信息(字典)
+
+### IMAdapterStatus
+继承自 IMAdapterConfig，额外包含：
+- `is_running`: 适配器是否正在运行
+
+### IMAdapterList
+- `adapters`: IM 适配器列表
+
+### IMAdapterResponse
+- `adapter`: 适配器信息
+
+### IMAdapterTypes
+- `types`: 可用的适配器类型列表
+
+## 适配器类型
+
+目前支持的适配器类型包括：
+
+### Mirai
+- 适配器类型: `mirai`
+- 基于 [mirai](https://github.com/mamoe/mirai) 的 QQ 机器人适配器
+- 配置项:
+  - `host`: Mirai HTTP API 主机地址
+  - `port`: Mirai HTTP API 端口
+  - `verify_key`: 验证密钥
+  - `qq`: 机器人 QQ 号
+
+### Telegram
+- 适配器类型: `telegram`
+- Telegram Bot API 适配器
+- 配置项:
+  - `token`: Bot Token
+  - `webhook_url`: Webhook URL(可选)
+  - `proxy`: 代理服务器(可选)
+
+### Discord
+- 适配器类型: `discord`
+- Discord Bot API 适配器
+- 配置项:
+  - `token`: Bot Token
+  - `intents`: 机器人权限配置
+
+## 相关代码
+
+- [IM 管理器](../../../im/manager.py)
+- [IM 注册表](../../../im/im_registry.py)
+- [适配器实现](../../../im/adapters)
+
+## 错误处理
+
+所有 API 端点在发生错误时都会返回适当的 HTTP 状态码和错误信息：
 
 ```json
 {
-    "message": "Adapter stopped successfully"
+  "error": "错误描述信息"
 }
 ```
 
-## 错误响应
+常见状态码：
+- 400: 请求参数错误、适配器类型无效或适配器已在运行
+- 404: 适配器不存在
+- 500: 服务器内部错误
 
-所有接口在发生错误时都会返回相应的错误信息：
+## 使用示例
 
-```json
-{
-    "error": "错误信息"
-}
+### 获取适配器类型
+```python
+import requests
+
+response = requests.get(
+    'http://localhost:8080/api/im/types',
+    headers={'Authorization': f'Bearer {token}'}
+)
 ```
 
-常见的错误状态码：
-- 400: 请求参数错误
-- 401: 未认证或认证失败
-- 404: 资源不存在
-- 500: 服务器内部错误 
+### 创建新适配器
+```python
+import requests
+
+adapter_data = {
+    "name": "telegram",
+    "adapter": "telegram",
+    "config": {
+        "token": "your-bot-token",
+        "webhook_url": "https://example.com/webhook"
+    }
+}
+
+response = requests.post(
+    'http://localhost:8080/api/im/adapters',
+    headers={'Authorization': f'Bearer {token}'},
+    json=adapter_data
+)
+```
+
+### 启动适配器
+```python
+import requests
+
+response = requests.post(
+    'http://localhost:8080/api/im/adapters/telegram/start',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+## 相关文档
+
+- [系统架构](../../README.md#系统架构-)
+- [API 认证](../../README.md#api认证-)
+- [IM 适配器开发](../../../im/README.md#适配器开发-) 
