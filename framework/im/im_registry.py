@@ -42,3 +42,11 @@ class IMRegistry:
         if name not in self._config_registry:
             raise ValueError(f"Config class for adapter '{name}' is not registered.")
         return self._config_registry[name]
+    
+    def get_all_adapters(self) -> Dict[str, Type[IMAdapter]]:
+        """
+        获取所有已注册的 adapter。
+        :return: 所有已注册的 adapter。
+        """
+        return self._registry
+

@@ -1,9 +1,15 @@
 from typing import Callable, Any, Dict
+import uuid
 
 from framework.workflow.core.workflow.input_output import Input, Output
 
 class Block:
+    id: str
+    name: str
+    inputs: Dict[str, Input]
+    outputs: Dict[str, Output]
     def __init__(self, name: str, inputs: Dict[str, Input], outputs: Dict[str, Output]):
+        self.id = getattr(self.__class__, "id", 'anonymous_' + self.__class__.__name__)
         self.name = name
         self.inputs = inputs
         self.outputs = outputs

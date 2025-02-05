@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import Dict, List, Type
+from typing import Dict, List, Type, Optional
 from pydantic import BaseModel
 
 from framework.llm.adapter import LLMBackendAdapter
-
+from framework.config.global_config import LLMBackendConfig
 
 class LLMAbility(Enum):
     """
@@ -26,26 +26,48 @@ class LLMAbility(Enum):
     
 class LLMBackendRegistry:
     """
-    LLM 注册表，用于动态注册和管理 LLM 适配器及其配置。
+    LLM后端注册表
     """
-
-    _registry: Dict[str, Type[LLMBackendAdapter]] = {}
-    _ability_registry: Dict[str, LLMAbility] = {}
-    _config_registry: Dict[str, Type[BaseModel]] = {}
-
-    def register(self, name: str, adapter_class: Type[LLMBackendAdapter], config_class: Type[BaseModel], ability: LLMAbility):
+    _adapters: Dict[str, Type[LLMBackendAdapter]]
+    _configs: Dict[str, Type[LLMBackendConfig]]
+    _ability_registry: Dict[str, int]
+    
+    def __init__(self):
+        self._adapters = {}
+        self._configs = {}
+    
+    def register(self, adapter_type: str, adapter_class: Type[LLMBackendAdapter], config_class: Type[LLMBackendConfig]):
         """
-        注册一个新的 LLM 适配器及其支持的能力和配置类。
-        :param name: LLM 适配器的名称。
-        :param adapter_class: LLM 适配器的类。
-        :param ability: LLM 适配器支持的能力。
-        :param config_class: LLM 适配器的配置类。
+        注册一个LLM后端适配器
+        :param adapter_type: 适配器类型
+        :param adapter_class: 适配器类
+        :param config_class: 配置类
         """
-        if name in self._registry:
-            raise ValueError(f"LLMAdapter with name '{name}' is already registered.")
-        self._registry[name] = adapter_class
-        self._ability_registry[name] = ability
-        self._config_registry[name] = config_class
+        self._adapters[adapter_type] = adapter_class
+        self._configs[adapter_type] = config_class
+    
+    def get(self, adapter_type: str) -> Optional[Type[LLMBackendAdapter]]:
+        """
+        获取指定类型的适配器类
+        :param adapter_type: 适配器类型
+        :return: 适配器类,如果没有找到则返回None
+        """
+        return self._adapters.get(adapter_type)
+    
+    def get_config_class(self, adapter_type: str) -> Optional[Type[LLMBackendConfig]]:
+        """
+        获取指定类型的配置类
+        :param adapter_type: 适配器类型
+        :return: 配置类,如果没有找到则返回None
+        """
+        return self._configs.get(adapter_type)
+    
+    def get_adapter_types(self) -> list[str]:
+        """
+        获取所有已注册的适配器类型
+        :return: 适配器类型列表
+        """
+        return list(self._adapters.keys())
 
     def get_adapter_by_ability(self, ability: LLMAbility) -> List[Type[LLMBackendAdapter]]:
         """
@@ -53,48 +75,18 @@ class LLMBackendRegistry:
         :param ability: 指定的能力。
         :return: 符合要求的 LLM 适配器列表。
         """
-        return [adapter_class for name, adapter_class in self._registry.items() if self._ability_registry[name] == ability.value]
+        return [adapter_class for name, adapter_class in self._adapters.items() if self._ability_registry[name] == ability.value]
     def search_adapter_by_ability(self, ability: LLMAbility) -> List[Type[LLMBackendAdapter]]:
         """
         根据指定的能力模糊搜索具备该能力的 LLM 适配器列表。
         :param ability: 指定的能力。
         :return: 具备该能力的 LLM 适配器列表。
         """
-        return [adapter_class for name, adapter_class in self._registry.items() if self._ability_registry[name].value & ability.value == ability.value]
-
-    def get(self, name: str) -> Type[LLMBackendAdapter]:
-        """
-        获取已注册的 LLM 适配器类。
-        :param name: LLM 适配器的名称。
-        :return: LLM 适配器的类。
-        """
-        if name not in self._registry:
-            raise ValueError(f"LLMAdapter with name '{name}' is not registered.")
-        return self._registry[name]
-
-    def get_config_class(self, name: str) -> Type[BaseModel]:
-        """
-        获取已注册的 LLM 适配器的配置类。
-        :param name: LLM 适配器的名称。
-        :return: LLM 适配器的配置类。
-        """
-        if name not in self._config_registry:
-            raise ValueError(f"Config class for LLMAdapter '{name}' is not registered.")
-        return self._config_registry[name]
-    
-    def get_ability(self, name: str) -> LLMAbility:
-        """
-        获取已注册的 LLM 适配器能力。
-        :param name: LLM 适配器的名称。
-        :return: LLM 适配器的能力。
-        """
-        if name not in self._ability_registry:
-            raise ValueError(f"LLMAdapter with name '{name}' is not registered.")
-        return self._ability_registry[name]
+        return [adapter_class for name, adapter_class in self._adapters.items() if self._ability_registry[name].value & ability.value == ability.value]
 
     def get_all_adapters(self) -> Dict[str, Type[LLMBackendAdapter]]:
         """
         获取所有已注册的 LLM 适配器。
         :return: 所有已注册的 LLM 适配器字典。
         """
-        return self._registry.copy()
+        return self._adapters.copy()

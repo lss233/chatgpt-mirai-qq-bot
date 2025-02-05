@@ -1,4 +1,5 @@
 from quart import Blueprint, request, jsonify, g
+from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.core.workflow import WorkflowRegistry
 from framework.workflow.core.workflow.builder import WorkflowBuilder
 from ...auth.middleware import require_auth
@@ -21,16 +22,13 @@ async def list_workflows():
         # 从 workflow_id 解析 group_id
         group_id, wf_id = workflow_id.split(':', 1)
         
-        # 创建工作流实例以获取信息
-        workflow = builder.build()
-        
         workflows.append(WorkflowInfo(
             group_id=group_id,
             workflow_id=wf_id,
-            name=workflow.name,
-            description=workflow.description if hasattr(workflow, 'description') else '',
-            block_count=len(workflow.blocks),
-            metadata=workflow.metadata if hasattr(workflow, 'metadata') else None
+            name=builder.name,
+            description=builder.description if hasattr(builder, 'description') else '',
+            block_count=len(builder.blocks),
+            metadata=builder.metadata if hasattr(builder, 'metadata') else None
         ))
         
     return WorkflowList(workflows=workflows).model_dump()
@@ -45,13 +43,10 @@ async def get_workflow(group_id: str, workflow_id: str):
     builder = registry.get(full_id)
     if not builder:
         return jsonify({"error": "Workflow not found"}), 404
-        
-    # 创建工作流实例
-    workflow = builder.build()
     
     # 构建工作流定义
     blocks = []
-    for block in workflow.blocks:
+    for block in builder.blocks:
         blocks.append({
             'block_id': block.id,
             'type_name': block.__class__.__name__,
@@ -61,7 +56,7 @@ async def get_workflow(group_id: str, workflow_id: str):
         })
         
     wires = []
-    for wire in workflow.wires:
+    for wire in builder.wires:
         wires.append({
             'source_block': wire.source_block.id,
             'source_output': wire.source_output,
@@ -72,11 +67,12 @@ async def get_workflow(group_id: str, workflow_id: str):
     workflow_def = WorkflowDefinition(
         group_id=group_id,
         workflow_id=workflow_id,
-        name=workflow.name,
-        description=workflow.description if hasattr(workflow, 'description') else '',
+        name=builder.name,
+        description=builder.description if hasattr(builder, 'description') else '',
         blocks=blocks,
         wires=wires,
-        metadata=workflow.metadata if hasattr(workflow, 'metadata') else None
+        metadata=builder.metadata if hasattr(builder, 'metadata') else None
+
     )
     
     return WorkflowResponse(workflow=workflow_def).model_dump()
@@ -89,6 +85,7 @@ async def create_workflow(group_id: str, workflow_id: str):
     workflow_def = WorkflowDefinition(**data)
     
     registry: WorkflowRegistry = g.container.resolve(WorkflowRegistry)
+    block_registry: BlockRegistry = g.container.resolve(BlockRegistry)
     
     # 检查工作流是否已存在
     full_id = f"{group_id}:{workflow_id}"
@@ -102,7 +99,7 @@ async def create_workflow(group_id: str, workflow_id: str):
         
         # 根据定义添加块和连接
         for block_def in workflow_def.blocks:
-            block_class = registry.get_block_type(block_def.type_name)
+            block_class = block_registry.get(block_def.type_name)
             if not block_class:
                 raise ValueError(f"Block type {block_def.type_name} not found")
                 
@@ -136,6 +133,7 @@ async def update_workflow(group_id: str, workflow_id: str):
     workflow_def = WorkflowDefinition(**data)
     
     registry: WorkflowRegistry = g.container.resolve(WorkflowRegistry)
+    block_registry: BlockRegistry = g.container.resolve(BlockRegistry)
     
     # 检查工作流是否存在
     full_id = f"{group_id}:{workflow_id}"
@@ -149,7 +147,7 @@ async def update_workflow(group_id: str, workflow_id: str):
         
         # 根据定义添加块和连接
         for block_def in workflow_def.blocks:
-            block_class = registry.get_block_type(block_def.type_name)
+            block_class = block_registry.get(block_def.type_name)
             if not block_class:
                 raise ValueError(f"Block type {block_def.type_name} not found")
                 

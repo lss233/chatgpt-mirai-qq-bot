@@ -1,14 +1,10 @@
 from functools import wraps
 from quart import request, jsonify
-from .utils import verify_token, is_first_time
+from .utils import verify_token
 
 def require_auth(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
-        # 如果是首次访问，跳过认证
-        if is_first_time():
-            return await f(*args, **kwargs)
-        
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return jsonify({"error": "No authorization header"}), 401
@@ -23,6 +19,6 @@ def require_auth(f):
             
             return await f(*args, **kwargs)
         except Exception as e:
-            return jsonify({"error": str(e)}), 401
+            raise e
     
     return decorated_function 

@@ -5,7 +5,6 @@ from quart_cors import cors
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
-from framework.config import get_config
 from framework.logger import get_async_logger
 from framework.ioc.container import DependencyContainer
 from .auth.routes import auth_bp
@@ -14,6 +13,8 @@ from .api.llm import llm_bp
 from .api.dispatch import dispatch_bp
 from .api.block import block_bp
 from .api.workflow import workflow_bp
+from .api.plugin import plugin_bp
+from .api.system import system_bp
 
 def create_app(container: DependencyContainer) -> Quart:
     app = Quart(__name__)
@@ -30,12 +31,15 @@ def create_app(container: DependencyContainer) -> Quart:
     app.register_blueprint(dispatch_bp, url_prefix='/api/dispatch')
     app.register_blueprint(block_bp, url_prefix='/api/block')
     app.register_blueprint(workflow_bp, url_prefix='/api/workflow')
+    app.register_blueprint(plugin_bp, url_prefix='/api/plugin')
+    app.register_blueprint(system_bp, url_prefix='/api/system')
     
     # 在每个请求前将容器注入到上下文
     @app.before_request
     async def inject_container():
         g.container = container
     
+    app.container = container
     return app
 
 class WebServer:
@@ -65,6 +69,3 @@ class WebServer:
                 pass
             except Exception as e:
                 self.logger.error(f"Error during server shutdown: {e}")
-
-# 全局Web服务器实例
-web_server = WebServer() 

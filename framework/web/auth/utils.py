@@ -1,14 +1,17 @@
-import os
 import bcrypt
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional
 from pathlib import Path
 
-from framework.config import get_config
+from quart import g
+from framework.config.global_config import GlobalConfig
+
 
 def get_password_file_path() -> Path:
-    return Path(get_config().web.password_file)
+    global_config: GlobalConfig = g.container.resolve(GlobalConfig)
+    return Path(global_config.web.password_file)
+
 
 def hash_password(password: str) -> bytes:
     salt = bcrypt.gensalt()
@@ -19,20 +22,24 @@ def verify_password(password: str, hashed: bytes) -> bool:
 
 def create_access_token(expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=30)
+        expire = datetime.now(UTC) + timedelta(minutes=30)
     
+
     to_encode = {"exp": expire}
-    secret_key = get_config().web.secret_key
+    global_config: GlobalConfig = g.container.resolve(GlobalConfig)
+    secret_key = global_config.web.secret_key
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm="HS256")
     return encoded_jwt
 
 def verify_token(token: str) -> bool:
     try:
-        secret_key = get_config().web.secret_key
+        global_config: GlobalConfig = g.container.resolve(GlobalConfig)
+        secret_key = global_config.web.secret_key
         jwt.decode(token, secret_key, algorithms=["HS256"])
         return True
+
     except:
         return False
 

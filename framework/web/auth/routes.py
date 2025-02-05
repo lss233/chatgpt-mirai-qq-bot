@@ -18,13 +18,13 @@ async def login():
     if is_first_time():
         save_password(login_data.password)
         token = create_access_token(timedelta(days=1))
-        return TokenResponse(access_token=token).dict()
+        return TokenResponse(access_token=token).model_dump()
     
     if not verify_saved_password(login_data.password):
         return jsonify({"error": "Invalid password"}), 401
     
     token = create_access_token(timedelta(days=1))
-    return TokenResponse(access_token=token).dict()
+    return TokenResponse(access_token=token).model_dump()
 
 @auth_bp.route('/change-password', methods=['POST'])
 @require_auth
