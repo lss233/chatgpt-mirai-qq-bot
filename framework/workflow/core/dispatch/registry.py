@@ -28,7 +28,7 @@ class DispatchRuleRegistry:
     def get_rule(self, rule_id: str) -> Optional[DispatchRule]:
         """获取指定ID的规则"""
         return self.rules.get(rule_id)
-        
+    
     def get_all_rules(self) -> List[DispatchRule]:
         """获取所有已注册的规则"""
         return list(self.rules.values())
