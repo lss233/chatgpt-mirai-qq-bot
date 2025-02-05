@@ -23,6 +23,7 @@ class PluginLoader:
         self._loaded_entry_points = set()  # 记录已加载的entry points
         self.plugin_dir = plugin_dir
         self.loaded_modules = {}
+        self.internal_plugins = []
 
     def register_plugin(self, plugin_class: Type[Plugin], plugin_name: str = None):
         """注册一个插件类，主要用于测试"""
@@ -61,6 +62,7 @@ class PluginLoader:
         for plugin_name in os.listdir(plugin_dir):
             plugin_path = os.path.join(plugin_dir, plugin_name)
             if os.path.isdir(plugin_path):
+                self.internal_plugins.append(plugin_name)
                 self.logger.debug(f"Found plugin directory: {plugin_name}")
                 self.load_plugin(plugin_name)
 
@@ -68,7 +70,7 @@ class PluginLoader:
         """加载插件，支持内部插件和外部插件"""
         self.logger.info(f"Loading plugin: {plugin_name}")
         try:
-            if plugin_name.startswith('plugins.'):  # 内部插件
+            if plugin_name in self.internal_plugins:  # 内部插件
                 self._load_internal_plugin(plugin_name)
             else:  # 外部插件
                 self._load_external_plugin(plugin_name)

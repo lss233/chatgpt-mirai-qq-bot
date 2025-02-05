@@ -74,7 +74,7 @@ def app():
     
     # 注册LLM组件
     registry = LLMBackendRegistry()
-    registry.register(TEST_ADAPTER_TYPE, TestAdapter, TestConfig)
+    registry.register(TEST_ADAPTER_TYPE, TestAdapter, TestConfig, LLMAbility.TextChat)
     container.register(LLMBackendRegistry, registry)
     
     manager = LLMManager(container)
