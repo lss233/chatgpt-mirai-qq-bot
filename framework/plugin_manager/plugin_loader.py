@@ -380,3 +380,14 @@ class PluginLoader:
         except Exception:
             pass
         return None
+    
+    def discover_external_plugins(self):
+        """发现并加载所有已安装的外部插件"""
+        eps = entry_points(group=Plugin.ENTRY_POINT_GROUP)
+        
+        for ep in eps:
+            if ep.name not in self._loaded_entry_points:
+                try:
+                    self._load_external_plugin(ep.name)
+                except Exception as e:
+                    self.logger.error(f"Failed to load external plugin {ep.name}: {e}")

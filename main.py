@@ -116,8 +116,12 @@ def main():
     register_system_blocks(container.resolve(BlockRegistry))
     
     # 发现并加载内部插件
-    logger.info("Discovering plugins...")
+    logger.info("Discovering internal plugins...")
     plugin_loader.discover_internal_plugins()
+
+    # 发现并加载外部插件
+    logger.info("Discovering external plugins...")
+    plugin_loader.discover_external_plugins()
 
     # 初始化插件
     logger.info("Loading plugins")
