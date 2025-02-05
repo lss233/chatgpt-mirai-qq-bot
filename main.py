@@ -102,7 +102,7 @@ def main():
     llm_manager = LLMManager(container)
     container.register(LLMManager, llm_manager)
     
-    plugin_loader = PluginLoader(container)
+    plugin_loader = PluginLoader(container, "plugins")
     container.register(PluginLoader, plugin_loader)
     
     workflow_dispatcher = WorkflowDispatcher(container)
@@ -117,7 +117,7 @@ def main():
     
     # 发现并加载内部插件
     logger.info("Discovering plugins...")
-    plugin_loader.discover_internal_plugins("plugins")
+    plugin_loader.discover_internal_plugins()
 
     # 初始化插件
     logger.info("Loading plugins")

@@ -1,7 +1,9 @@
+from unittest.mock import patch
 import pytest
 from datetime import datetime, timedelta
 
 import pytest_asyncio
+from framework.plugin_manager.models import PluginInfo
 from framework.web.app import create_app
 from framework.ioc.container import DependencyContainer
 from framework.config.global_config import GlobalConfig, WebConfig, PluginConfig
@@ -65,7 +67,7 @@ def app():
     container.register(PluginEventBus, PluginEventBus())
     
     # 创建插件加载器并注册测试插件
-    plugin_loader = PluginLoader(container)
+    plugin_loader = PluginLoader(container, "plugins")
     plugin_loader.register_plugin(TestPlugin, TEST_PLUGIN_NAME)
     container.register(PluginLoader, plugin_loader)
     
@@ -95,7 +97,7 @@ class TestPlugin:
     async def test_get_plugin_details(self, test_client, auth_headers):
         """测试获取插件详情"""
         response = await test_client.get(
-            f'/api/plugin/{TEST_PLUGIN_NAME}',
+            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}',
             headers=auth_headers
         )
         
@@ -111,7 +113,7 @@ class TestPlugin:
     async def test_get_nonexistent_plugin(self, test_client, auth_headers):
         """测试获取不存在的插件"""
         response = await test_client.get(
-            '/api/plugin/nonexistent',
+            '/api/plugin/plugins/nonexistent',
             headers=auth_headers
         )
         
@@ -123,11 +125,78 @@ class TestPlugin:
     async def test_update_plugin(self, test_client, auth_headers):
         """测试更新插件"""
         # 由于是内部插件，更新应该失败
-        response = await test_client.post(
-            f'/api/plugin/update/{TEST_PLUGIN_NAME}',
+        response = await test_client.put(
+            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}',
             headers=auth_headers
         )
         
         assert response.status_code == 400  # 内部插件不支持更新
         data = await response.get_json()
+        assert 'error' in data
+
+    @pytest.mark.asyncio
+    async def test_enable_plugin(self, test_client, auth_headers):
+        """测试启用插件"""
+        response = await test_client.post(
+            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 200
+        data = await response.get_json()
+        assert "error" not in data
+        assert data['plugin']['is_enabled'] is True
+
+    @pytest.mark.asyncio
+    async def test_disable_plugin(self, test_client, auth_headers):
+        """测试禁用插件"""
+        response = await test_client.post(
+            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 200
+        data = await response.get_json()
+        assert "error" not in data
+        assert data['plugin']['is_enabled'] is False
+
+    @pytest.mark.asyncio
+    async def test_install_plugin(self, test_client, auth_headers):
+        """测试安装插件"""
+        with patch("framework.web.api.plugin.routes.PluginLoader.install_plugin") as mock_install_plugin:   
+            mock_install_plugin.return_value = PluginInfo(
+                name="test-plugin",
+                package_name="test-plugin-package",
+                description="test-plugin-description",
+                is_internal=False,
+                is_enabled=False,
+                version="1.0.0",
+                author="test-author"
+
+            )
+            response = await test_client.post(
+                '/api/plugin/plugins',
+                headers=auth_headers,
+
+            json={
+                'package_name': 'test-plugin-package',
+                'version': '1.0.0'
+            }
+        )
+        
+        data = await response.get_json()
+        assert "error" not in data
+        assert data['plugin']['package_name'] == 'test-plugin-package'
+
+    @pytest.mark.asyncio
+    async def test_uninstall_plugin(self, test_client, auth_headers):
+        """测试卸载插件"""
+        # 由于是内部插件，卸载应该失败
+        response = await test_client.delete(
+            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}',
+            headers=auth_headers
+        )
+        
+        data = await response.get_json()
         assert 'error' in data 
+        assert response.status_code == 400  # 内部插件不能卸载

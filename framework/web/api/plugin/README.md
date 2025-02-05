@@ -1,13 +1,44 @@
 # 插件 API 🔌
 
-插件 API 提供了管理插件的功能。插件可以扩展系统的功能，添加新的区块类型、适配器或工作流。
+插件 API 提供了管理插件的功能。通过这些 API，你可以安装、卸载、启用、禁用和更新插件。
 
 ## API 端点
 
-### 获取插件详情
+### 获取所有插件
 
 ```http
-GET /api/plugin/{plugin_name}
+GET /api/plugin/plugins
+```
+
+获取所有已安装的插件列表。
+
+**响应示例：**
+```json
+{
+  "plugins": [
+    {
+      "name": "图像处理",
+      "package_name": "image-processing",
+      "description": "提供图像处理功能",
+      "version": "1.0.0",
+      "author": "开发者",
+      "homepage": "https://github.com/example/image-processing",
+      "license": "MIT",
+      "is_internal": false,
+      "is_enabled": true,
+      "metadata": {
+        "category": "media",
+        "tags": ["image", "processing"]
+      }
+    }
+  ]
+}
+```
+
+### 获取特定插件
+
+```http
+GET /api/plugin/plugins/{plugin_name}
 ```
 
 获取指定插件的详细信息。
@@ -16,59 +47,94 @@ GET /api/plugin/{plugin_name}
 ```json
 {
   "plugin": {
-    "name": "image-processing",
-    "package_name": "chatgpt-mirai-plugin-image",
-    "description": "图像处理插件",
+    "name": "图像处理",
+    "package_name": "image-processing",
+    "description": "提供图像处理功能",
     "version": "1.0.0",
-    "author": "Plugin Author",
+    "author": "开发者",
+    "homepage": "https://github.com/example/image-processing",
+    "license": "MIT",
     "is_internal": false,
     "is_enabled": true,
     "metadata": {
-      "homepage": "https://github.com/author/plugin",
-      "license": "MIT"
+      "category": "media",
+      "tags": ["image", "processing"]
     }
   }
 }
 ```
+
+### 安装插件
+
+```http
+POST /api/plugin/plugins
+```
+
+安装新的插件。
+
+**请求体：**
+```json
+{
+  "package_name": "image-processing",
+  "version": "1.0.0"  // 可选，不指定则安装最新版本
+}
+```
+
+### 卸载插件
+
+```http
+DELETE /api/plugin/plugins/{plugin_name}
+```
+
+卸载指定的插件。注意：内部插件不能被卸载。
+
+### 启用插件
+
+```http
+POST /api/plugin/plugins/{plugin_name}/enable
+```
+
+启用指定的插件。
+
+### 禁用插件
+
+```http
+POST /api/plugin/plugins/{plugin_name}/disable
+```
+
+禁用指定的插件。
 
 ### 更新插件
 
 ```http
-POST /api/plugin/update/{plugin_name}
+PUT /api/plugin/plugins/{plugin_name}
 ```
 
-更新指定的外部插件到最新版本。注意：内部插件不支持更新。
-
-**响应示例：**
-```json
-{
-  "plugin": {
-    "name": "image-processing",
-    "package_name": "chatgpt-mirai-plugin-image",
-    "description": "图像处理插件",
-    "version": "1.1.0",  // 更新后的版本
-    "author": "Plugin Author",
-    "is_internal": false,
-    "is_enabled": true,
-    "metadata": {
-      "homepage": "https://github.com/author/plugin",
-      "license": "MIT"
-    }
-  }
-}
-```
+更新插件到最新版本。注意：内部插件不支持更新。
 
 ## 数据模型
 
 ### PluginInfo
 - `name`: 插件名称
-- `package_name`: 包名(外部插件)
-- `description`: 插件描述
+- `package_name`: 包名
+- `description`: 描述
 - `version`: 版本号
 - `author`: 作者
+- `homepage`: 主页(可选)
+- `license`: 许可证(可选)
 - `is_internal`: 是否为内部插件
-- `is_enabled`: 是否启用
+- `is_enabled`: 是否已启用
 - `metadata`: 元数据(可选)
+
+### InstallPluginRequest
+- `package_name`: 包名
+- `version`: 版本号(可选)
+
+### PluginList
+- `plugins`: 插件列表
+
+### PluginResponse
+- `plugin`: 插件信息
 
 ## 内置插件
 
@@ -84,10 +150,9 @@ POST /api/plugin/update/{plugin_name}
 
 ## 相关代码
 
+- [插件管理器](../../../plugin_manager/plugin_loader.py)
 - [插件基类](../../../plugin_manager/plugin.py)
-- [插件加载器](../../../plugin_manager/plugin_loader.py)
-- [插件事件总线](../../../plugin_manager/plugin_event_bus.py)
-- [内置插件](../../../../plugins)
+- [系统插件](../../../plugins)
 
 ## 错误处理
 
@@ -100,18 +165,44 @@ POST /api/plugin/update/{plugin_name}
 ```
 
 常见状态码：
-- 400: 请求参数错误或插件不支持更新
+- 400: 请求参数错误、插件已存在或内部插件操作限制
 - 404: 插件不存在
 - 500: 服务器内部错误
 
 ## 使用示例
 
-### 获取插件信息
+### 获取所有插件
 ```python
 import requests
 
 response = requests.get(
-    'http://localhost:8080/api/plugin/image-processing',
+    'http://localhost:8080/api/plugin/plugins',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+### 安装新插件
+```python
+import requests
+
+data = {
+    "package_name": "image-processing",
+    "version": "1.0.0"
+}
+
+response = requests.post(
+    'http://localhost:8080/api/plugin/plugins',
+    headers={'Authorization': f'Bearer {token}'},
+    json=data
+)
+```
+
+### 启用插件
+```python
+import requests
+
+response = requests.post(
+    'http://localhost:8080/api/plugin/plugins/image-processing/enable',
     headers={'Authorization': f'Bearer {token}'}
 )
 ```
@@ -120,14 +211,14 @@ response = requests.get(
 ```python
 import requests
 
-response = requests.post(
-    'http://localhost:8080/api/plugin/update/image-processing',
+response = requests.put(
+    'http://localhost:8080/api/plugin/plugins/image-processing',
     headers={'Authorization': f'Bearer {token}'}
 )
 ```
 
 ## 相关文档
 
-- [插件系统概述](../../README.md#插件系统-)
-- [插件开发指南](../../../plugin_manager/README.md#插件开发)
-- [API 认证](../../README.md#api认证-) 
+- [系统架构](../../README.md#系统架构-)
+- [API 认证](../../README.md#api认证-)
+- [插件开发](../../../plugin_manager/README.md#插件开发-) 
