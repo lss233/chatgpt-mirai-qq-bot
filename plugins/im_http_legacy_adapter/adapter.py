@@ -158,17 +158,22 @@ class HttpLegacyAdapter(IMAdapter):
 
     async def start(self):
         """启动HTTP服务器"""
-        from framework.logger import get_async_logger
+        from framework.logger import HypercornLoggerWrapper
         
         # 使用 hypercorn 配置来正确处理关闭信号
         from hypercorn.config import Config
+        from hypercorn.logging import Logger
         config = Config()
         config.bind = [f"{self.config.host}:{self.config.port}"]
-        config._log = get_async_logger("HTTP-Legacy-API")
+        config._log = Logger(config)
+        config._log.access_logger = HypercornLoggerWrapper(self.app.logger)
+        config._log.error_logger = HypercornLoggerWrapper(self.app.logger)
         from hypercorn.asyncio import serve
+
         self.server_task = asyncio.create_task(
             serve(self.app, config)
         )
+
 
         # 启动清理过期请求的任务
         self.cleanup_task = asyncio.create_task(self.cleanup_expired_requests())
