@@ -1,36 +1,61 @@
+# 配置文件示例
+# 通讯平台配置部分
 ims:
-  - name: "telegram-bot-1234"
-    enable: true
-    adapter: "telegram"
-    config:
-      token: "abcd"
+  # 每个 IM 平台的具体配置
+  - name: "telegram-bot-1234"  # IM 平台实例名称
+    enable: true              # 是否启用该平台
+    adapter: "telegram"       # 使用的适配器类型
+    config:                   # 平台特定的配置
+      token: "abcd"          # 平台的 API 令牌
 
+# 插件系统配置
 plugins:
-  enable: []
+  enable: []                 # 启用的插件列表
 
+# Web 服务器配置
 web:
-  host: "127.0.0.1"
-  port: 8080
-  secret_key: "please-change-this-to-a-secure-secret-key"
+  host: "127.0.0.1"         # Web 服务器监听地址
+  port: 8080                # Web 服务器端口
+  secret_key: "please-change-this-to-a-secure-secret-key"  # Web 服务器安全密钥，请修改为安全的值
 
+# LLM (大语言模型) 配置
 llms:
-  api_backends:
-    - name: "deepseek-official"
-      adapter: "deepseek"
-      enable: true
-      config:
-        api_key: "your-api-key"
-        base_url: "https://api.deepseek.com/v1"
-      models:
+  api_backends:             # API 后端配置列表
+    # DeepSeek API 配置
+    - name: "deepseek-official"  # 后端名称
+      adapter: "deepseek"        # 使用的适配器
+      enable: true               # 是否启用
+      config:                    # API 具体配置
+        api_key: "your-api-key"  # API 密钥
+        base_url: "https://api.deepseek.com/v1"  # API 基础 URL
+      models:                    # 支持的模型列表
         - "deepseek-chat"
         - "deepseek-coder"
     
-    - name: "openai-gpt4"
-      adapter: "openai"
-      enable: true
-      config:
-        api_key: "your-openai-key"
-        base_url: "https://api.openai.com/v1"
-      models:
+    # OpenAI API 配置
+    - name: "openai-gpt4"        # 后端名称
+      adapter: "openai"          # 使用的适配器
+      enable: true               # 是否启用
+      config:                    # API 具体配置
+        api_key: "your-openai-key"  # OpenAI API 密钥
+        base_url: "https://api.openai.com/v1"  # OpenAI API 基础 URL
+      models:                    # 支持的模型列表
         - "gpt-4"
         - "gpt-4-turbo"
+
+# 默认配置
+defaults:
+  llm_model: gemini-1.5-flash  # 默认使用的 LLM 模型
+
+# 记忆系统配置
+memory:
+  persistence:                  # 持久化配置
+    type: file                 # 持久化类型（支持 file 或 redis）
+    file:                      # 文件存储配置
+      storage_dir: ./data/memory  # 存储目录
+    redis:                     # Redis 存储配置
+      host: localhost          # Redis 主机地址
+      port: 6379              # Redis 端口
+      db: 0                   # Redis 数据库编号
+  max_entries: 100            # 最大记忆条目数
+  default_scope: member       # 默认记忆作用域
