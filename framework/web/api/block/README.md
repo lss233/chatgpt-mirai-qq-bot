@@ -2,6 +2,7 @@
 
 区块 API 提供了查询工作流构建块类型的功能。每个区块类型定义了其输入、输出和配置项。
 
+>> 注意：文档由 Claude 生成，可能存在错误，请以实际代码为准。
 ## API 端点
 
 ### 获取所有区块类型
@@ -251,27 +252,6 @@ PUT /api/block/instances/{workflow_id}/{block_id}
 - `error`: 错误信息(如果有)
 - `metrics`: 性能指标(可选)
 
-## 区块类型分类
-
-### IO 类
-- 输入区块 (input)
-- 输出区块 (output)
-- 文件区块 (file)
-
-### 处理类
-- LLM 区块 (llm)
-- 提示词区块 (prompt)
-- 转换区块 (transform)
-
-### 控制类
-- 条件区块 (condition)
-- 循环区块 (loop)
-- 并行区块 (parallel)
-
-### 媒体类
-- 图像处理区块 (image)
-- 音频处理区块 (audio)
-- 视频处理区块 (video)
 
 ## 相关代码
 

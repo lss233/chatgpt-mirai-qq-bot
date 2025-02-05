@@ -36,16 +36,14 @@ GET /api/im/adapters
 {
   "adapters": [
     {
-      "name": "mirai",
-      "adapter": "mirai",
+      "name": "telegram",
+      "adapter": "telegram",
       "config": {
-        "host": "localhost",
-        "port": 8080,
-        "verify_key": "your-verify-key",
-        "qq": 123456789
+        "token": "your-bot-token",
       },
       "is_running": true
     }
+
   ]
 }
 ```
@@ -66,9 +64,9 @@ GET /api/im/adapters/{adapter_id}
     "adapter": "telegram",
     "config": {
       "token": "your-bot-token",
-      "webhook_url": "https://example.com/webhook"
     },
     "is_running": true
+
   }
 }
 ```
@@ -88,10 +86,10 @@ POST /api/im/adapters
   "adapter": "telegram",
   "config": {
     "token": "your-bot-token",
-    "webhook_url": "https://example.com/webhook"
   }
 }
 ```
+
 
 ### 更新适配器
 
@@ -108,9 +106,9 @@ PUT /api/im/adapters/{adapter_id}
   "adapter": "telegram",
   "config": {
     "token": "your-bot-token",
-    "webhook_url": "https://example.com/webhook",
-    "proxy": "http://proxy.example.com:8080"
   }
+
+
 }
 ```
 
@@ -160,31 +158,7 @@ POST /api/im/adapters/{adapter_id}/stop
 
 ## 适配器类型
 
-目前支持的适配器类型包括：
-
-### Mirai
-- 适配器类型: `mirai`
-- 基于 [mirai](https://github.com/mamoe/mirai) 的 QQ 机器人适配器
-- 配置项:
-  - `host`: Mirai HTTP API 主机地址
-  - `port`: Mirai HTTP API 端口
-  - `verify_key`: 验证密钥
-  - `qq`: 机器人 QQ 号
-
-### Telegram
-- 适配器类型: `telegram`
-- Telegram Bot API 适配器
-- 配置项:
-  - `token`: Bot Token
-  - `webhook_url`: Webhook URL(可选)
-  - `proxy`: 代理服务器(可选)
-
-### Discord
-- 适配器类型: `discord`
-- Discord Bot API 适配器
-- 配置项:
-  - `token`: Bot Token
-  - `intents`: 机器人权限配置
+适配器由插件提供，见[适配器实现](../../../im/adapters)。
 
 ## 相关代码
 

@@ -154,7 +154,9 @@ DELETE /api/llm/backends/{backend_name}
 
 ## 适配器类型
 
-目前支持的适配器类型包括：
+适配器由插件提供，见[适配器实现](../../../llm/adapters)。
+
+目前自带支持的适配器类型包括：
 
 ### OpenAI
 - 适配器类型: `openai`
