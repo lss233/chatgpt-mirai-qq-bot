@@ -1,6 +1,6 @@
 import bcrypt
 import jwt
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 from typing import Optional
 from pathlib import Path
 
@@ -22,9 +22,9 @@ def verify_password(password: str, hashed: bytes) -> bool:
 
 def create_access_token(expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta:
-        expire = datetime.now(UTC) + expires_delta
+        expire = datetime.now() + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=30)
+        expire = datetime.now() + timedelta(minutes=30)
     
 
     to_encode = {"exp": expire}
