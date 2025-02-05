@@ -13,7 +13,8 @@ from framework.im.manager import IMManager
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage
 from framework.im.sender import ChatSender
-from unittest.mock import patch
+from framework.config.config_loader import ConfigLoader
+from unittest.mock import patch, MagicMock, mock_open
 from pydantic import BaseModel, Field
 
 # ==================== 常量区 ====================
@@ -179,19 +180,23 @@ class TestIMAdapter:
             config=TEST_ADAPTER_CONFIG
         )
         
+        # Mock 配置文件保存
+        ConfigLoader.save_config_with_backup = MagicMock()
         response = await test_client.post(
             '/api/im/adapters',
             headers=auth_headers,
             json=adapter_data.model_dump()
         )
-        
+            
         data = await response.get_json()
         assert 'adapter' in data
         adapter = data.get('adapter')
         assert adapter.get('name') == 'new-adapter'
         assert adapter.get('adapter') == TEST_ADAPTER_TYPE
         assert adapter.get('config') == TEST_ADAPTER_CONFIG
-
+        
+        # 验证配置保存
+        ConfigLoader.save_config_with_backup.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_update_adapter(self, test_client, auth_headers):
@@ -202,13 +207,14 @@ class TestIMAdapter:
             config={'token': 'updated-token', 'name': 'Updated Bot'}
         )
         
-
+        # Mock 配置文件保存
+        ConfigLoader.save_config_with_backup = MagicMock()
         response = await test_client.put(
             f'/api/im/adapters/{TEST_ADAPTER_ID}',
             headers=auth_headers,
             json=adapter_data.model_dump()
         )
-        
+            
         data = await response.get_json()
         assert 'adapter' in data
         adapter = data.get('adapter')
@@ -216,7 +222,9 @@ class TestIMAdapter:
         assert adapter.get('adapter') == TEST_ADAPTER_TYPE
         assert adapter.get('config').get('token') == 'updated-token'
         assert adapter.get('config').get('name') == 'Updated Bot'
-
+        
+        # 验证配置保存
+        ConfigLoader.save_config_with_backup.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_stop_adapter(self, test_client, auth_headers):
@@ -267,6 +275,8 @@ class TestIMAdapter:
             headers=auth_headers
         )
         
+        # Mock 配置文件保存
+        ConfigLoader.save_config_with_backup = MagicMock()
         response = await test_client.delete(
             f'/api/im/adapters/{TEST_ADAPTER_ID}',
             headers=auth_headers
@@ -275,3 +285,6 @@ class TestIMAdapter:
         data = await response.get_json()
         assert 'message' in data
         assert data.get('message') == 'Adapter deleted successfully'
+        
+        # 验证配置保存
+        ConfigLoader.save_config_with_backup.assert_called_once()

@@ -45,7 +45,7 @@ class PluginLoader:
         self.logger.info(f"Registered test plugin: {key}")
         return plugin
 
-    def discover_internal_plugins(self, plugin_dir):
+    def discover_internal_plugins(self, plugin_dir=None):
         """Discovers and loads internal plugins from a specified directory.
 
         Scans the given directory for subdirectories and attempts to load each as a plugin.

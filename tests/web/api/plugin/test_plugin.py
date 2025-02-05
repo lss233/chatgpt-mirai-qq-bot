@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, mock_open
 import pytest
 from datetime import datetime, timedelta
 
@@ -16,6 +16,7 @@ from framework.im.manager import IMManager
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.workflow.core.workflow.registry import WorkflowRegistry
+from framework.config.config_loader import ConfigLoader
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
@@ -137,28 +138,35 @@ class TestPlugin:
     @pytest.mark.asyncio
     async def test_enable_plugin(self, test_client, auth_headers):
         """测试启用插件"""
-        response = await test_client.post(
-            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable',
-            headers=auth_headers
-        )
-        
-        assert response.status_code == 200
-        data = await response.get_json()
-        assert "error" not in data
-        assert data['plugin']['is_enabled'] is True
-
+        # Mock 配置文件保存
+        with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
+            response = await test_client.post(
+                f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable',
+                headers=auth_headers
+            )
+            
+            assert response.status_code == 200
+            data = await response.get_json()
+            assert "error" not in data
+            assert data['plugin']['is_enabled'] is True
+            
     @pytest.mark.asyncio
     async def test_disable_plugin(self, test_client, auth_headers):
         """测试禁用插件"""
-        response = await test_client.post(
-            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable',
-            headers=auth_headers
-        )
-        
-        assert response.status_code == 200
-        data = await response.get_json()
-        assert "error" not in data
-        assert data['plugin']['is_enabled'] is False
+        # Mock 配置文件保存
+        with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
+            response = await test_client.post(
+                f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable',
+                headers=auth_headers
+            )
+            
+            assert response.status_code == 200
+            data = await response.get_json()
+            assert "error" not in data
+            assert data['plugin']['is_enabled'] is False
+            
+            # 验证配置保存
+            mock_save.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_install_plugin(self, test_client, auth_headers):
@@ -172,21 +180,25 @@ class TestPlugin:
                 is_enabled=False,
                 version="1.0.0",
                 author="test-author"
-
             )
-            response = await test_client.post(
-                '/api/plugin/plugins',
-                headers=auth_headers,
-
-            json={
-                'package_name': 'test-plugin-package',
-                'version': '1.0.0'
-            }
-        )
-        
-        data = await response.get_json()
-        assert "error" not in data
-        assert data['plugin']['package_name'] == 'test-plugin-package'
+            
+            # Mock 配置文件保存
+            with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
+                response = await test_client.post(
+                    '/api/plugin/plugins',
+                    headers=auth_headers,
+                    json={
+                        'package_name': 'test-plugin-package',
+                        'version': '1.0.0'
+                    }
+                )
+                
+                data = await response.get_json()
+                assert "error" not in data
+                assert data['plugin']['package_name'] == 'test-plugin-package'
+                
+                # 验证配置保存
+                mock_save.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_uninstall_plugin(self, test_client, auth_headers):

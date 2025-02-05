@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 
 import pytest_asyncio
 from framework.web.app import create_app
@@ -11,6 +11,7 @@ from framework.llm.llm_manager import LLMManager
 from framework.llm.adapter import LLMBackendAdapter
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
+from framework.config.config_loader import ConfigLoader
 from pydantic import BaseModel
 
 # ==================== 常量区 ====================
@@ -61,9 +62,12 @@ def app():
         LLMBackendConfig(
             name=TEST_BACKEND_NAME,
             adapter=TEST_ADAPTER_TYPE,
-            config={"api_key": "test-key", "model": "test-model"},
+            config={
+                'api_key': 'test-key',
+                'model': 'test-model'
+            },
             enable=True,
-            models=["test-model"]
+            models=['test-model']
         )
     ]
     container.register(GlobalConfig, config)
@@ -149,17 +153,22 @@ class TestLLMBackend:
             models=['new-model']
         )
         
-        response = await test_client.post(
-            '/api/llm/backends',
-            headers=auth_headers,
-            json=new_backend.model_dump()
-        )
-        
-        data = await response.get_json()
-        assert 'data' in data
-        backend = data.get('data')
-        assert backend.get('name') == 'new-backend'
-        assert backend.get('adapter') == TEST_ADAPTER_TYPE
+        # Mock 配置文件保存
+        with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
+            response = await test_client.post(
+                '/api/llm/backends',
+                headers=auth_headers,
+                json=new_backend.model_dump()
+            )
+            
+            data = await response.get_json()
+            assert 'data' in data
+            backend = data.get('data')
+            assert backend.get('name') == 'new-backend'
+            assert backend.get('adapter') == TEST_ADAPTER_TYPE
+            
+            # 验证配置保存
+            mock_save.assert_called_once()
         
     @pytest.mark.asyncio
     async def test_update_backend(self, test_client, auth_headers):
@@ -175,6 +184,8 @@ class TestLLMBackend:
             models=['updated-model']
         )
         
+        # Mock 配置文件保存
+        ConfigLoader.save_config_with_backup = MagicMock()
         response = await test_client.put(
             f'/api/llm/backends/{TEST_BACKEND_NAME}',
             headers=auth_headers,
@@ -186,10 +197,14 @@ class TestLLMBackend:
         backend = data.get('data')
         assert backend.get('name') == TEST_BACKEND_NAME
         assert backend.get('config').get('api_key') == 'updated-key'
-        
+    
+        # 验证配置保存
+        ConfigLoader.save_config_with_backup.assert_called_once()
+
     @pytest.mark.asyncio
     async def test_delete_backend(self, test_client, auth_headers):
         """测试删除后端"""
+        ConfigLoader.save_config_with_backup = MagicMock()
         response = await test_client.delete(
             f'/api/llm/backends/{TEST_BACKEND_NAME}',
             headers=auth_headers
@@ -199,6 +214,7 @@ class TestLLMBackend:
         assert 'data' in data
         backend = data.get('data')
         assert backend.get('name') == TEST_BACKEND_NAME
+        ConfigLoader.save_config_with_backup.assert_called_once()
         
         # 验证后端已被删除
         response = await test_client.get(
@@ -206,4 +222,4 @@ class TestLLMBackend:
             headers=auth_headers
         )
         data = await response.get_json()
-        assert 'error' in data 
+        assert 'error' in data
