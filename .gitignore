@@ -12,3 +12,4 @@ venv/
 config.yaml
 config.yaml.bak
 logs/
+**/password.hash

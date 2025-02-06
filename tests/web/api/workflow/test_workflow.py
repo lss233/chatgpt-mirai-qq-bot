@@ -9,8 +9,8 @@ from framework.workflow.core.workflow import WorkflowRegistry, Workflow, Wire
 from framework.workflow.core.workflow.builder import WorkflowBuilder
 from framework.workflow.core.block import Block, BlockRegistry
 from framework.workflow.core.workflow.input_output import Input, Output
-from framework.web.auth.routes import create_access_token
 from unittest.mock import patch
+from tests.utils.auth_test_utils import setup_auth_service, auth_headers
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
@@ -60,6 +60,9 @@ def app():
     )
     container.register(GlobalConfig, config)
     
+    # 设置认证服务
+    setup_auth_service(container)
+    
     # 创建并注册 BlockRegistry
     block_registry = BlockRegistry()
     block_registry.register("message", "test", MessageBlock)
@@ -77,7 +80,6 @@ def app():
     registry.register(TEST_GROUP_ID, TEST_WORKFLOW_ID, builder)
     container.register(WorkflowRegistry, registry)
     
-
     app = create_app(container)
     app.container = container
     return app
@@ -87,24 +89,12 @@ def test_client(app):
     """创建测试客户端"""
     return app.test_client()
 
-@pytest_asyncio.fixture
-async def auth_headers(test_client):
-    """获取认证头"""
-    with patch('framework.web.auth.routes.verify_saved_password', return_value=True):
-        response = await test_client.post('/api/auth/login', json={
-            'password': TEST_PASSWORD
-        })
-        data = await response.get_json()
-        assert response.status_code == 200
-        token = data['access_token']
-        return {'Authorization': f'Bearer {token}'}
-
 # ==================== 测试用例 ====================
 class TestWorkflow:
     @pytest.mark.asyncio
     async def test_list_workflows(self, test_client, auth_headers):
         """测试获取工作流列表"""
-        response = await test_client.get('/api/workflow', headers=auth_headers)
+        response = await test_client.get('/backend-api/api/workflow', headers=auth_headers)
         data = await response.get_json()
         assert "error" not in data
         assert "workflows" in data
@@ -119,7 +109,7 @@ class TestWorkflow:
     async def test_get_workflow(self, test_client, auth_headers):
         """测试获取单个工作流"""
         response = await test_client.get(
-            f'/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}',
+            f'/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}',
             headers=auth_headers
         )
         data = await response.get_json()
@@ -154,7 +144,7 @@ class TestWorkflow:
         }
         
         response = await test_client.post(
-            f'/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID_NEW}',
+            f'/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID_NEW}',
             headers=auth_headers,
             json=workflow_data
         )
@@ -188,7 +178,7 @@ class TestWorkflow:
         }
         
         response = await test_client.put(
-            f'/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}',
+            f'/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}',
             headers=auth_headers,
             json=workflow_data
         )
@@ -206,7 +196,7 @@ class TestWorkflow:
     async def test_delete_workflow(self, test_client, auth_headers):
         """测试删除工作流"""
         response = await test_client.delete(
-            f'/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}',
+            f'/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}',
             headers=auth_headers
         )
         

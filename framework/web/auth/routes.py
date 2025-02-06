@@ -1,11 +1,8 @@
-from quart import Blueprint, request, jsonify
+from quart import Blueprint, request, jsonify, g
 from datetime import timedelta
 
 from .models import LoginRequest, ChangePasswordRequest, TokenResponse
-from .utils import (
-    is_first_time, save_password, verify_saved_password,
-    create_access_token
-)
+from .services import AuthService
 from .middleware import require_auth
 
 auth_bp = Blueprint('auth', __name__)
@@ -15,15 +12,17 @@ async def login():
     data = await request.get_json()
     login_data = LoginRequest(**data)
     
-    if is_first_time():
-        save_password(login_data.password)
-        token = create_access_token(timedelta(days=1))
+    auth_service: AuthService = g.container.resolve(AuthService)
+    
+    if auth_service.is_first_time():
+        auth_service.save_password(login_data.password)
+        token = auth_service.create_access_token(timedelta(days=1))
         return TokenResponse(access_token=token).model_dump()
     
-    if not verify_saved_password(login_data.password):
+    if not auth_service.verify_password(login_data.password):
         return jsonify({"error": "Invalid password"}), 401
     
-    token = create_access_token(timedelta(days=1))
+    token = auth_service.create_access_token(timedelta(days=1))
     return TokenResponse(access_token=token).model_dump()
 
 @auth_bp.route('/change-password', methods=['POST'])
@@ -32,8 +31,10 @@ async def change_password():
     data = await request.get_json()
     password_data = ChangePasswordRequest(**data)
     
-    if not verify_saved_password(password_data.old_password):
+    auth_service: AuthService = g.container.resolve(AuthService)
+    
+    if not auth_service.verify_password(password_data.old_password):
         return jsonify({"error": "Invalid old password"}), 401
     
-    save_password(password_data.new_password)
+    auth_service.save_password(password_data.new_password)
     return jsonify({"message": "Password changed successfully"}) 

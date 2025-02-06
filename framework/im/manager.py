@@ -74,8 +74,6 @@ class IMManager:
         根据配置文件中的 enable_ims 启动对应的 adapter。
         :param loop: 负责执行的 event loop
         """
-
-
         if loop is None:
             loop = asyncio.new_event_loop()
         tasks = []
@@ -94,8 +92,10 @@ class IMManager:
             self.adapters[im.name] = adapter
             if im.enable:
                 tasks.append(asyncio.ensure_future(self._start_adapter(im.name, adapter), loop=loop))
-        loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-
+        if len(tasks) > 0:  
+            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+        else:
+            logger.warning("No adapters to start, please check your config")
 
     def stop_adapters(self, loop=None):
         """

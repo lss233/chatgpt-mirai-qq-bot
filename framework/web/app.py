@@ -4,6 +4,7 @@ from framework.config.global_config import GlobalConfig
 from quart_cors import cors
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
+from pathlib import Path
 
 from framework.logger import get_logger, HypercornLoggerWrapper
 from framework.ioc.container import DependencyContainer
@@ -17,13 +18,11 @@ from .api.workflow import workflow_bp
 from .api.plugin import plugin_bp
 from .api.system import system_bp
 
+from framework.web.auth.services import AuthService, FileBasedAuthService
+
 def create_app(container: DependencyContainer) -> Quart:
     app = Quart(__name__)
     app = cors(app)  # 启用CORS支持
-    
-    # 配置
-    config = container.resolve(GlobalConfig)
-    app.config['SECRET_KEY'] = config.web.secret_key
     
     # 注册蓝图
     app.register_blueprint(auth_bp, url_prefix='/backend-api/api/auth')
@@ -46,6 +45,10 @@ def create_app(container: DependencyContainer) -> Quart:
 class WebServer:
     def __init__(self, container: DependencyContainer):
         self.app = create_app(container)
+        container.register(AuthService, FileBasedAuthService(
+            password_file=Path(container.resolve(GlobalConfig).web.password_file),
+            secret_key=container.resolve(GlobalConfig).web.secret_key
+        ))
         self.config = container.resolve(GlobalConfig)
         self.logger = get_logger("WebServer")
         

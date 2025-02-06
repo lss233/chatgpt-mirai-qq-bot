@@ -9,6 +9,7 @@ from framework.im.manager import IMManager
 from framework.llm.llm_manager import LLMManager
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.workflow.core.workflow import WorkflowRegistry
+from tests.utils.auth_test_utils import setup_auth_service, auth_headers
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
@@ -27,6 +28,9 @@ def app():
         password_file="test_password.hash"
     )
     container.register(GlobalConfig, config)
+    
+    # 设置认证服务
+    setup_auth_service(container)
     
     # Mock其他依赖
     im_manager = MagicMock(spec=IMManager)
@@ -53,17 +57,6 @@ def test_client(app):
     """创建测试客户端"""
     return app.test_client()
 
-@pytest_asyncio.fixture
-async def auth_headers(test_client):
-    """获取认证头"""
-    with patch('framework.web.auth.routes.verify_saved_password', return_value=True):
-        response = await test_client.post('/api/auth/login', json={
-            'password': TEST_PASSWORD
-        })
-        data = await response.get_json()
-        token = data['access_token']
-        return {'Authorization': f'Bearer {token}'}
-
 # ==================== 测试用例 ====================
 class TestSystemStatus:
     @pytest.mark.asyncio
@@ -76,7 +69,7 @@ class TestSystemStatus:
         mock_process.cpu_percent.return_value = 1.2
         
         with patch('framework.web.api.system.routes.psutil.Process', return_value=mock_process):
-            response = await test_client.get('/api/system/status', headers=auth_headers)
+            response = await test_client.get('/backend-api/api/system/status', headers=auth_headers)
             
             assert response.status_code == 200
             data = await response.get_json()
@@ -103,7 +96,7 @@ class TestSystemStatus:
     @pytest.mark.asyncio
     async def test_get_system_status_unauthorized(self, test_client):
         """测试未认证时获取系统状态"""
-        response = await test_client.get('/api/system/status')
+        response = await test_client.get('/backend-api/api/system/status')
         
         assert response.status_code == 401
         data = await response.get_json()

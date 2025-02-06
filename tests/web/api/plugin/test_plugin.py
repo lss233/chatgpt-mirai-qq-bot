@@ -17,6 +17,7 @@ from framework.workflow.core.dispatch import WorkflowDispatcher
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 from framework.config.config_loader import ConfigLoader
+from tests.utils.auth_test_utils import setup_auth_service, auth_headers
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
@@ -47,6 +48,7 @@ def app():
     """创建测试应用实例"""
     container = DependencyContainer()
     container.register(DependencyContainer, container)
+    
     # 配置
     config = GlobalConfig()
     config.web = WebConfig(
@@ -57,6 +59,9 @@ def app():
         enable=[TEST_PLUGIN_NAME]
     )
     container.register(GlobalConfig, config)
+    
+    # 设置认证服务
+    setup_auth_service(container)
     
     # 注册必要的组件
     container.register(LLMBackendRegistry, LLMBackendRegistry())
@@ -81,24 +86,13 @@ def test_client(app):
     """创建测试客户端"""
     return app.test_client()
 
-@pytest_asyncio.fixture
-async def auth_headers(test_client):
-    """获取认证头"""
-    response = await test_client.post('/api/auth/login', json={
-        'password': TEST_PASSWORD
-    })
-    data = await response.get_json()
-    assert "error" not in data
-    token = data['access_token']
-    return {'Authorization': f'Bearer {token}'}
-
 # ==================== 测试用例 ====================
 class TestPlugin:
     @pytest.mark.asyncio
     async def test_get_plugin_details(self, test_client, auth_headers):
         """测试获取插件详情"""
         response = await test_client.get(
-            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}',
+            f'/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}',
             headers=auth_headers
         )
         
@@ -114,7 +108,7 @@ class TestPlugin:
     async def test_get_nonexistent_plugin(self, test_client, auth_headers):
         """测试获取不存在的插件"""
         response = await test_client.get(
-            '/api/plugin/plugins/nonexistent',
+            '/backend-api/api/plugin/plugins/nonexistent',
             headers=auth_headers
         )
         
@@ -127,7 +121,7 @@ class TestPlugin:
         """测试更新插件"""
         # 由于是内部插件，更新应该失败
         response = await test_client.put(
-            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}',
+            f'/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}',
             headers=auth_headers
         )
         
@@ -141,7 +135,7 @@ class TestPlugin:
         # Mock 配置文件保存
         with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
             response = await test_client.post(
-                f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable',
+                f'/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable',
                 headers=auth_headers
             )
             
@@ -156,7 +150,7 @@ class TestPlugin:
         # Mock 配置文件保存
         with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
             response = await test_client.post(
-                f'/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable',
+                f'/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable',
                 headers=auth_headers
             )
             
@@ -185,7 +179,7 @@ class TestPlugin:
             # Mock 配置文件保存
             with patch("framework.config.config_loader.ConfigLoader.save_config_with_backup") as mock_save:
                 response = await test_client.post(
-                    '/api/plugin/plugins',
+                    '/backend-api/api/plugin/plugins',
                     headers=auth_headers,
                     json={
                         'package_name': 'test-plugin-package',
@@ -205,7 +199,7 @@ class TestPlugin:
         """测试卸载插件"""
         # 由于是内部插件，卸载应该失败
         response = await test_client.delete(
-            f'/api/plugin/plugins/{TEST_PLUGIN_NAME}',
+            f'/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}',
             headers=auth_headers
         )
         

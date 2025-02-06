@@ -1,6 +1,7 @@
 from functools import wraps
-from quart import request, jsonify
-from .utils import verify_token
+from quart import request, jsonify, g
+
+from framework.web.auth.services import AuthService
 
 def require_auth(f):
     @wraps(f)
@@ -14,7 +15,8 @@ def require_auth(f):
             if token_type.lower() != 'bearer':
                 return jsonify({"error": "Invalid token type"}), 401
             
-            if not verify_token(token):
+            auth_service: AuthService = g.container.resolve(AuthService)
+            if not auth_service.verify_token(token):
                 return jsonify({"error": "Invalid token"}), 401
             
             return await f(*args, **kwargs)
