@@ -40,18 +40,6 @@ def _signal_handler(*args):
 def init_container() -> DependencyContainer:
     container = DependencyContainer()
     container.register(DependencyContainer, container)
-    
-    # 注册工作流注册表
-    workflow_registry = WorkflowRegistry(container)
-    workflow_registry.load_workflows()  # 加载自定义工作流
-    register_system_workflows(workflow_registry)  # 注册系统工作流
-    container.register(WorkflowRegistry, workflow_registry)
-    
-    # 注册调度规则注册表
-    dispatch_registry = DispatchRuleRegistry(container)
-    dispatch_registry.load_rules()  # 加载调度规则
-    container.register(DispatchRuleRegistry, dispatch_registry)
-    
     return container
 
 def init_memory_system(container: DependencyContainer):
@@ -73,7 +61,7 @@ def init_memory_system(container: DependencyContainer):
 def main():
     loop = asyncio.new_event_loop()
     
-    logger.info("Starting application...")
+    logger.info("Initializing application...")
     
     # 配置文件路径
     config_path = "config.yaml"
@@ -92,11 +80,20 @@ def main():
     
     container.register(asyncio.AbstractEventLoop, loop)
     
+    # 注册核心组件
     container.register(EventBus, EventBus())
-    
     container.register(GlobalConfig, config)
     
+    # 注册 BlockRegistry
     container.register(BlockRegistry, BlockRegistry())
+    # 注册工作流注册表
+    workflow_registry = WorkflowRegistry(container)
+    container.register(WorkflowRegistry, workflow_registry)
+    
+    # 注册调度规则注册表
+    dispatch_registry = DispatchRuleRegistry(container)
+    container.register(DispatchRuleRegistry, dispatch_registry)
+    
     container.register(IMRegistry, IMRegistry())
     container.register(LLMBackendRegistry, LLMBackendRegistry())
     
@@ -126,14 +123,26 @@ def main():
     # 发现并加载外部插件
     logger.info("Discovering external plugins...")
     plugin_loader.discover_external_plugins()
-
+    
     # 初始化插件
     logger.info("Loading plugins")
     plugin_loader.load_plugins()
     
+    # 加载用户配置相关
+    workflow_registry.load_workflows()  # 加载自定义工作流
+    # 加载系统工作流
+    register_system_workflows(workflow_registry)
+    
+    # 加载调度规则
+    dispatch_registry.load_rules()
+    
     # 加载模型后端配置
     logger.info("Loading LLMs")
     llm_manager.load_config()
+    
+    # 加载完毕，开始启动
+
+    logger.info("Starting application...")
     
     # 创建 IM 生命周期管理器
     logger.info("Starting adapters")

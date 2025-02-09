@@ -1,5 +1,0 @@
-name: Test Workflow
-blocks:
-  - type: test:message
-    name: Message Node
-    params: {}

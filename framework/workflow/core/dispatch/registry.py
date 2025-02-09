@@ -54,7 +54,7 @@ class DispatchRuleRegistry:
         config = rule_class.config_class(**rule_config)
         
         # 创建规则实例
-        rule = rule_class.from_config(config, workflow_builder)
+        rule = rule_class.from_config(config, workflow_builder.build)
         
         # 设置规则属性
         rule.rule_id = rule_id
@@ -152,7 +152,7 @@ class DispatchRuleRegistry:
                             enabled=rule_data.get('enabled', True),
                             metadata=rule_data.get('metadata', {})
                         )
-                        self.logger.info(f"Loaded rule: {rule}")
+                        self.logger.debug(f"Loaded rule: {rule}")
                     except Exception as e:
                         self.logger.trace(e)
                         self.logger.error(f"Failed to load rule in file {file_path}: {str(e)}")
