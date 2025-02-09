@@ -64,31 +64,36 @@ async def get_adapter(adapter_id: str):
 async def create_adapter():
     """创建新的适配器"""
     data = await request.get_json()
-    adapter_config = IMAdapterConfig(**data)
+    adapter_info = IMAdapterConfig(**data)
     
     config: GlobalConfig = g.container.resolve(GlobalConfig)
     registry: IMRegistry = g.container.resolve(IMRegistry)
     manager: IMManager = g.container.resolve(IMManager)
 
     # 检查适配器类型是否存在
-    if adapter_config.adapter not in registry.get_all_adapters():
+    if adapter_info.adapter not in registry.get_all_adapters():
         return jsonify({"error": "Invalid adapter type"}), 400
     
     # 检查ID是否已存在
-    if manager.has_adapter(adapter_config.name):
+    if manager.has_adapter(adapter_info.name):
         return jsonify({"error": "Adapter ID already exists"}), 400
     
     # 更新配置
-    config.ims.append(adapter_config)
+    config.ims.append(adapter_info)
+    adapter_class = registry.get_all_adapters()[adapter_info.adapter]
+    adapter_config_class = registry.get_config_class(adapter_info.adapter)
+    adapter_config = adapter_config_class(**adapter_info.config)
+    manager.create_adapter(adapter_info.name, adapter_class, adapter_config)
+    manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
     
     # 保存配置到文件
     ConfigLoader.save_config_with_backup("config.yaml", config)
     
     return IMAdapterResponse(adapter=IMAdapterStatus(
-        name=adapter_config.name,
-        adapter=adapter_config.adapter,
+        name=adapter_info.name,
+        adapter=adapter_info.adapter,
         is_running=False,
-        config=adapter_config.config
+        config=adapter_info.config
     )).model_dump()
 
 @im_bp.route('/adapters/<adapter_id>', methods=['PUT'])
@@ -96,9 +101,10 @@ async def create_adapter():
 async def update_adapter(adapter_id: str):
     """更新适配器配置"""
     data = await request.get_json()
-    adapter_config = IMAdapterConfig(**data)
+    adapter_info = IMAdapterConfig(**data)
+    registry: IMRegistry = g.container.resolve(IMRegistry)
     
-    if adapter_id != adapter_config.name:
+    if adapter_id != adapter_info.name:
         return jsonify({"error": "Adapter ID mismatch"}), 400
     
     config: GlobalConfig = g.container.resolve(GlobalConfig)
@@ -110,8 +116,11 @@ async def update_adapter(adapter_id: str):
         return jsonify({"error": "Adapter not found"}), 404
     
     # 更新配置
-    manager.update_adapter_config(adapter_id, adapter_config.config)
+    adapter_config_class = registry.get_config_class(adapter_info.adapter)
+    adapter_config = adapter_config_class(**adapter_info.config)
+    manager.update_adapter_config(adapter_id, adapter_config)
     
+
     # 保存配置到文件
     ConfigLoader.save_config_with_backup("config.yaml", config)
     
@@ -123,9 +132,10 @@ async def update_adapter(adapter_id: str):
 
     return IMAdapterResponse(adapter=IMAdapterStatus(
         name=adapter_id,
-        adapter=adapter_config.adapter,
+        adapter=adapter_info.adapter,
         is_running=is_running,
-        config=adapter_config.config
+        config=adapter_info.config
+
     )).model_dump()
 
 @im_bp.route('/adapters/<adapter_id>', methods=['DELETE'])
