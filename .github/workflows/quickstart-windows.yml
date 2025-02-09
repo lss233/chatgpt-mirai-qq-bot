@@ -74,9 +74,11 @@ jobs:
 
     - name: Download and extract web dist.zip
       shell: pwsh
+      env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # 获取最新的 release 信息
-        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases"
+        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases" -Headers @{ Authorization = "Bearer $($env:GH_TOKEN)" }
         $zipUrl = $latestRelease[0].assets[0].browser_download_url
 
         # 下载 dist.zip 文件
