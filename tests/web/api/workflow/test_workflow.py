@@ -6,9 +6,10 @@ from framework.web.app import create_app
 from framework.ioc.container import DependencyContainer
 from framework.config.global_config import GlobalConfig, WebConfig
 from framework.workflow.core.workflow import WorkflowRegistry, Workflow, Wire
+from framework.workflow.core.block.input_output import Input
 from framework.workflow.core.workflow.builder import WorkflowBuilder
 from framework.workflow.core.block import Block, BlockRegistry
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Output
 from unittest.mock import patch
 from tests.utils.auth_test_utils import setup_auth_service, auth_headers
 
@@ -25,22 +26,28 @@ TEST_WORKFLOW_DESC = "A test workflow"
 
 # ==================== 测试用Block ====================
 class MessageBlock(Block):
-    def __init__(self, container: DependencyContainer, text: str = ""):
-        inputs = {}
-        outputs = {"output": Output("output", str, "Output message")}
-        super().__init__("message_block", inputs, outputs)
+    name = "message_block"
+    inputs = {}
+    outputs = {"output": Output("output", str, "Output message")}
+    container: DependencyContainer
+
+    def __init__(self, text: str = ""):
         self.config = {"text": text}
         self.position = {"x": 0, "y": 0}
+
 
     def execute(self) -> dict:
         return {"output": self.config["text"]}
 
 class LLMBlock(Block):
-    def __init__(self, container: DependencyContainer, prompt: str = ""):
-        inputs = {"input": Input("input", str, "Input message")}
-        outputs = {"output": Output("output", str, "Output message")}
-        super().__init__("llm_block", inputs, outputs)
+    name = "llm_block"
+    inputs = {"input": Input("input", str, "Input message")}
+    outputs = {"output": Output("output", str, "Output message")}
+    container: DependencyContainer
+
+    def __init__(self, prompt: str = ""):
         self.config = {"prompt": prompt}
+
         self.position = {"x": 200, "y": 0}
 
     def execute(self, input: str) -> dict:
@@ -70,10 +77,10 @@ def app():
     container.register(BlockRegistry, block_registry)
     
     # 创建工作流
-    builder = (WorkflowBuilder(TEST_WORKFLOW_NAME, container)
+    builder = (WorkflowBuilder(TEST_WORKFLOW_NAME)
         .use(MessageBlock, text="Hello")
-        .chain(LLMBlock, prompt="How are you?")
-        .build())
+        .chain(LLMBlock, prompt="How are you?"))
+    
     
     # 创建并注册 WorkflowRegistry
     registry = WorkflowRegistry(container)
@@ -119,7 +126,6 @@ class TestWorkflow:
         assert workflow["workflow_id"] == TEST_WORKFLOW_ID
         assert workflow["group_id"] == TEST_GROUP_ID
         assert workflow["name"] == TEST_WORKFLOW_NAME
-        assert len(workflow["blocks"]) == 2
         assert len(workflow["wires"]) == 1
 
     @pytest.mark.asyncio

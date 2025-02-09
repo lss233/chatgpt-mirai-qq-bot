@@ -21,7 +21,7 @@ from .api.system import system_bp
 from framework.web.auth.services import AuthService, FileBasedAuthService
 
 def create_app(container: DependencyContainer) -> Quart:
-    app = Quart(__name__)
+    app = Quart(__name__, static_folder='web', static_url_path='')
     app = cors(app)  # 启用CORS支持
     
     # 注册蓝图

@@ -2,16 +2,21 @@
 # 这些规则用于处理各种游戏互动
 
 # 骰子
-- type: regex
-  workflow: game:dice
+- rule_id: game_dice
+  name: "骰子"
+  type: regex
+  workflow_id: game:dice
   pattern: "^[.。]roll\\s*(\\d+)?d(\\d+)"
   description: "骰子游戏，支持 XdY 格式"
 
 # 抽卡
-- type: keyword
-  workflow: game:gacha
+- rule_id: game_gacha
+  name: "抽卡"
+  type: keyword
+  workflow_id: game:gacha
   keywords:
     - "抽卡"
     - "十连"
+
     - "单抽"
   description: "抽卡模拟器" 

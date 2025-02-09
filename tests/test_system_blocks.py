@@ -37,7 +37,8 @@ def test_generate_help_basic(container):
     
     registry.get_all_rules.return_value = [rule1, rule2]
     registry.get_active_rules.return_value = [rule1, rule2]
-    block = GenerateHelp(container)
+    block = GenerateHelp()
+    block.container = container
     result = block.execute()
     
     assert "response" in result
@@ -59,13 +60,15 @@ def test_generate_help_empty(container):
     container, registry = container
     registry.get_all_rules.return_value = []
     
-    block = GenerateHelp(container)
+    block = GenerateHelp()
+    block.container = container
     result = block.execute()
     
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
     help_text = response.content
+
     
     # 检查基本格式
     assert "机器人命令帮助" in help_text
@@ -85,13 +88,15 @@ def test_generate_help_no_description(container):
     
     registry.get_all_rules.return_value = [rule]
     
-    block = GenerateHelp(container)
+    block = GenerateHelp()
+    block.container = container
     result = block.execute()
     
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
     help_text = response.content
+
     
     # 不应该包含没有描述的命令
     assert "/test" not in help_text 

@@ -1,27 +1,7 @@
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 
-class BlockInput(BaseModel):
-    """Block输入定义"""
-    name: str
-    description: str
-    type: str
-    required: bool = True
-    default: Optional[Any] = None
-
-class BlockOutput(BaseModel):
-    """Block输出定义"""
-    name: str
-    description: str
-    type: str
-
-class BlockConfig(BaseModel):
-    """Block配置项定义"""
-    name: str
-    description: str
-    type: str
-    required: bool = True
-    default: Optional[Any] = None
+from framework.workflow.core.block.schema import BlockInput, BlockOutput, BlockConfig
 
 class BlockType(BaseModel):
     """Block类型信息"""

@@ -10,7 +10,7 @@ def container():
 
 def test_game_dice_workflow(container):
     """测试骰子游戏工作流创建"""
-    workflow = GameWorkflowFactory.create_dice_workflow(container)
+    workflow = GameWorkflowFactory.create_dice_workflow().build(container)
     
     # 验证工作流结构
     assert workflow.name == "dice_workflow"
@@ -21,7 +21,7 @@ def test_game_dice_workflow(container):
 
 def test_game_gacha_workflow(container):
     """测试抽卡游戏工作流创建"""
-    workflow = GameWorkflowFactory.create_gacha_workflow(container)
+    workflow = GameWorkflowFactory.create_gacha_workflow().build(container)
     
     # 验证工作流结构
     assert workflow.name == "gacha_workflow"
@@ -32,7 +32,7 @@ def test_game_gacha_workflow(container):
 
 def test_system_help_workflow(container):
     """测试帮助信息工作流创建"""
-    workflow = SystemWorkflowFactory.create_help_workflow(container)
+    workflow = SystemWorkflowFactory.create_help_workflow().build(container)
     
     # 验证工作流结构
     assert workflow.name == "help_workflow"

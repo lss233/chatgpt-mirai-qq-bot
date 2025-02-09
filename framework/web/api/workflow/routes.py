@@ -27,10 +27,11 @@ async def list_workflows():
             workflow_id=wf_id,
             name=builder.name,
             description=builder.description if hasattr(builder, 'description') else '',
-            block_count=len(builder.blocks),
+            block_count=len(builder.nodes_by_name),
             metadata=builder.metadata if hasattr(builder, 'metadata') else None
         ))
         
+
     return WorkflowList(workflows=workflows).model_dump()
 
 @workflow_bp.route('/<group_id>/<workflow_id>', methods=['GET'])
@@ -38,7 +39,7 @@ async def list_workflows():
 async def get_workflow(group_id: str, workflow_id: str):
     """获取特定工作流的详细信息"""
     registry: WorkflowRegistry = g.container.resolve(WorkflowRegistry)
-    
+    block_registry: BlockRegistry = g.container.resolve(BlockRegistry)
     full_id = f"{group_id}:{workflow_id}"
     builder = registry.get(full_id)
     if not builder:
@@ -48,19 +49,18 @@ async def get_workflow(group_id: str, workflow_id: str):
     blocks = []
     for block in builder.blocks:
         blocks.append({
-            'block_id': block.id,
-            'type_name': block.__class__.__name__,
+            'type_name': block_registry.get_block_type_name(block.__class__),
             'name': block.name,
-            'config': block.config,
+            'config': builder.nodes_by_name[block.name].spec.kwargs,
             'position': block.position if hasattr(block, 'position') else {'x': 0, 'y': 0}
         })
-        
+
     wires = []
     for wire in builder.wires:
         wires.append({
-            'source_block': wire.source_block.id,
+            'source_block': wire.source_block.name,
             'source_output': wire.source_output,
-            'target_block': wire.target_block.id,
+            'target_block': wire.target_block.name,
             'target_input': wire.target_input
         })
         
@@ -95,7 +95,7 @@ async def create_workflow(group_id: str, workflow_id: str):
     # 创建工作流构建器
     try:
         # 创建工作流构建器
-        builder = WorkflowBuilder(workflow_def.name, g.container)
+        builder = WorkflowBuilder(workflow_def.name)
         
         # 根据定义添加块和连接
         for block_def in workflow_def.blocks:
@@ -116,10 +116,10 @@ async def create_workflow(group_id: str, workflow_id: str):
             
         # 保存工作流
         file_path = registry.get_workflow_path(group_id, workflow_id)
-        builder.save_to_yaml(file_path)
+        builder.save_to_yaml(file_path, g.container)
         
         # 注册工作流
-        registry.register(group_id, workflow_id, builder.__class__)
+        registry.register(group_id, workflow_id, builder)
         
         return workflow_def.model_dump()
     except Exception as e:
@@ -143,7 +143,7 @@ async def update_workflow(group_id: str, workflow_id: str):
     # 更新工作流
     try:
         # 创建新的工作流构建器
-        builder = WorkflowBuilder(workflow_def.name, g.container)
+        builder = WorkflowBuilder(workflow_def.name)
         
         # 根据定义添加块和连接
         for block_def in workflow_def.blocks:
@@ -164,11 +164,16 @@ async def update_workflow(group_id: str, workflow_id: str):
             
         # 保存工作流
         file_path = registry.get_workflow_path(group_id, workflow_id)
-        builder.save_to_yaml(file_path)
-        
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        new_file_path = registry.get_workflow_path(data["group_id"], data["workflow_id"])
+        builder.save_to_yaml(new_file_path, g.container)
+
         # 更新注册表
-        registry.register(group_id, workflow_id, builder.__class__)
-        
+        registry.unregister(group_id, workflow_id)
+        registry.register(data["group_id"], data["workflow_id"], builder)
+
+
         return workflow_def.model_dump()
     except Exception as e:
         return jsonify({"error": str(e)}), 400

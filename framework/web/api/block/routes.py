@@ -16,42 +16,15 @@ async def list_block_types():
     
     types = []
     for block_type in registry.get_all_types():
-        # 获取Block类的输入输出定义
-        inputs = []
-        for name, info in block_type.get_inputs().items():
-            inputs.append(BlockInput(
-                name=name,
-                description=info.get('description', ''),
-                type=info.get('type', 'any'),
-                required=info.get('required', True),
-                default=info.get('default')
-            ))
-            
-        outputs = []
-        for name, info in block_type.get_outputs().items():
-            outputs.append(BlockOutput(
-                name=name,
-                description=info.get('description', ''),
-                type=info.get('type', 'any')
-            ))
-            
-        configs = []
-        for name, info in block_type.get_configs().items():
-            configs.append(BlockConfig(
-                name=name,
-                description=info.get('description', ''),
-                type=info.get('type', 'any'),
-                required=info.get('required', True),
-                default=info.get('default')
-            ))
-            
+        inputs, outputs, configs = registry.extract_block_info(block_type)
+        
         types.append(BlockType(
-            type_name=block_type.__name__,
+            type_name=registry.get_block_type_name(block_type),
             name=block_type.name,
-            description=block_type.description,
-            inputs=inputs,
-            outputs=outputs,
-            configs=configs
+            description=getattr(block_type, 'description', ''),
+            inputs=inputs.values(),
+            outputs=outputs.values(),
+            configs=configs.values()
         ))
         
     return BlockTypeList(types=types).model_dump()
@@ -62,7 +35,7 @@ async def get_block_type(type_name: str):
     """获取特定Block类型的详细信息"""
     registry: BlockRegistry = g.container.resolve(BlockRegistry)
     
-    block_type = registry.get_type(type_name)
+    block_type = registry.get(type_name)
     if not block_type:
         return jsonify({"error": "Block type not found"}), 404
         
@@ -96,7 +69,7 @@ async def get_block_type(type_name: str):
         ))
         
     return BlockTypeResponse(type=BlockType(
-        type_name=block_type.__name__,
+        type_name=registry.get_block_type_name(block_type),
         name=block_type.name,
         description=block_type.description,
         inputs=inputs,

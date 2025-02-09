@@ -6,6 +6,7 @@ import sys
 import shutil
 import subprocess
 
+from framework.config.global_config import GlobalConfig
 from framework.ioc.container import DependencyContainer
 from framework.ioc.inject import Inject
 from framework.logger import get_logger
@@ -22,8 +23,9 @@ class PluginLoader:
         self.logger = get_logger("PluginLoader")
         self._loaded_entry_points = set()  # 记录已加载的entry points
         self.plugin_dir = plugin_dir
-        self.loaded_modules = {}
         self.internal_plugins = []
+        self.config = self.container.resolve(GlobalConfig)
+        
 
     def register_plugin(self, plugin_class: Type[Plugin], plugin_name: str = None):
         """注册一个插件类，主要用于测试"""
@@ -105,40 +107,32 @@ class PluginLoader:
 
     def _load_external_plugin(self, plugin_name: str):
         """加载外部插件"""
+        from importlib.metadata import entry_points
+        
+        # 获取插件的 entry point
         eps = entry_points(group=Plugin.ENTRY_POINT_GROUP)
-        for entry_point in eps:
-            if entry_point.name == plugin_name or entry_point.module_name == plugin_name:
-                if entry_point.name in self._loaded_entry_points:
-                    self.logger.warning(f"Plugin {plugin_name} is already loaded")
-                    return
-                    
-                plugin_class = entry_point.load()
-                if not issubclass(plugin_class, Plugin):
-                    raise ValueError(f"Plugin class must inherit from Plugin base class")
-                    
-                plugin = self.instantiate_plugin(plugin_class)
-                self.plugins.append(plugin)
-                self._loaded_entry_points.add(entry_point.name)
-                
-                # 获取并存储插件信息
-                metadata = get_package_metadata(plugin_name)
-                if metadata:
-                    plugin_info = PluginInfo(
-                        name=metadata['name'],
-                        package_name=plugin_name,
-                        description=metadata['description'],
-                        version=metadata['version'],
-                        author=metadata['author'],
-                        is_internal=False,
-                        is_enabled=True,
-                        metadata=None
-                    )
-                    self.plugin_infos[plugin_name] = plugin_info
-                
-                self.logger.info(f"External plugin {plugin_name} loaded successfully")
-                return
-                
-        raise ValueError(f"No plugin found with name {plugin_name}")
+        plugin_ep = next((ep for ep in eps if ep.name == plugin_name), None)
+        
+        if not plugin_ep:
+            raise ValueError(f"Unable to find entry point for plugin {plugin_name}")
+        
+        try:
+            # 加载插件类
+            plugin_class = plugin_ep.load()
+            
+            # 检查插件类是否继承自 Plugin
+            if not issubclass(plugin_class, Plugin):
+                raise TypeError(f"Plugin {plugin_name} must inherit from the Plugin class")
+            
+            # 实例化插件并启动
+            plugin = self.instantiate_plugin(plugin_class)
+            self.plugins.append(plugin)
+            
+            self.logger.info(f"Successfully loaded external plugin: {plugin_name}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to load external plugin {plugin_name}: {e}")
+            raise
 
     def instantiate_plugin(self, plugin_class):
         """Instantiates a plugin class using dependency injection."""
@@ -203,16 +197,15 @@ class PluginLoader:
                 stderr=subprocess.PIPE
             )
             stdout, stderr = process.communicate()
-            
+            self.logger.info(f"Install plugin {package_name} output: {stdout.decode()}")
             if process.returncode != 0:
                 raise Exception(f"Failed to install plugin: {stderr.decode()}")
                 
             # 导入并加载插件
-            module = importlib.import_module(package_name)
-            plugin_info = self._load_plugin_info(module)
-            if plugin_info:
-                self.plugin_infos[plugin_info.package_name] = plugin_info
-                return plugin_info
+            self.discover_external_plugins()
+            possible_plugin_infos = [info for info in self.plugin_infos.values() if info.package_name == package_name]
+            if possible_plugin_infos:
+                return possible_plugin_infos[0]
                 
         except Exception as e:
             raise Exception(f"Failed to install plugin: {str(e)}")
@@ -240,15 +233,14 @@ class PluginLoader:
                 stderr=subprocess.PIPE
             )
             stdout, stderr = process.communicate()
-            
+            self.logger.info(f"Uninstall plugin {plugin_info.package_name} output: {stdout.decode()}")
+
             if process.returncode != 0:
                 raise Exception(f"Failed to uninstall plugin: {stderr.decode()}")
                 
             # 清理插件信息
             if plugin_name in self.plugin_infos:
                 del self.plugin_infos[plugin_name]
-            if plugin_name in self.loaded_modules:
-                del self.loaded_modules[plugin_name]
                 
             return True
             
@@ -256,14 +248,7 @@ class PluginLoader:
             raise Exception(f"Failed to uninstall plugin: {str(e)}")
             
     async def enable_plugin(self, plugin_name: str) -> bool:
-        """启用插件
-        
-        Args:
-            plugin_name: 插件名称
-            
-        Returns:
-            bool: 是否成功启用
-        """
+        """启用插件"""
         plugin_info = self.get_plugin_info(plugin_name)
         if not plugin_info:
             raise ValueError(f"Plugin {plugin_name} not found")
@@ -274,20 +259,14 @@ class PluginLoader:
         try:
             # 加载插件
             if plugin_info.is_internal:
-                plugin_class = self._load_internal_plugin(plugin_name)
+                self._load_internal_plugin(plugin_name)
             else:
-                plugin_class = self._load_external_plugin(plugin_name)
-                
-            if not plugin_class:
-                raise ValueError(f"Failed to load plugin class for {plugin_name}")
-                
-            # 实例化并初始化插件
-            plugin = self.instantiate_plugin(plugin_class)
-            plugin.on_load()
-            plugin.on_start()
+                self._load_external_plugin(plugin_name)
             
-            # 更新状态
-            self.plugins.append(plugin)
+            # 更新配置
+            if plugin_name not in self.config.plugins.enable:
+                self.config.plugins.enable.append(plugin_name)
+            
             plugin_info.is_enabled = True
             
             self.logger.info(f"Plugin {plugin_name} enabled")
@@ -298,14 +277,7 @@ class PluginLoader:
             return False
 
     async def disable_plugin(self, plugin_name: str) -> bool:
-        """禁用插件
-        
-        Args:
-            plugin_name: 插件名称
-            
-        Returns:
-            bool: 是否成功禁用
-        """
+        """禁用插件"""
         plugin_info = self.get_plugin_info(plugin_name)
         if not plugin_info:
             raise ValueError(f"Plugin {plugin_name} not found")
@@ -320,7 +292,10 @@ class PluginLoader:
                 plugin.on_stop()
                 self.plugins.remove(plugin)
             
-            # 更新状态
+            # 更新配置
+            if plugin_name in self.config.plugins.enable:
+                self.config.plugins.enable.remove(plugin_name)
+            
             plugin_info.is_enabled = False
             
             self.logger.info(f"Plugin {plugin_name} disabled")
@@ -342,52 +317,81 @@ class PluginLoader:
                 
             # 获取当前版本
             old_version = plugin_info.version
-            
+            # 先关闭插件
+            await self.disable_plugin(plugin_name)
             # 执行更新
             cmd = [sys.executable, "-m", "pip", "install", "--upgrade", plugin_info.package_name]
+
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
             stdout, stderr = process.communicate()
-            
+            self.logger.info(f"Update plugin {plugin_info.package_name} output: {stdout.decode()}")
             if process.returncode != 0:
                 raise Exception(f"Failed to update plugin: {stderr.decode()}")
                 
-            # 重新加载插件
-            if plugin_name in self.loaded_modules:
-                module = self.loaded_modules[plugin_name]
-                module = importlib.reload(module)
-                self.loaded_modules[plugin_name] = module
-                
-            # 更新插件信息
-            new_info = self._load_plugin_info(module)
-            if new_info:
-                self.plugin_infos[plugin_name] = new_info
-                return new_info
-                
+            self.discover_external_plugins()
+            possible_plugin_infos = [info for info in self.plugin_infos.values() if info.package_name == plugin_info.package_name]
+            if possible_plugin_infos:
+                if possible_plugin_infos[0].version != old_version:
+                    return possible_plugin_infos[0]
+                else:
+                    raise Exception(f"Failed to update plugin: {plugin_info.package_name} is already up to date")
+
         except Exception as e:
             raise Exception(f"Failed to update plugin: {str(e)}")
             
         return None
-        
-    def _load_plugin_info(self, module) -> Optional[PluginInfo]:
-        """从模块加载插件信息"""
-        try:
-            if hasattr(module, '__plugin_info__'):
-                return PluginInfo(**module.__plugin_info__)
-        except Exception:
-            pass
-        return None
     
     def discover_external_plugins(self):
         """发现并加载所有已安装的外部插件"""
-        eps = entry_points(group=Plugin.ENTRY_POINT_GROUP)
+        self.logger.info("Discovering external plugins...")
         
-        for ep in eps:
-            if ep.name not in self._loaded_entry_points:
-                try:
-                    self._load_external_plugin(ep.name)
-                except Exception as e:
-                    self.logger.error(f"Failed to load external plugin {ep.name}: {e}")
+        from importlib.metadata import distributions
+        
+        # 获取所有已安装的包
+        for dist in distributions():
+            try:
+                # 检查包是否包含我们需要的 entry point
+                eps = dist.entry_points
+                plugin_eps = [ep for ep in eps if ep.group == Plugin.ENTRY_POINT_GROUP]
+                
+                if not plugin_eps:
+                    continue
+                    
+                for ep in plugin_eps:
+                    try:
+                        # 获取插件元数据
+                        metadata = {
+                            'name': dist.metadata['Name'],
+                            'description': dist.metadata.get('Summary', ''),
+                            'version': dist.metadata.get('Version', '1.0.0'),
+                            'author': dist.metadata.get('Author', 'Unknown'),
+                        }
+                        
+                        # 创建插件信息
+                        plugin_info = PluginInfo(
+                            name=ep.name,
+                            package_name=dist.metadata['Name'],
+                            description=metadata['description'],
+                            version=metadata['version'],
+                            author=metadata['author'],
+                            is_internal=False,
+                            is_enabled=ep.name in self.config.plugins.enable,
+                            metadata=None
+                        )
+                        
+                        # 存储插件信息
+                        self.plugin_infos[ep.name] = plugin_info
+                        
+                        # 如果插件在启用列表中，则加载它
+                        if ep.name in self.config.plugins.enable:
+                            self._load_external_plugin(ep.name)
+                            
+                    except Exception as e:
+                        self.logger.error(f"Error processing metadata for plugin {ep.name}: {e}")
+
+            except Exception as e:
+                self.logger.error(f"Error processing package {dist.metadata['Name']}: {e}")

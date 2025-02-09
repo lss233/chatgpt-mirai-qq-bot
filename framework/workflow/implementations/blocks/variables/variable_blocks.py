@@ -1,7 +1,8 @@
 from typing import Any, Dict, Type, TypeVar, Optional
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 from framework.workflow.core.execution.executor import WorkflowExecutor
 
 T = TypeVar('T')

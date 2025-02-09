@@ -1,7 +1,8 @@
 from typing import Dict, Any, Optional
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 from framework.im.sender import ChatSender
 from framework.im.adapter import IMAdapter, UserProfileAdapter
 from framework.im.profile import UserProfile

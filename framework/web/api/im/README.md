@@ -136,6 +136,32 @@ POST/backend-api/api/im/adapters/{adapter_id}/stop
 
 停止指定的适配器。
 
+### 获取适配器配置模式
+
+```http
+GET/backend-api/api/im/types/{adapter_type}/config-schema
+```
+
+获取指定适配器类型的配置字段模式。
+
+**响应示例：**
+```json
+{
+  "schema": {
+    "title": "TelegramConfig",
+    "type": "object",
+    "properties": {
+      "token": {
+        "title": "Bot Token",
+        "type": "string",
+        "description": "Telegram Bot Token"
+      }
+    },
+    "required": ["token"]
+  }
+}
+```
+
 ## 数据模型
 
 ### IMAdapterConfig
@@ -155,6 +181,10 @@ POST/backend-api/api/im/adapters/{adapter_id}/stop
 
 ### IMAdapterTypes
 - `types`: 可用的适配器类型列表
+
+### IMAdapterConfigSchema
+- `error`: 错误信息(可选)
+- `schema`: JSON Schema 格式的配置字段描述
 
 ## 适配器类型
 

@@ -37,4 +37,9 @@ async def change_password():
         return jsonify({"error": "Invalid old password"}), 401
     
     auth_service.save_password(password_data.new_password)
-    return jsonify({"message": "Password changed successfully"}) 
+    return jsonify({"message": "Password changed successfully"})
+
+@auth_bp.route('/check-first-time', methods=['GET'])
+async def check_first_time():
+    auth_service: AuthService = g.container.resolve(AuthService)
+    return jsonify({"is_first_time": auth_service.is_first_time()}) 

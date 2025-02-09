@@ -279,3 +279,41 @@ class TestIMAdapter:
         
         # 验证配置保存
         ConfigLoader.save_config_with_backup.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_adapter_config_schema(self, test_client, auth_headers):
+        """测试获取适配器配置模式"""
+        response = await test_client.get(
+            f'/backend-api/api/im/types/{TEST_ADAPTER_TYPE}/config-schema',
+            headers=auth_headers
+        )
+        
+        data = await response.get_json()
+        assert 'configSchema' in data
+        schema = data.get('configSchema')
+        assert schema.get('title') == 'DummyConfig'
+        assert schema.get('type') == 'object'
+        assert 'properties' in schema
+        
+        properties = schema.get('properties')
+        assert 'token' in properties
+        assert properties['token'].get('title') == 'Token'
+        assert properties['token'].get('type') == 'string'
+        assert properties['token'].get('description') == 'Dummy Bot Token'
+        
+        assert 'name' in properties
+        assert properties['name'].get('title') == 'Name'
+        assert properties['name'].get('type') == 'string'
+        assert properties['name'].get('description') == 'Bot Name'
+
+    @pytest.mark.asyncio
+    async def test_get_adapter_config_schema_not_found(self, test_client, auth_headers):
+        """测试获取不存在的适配器配置模式"""
+        response = await test_client.get(
+            '/backend-api/api/im/types/not-exist/config-schema',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 404
+        data = await response.get_json()
+        assert 'error' in data

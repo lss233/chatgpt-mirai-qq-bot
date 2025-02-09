@@ -12,7 +12,7 @@ class DefaultWorkflowFactory:
     构建默认的聊天工作流，提供基本的聊天 bot 能力。
     """
     @staticmethod
-    def create_default_workflow(container: DependencyContainer) -> Workflow:
+    def create_default_workflow() -> WorkflowBuilder:
         """使用 DSL 创建默认工作流"""    
         system_prompt = f"""# Role: 角色扮演
 
@@ -81,7 +81,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 
         user_prompt = """{user_name}说：{user_msg}"""
         
-        return (WorkflowBuilder("default_workflow", container)
+        return (WorkflowBuilder("default_workflow")
             .use(GetIMMessage, name="get_message")
             .parallel([
                 (ToggleEditState, {"is_editing": True}),
@@ -96,6 +96,4 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
             .parallel([
                 SendIMMessage,
                 (ChatMemoryStore, {"scope_type": 'member'}, ["get_message", "llm_chat"]),
-                (ToggleEditState, {"is_editing": False}, ["get_message"])
-            ])
-            .build())
+            ]))

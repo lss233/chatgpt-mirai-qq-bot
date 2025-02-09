@@ -6,20 +6,22 @@ from framework.llm.format.response import LLMChatResponse
 from framework.llm.llm_manager import LLMManager
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 from framework.config.global_config import GlobalConfig
 from framework.im.message import IMMessage, TextMessage
 from framework.workflow.core.execution.executor import WorkflowExecutor
 
 class ChatMessageConstructor(Block):
-    def __init__(self, container: DependencyContainer, system_prompt_format: str, user_prompt_format: str):
-        inputs = {
-            "user_msg": Input("user_msg", IMMessage, "Input message"),
-            "memory_content": Input("memory_content", str, "Memory content")
-        }
-        outputs = {"llm_msg": Output("llm_msg", List[LLMChatMessage], "LLM message")}
-        super().__init__("chat_message_constructor", inputs, outputs)
-        self.container = container
+    name = "chat_message_constructor"
+    inputs = {
+        "user_msg": Input("user_msg", IMMessage, "Input message"),
+        "memory_content": Input("memory_content", str, "Memory content")
+    }
+    outputs = {"llm_msg": Output("llm_msg", List[LLMChatMessage], "LLM message")}
+    container: DependencyContainer
+
+    def __init__(self, system_prompt_format: str, user_prompt_format: str):
         self.system_prompt_format = system_prompt_format
         self.user_prompt_format = user_prompt_format
 
@@ -82,11 +84,10 @@ class ChatMessageConstructor(Block):
         return {"llm_msg": llm_msg}
 
 class ChatCompletion(Block):
-    def __init__(self, container: DependencyContainer):
-        inputs = {"prompt": Input("prompt", List[LLMChatMessage], "LLM prompt")}
-        outputs = {"resp": Output("resp", LLMChatResponse, "LLM response")}
-        super().__init__("chat_completion", inputs, outputs)
-        self.container = container
+    name = "chat_completion"
+    inputs = {"prompt": Input("prompt", List[LLMChatMessage], "LLM prompt")}
+    outputs = {"resp": Output("resp", LLMChatResponse, "LLM response")}
+    container: DependencyContainer
 
     def execute(self, prompt: List[LLMChatMessage]) -> Dict[str, Any]:
         llm_manager = self.container.resolve(LLMManager)
@@ -98,11 +99,10 @@ class ChatCompletion(Block):
         return {"resp": llm.chat(req)}
 
 class ChatResponseConverter(Block):
-    def __init__(self, container: DependencyContainer):
-        inputs = {"resp": Input("resp", LLMChatResponse, "LLM response")}
-        outputs = {"msg": Output("msg", IMMessage, "Output message")}
-        super().__init__("chat_response_converter", inputs, outputs)
-        self.container = container
+    name = "chat_response_converter"
+    inputs = {"resp": Input("resp", LLMChatResponse, "LLM response")}
+    outputs = {"msg": Output("msg", IMMessage, "Output message")}
+    container: DependencyContainer
 
     def execute(self, resp: LLMChatResponse) -> Dict[str, Any]:
         content = ""

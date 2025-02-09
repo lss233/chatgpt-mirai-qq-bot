@@ -9,18 +9,16 @@ class SystemWorkflowFactory:
     """系统相关工作流工厂"""
     
     @staticmethod
-    def create_help_workflow(container: DependencyContainer) -> Workflow:
+    def create_help_workflow() -> WorkflowBuilder:
         """创建帮助信息工作流"""
-        return (WorkflowBuilder("help_workflow", container)
+        return (WorkflowBuilder("help_workflow")
             .use(GenerateHelp)
-            .chain(SendIMMessage)
-            .build())
+            .chain(SendIMMessage))
             
     @staticmethod
-    def create_clear_memory_workflow(container: DependencyContainer) -> Workflow:
+    def create_clear_memory_workflow() -> WorkflowBuilder:
         """创建清空记忆工作流"""
-        return (WorkflowBuilder("clear_memory_workflow", container)
+        return (WorkflowBuilder("clear_memory_workflow")
             .use(GetIMMessage)
             .chain(ClearMemory)
-            .chain(SendIMMessage)
-            .build())
+            .chain(SendIMMessage))

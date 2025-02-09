@@ -11,7 +11,8 @@ from framework.web.api.llm.models import (
     LLMBackendListResponse,
     LLMBackendCreateRequest,
     LLMBackendUpdateRequest,
-    LLMAdapterTypes
+    LLMAdapterTypes,
+    LLMAdapterConfigSchema
 )
 from ...auth.middleware import require_auth
 
@@ -173,4 +174,19 @@ async def delete_backend(backend_name: str):
             models=deleted_backend.models
         )).model_dump()
     except Exception as e:
-        return LLMBackendResponse(error=str(e)).model_dump() 
+        return LLMBackendResponse(error=str(e)).model_dump()
+
+@llm_bp.route('/types/<adapter_type>/config-schema', methods=['GET'])
+@require_auth
+async def get_adapter_config_schema(adapter_type: str):
+    """获取指定适配器类型的配置字段模式"""
+    try:
+        registry: LLMBackendRegistry = g.container.resolve(LLMBackendRegistry)
+        config_class = registry.get_config_class(adapter_type)
+        if not config_class:
+            return jsonify({"error": f"Adapter type {adapter_type} not found"}), 404
+        
+        schema = config_class.model_json_schema()
+        return LLMAdapterConfigSchema(configSchema=schema).model_dump()
+    except Exception as e:
+        return LLMAdapterConfigSchema(error=str(e)).model_dump() 

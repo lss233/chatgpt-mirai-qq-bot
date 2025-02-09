@@ -1,6 +1,7 @@
 import asyncio
 from typing import Dict
 
+from framework.config.config_loader import pydantic_validation_wrapper
 from framework.config.global_config import GlobalConfig, IMConfig
 from framework.im.adapter import IMAdapter
 from framework.im.im_registry import IMRegistry
@@ -24,7 +25,7 @@ class IMManager:
         self.container = container
         self.config = config
         self.im_registry = adapter_registry
-        self.adapters: Dict[str, any] = {}
+        self.adapters: Dict[str, IMAdapter] = {}
 
     def get_adapter_type(self, name: str) -> str:
         """
@@ -69,6 +70,7 @@ class IMManager:
         self.adapters.pop(name)
         self.config.ims = [im for im in self.config.ims if im.name != name]
 
+    @pydantic_validation_wrapper
     def start_adapters(self, loop=None):
         """
         根据配置文件中的 enable_ims 启动对应的 adapter。

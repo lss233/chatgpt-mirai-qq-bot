@@ -1,16 +1,26 @@
 import json
 from typing import Any
-from wechatpy.work.crypto import WeChatCrypto
-from wechatpy.work.client import WeChatClient
+
+from framework.workflow.core.dispatch.dispatcher import WorkflowDispatcher
+
+# 兼容新旧版本的 wechatpy 导入
+try:
+    from wechatpy.enterprise.crypto import WeChatCrypto
+    from wechatpy.enterprise.client import WeChatClient
+    from wechatpy.enterprise.exceptions import InvalidCorpIdException
+    from wechatpy.enterprise import parse_message, create_reply
+except ImportError:
+    from wechatpy.work.crypto import WeChatCrypto
+    from wechatpy.work.client import WeChatClient
+    from wechatpy.work.exceptions import InvalidCorpIdException
+    from wechatpy.work import parse_message, create_reply
+
 from wechatpy.exceptions import InvalidSignatureException
-from wechatpy.work.exceptions import InvalidCorpIdException
-from wechatpy.work import parse_message, create_reply
 from quart import Quart, request, abort
 from pydantic import ConfigDict, BaseModel, Field
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.logger import get_logger
-from framework.workflow_dispatcher.workflow_dispatcher import WorkflowDispatcher
 import asyncio
 import base64
 from io import BytesIO

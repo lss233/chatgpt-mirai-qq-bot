@@ -6,28 +6,37 @@ import warnings
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
 from framework.workflow.core.block.registry import BlockRegistry
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 from framework.workflow.core.workflow.builder import WorkflowBuilder
 
 
 # 测试用的 Block 类
 class SimpleInputBlock(Block):
-    def __init__(self, container: DependencyContainer, param1: str = "default"):
-        inputs = {}
-        outputs = {"out1": Output("out1", str, "Output 1")}
-        super().__init__("simple_input", inputs, outputs)
+    """简单的输入块"""
+    name: str = "simple_input"
+    inputs: Dict[str, Input] = {"param1": Input("param1", str, "Input 1")}
+    outputs: Dict[str, Output] = {"out1": Output("out1", str, "Output 1")}
+    
+    def __init__(self, param1: str = "default"):
+        super().__init__()
         self.param1 = param1
-        
+
+
     def execute(self) -> Dict[str, Any]:
         return {"out1": self.param1}
 
 class SimpleProcessBlock(Block):
-    def __init__(self, container: DependencyContainer, multiplier: int = 1):
-        inputs = {"in1": Input("in1", str, "Input 1")}
-        outputs = {"out1": Output("out1", str, "Output 1")}
-        super().__init__("simple_process", inputs, outputs)
+    """简单的处理块"""
+    name: str = "simple_process"
+    inputs: Dict[str, Input] = {"in1": Input("in1", str, "Input 1")}
+    outputs: Dict[str, Output] = {"out1": Output("out1", str, "Output 1")}
+    
+    def __init__(self, multiplier: int = 1):
+        super().__init__()
         self.multiplier = multiplier
-        
+
+
     def execute(self, in1: str) -> Dict[str, Any]:
         return {"out1": in1 * self.multiplier}
 
@@ -63,11 +72,11 @@ class TestWorkflowBuilder:
             
     def test_basic_dsl_construction(self, container):
         """测试基本的 DSL 构建功能"""
-        builder = (WorkflowBuilder("test_workflow", container)
+        builder = (WorkflowBuilder("test_workflow")
             .use(SimpleInputBlock, name="input1", param1="test")
             .chain(SimpleProcessBlock, name="process1", multiplier=2))
         
-        workflow = builder.build()
+        workflow = builder.build(container)
         
         assert len(workflow.blocks) == 2
         assert len(workflow.wires) == 1
@@ -76,14 +85,14 @@ class TestWorkflowBuilder:
         
     def test_parallel_construction(self, container):
         """测试并行节点构建"""
-        builder = (WorkflowBuilder("test_workflow", container)
+        builder = (WorkflowBuilder("test_workflow")
             .use(SimpleInputBlock)
             .parallel([
                 (SimpleProcessBlock, "process1", {"multiplier": 2}),
                 (SimpleProcessBlock, "process2", {"multiplier": 3})
             ]))
         
-        workflow = builder.build()
+        workflow = builder.build(container)
         
         assert len(workflow.blocks) == 3
         assert len(workflow.wires) == 2
@@ -93,7 +102,7 @@ class TestWorkflowBuilder:
     def test_save_and_load(self, container, yaml_path):
         """测试工作流的保存和加载"""
         # 构建原始工作流
-        original_builder = (WorkflowBuilder("test_workflow", container)
+        original_builder = (WorkflowBuilder("test_workflow")
             .use(SimpleInputBlock, name="input1", param1="test")
             .parallel([
                 (SimpleProcessBlock, "process1", {"multiplier": 2}),
@@ -101,13 +110,14 @@ class TestWorkflowBuilder:
             ]))
         
         # 保存工作流
-        original_builder.save_to_yaml(yaml_path)
+        original_builder.save_to_yaml(yaml_path, container)
         
         # 加载工作流
         loaded_builder = WorkflowBuilder.load_from_yaml(yaml_path, container)
-        loaded_workflow = loaded_builder.build()
+        loaded_workflow = loaded_builder.build(container)
         
         # 验证加载后的工作流
+
         assert len(loaded_workflow.blocks) == 3
         assert loaded_workflow.name == "test_workflow"
         
@@ -124,7 +134,7 @@ class TestWorkflowBuilder:
     def test_complex_workflow_serialization(self, container, yaml_path):
         """测试复杂工作流的序列化"""
         # 构建一个包含多种特性的复杂工作流
-        builder = (WorkflowBuilder("complex_workflow", container)
+        builder = (WorkflowBuilder("complex_workflow")
             .use(SimpleInputBlock, name="start", param1="init")
             .parallel([
                 (SimpleProcessBlock, "parallel1", {"multiplier": 2}),
@@ -135,11 +145,11 @@ class TestWorkflowBuilder:
                   multiplier=1))
         
         # 保存工作流
-        builder.save_to_yaml(yaml_path)
+        builder.save_to_yaml(yaml_path, container)
         
         # 加载工作流
         loaded_builder = WorkflowBuilder.load_from_yaml(yaml_path, container)
-        loaded_workflow = loaded_builder.build()
+        loaded_workflow = loaded_builder.build(container)
         
         # 验证结构
         assert len(loaded_workflow.blocks) == 4
@@ -158,7 +168,7 @@ class TestWorkflowBuilder:
             
     def test_wire_connections(self, container):
         """测试复杂的连线配置"""
-        builder = (WorkflowBuilder("test_workflow", container)
+        builder = (WorkflowBuilder("test_workflow")
             .use(SimpleInputBlock, name="input1")
             .parallel([
                 (SimpleProcessBlock, "process1"),
@@ -167,7 +177,7 @@ class TestWorkflowBuilder:
             .chain(SimpleProcessBlock, name="merger", 
                   wire_from=["process1", "process2"]))
         
-        workflow = builder.build()
+        workflow = builder.build(container)
         
         # 验证连线
         merger_block = next(b for b in workflow.blocks if b.name == "merger")
@@ -181,9 +191,9 @@ class TestWorkflowBuilder:
         registry.clear()
         
         with pytest.warns(UserWarning):
-            builder = (WorkflowBuilder("test_workflow", container)
+            builder = (WorkflowBuilder("test_workflow")
                 .use(SimpleInputBlock))
-            builder.save_to_yaml(yaml_path)
+            builder.save_to_yaml(yaml_path, container)
             
     def test_registered_block_no_warning(self, container, yaml_path):
         """测试已注册 block 不会产生警告"""
@@ -193,6 +203,6 @@ class TestWorkflowBuilder:
         
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            builder = (WorkflowBuilder("test_workflow", container)
+            builder = (WorkflowBuilder("test_workflow")
                 .use(SimpleInputBlock))
-            builder.save_to_yaml(yaml_path) 
+            builder.save_to_yaml(yaml_path, container)

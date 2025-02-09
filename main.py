@@ -39,8 +39,8 @@ def init_container() -> DependencyContainer:
     
     # 注册工作流注册表
     workflow_registry = WorkflowRegistry(container)
-    register_system_workflows(workflow_registry)  # 注册系统工作流
     workflow_registry.load_workflows()  # 加载自定义工作流
+    register_system_workflows(workflow_registry)  # 注册系统工作流
     container.register(WorkflowRegistry, workflow_registry)
     
     # 注册调度规则注册表

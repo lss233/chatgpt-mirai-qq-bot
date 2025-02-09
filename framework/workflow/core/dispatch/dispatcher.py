@@ -26,7 +26,8 @@ class WorkflowDispatcher:
     def __init_fallback(self):
         """初始化默认的兜底规则"""
         fallback_factory = DefaultWorkflowFactory()
-        fallback_rule = FallbackMatchRule(fallback_factory.create_default_workflow)
+        workflow_builder = fallback_factory.create_default_workflow()
+        fallback_rule = FallbackMatchRule(lambda container: workflow_builder.build(container))
         fallback_rule.rule_id = "default"
         fallback_rule.name = "默认规则"
         fallback_rule.description = "处理所有未匹配的消息"
