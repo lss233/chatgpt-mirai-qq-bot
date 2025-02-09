@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict
+from typing import Dict, Type
 
 from framework.config.config_loader import pydantic_validation_wrapper
 from framework.config.global_config import GlobalConfig, IMConfig
@@ -60,7 +60,7 @@ class IMManager:
         :param name: adapter 的名称
         :param config: adapter 的配置
         """
-        self.get_adapter_config(name).config = config
+        self.get_adapter_config(name).config = config.model_dump()
         
     def delete_adapter(self, name: str):
         """
@@ -88,10 +88,7 @@ class IMManager:
             adapter_config = config_class(**im.config)
 
             # 创建 adapter 实例
-            with self.container.scoped() as scoped_container:
-                scoped_container.register(config_class, adapter_config)
-                adapter = Inject(scoped_container).create(adapter_class)()
-            self.adapters[im.name] = adapter
+            adapter = self.create_adapter(im.name, adapter_class, adapter_config)
             if im.enable:
                 tasks.append(asyncio.ensure_future(self._start_adapter(im.name, adapter), loop=loop))
         if len(tasks) > 0:  
@@ -127,14 +124,14 @@ class IMManager:
     
     async def _start_adapter(self, key: str, adapter: IMAdapter):
         logger.info(f"Starting adapter: {key}")
-        adapter.is_running = True
         await adapter.start()
+        adapter.is_running = True
         logger.info(f"Started adapter: {key}")
 
     async def _stop_adapter(self, key: str, adapter: IMAdapter):
         logger.info(f"Stopping adapter: {key}")
-        adapter.is_running = False
         await adapter.stop()
+        adapter.is_running = False
         logger.info(f"Stopped adapter: {key}")
 
     def stop_adapter(self, adapter_id: str, loop: asyncio.AbstractEventLoop):
@@ -157,4 +154,13 @@ class IMManager:
         """
 
         return key in self.adapters and getattr(self.adapters[key], "is_running", False)
+
+    def create_adapter(self, name: str, adapter_class: Type[IMAdapter], adapter_config: IMConfig) -> IMAdapter:
+        with self.container.scoped() as scoped_container:
+            scoped_container.register(adapter_config.__class__, adapter_config)
+            adapter = Inject(scoped_container).create(adapter_class)()
+            adapter.is_running = False
+        self.adapters[name] = adapter
+        return adapter
+
 
