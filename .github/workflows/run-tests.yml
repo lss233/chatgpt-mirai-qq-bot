@@ -14,18 +14,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-        
-    - name: Install dependencies
+    - name: Set up Docker
+      uses: docker/setup-docker-action@v4
+    - name: Build Docker image
       run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-        pip install -r requirements.txt
-        
-    - name: Run tests
+        docker build -t test-image .
+
+    - name: Run tests in Docker
       run: |
-        python -m pytest -v
+        docker run -rm test-image python -m pytest -v
