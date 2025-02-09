@@ -75,7 +75,7 @@ async def create_rule():
         return jsonify({"error": "Rule ID already exists"}), 400
     
     # 检查工作流是否存在
-    if not workflow_registry.get_workflow(rule_config.workflow_id):
+    if not workflow_registry.get(rule_config.workflow_id):
         return jsonify({"error": "Workflow not found"}), 400
     
     # 检查规则类型是否存在
@@ -139,7 +139,7 @@ async def update_rule(rule_id: str):
         return jsonify({"error": "Rule not found"}), 404
     
     # 检查工作流是否存在
-    if not workflow_registry.get_workflow(rule_config.workflow_id):
+    if not workflow_registry.get(rule_config.workflow_id):
         return jsonify({"error": "Workflow not found"}), 400
     
     # 检查规则类型是否存在

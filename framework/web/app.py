@@ -4,8 +4,9 @@ from framework.config.global_config import GlobalConfig
 from quart_cors import cors
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
+from werkzeug.exceptions import NotFound
 from pathlib import Path
-
+import os
 from framework.logger import get_logger, HypercornLoggerWrapper
 from framework.ioc.container import DependencyContainer
 from .auth.routes import auth_bp
@@ -21,7 +22,24 @@ from .api.system import system_bp
 from framework.web.auth.services import AuthService, FileBasedAuthService
 
 def create_app(container: DependencyContainer) -> Quart:
-    app = Quart(__name__, static_folder='web', static_url_path='')
+    app = Quart(__name__)
+    app.static_folder = '../../web'
+    
+    @app.route('/')
+    async def index():
+        print("Serving index.html")
+        return await app.send_static_file('index.html')
+    @app.route('/<path:path>')
+    async def serve_static(path):
+        if path.startswith('backend-api'):
+            raise NotFound()
+        try:
+            return await app.send_static_file(path)
+        except Exception as e:
+            return await app.send_static_file('index.html')
+
+
+        
     app = cors(app)  # 启用CORS支持
     
     # 注册蓝图
@@ -40,6 +58,7 @@ def create_app(container: DependencyContainer) -> Quart:
         g.container = container
     
     app.container = container
+
     return app
 
 class WebServer:
