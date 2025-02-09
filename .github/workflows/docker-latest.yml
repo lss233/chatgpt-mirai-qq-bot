@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'browser-version'
+      - 'master'
 
 jobs:
   docker:
@@ -32,6 +32,6 @@ jobs:
           context: .
           push: true
           platforms: 'linux/amd64,linux/arm64'
-          tags: lss233/chatgpt-mirai-qq-bot:browser-version
+          tags: lss233/kirara-agent-framework:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
