@@ -73,8 +73,12 @@ jobs:
     - name: Download and extract web dist.zip
       shell: pwsh
       run: |
+        # 获取最新的 release 信息
+        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases"
+        $zipUrl = $latestRelease[0].assets[0].browser_download_url
+
         # 下载 dist.zip 文件
-        Invoke-WebRequest -Uri "https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases/download/v0.0.1/dist.zip" -OutFile "C:\generated_files\dist.zip"
+        Invoke-WebRequest -Uri $zipUrl -OutFile "C:\generated_files\dist.zip"
 
         # 解压 dist.zip 文件到 C:/generated_files 目录
         Expand-Archive -Path "C:\generated_files\dist.zip" -DestinationPath "C:\generated_files\kirara_ai\web"

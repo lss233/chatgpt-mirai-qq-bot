@@ -19,7 +19,8 @@ WORKDIR /app
 
 COPY requirements.txt /app
 
-RUN wget https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases/download/v0.0.1/dist.zip -O dist.zip \
+RUN LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases | jq -r '.[0].assets[] | select(.name == "dist.zip") | .browser_download_url') \
+    && wget -O dist.zip "$LATEST_RELEASE_URL" \
     && unzip dist.zip -d web \
     && rm dist.zip && \
     pip install --no-cache-dir -r requirements.txt && \
