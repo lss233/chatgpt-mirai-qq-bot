@@ -26,9 +26,10 @@ if config.mirai:
 
 if config.onebot:
     logger.info("检测到 Onebot 配置，将启动 Onebot 模式……")
-    from platforms.onebot_bot import start_task
+    from platforms.onebot_bot import start_task, daily_care
 
     bots.append(loop.create_task(start_task()))
+    bots.append(loop.create_task(daily_care()))
 if config.telegram:
     logger.info("检测到 telegram 配置，将启动 telegram bot 模式……")
     from platforms.telegram_bot import start_task
