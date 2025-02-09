@@ -215,3 +215,40 @@ class TestLLMBackend:
         )
         data = await response.get_json()
         assert 'error' in data
+
+    @pytest.mark.asyncio
+    async def test_get_adapter_config_schema(self, test_client, auth_headers):
+        """测试获取适配器配置模式"""
+        response = await test_client.get(
+            f'/backend-api/api/llm/types/{TEST_ADAPTER_TYPE}/config-schema',
+            headers=auth_headers
+        )
+        
+        data = await response.get_json()
+        assert 'configSchema' in data
+        schema = data.get('configSchema')
+        assert schema.get('title') == 'TestConfig'
+        assert schema.get('type') == 'object'
+        assert 'properties' in schema
+        
+
+        properties = schema.get('properties')
+        assert 'api_key' in properties
+        assert properties['api_key'].get('title') == 'Api Key'
+        assert properties['api_key'].get('type') == 'string'
+        
+        assert 'model' in properties
+        assert properties['model'].get('title') == 'Model'
+        assert properties['model'].get('type') == 'string'
+        assert properties['model'].get('default') == 'test-model'
+
+    @pytest.mark.asyncio
+    async def test_get_adapter_config_schema_not_found(self, test_client, auth_headers):
+        """测试获取不存在的适配器配置模式"""
+        response = await test_client.get(
+            '/backend-api/api/llm/types/not-exist/config-schema',
+            headers=auth_headers
+        )
+        
+        assert response.status_code == 404
+        data = await response.get_json()

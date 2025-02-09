@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from pydantic import BaseModel
 from framework.config.global_config import LLMBackendConfig
 
@@ -30,4 +30,9 @@ class LLMBackendUpdateRequest(LLMBackendConfig):
 
 class LLMAdapterTypes(BaseModel):
     """可用的LLM适配器类型列表"""
-    types: List[str] 
+    types: List[str]
+
+class LLMAdapterConfigSchema(BaseModel):
+    """LLM适配器配置模式"""
+    error: Optional[str] = None
+    configSchema: Optional[Dict[str, Any]] = None 

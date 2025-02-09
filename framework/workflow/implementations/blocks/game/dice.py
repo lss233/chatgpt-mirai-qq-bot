@@ -6,20 +6,19 @@ from framework.ioc.container import DependencyContainer
 from framework.im.message import IMMessage, TextMessage
 import re
 
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 
 class DiceRoll(Block):
     """骰子掷点 block"""
+    name = "dice_roll"
+    inputs = {
+        "message": Input("message", IMMessage, "Input message containing dice command")
+    }
+    outputs = {
+        "response": Output("response", IMMessage, "Response message with dice roll result")
+    }
     
-    def __init__(self, container: DependencyContainer):
-        inputs = {
-            "message": Input("message", IMMessage, "Input message containing dice command")
-        }
-        outputs = {
-            "response": Output("response", IMMessage, "Response message with dice roll result")
-        }
-        super().__init__("dice_roll", inputs, outputs)
-        
     def execute(self, message: IMMessage) -> Dict[str, Any]:
         # 解析命令
         command = message.content

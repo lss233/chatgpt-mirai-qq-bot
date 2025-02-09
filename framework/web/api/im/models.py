@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 
 from framework.config.global_config import IMConfig
@@ -19,4 +19,9 @@ class IMAdapterResponse(BaseModel):
 
 class IMAdapterTypes(BaseModel):
     """可用的IM适配器类型列表"""
-    types: List[str] 
+    types: List[str]
+
+class IMAdapterConfigSchema(BaseModel):
+    """IM适配器配置模式"""
+    error: Optional[str] = None
+    configSchema: Optional[Dict[str, Any]] = None 

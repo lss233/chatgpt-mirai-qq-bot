@@ -1,7 +1,8 @@
 from typing import Any, Optional
 
+
 class Input:
-    def __init__(self, name: str, data_type: type, description: str, 
+    def __init__(self, name: str, data_type: type, description: str,
                  nullable: bool = False, default: Optional[Any] = None):
         self.name = name
         self.data_type = data_type
@@ -13,7 +14,8 @@ class Input:
         if value is None:
             return self.nullable
         return isinstance(value, self.data_type)
-    
+
+
 class Output:
     def __init__(self, name: str, data_type: type, description: str):
         self.name = name

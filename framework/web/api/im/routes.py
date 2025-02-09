@@ -7,7 +7,7 @@ from framework.im.manager import IMManager
 from ...auth.middleware import require_auth
 from .models import (
     IMAdapterConfig, IMAdapterStatus, IMAdapterList,
-    IMAdapterResponse, IMAdapterTypes
+    IMAdapterResponse, IMAdapterTypes, IMAdapterConfigSchema
 )
 
 im_bp = Blueprint('im', __name__)
@@ -178,4 +178,20 @@ async def stop_adapter(adapter_id: str):
         await manager.stop_adapter(adapter_id, loop)
         return jsonify({"message": "Adapter stopped successfully"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
+
+@im_bp.route('/types/<adapter_type>/config-schema', methods=['GET'])
+@require_auth
+async def get_adapter_config_schema(adapter_type: str):
+    """获取指定适配器类型的配置字段模式"""
+    try:
+        registry: IMRegistry = g.container.resolve(IMRegistry)
+        try:
+            config_class = registry.get_config_class(adapter_type)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
+        
+        schema = config_class.model_json_schema()
+        return IMAdapterConfigSchema(configSchema=schema).model_dump()
+    except Exception as e:
+        return IMAdapterConfigSchema(error=str(e)).model_dump() 

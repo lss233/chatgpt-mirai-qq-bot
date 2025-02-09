@@ -13,3 +13,6 @@ config.yaml
 config.yaml.bak
 logs/
 **/password.hash
+dist/
+build/
+*.egg-info/

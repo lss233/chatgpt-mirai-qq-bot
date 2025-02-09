@@ -1,22 +1,22 @@
 import random
 from typing import Any, Dict
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 from framework.ioc.container import DependencyContainer
 from framework.im.message import IMMessage, TextMessage
 
 class GachaSimulator(Block):
     """抽卡模拟器 block"""
+    name = "gacha_simulator"
+    inputs = {
+        "message": Input("message", IMMessage, "Input message containing gacha command")
+    }
+    outputs = {
+        "response": Output("response", IMMessage, "Response message with gacha results")
+    }
     
-    def __init__(self, container: DependencyContainer, rates: Dict[str, float] = None):
-        inputs = {
-            "message": Input("message", IMMessage, "Input message containing gacha command")
-        }
-        outputs = {
-            "response": Output("response", IMMessage, "Response message with gacha results")
-        }
-        super().__init__("gacha_simulator", inputs, outputs)
-        
+    def __init__(self, rates: Dict[str, float] = None):
         # 默认抽卡概率
         self.rates = rates or {
             "SSR": 0.03,  # 3%

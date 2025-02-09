@@ -26,7 +26,7 @@ async def get_system_status():
     uptime = time.time() - start_time
     
     # 获取活跃的适配器数量
-    active_adapters = len([adapter for adapter in im_manager.adapters if adapter.is_running])
+    active_adapters = len([adapter for adapter in im_manager.adapters.values() if adapter.is_running])
     
     # 获取活跃的LLM后端数量
     active_backends = len(llm_manager.active_backends)

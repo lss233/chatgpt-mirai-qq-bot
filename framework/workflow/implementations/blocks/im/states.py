@@ -4,17 +4,19 @@ from framework.im.adapter import EditStateAdapter, IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 
 # Toggle edit state
 class ToggleEditState(Block):
-    def __init__(self, container: DependencyContainer, is_editing: bool):
-        inputs = {"msg": Input("msg", IMMessage, "Input message")}
-        outputs = {}
-        super().__init__("toggle_edit_state", inputs, outputs)
-        self.container = container
+    name = "toggle_edit_state"
+    inputs = {"msg": Input("msg", IMMessage, "Input message")}
+    outputs = {}
+    container: DependencyContainer
+
+    def __init__(self, is_editing: bool):
         self.is_editing = is_editing
-    
+
     def execute(self, msg: IMMessage) -> Dict[str, Any]:
         im_adapter = self.container.resolve(IMAdapter)
         if isinstance(im_adapter, EditStateAdapter):

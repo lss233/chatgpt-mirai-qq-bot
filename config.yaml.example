@@ -27,7 +27,7 @@ llms:
       enable: true               # 是否启用
       config:                    # API 具体配置
         api_key: "your-api-key"  # API 密钥
-        base_url: "https://api.deepseek.com/v1"  # API 基础 URL
+        api_base: "https://api.deepseek.com/v1"  # API 基础 URL
       models:                    # 支持的模型列表
         - "deepseek-chat"
         - "deepseek-coder"
@@ -38,7 +38,7 @@ llms:
       enable: true               # 是否启用
       config:                    # API 具体配置
         api_key: "your-openai-key"  # OpenAI API 密钥
-        base_url: "https://api.openai.com/v1"  # OpenAI API 基础 URL
+        api_base: "https://api.openai.com/v1"  # OpenAI API 基础 URL
       models:                    # 支持的模型列表
         - "gpt-4"
         - "gpt-4-turbo"

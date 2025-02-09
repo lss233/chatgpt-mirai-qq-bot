@@ -34,9 +34,13 @@ def app():
     
     # Mock其他依赖
     im_manager = MagicMock(spec=IMManager)
-    im_manager.adapters = [MagicMock(is_running=True), MagicMock(is_running=False)]
+    im_manager.adapters = {
+        "adapter1": MagicMock(is_running=True),
+        "adapter2": MagicMock(is_running=False)
+    }
     container.register(IMManager, im_manager)
     
+
     llm_manager = MagicMock(spec=LLMManager)
     llm_manager.active_backends = {'backend1': [], 'backend2': []}
     container.register(LLMManager, llm_manager)

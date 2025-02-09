@@ -1,4 +1,5 @@
+from ..block.input_output import Input
 from .base import Workflow, Wire
 from .builder import WorkflowBuilder
-from .input_output import Input, Output
+from ..block.input_output import Output
 from .registry import WorkflowRegistry

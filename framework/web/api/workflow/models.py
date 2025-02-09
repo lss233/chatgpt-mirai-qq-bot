@@ -10,7 +10,6 @@ class Wire(BaseModel):
 
 class BlockInstance(BaseModel):
     """工作流中的Block实例"""
-    block_id: str
     type_name: str
     name: str
     config: Dict[str, Any]

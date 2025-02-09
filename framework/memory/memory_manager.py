@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Type
 from framework.ioc.container import DependencyContainer
 from framework.config.global_config import GlobalConfig
-from framework.memory.persistences.base import AsyncMemoryPersistence
+from framework.memory.persistences.base import AsyncMemoryPersistence, MemoryPersistence
 from framework.memory.persistences.file_persistence import FileMemoryPersistence
 from framework.memory.persistences.redis_persistence import RedisMemoryPersistence
 from .entry import MemoryEntry
@@ -13,7 +13,7 @@ from .registry import ScopeRegistry, ComposerRegistry, DecomposerRegistry
 class MemoryManager:
     """记忆系统管理器，负责整个记忆系统的生命周期管理"""
     
-    def __init__(self, container: DependencyContainer):
+    def __init__(self, container: DependencyContainer, persistence: Optional[MemoryPersistence] = None):
         self.container = container
         self.config = container.resolve(GlobalConfig).memory
         
@@ -28,7 +28,10 @@ class MemoryManager:
         container.register(DecomposerRegistry, self.decomposer_registry)
         
         # 初始化持久化层
-        self._init_persistence()
+        if persistence is None:
+            self._init_persistence()
+        else:
+            self.persistence = persistence
         
         # 内存缓存
         self.memories: Dict[str, List[MemoryEntry]] = {}

@@ -40,16 +40,26 @@ async def auth_token(test_client):
 # ==================== 测试用例 ====================
 class TestAuth:
     @pytest.mark.asyncio
-    async def test_first_time_login(self, test_client):
-        """测试首次登录"""
-        response = await test_client.post('/backend-api/api/auth/login', json={
-            'password': TEST_PASSWORD
-        })
-        
+    async def test_check_first_time(self, test_client):
+        """测试检查是否首次访问接口"""
+        # 首次访问
+        response = await test_client.get('/backend-api/api/auth/check-first-time')
         assert response.status_code == 200
         data = await response.get_json()
-        assert 'access_token' in data
-        assert data['access_token'] == TEST_TOKEN
+        assert 'is_first_time' in data
+        assert data['is_first_time'] == True
+
+        # 模拟登录后
+        await test_client.post('/backend-api/api/auth/login', json={
+            'password': TEST_PASSWORD
+        })
+
+        # 再次检查
+        response = await test_client.get('/backend-api/api/auth/check-first-time')
+        assert response.status_code == 200
+        data = await response.get_json()
+        assert 'is_first_time' in data
+        assert data['is_first_time'] == False 
 
     @pytest.mark.asyncio
     async def test_normal_login(self, test_client):
@@ -120,4 +130,4 @@ class TestAuth:
         
         assert response.status_code == 401
         data = await response.get_json()
-        assert 'error' in data 
+        assert 'error' in data

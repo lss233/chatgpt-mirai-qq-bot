@@ -1,3 +1,4 @@
+from functools import wraps
 import sys
 import warnings
 from ruamel.yaml import YAML
@@ -5,6 +6,8 @@ from pydantic import BaseModel, ValidationError
 from typing import Type
 import shutil
 import os
+
+from framework.logger import get_logger
 
 class ConfigLoader:
     """
@@ -52,3 +55,20 @@ class ConfigLoader:
             backup_path = f"{config_path}.bak"
             shutil.copy2(config_path, backup_path)
         ConfigLoader.save_config(config_path, config_object)
+        
+def pydantic_validation_wrapper(func):
+    logger = get_logger("ConfigLoader")
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except ValidationError as e:
+            # 使用 loguru 输出错误信息
+            logger.error(f"Pydantic 验证错误: '{e.title}':")
+            for error in e.errors():
+                logger.error(f"字段: {error['loc'][0]}, 错误类型: {error['type']}, 错误信息: {error['msg']}")
+            # 记录堆栈跟踪
+
+            logger.opt(exception=True).error("堆栈跟踪如下：")
+            raise  # 可以选择重新抛出异常，或者处理异常后返回一个默认值
+    return wrapper

@@ -154,7 +154,8 @@ class DispatchRuleRegistry:
                         )
                         self.logger.info(f"Loaded rule: {rule}")
                     except Exception as e:
-                        self.logger.error(f"Failed to load rule: {str(e)}")
+                        self.logger.trace(e)
+                        self.logger.error(f"Failed to load rule in file {file_path}: {str(e)}")
                         
             except Exception as e:
                 self.logger.error(f"Failed to load rules from {file_path}: {str(e)}")

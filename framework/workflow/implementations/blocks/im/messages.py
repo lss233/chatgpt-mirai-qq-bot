@@ -4,26 +4,26 @@ from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 
 
 class GetIMMessage(Block):
     """获取 IM 消息"""
-    def __init__(self, container: DependencyContainer):
-        outputs = {"msg": Output("msg", IMMessage, "Input message")}
-        super().__init__("msg_input", {}, outputs)
-        self.container = container
-
+    name = "msg_input"
+    container: DependencyContainer
+    outputs = {"msg": Output("msg", IMMessage, "Input message")}
+        
     def execute(self, **kwargs) -> Dict[str, Any]:
         msg = self.container.resolve(IMMessage)
         return {"msg": msg}
 
 class SendIMMessage(Block):
     """发送 IM 消息"""
-    def __init__(self, container: DependencyContainer):
-        inputs = {"msg": Input("msg", IMMessage, "Message to send")}
-        super().__init__("msg_sender", inputs, {})
-        self.container = container
+    name = "msg_sender"
+    inputs = {"msg": Input("msg", IMMessage, "Message to send")}
+    outputs = {}
+    container: DependencyContainer
 
     def execute(self, msg: IMMessage) -> Dict[str, Any]:
         src_msg = self.container.resolve(IMMessage)

@@ -1,20 +1,19 @@
 from typing import Any, Dict, List
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.im.message import IMMessage, TextMessage
 
 class GenerateHelp(Block):
     """生成帮助信息 block"""
-    
-    def __init__(self, container: DependencyContainer):
-        inputs = {}  # 不需要输入
-        outputs = {
-            "response": Output("response", IMMessage, "Help message")
-        }
-        super().__init__("generate_help", inputs, outputs)
-        self.container = container
+    name = "generate_help"
+    inputs = {}  # 不需要输入
+    outputs = {
+        "response": Output("response", IMMessage, "Help message")
+    }
+    container: DependencyContainer
         
     def execute(self) -> Dict[str, Any]:
         # 从容器获取调度规则注册表

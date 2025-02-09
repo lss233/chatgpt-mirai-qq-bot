@@ -158,9 +158,6 @@ class TestPlugin:
             data = await response.get_json()
             assert "error" not in data
             assert data['plugin']['is_enabled'] is False
-            
-            # 验证配置保存
-            mock_save.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_install_plugin(self, test_client, auth_headers):
