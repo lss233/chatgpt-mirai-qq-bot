@@ -40,8 +40,8 @@ jobs:
         echo "Downloading ffmpeg ..."
         Invoke-WebRequest  https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.0.2-essentials_build.7z -OutFile C:/tmp_files/ffmpeg.7z
         echo "Appreciate the contribution of gyan.dev"
-        
-        7z x C:/tmp_files/ffmpeg.zip -r -oC:/generated_files/ffmpeg
+
+        7z x C:/tmp_files/ffmpeg.7z -r -oC:/generated_files/ffmpeg
 
         echo "Downloading Python3.11 ..."
         Invoke-WebRequest https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip -OutFile C:/tmp_files/python.zip
@@ -55,16 +55,12 @@ jobs:
         mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
 
         echo "Replacing..."
+        dir C:/generated_files/files/scripts/
+        
         cp C:/generated_files/files/scripts/初始化.cmd C:/generated_files/
 
-        Invoke-WebRequest -URI https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox-0.12.6-1.mxe-cross-win64.7z -O C:/tmp_files/wkhtmltox.7z
-
         echo "Downloading vc_redist.exe..."
-        Invoke-WebRequest -URI https://aka.ms/vs/17/release/vc_redist.x64.exe -O "C:\generated_files\【语音功能依赖】vc_redist.x64.exe"
-
-        echo "Setting up wkhtmltox"
-        7z x C:/tmp_files/wkhtmltox.7z -oC:/tmp_files/
-        cp C:/tmp_files/wkhtmltox/bin/wkhtmltoimage.exe C:\generated_files\kirara_ai\
+        Invoke-WebRequest -URI https://aka.ms/vs/17/release/vc_redist.x64.exe -OutFile "C:\generated_files\【语音功能依赖】vc_redist.x64.exe"
 
         echo "Downloading packages..."
         cd C:/generated_files/kirara_ai
@@ -74,10 +70,25 @@ jobs:
 
         echo "Packing..."
         cd C:/generated_files
-        7z a quickstart-windows-kirara-ai-amd64.zip C:\generated_files\*
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: quickstart-windows-kirara-ai-amd64.zip
+        name: quickstart-windows-kirara-ai-amd64
         path: |
-          C:\generated_files\quickstart-windows-kirara-ai-amd64.zip
+          C:\generated_files\
+    - name: Create Release Archive
+      if: startsWith(github.ref, 'refs/tags/')
+      shell: pwsh
+      run: |
+        Write-Host "Creating archive for release..."
+        Compress-Archive -Path C:\generated_files\* -DestinationPath C:\generated_files\quickstart-windows-kirara-ai-amd64.zip
+    - name: Upload compressed files to release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: C:\generated_files\quickstart-windows-kirara-ai-amd64.zip
+        asset_name: Windows-quickstart-kirara-ai-${{ github.ref_name }}.zip
+        tag: ${{ github.ref_name }}
+        overwrite: false
+        body: "quickstart-windows-kirara-ai-amd64.zip 是为 Windows x64 用户准备的快速启动包"
