@@ -14,15 +14,22 @@ RUN apt-get update && \
 RUN export DBUS_SESSION_BUS_ADDRESS=`dbus-daemon --fork --config-file=/usr/share/dbus-1/session.conf --print-address`
 
 RUN mkdir -p /app
+
 WORKDIR /app
 
 COPY requirements.txt /app
-RUN pip install --no-cache-dir -r requirements.txt && \
+
+RUN wget https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases/download/v0.0.1/dist.zip -O dist.zip \
+    && unzip dist.zip -d web \
+    && rm dist.zip && \
+    pip install --no-cache-dir -r requirements.txt && \
     pip cache purge && \
     python -c "from pycloudflared import try_cloudflare; try_cloudflare(-1)" || true
 
 RUN apt-get remove --purge -yq binutils
 
 COPY . /app
+
+EXPOSE 8080
 
 CMD ["/bin/bash", "/app/docker/start.sh"]
