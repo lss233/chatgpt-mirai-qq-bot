@@ -38,7 +38,9 @@ jobs:
         cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\kirara_ai\
 
         echo "Downloading ffmpeg ..."
-        Invoke-WebRequest  https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-6.0-full_build.7z -OutFile C:/tmp_files/ffmpeg.7z
+        Invoke-WebRequest  https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.0.2-essentials_build.7z -OutFile C:/tmp_files/ffmpeg.7z
+        echo "Appreciate the contribution of gyan.dev"
+        
         7z x C:/tmp_files/ffmpeg.zip -r -oC:/generated_files/ffmpeg
 
         echo "Downloading Python3.11 ..."
