@@ -13,6 +13,8 @@ on:
       - 'master'
       - 'dev'
       - 'refactoring-v3-mvp'
+    tags:
+      - '**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -68,8 +70,21 @@ jobs:
         ..\python3.11\python.exe -m pip install -r requirements.txt
         ..\python3.11\python.exe -c exec("""from pycloudflared import try_cloudflare \ntry: try_cloudflare(-1)\nexcept:... """)
 
-        echo "Packing..."
         cd C:/generated_files
+
+    - name: Download and extract web dist.zip
+      shell: pwsh
+      run: |
+        # 获取最新的 release 信息
+        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases"
+        $zipUrl = $latestRelease[0].assets[0].browser_download_url
+
+        # 下载 dist.zip 文件
+        Invoke-WebRequest -Uri $zipUrl -OutFile "C:\generated_files\dist.zip"
+
+        # 解压 dist.zip 文件到 C:/generated_files 目录
+        Expand-Archive -Path "C:\generated_files\dist.zip" -DestinationPath "C:\generated_files\kirara_ai\web"
+
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4
       with:
