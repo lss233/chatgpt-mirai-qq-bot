@@ -89,14 +89,20 @@ class ChatCompletion(Block):
     outputs = {"resp": Output("resp", LLMChatResponse, "LLM response")}
     container: DependencyContainer
 
+    def __init__(self, model_name: Optional[str] = None):
+        self.model_name = model_name
+
     def execute(self, prompt: List[LLMChatMessage]) -> Dict[str, Any]:
         llm_manager = self.container.resolve(LLMManager)
         config = self.container.resolve(GlobalConfig)
-        
-        default_model = config.defaults.llm_model
-        llm = llm_manager.get_llm(default_model)
-        req = LLMChatRequest(messages=prompt, model=default_model)
+        model_id = self.model_name
+        if not model_id:
+            model_id = config.defaults.llm_model
+
+        llm = llm_manager.get_llm(model_id)
+        req = LLMChatRequest(messages=prompt, model=model_id)
         return {"resp": llm.chat(req)}
+
 
 class ChatResponseConverter(Block):
     name = "chat_response_converter"
