@@ -22,6 +22,14 @@ class IMRegistry:
             raise ValueError(f"IMAdapter with name '{name}' is already registered.")
         self._registry[name] = adapter_class
         self._config_registry[name] = config_class
+        
+    def unregister(self, name: str):
+        """
+        注销一个 adapter。
+        :param name: adapter 的名称。
+        """
+        del self._registry[name]
+        del self._config_registry[name]
 
     def get(self, name: str) -> Type[IMAdapter]:
         """

@@ -100,9 +100,9 @@ async def enable_plugin(plugin_name: str):
         await loader.enable_plugin(plugin_name)
         
         # 更新配置
-        if plugin_name and plugin_name in config.plugins.enable and not plugin_info.is_internal:
+        if plugin_name and plugin_name not in config.plugins.enable and not plugin_info.is_internal:
             config.plugins.enable.append(plugin_name)
-            ConfigLoader.save_config_with_backup("config.yaml", config)
+        ConfigLoader.save_config_with_backup("config.yaml", config)
         
         return PluginResponse(plugin=plugin_info).model_dump()
     except Exception as e:
@@ -127,7 +127,8 @@ async def disable_plugin(plugin_name: str):
         # 更新配置
         if plugin_name and plugin_name in config.plugins.enable and not plugin_info.is_internal:
             config.plugins.enable.remove(plugin_name)
-            ConfigLoader.save_config_with_backup("config.yaml", config)
+            
+        ConfigLoader.save_config_with_backup("config.yaml", config)
 
         return PluginResponse(plugin=plugin_info).model_dump()
     except Exception as e:

@@ -104,6 +104,7 @@ class PluginLoader:
         )
         self.plugin_infos[plugin_name] = plugin_info
         self.logger.info(f"Internal plugin {plugin_name} loaded successfully")
+        return plugin
 
     def _load_external_plugin(self, plugin_name: str):
         """加载外部插件"""
@@ -125,11 +126,11 @@ class PluginLoader:
                 raise TypeError(f"Plugin {plugin_name} must inherit from the Plugin class")
             
             # 实例化插件并启动
-            plugin = self.instantiate_plugin(plugin_class)
+            plugin: Plugin = self.instantiate_plugin(plugin_class)
             self.plugins.append(plugin)
             
             self.logger.info(f"Successfully loaded external plugin: {plugin_name}")
-            
+            return plugin
         except Exception as e:
             self.logger.error(f"Failed to load external plugin {plugin_name}: {e}")
             raise
@@ -259,13 +260,17 @@ class PluginLoader:
         try:
             # 加载插件
             if plugin_info.is_internal:
-                self._load_internal_plugin(plugin_name)
+                plugin = self._load_internal_plugin(plugin_name)
             else:
-                self._load_external_plugin(plugin_name)
+                plugin =self._load_external_plugin(plugin_name)
             
             # 更新配置
             if plugin_name not in self.config.plugins.enable:
                 self.config.plugins.enable.append(plugin_name)
+                
+            plugin.on_load()
+            
+            plugin.on_start()
             
             plugin_info.is_enabled = True
             

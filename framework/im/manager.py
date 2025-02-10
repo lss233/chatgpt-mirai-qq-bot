@@ -107,7 +107,7 @@ class IMManager:
         for key, adapter in self.adapters.items():
             loop.run_until_complete(self._stop_adapter(key, adapter))
             
-    def get_adapters(self) -> Dict[str, any]:
+    def get_adapters(self) -> Dict[str, IMAdapter]:
         """
         获取所有已启动的 adapter。
         :return: 已启动的 adapter 字典。
