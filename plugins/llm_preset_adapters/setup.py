@@ -9,7 +9,8 @@ setup(
     install_requires=[
         "openai",
         "google-generativeai",
-        "anthropic"
+        "anthropic",
+        "requests"
     ],
     entry_points={
         "chatgpt_mirai.plugins": [
