@@ -5,10 +5,8 @@ from framework.logger import get_logger
 from framework.workflow.core.workflow.base import Workflow
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
-from framework.workflow.core.dispatch.rule import DispatchRule, FallbackMatchRule
+from framework.workflow.core.dispatch.rule import DispatchRule
 from framework.workflow.core.execution.executor import WorkflowExecutor
-from framework.workflow.implementations.factories.default_factory import DefaultWorkflowFactory
-
 
 class WorkflowDispatcher:
     """工作流调度器"""
@@ -19,21 +17,6 @@ class WorkflowDispatcher:
         # 从容器获取注册表
         self.workflow_registry = container.resolve(WorkflowRegistry)
         self.dispatch_registry = container.resolve(DispatchRuleRegistry)
-        
-        # 初始化默认的兜底规则
-        self.__init_fallback()
-
-    def __init_fallback(self):
-        """初始化默认的兜底规则"""
-        fallback_factory = DefaultWorkflowFactory()
-        workflow_builder = fallback_factory.create_default_workflow()
-        fallback_rule = FallbackMatchRule(lambda container: workflow_builder.build(container))
-        fallback_rule.rule_id = "default"
-        fallback_rule.name = "默认规则"
-        fallback_rule.description = "处理所有未匹配的消息"
-        fallback_rule.workflow_id = "default"
-        self.dispatch_registry.register(fallback_rule)
-        self.logger.info("Registered fallback dispatch rule")
 
     def register_rule(self, rule: DispatchRule):
         """注册一个调度规则"""

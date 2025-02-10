@@ -81,7 +81,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 
         user_prompt = """{user_name}说：{user_msg}"""
         
-        return (WorkflowBuilder("default_workflow")
+        return (WorkflowBuilder("（默认）角色扮演")
             .use(GetIMMessage, name="get_message")
             .parallel([
                 (ToggleEditState, {"is_editing": True}),

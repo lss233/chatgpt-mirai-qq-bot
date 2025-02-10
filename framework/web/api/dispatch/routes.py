@@ -82,21 +82,14 @@ async def create_rule():
     if rule_config.type not in DispatchRule.rule_types:
         return jsonify({"error": "Invalid rule type"}), 400
     
-    # 获取规则类和配置类
-    rule_class = DispatchRule.rule_types[rule_config.type]
-    config_class = rule_class.config_class
-    
     try:
-        # 创建规则配置实例
-        rule_type_config = config_class(**rule_config.config)
-        
         # 创建规则
         rule = registry.create_rule(
             rule_id=rule_config.rule_id,
             name=rule_config.name,
             description=rule_config.description,
-            type=rule_config.type,
-            config=rule_type_config,
+            rule_type=rule_config.type,
+            rule_config=rule_config.config,
             priority=rule_config.priority,
             workflow_id=rule_config.workflow_id,
             enabled=rule_config.enabled,
@@ -146,23 +139,17 @@ async def update_rule(rule_id: str):
     if rule_config.type not in DispatchRule.rule_types:
         return jsonify({"error": "Invalid rule type"}), 400
     
-    # 获取规则类和配置类
-    rule_class = DispatchRule.rule_types[rule_config.type]
-    config_class = rule_class.config_class
-    
     try:
-        # 创建规则配置实例
-        rule_type_config = config_class(**rule_config.config)
         
         # 更新规则
         rule = registry.update_rule(
             rule_id=rule_config.rule_id,
             name=rule_config.name,
             description=rule_config.description,
-            type=rule_config.type,
-            config=rule_type_config,
-            priority=rule_config.priority,
+            rule_type=rule_config.type,
             workflow_id=rule_config.workflow_id,
+            rule_config=rule_config.config,
+            priority=rule_config.priority,
             enabled=rule_config.enabled,
             metadata=rule_config.metadata
         )

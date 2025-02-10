@@ -20,9 +20,11 @@ class TelegramAdapterPlugin(Plugin):
             for key, adapter in self.im_manager.get_adapters().items():
                 if isinstance(adapter, TelegramAdapter):
                     tasks.append(self.im_manager.stop_adapter(key, loop))
-                    self.im_manager.delete_adapter(key)
+            for key in list(self.im_manager.get_adapters().keys()):
+                self.im_manager.delete_adapter(key)
             loop.run_until_complete(asyncio.gather(*tasks))
         except Exception as e:
+
             logger.error(f"Error stopping Telegram adapter: {e}")
         finally:
             self.im_registry.unregister("telegram")

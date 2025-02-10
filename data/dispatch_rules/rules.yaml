@@ -1,0 +1,123 @@
+- rule_id: chat_normal
+  name: 普通聊天
+  description: 普通聊天，使用默认参数
+  type: prefix
+  priority: 5
+  workflow_id: chat:normal
+  enabled: true
+  metadata:
+    category: chat
+    permission: user
+    temperature: 0.7
+  prefix: /chat
+- rule_id: chat_creative
+  name: 创意聊天
+  description: 创意聊天，使用更高的温度参数
+  type: keyword
+  priority: 5
+  workflow_id: chat:creative
+  enabled: true
+  metadata:
+    category: chat
+    permission: user
+    temperature: 0.9
+  keywords:
+  - 创意
+  - 发散
+  - brainstorm
+- rule_id: chat_roleplay
+  name: 角色扮演
+  description: 角色扮演聊天，自动提取角色设定
+  type: regex
+  priority: 8
+  workflow_id: chat:roleplay
+  enabled: true
+  metadata:
+    category: chat
+    permission: user
+    temperature: 0.8
+  pattern: ^扮演(.+?)[:：]
+- rule_id: game_dice
+  name: 骰子
+  description: 骰子游戏，支持 XdY 格式
+  type: regex
+  priority: 5
+  workflow_id: game:dice
+  enabled: true
+  metadata: {}
+  pattern: ^[.。]roll\s*(\d+)?d(\d+)
+- rule_id: game_gacha
+  name: 抽卡
+  description: 抽卡模拟器
+  type: keyword
+  priority: 5
+  workflow_id: game:gacha
+  enabled: true
+  metadata: {}
+  keywords:
+  - 抽卡
+  - 十连
+  - 单抽
+- rule_id: system_help
+  name: 帮助命令
+  description: 显示帮助信息
+  type: prefix
+  priority: 10
+  workflow_id: system:help
+  enabled: true
+  metadata:
+    category: system
+    permission: user
+  prefix: /help
+- rule_id: system_status
+  name: 系统状态
+  description: 显示系统状态
+  type: prefix
+  priority: 10
+  workflow_id: system:status
+  enabled: true
+  metadata:
+    category: system
+    permission: user
+  prefix: /status
+- rule_id: system_admin
+  name: 管理员命令
+  description: 管理员命令，需要管理员权限
+  type: regex
+  priority: 20
+  workflow_id: system:admin
+  enabled: true
+  metadata:
+    category: system
+    permission: admin
+  pattern: ^/(ban|unban|kick|mute) \S+
+- rule_id: system_settings
+  name: 系统设置
+  description: 修改系统设置
+  type: prefix
+  priority: 10
+  workflow_id: system:settings
+  enabled: true
+  metadata:
+    category: system
+    permission: admin
+  prefix: /settings
+- rule_id: system_clear_memory
+  name: 清空记忆
+  description: 清空当前对话的记忆
+  type: prefix
+  priority: 10
+  workflow_id: system:clear_memory
+  enabled: true
+  metadata:
+    category: system
+    permission: user
+  prefix: /清空记忆
+- rule_id: fallback
+  name: 默认规则
+  description: 当上述规则均没有匹配成功时，执行此工作流。
+  type: fallback
+  priority: 0
+  workflow_id: chat:normal
+  enabled: true
+  metadata: {}

@@ -12,9 +12,6 @@ def register_system_workflows(registry: WorkflowRegistry):
     
     # 系统相关工作流
     registry.register_preset_workflow("system", "help", SystemWorkflowFactory.create_help_workflow())
-    registry.register_preset_workflow("system", "admin", SystemWorkflowFactory.create_help_workflow())
-    registry.register_preset_workflow("system", "status", SystemWorkflowFactory.create_help_workflow())
-    registry.register_preset_workflow("system", "settings", SystemWorkflowFactory.create_help_workflow())
     registry.register_preset_workflow("system", "clear_memory", SystemWorkflowFactory.create_clear_memory_workflow())
     
     # 聊天相关工作流
