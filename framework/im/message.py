@@ -25,9 +25,13 @@ class TextMessage(MessageElement):
     
     def to_plain(self):
         return self.text
+    
+    def __repr__(self):
+        return f"TextMessage(text={self.text})"
 
 # 定义媒体消息的基类
 class MediaMessage(MessageElement):
+
     def __init__(self, url: Optional[str] = None, path: Optional[str] = None, data: Optional[bytes] = None, format: Optional[str] = None):
         self.url = url
         self.path = path
@@ -93,9 +97,13 @@ class ImageMessage(MediaMessage):
         
     def to_plain(self):
         return "[ImageMessage]"
+    
+    def __repr__(self):
+        return f"ImageMessage(url={self.url}, path={self.path}, format={self.format})"
 
 # 定义@消息元素
 class AtElement(MessageElement):
+
     def __init__(self, user_id: str, nickname: str = ""):
         self.user_id = user_id
         self.nickname = nickname
@@ -112,10 +120,14 @@ class AtElement(MessageElement):
     
     def to_plain(self):
         return f"@{self.nickname or self.user_id}"
+    
+    def __repr__(self):
+        return f"AtElement(user_id={self.user_id}, nickname={self.nickname})"
 
 
 # 定义回复消息元素
 class ReplyElement(MessageElement):
+
     def __init__(self, message_id: str):
         self.message_id = message_id
 
@@ -130,10 +142,14 @@ class ReplyElement(MessageElement):
     
     def to_plain(self):
         return f"[Reply:{self.message_id}]"
+    
+    def __repr__(self):
+        return f"ReplyElement(message_id={self.message_id})"
 
 
 # 定义文件消息元素
 class FileElement(MediaMessage):
+
     def to_dict(self):
         return {
             "type": "file",
@@ -145,9 +161,13 @@ class FileElement(MediaMessage):
     
     def to_plain(self):
         return f"[File:{self.path or self.url or 'unnamed'}]"
+    
+    def __repr__(self):
+        return f"FileElement(url={self.url}, path={self.path}, format={self.format})"
 
 # 定义JSON消息元素
 class JsonElement(MessageElement):
+
     def __init__(self, data: str):
         self.data = data
 
@@ -162,10 +182,14 @@ class JsonElement(MessageElement):
     
     def to_plain(self):
         return "[JSON Message]"
+    
+    def __repr__(self):
+        return f"JsonElement(data={self.data})"
 
 
 # 定义表情消息元素
 class FaceElement(MessageElement):
+
     def __init__(self, face_id: str):
         self.face_id = face_id
 
@@ -180,7 +204,9 @@ class FaceElement(MessageElement):
     
     def to_plain(self):
         return f"[Face:{self.face_id}]"
-
+    
+    def __repr__(self):
+        return f"FaceElement(face_id={self.face_id})"
 
 # 定义视频消息元素
 class VideoElement(MessageElement):
@@ -198,10 +224,13 @@ class VideoElement(MessageElement):
     
     def to_plain(self):
         return "[Video Message]"
-
+    
+    def __repr__(self):
+        return f"VideoElement(file={self.file})"
 
 # 定义消息类
 class IMMessage:
+
     """
     IM消息类，用于表示一条完整的消息。
     包含发送者信息和消息元素列表。
@@ -218,8 +247,12 @@ class IMMessage:
     message_elements: List[MessageElement]
     raw_message: Optional[dict]
     
+    def __repr__(self):
+        return f"IMMessage(sender={self.sender}, message_elements={self.message_elements}, raw_message={self.raw_message})"
+    
     @property
     def content(self) -> str:
+
         """获取消息的纯文本内容"""
         return ''.join([element.to_plain() for element in self.message_elements])
         

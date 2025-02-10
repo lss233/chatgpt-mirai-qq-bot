@@ -1,3 +1,4 @@
+import copy
 from typing import List, Type, Union, Callable, Dict, Any, Optional, TextIO, Tuple
 from dataclasses import dataclass
 from framework.ioc.container import DependencyContainer
@@ -327,11 +328,12 @@ class WorkflowBuilder:
     def build(self, container: DependencyContainer) -> Workflow:
         """构建工作流"""
         # Add unique name for each unnamed block
+        # TODO: 需要优化，不能直接修改 blocks 列表
         for block in self.blocks:
             if not block.name:
                 block.name = self._generate_unique_name(block.__class__.__name__)
-            if not hasattr(block, 'container'):
-                block.container = container
+            block.container = container
+
         return Workflow(self.name, self.blocks, self.wires)
 
     def save_to_yaml(self, file_path: str, container: DependencyContainer):
