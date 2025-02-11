@@ -27,8 +27,10 @@ def create_app(container: DependencyContainer) -> Quart:
     
     @app.route('/')
     async def index():
-        print("Serving index.html")
-        return await app.send_static_file('index.html')
+        try:
+            return await app.send_static_file('index.html')
+        except Exception as e:
+            return "Error: Web UI not found. Please install from <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>here</a>."
     @app.route('/<path:path>')
     async def serve_static(path):
         if path.startswith('backend-api'):
@@ -86,7 +88,11 @@ class WebServer:
         self.server_task = asyncio.create_task(
             serve(self.app, self.hypercorn_config)
         )
-    
+        self.logger.info(
+            f"监听地址：http://{self.config.web.host}:{self.config.web.port}/")
+        self.logger.info(
+            f"WebUI 本地访问地址：http://127.0.0.1:{self.config.web.port}/")
+        
     async def stop(self):
         """停止Web服务器"""
         if hasattr(self, 'server_task'):
