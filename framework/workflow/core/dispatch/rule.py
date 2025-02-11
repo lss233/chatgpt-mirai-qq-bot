@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.workflow import Workflow
+from framework.workflow.core.workflow.registry import WorkflowRegistry
 
 class RuleConfig(BaseModel):
     """规则配置的基类"""
@@ -31,21 +32,21 @@ class DispatchRule(ABC):
     config_class: ClassVar[Type[RuleConfig]]
     type_name: ClassVar[str]
     
-    def __init__(self, workflow_factory: Callable[[DependencyContainer], Workflow]):
+    def __init__(self, workflow_registry: WorkflowRegistry, workflow_id: str):
         """
         初始化调度规则。
         
         Args:
-            workflow_factory: 用于构造工作流的工厂函数
+            workflow_id: 工作流ID
         """
-        self.workflow_factory = workflow_factory
+        self.workflow_registry = workflow_registry
         self.rule_id: str = ""
         self.name: str = ""
         self.description: str = ""
         self.priority: int = 5  # 默认优先级为5
         self.enabled: bool = True  # 是否启用
         self.metadata: Dict[str, Any] = {}  # 元数据
-        self.workflow_id: str = ""  # 关联的工作流ID
+        self.workflow_id: str = workflow_id
     
     @abstractmethod
     def match(self, message: IMMessage) -> bool:
@@ -67,7 +68,7 @@ class DispatchRule(ABC):
         Returns:
             Workflow: 工作流实例
         """
-        return self.workflow_factory(container)
+        return self.workflow_registry.get(self.workflow_id, container)
     
     @classmethod
     def register_rule_type(cls, rule_class: Type["DispatchRule"]):
@@ -88,7 +89,7 @@ class DispatchRule(ABC):
         
     @classmethod
     @abstractmethod
-    def from_config(cls, config: RuleConfig, workflow_factory: Callable[[DependencyContainer], Workflow]) -> "DispatchRule":
+    def from_config(cls, config: RuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "DispatchRule":
         """从配置创建规则实例"""
         pass
     
@@ -101,8 +102,8 @@ class RegexMatchRule(DispatchRule):
     config_class = RegexRuleConfig
     type_name = "regex"
     
-    def __init__(self, pattern: str, workflow_factory: Callable[[DependencyContainer], Workflow]):
-        super().__init__(workflow_factory)
+    def __init__(self, pattern: str, workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
         import re
         self.pattern = re.compile(pattern)
         
@@ -113,8 +114,8 @@ class RegexMatchRule(DispatchRule):
         return RegexRuleConfig(pattern=self.pattern.pattern)
         
     @classmethod
-    def from_config(cls, config: RegexRuleConfig, workflow_factory: Callable[[DependencyContainer], Workflow]) -> "RegexMatchRule":
-        return cls(config.pattern, workflow_factory)
+    def from_config(cls, config: RegexRuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "RegexMatchRule":
+        return cls(config.pattern, workflow_registry, workflow_id)
         
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.rule_id}', pattern='{self.pattern.pattern}', priority={self.priority}, enabled={self.enabled})"
@@ -125,8 +126,8 @@ class PrefixMatchRule(DispatchRule):
     config_class = PrefixRuleConfig
     type_name = "prefix"
     
-    def __init__(self, prefix: str, workflow_factory: Callable[[DependencyContainer], Workflow]):
-        super().__init__(workflow_factory)
+    def __init__(self, prefix: str, workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
         self.prefix = prefix
         
     def match(self, message: IMMessage) -> bool:
@@ -136,8 +137,8 @@ class PrefixMatchRule(DispatchRule):
         return PrefixRuleConfig(prefix=self.prefix)
         
     @classmethod
-    def from_config(cls, config: PrefixRuleConfig, workflow_factory: Callable[[DependencyContainer], Workflow]) -> "PrefixMatchRule":
-        return cls(config.prefix, workflow_factory)
+    def from_config(cls, config: PrefixRuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "PrefixMatchRule":
+        return cls(config.prefix, workflow_registry, workflow_id)
         
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.rule_id}', prefix='{self.prefix}', priority={self.priority}, enabled={self.enabled})"
@@ -148,8 +149,8 @@ class KeywordMatchRule(DispatchRule):
     config_class = KeywordRuleConfig
     type_name = "keyword"
     
-    def __init__(self, keywords: List[str], workflow_factory: Callable[[DependencyContainer], Workflow]):
-        super().__init__(workflow_factory)
+    def __init__(self, keywords: List[str], workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
         self.keywords = keywords
         
     def match(self, message: IMMessage) -> bool:
@@ -159,8 +160,8 @@ class KeywordMatchRule(DispatchRule):
         return KeywordRuleConfig(keywords=self.keywords)
         
     @classmethod
-    def from_config(cls, config: KeywordRuleConfig, workflow_factory: Callable[[DependencyContainer], Workflow]) -> "KeywordMatchRule":
-        return cls(config.keywords, workflow_factory)
+    def from_config(cls, config: KeywordRuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "KeywordMatchRule":
+        return cls(config.keywords, workflow_registry, workflow_id)
         
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.rule_id}', keywords={self.keywords}, priority={self.priority}, enabled={self.enabled})"
@@ -171,8 +172,8 @@ class FallbackMatchRule(DispatchRule):
     config_class = RuleConfig
     type_name = "fallback"
     
-    def __init__(self, workflow_factory: Callable[[DependencyContainer], Workflow]):
-        super().__init__(workflow_factory)
+    def __init__(self, workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
         self.priority = 0  # 兜底规则优先级最低
         
     def match(self, message: IMMessage) -> bool:
@@ -182,8 +183,8 @@ class FallbackMatchRule(DispatchRule):
         return RuleConfig()
         
     @classmethod
-    def from_config(cls, config: RuleConfig, workflow_factory: Callable[[DependencyContainer], Workflow]) -> "FallbackMatchRule":
-        return cls(workflow_factory)
+    def from_config(cls, config: RuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "FallbackMatchRule":
+        return cls(workflow_registry, workflow_id)
 
 
 # 注册所有规则类型

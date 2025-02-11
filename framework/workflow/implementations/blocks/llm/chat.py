@@ -5,6 +5,8 @@ from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
 from framework.llm.llm_manager import LLMManager
 from framework.ioc.container import DependencyContainer
+from framework.llm.llm_registry import LLMAbility
+from framework.logger import get_logger
 from framework.workflow.core.block import Block
 from framework.workflow.core.block.input_output import Input
 from framework.workflow.core.block.input_output import Output
@@ -91,15 +93,23 @@ class ChatCompletion(Block):
 
     def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name
+        self.logger = get_logger("ChatCompletionBlock")
 
     def execute(self, prompt: List[LLMChatMessage]) -> Dict[str, Any]:
         llm_manager = self.container.resolve(LLMManager)
-        config = self.container.resolve(GlobalConfig)
         model_id = self.model_name
         if not model_id:
-            model_id = config.defaults.llm_model
-
+            model_id = llm_manager.get_llm_id_by_ability(LLMAbility.TextChat)
+            if not model_id:
+                raise ValueError("No available LLM models found")
+            else:
+                self.logger.info(f"Model id unspecified, using default model: {model_id}")
+        else:
+            self.logger.debug(f"Using specified model: {model_id}")
+            
         llm = llm_manager.get_llm(model_id)
+        if not llm:
+            raise ValueError(f"LLM {model_id} not found, please check the model name")
         req = LLMChatRequest(messages=prompt, model=model_id)
         return {"resp": llm.chat(req)}
 

@@ -4,7 +4,7 @@ from framework.config.global_config import GlobalConfig, LLMBackendConfig
 from framework.ioc.container import DependencyContainer
 from framework.ioc.inject import Inject
 from framework.llm.adapter import LLMBackendAdapter
-from framework.llm.llm_registry import LLMBackendRegistry
+from framework.llm.llm_registry import LLMAbility, LLMBackendRegistry
 from framework.logger import get_logger
 
 class LLMManager:
@@ -120,3 +120,22 @@ class LLMManager:
             return None
         # TODO: 后续考虑支持更多的选择策略
         return random.choice(backends)
+    
+    def get_llm_id_by_ability(self, ability: LLMAbility) -> str:
+        """
+        根据指定的能力获取严格符合要求的 LLM 适配器列表。
+        :param ability: 指定的能力。
+        :return: 符合要求的 LLM 适配器列表。
+        """
+        adapter_types = self.backend_registry.search_adapter_by_ability(ability)
+        matched_backends = set()
+        for backend_id, backends in self.active_backends.items():
+            for backend in backends:
+                for adapter_type in adapter_types:
+                    if isinstance(backend, adapter_type):
+                        matched_backends.add(backend_id)
+                        break
+                    
+        if not matched_backends:
+            return None
+        return random.choice(list(matched_backends))

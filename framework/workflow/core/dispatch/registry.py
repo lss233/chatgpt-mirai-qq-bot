@@ -54,7 +54,7 @@ class DispatchRuleRegistry:
         config = rule_class.config_class(**rule_config)
         
         # 创建规则实例
-        rule = rule_class.from_config(config, workflow_builder.build)
+        rule = rule_class.from_config(config, self.workflow_registry, workflow_id)
         
         # 设置规则属性
         rule.rule_id = rule_id
