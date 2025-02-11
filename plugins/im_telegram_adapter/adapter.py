@@ -59,10 +59,10 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
         """处理接收到的消息"""
         # 将 Telegram 消息转换为 Message 对象
         message = self.convert_to_message(update)
-
-        await self.dispatcher.dispatch(self, message)
-        # 打印转换后的 Message 对象
-        print("Converted Message:", message.to_dict())
+        try:
+            await self.dispatcher.dispatch(self, message)
+        except Exception as e:
+            await update.message.reply_text(f"Workflow execution failed, please try again later: {str(e)}")
 
     def convert_to_message(self, raw_message: Update) -> IMMessage:
         """
