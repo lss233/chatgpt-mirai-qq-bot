@@ -12,17 +12,17 @@ class ChatMemoryQuery(Block):
         inputs = {"msg": Input("msg", IMMessage, "Input message")}
         outputs = {"memory_content": Output("memory_content", str, "memory messages")}
         super().__init__("chat_memory_query", inputs, outputs)
-        
+
         self.memory_manager = container.resolve(MemoryManager)
-        
+
         # 如果没有指定作用域类型，使用配置中的默认值
         if scope_type is None:
             scope_type = self.memory_manager.config.default_scope
-            
+
         # 获取作用域实例
         scope_registry = container.resolve(ScopeRegistry)
         self.scope = scope_registry.get_scope(scope_type)
-        
+
         # 获取解析器实例
         decomposer_registry = container.resolve(DecomposerRegistry)
         self.decomposer = decomposer_registry.get_decomposer("default")
@@ -40,17 +40,17 @@ class ChatMemoryStore(Block):
         }
         outputs = {}
         super().__init__("chat_memory_store", inputs, outputs)
-        
+
         self.memory_manager = container.resolve(MemoryManager)
-        
+
         # 如果没有指定作用域类型，使用配置中的默认值
         if scope_type is None:
             scope_type = self.memory_manager.config.default_scope
-            
+
         # 获取作用域实例
         scope_registry = container.resolve(ScopeRegistry)
         self.scope = scope_registry.get_scope(scope_type)
-        
+
         # 获取组合器实例
         composer_registry = container.resolve(ComposerRegistry)
         self.composer = composer_registry.get_composer("default")
@@ -59,9 +59,44 @@ class ChatMemoryStore(Block):
         # 存储用户消息
         user_entry = self.composer.compose(user_msg)
         self.memory_manager.store(self.scope, user_entry)
-        
+
         # 存储LLM响应
         llm_entry = self.composer.compose(llm_resp)
         self.memory_manager.store(self.scope, llm_entry)
-        
-        return {} 
+
+        return {}
+class ChatMemoryDirectStore(Block):
+    name = "chat_memory_store"
+
+    inputs = {
+        "user_msg": Input("user_msg", IMMessage, "User message")
+    }
+    outputs = {}
+    container: DependencyContainer
+
+    def __init__(self, scope_type: Optional[str] = None):
+        self.scope_type = scope_type
+
+    def execute(self, user_msg: IMMessage) -> Dict[str, Any]:
+        self.memory_manager = self.container.resolve(MemoryManager)
+
+
+        # 如果没有指定作用域类型，使用配置中的默认值
+        if self.scope_type is None:
+            self.scope_type = self.memory_manager.config.default_scope
+
+        # 获取作用域实例
+        scope_registry = self.container.resolve(ScopeRegistry)
+        self.scope = scope_registry.get_scope(self.scope_type)
+
+        # 获取组合器实例
+        composer_registry = self.container.resolve(ComposerRegistry)
+        self.composer = composer_registry.get_composer("default")
+
+        # 存储用户消息和LLM响应
+        composed_messages = [user_msg]
+        print(composed_messages)
+        memory_entries = self.composer.compose(user_msg.sender, composed_messages)
+        self.memory_manager.store(self.scope, memory_entries)
+
+        return {}
