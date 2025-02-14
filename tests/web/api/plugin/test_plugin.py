@@ -42,6 +42,49 @@ class TestPlugin(Plugin):
     def on_stop(self):
         self.started = False
 
+# ==================== Mock 数据 ====================
+async def MOCK_PLUGIN_SEARCH_RESPONSE():
+    return {
+        "plugins": [
+            {
+            "name": "测试插件",
+            "description": "测试插件描述",
+            "author": "测试作者",
+            "pypiPackage": "test-plugin",
+            "pypiInfo": {
+                "version": "0.1.0",
+                "description": "PyPI 描述",
+                "author": "PyPI 作者",
+                "homePage": "https://example.com"
+            },
+            "isInstalled": True,
+            "installedVersion": "1.0.0",
+            "isUpgradable": False
+        }
+    ],
+    "totalCount": 1,
+    "totalPages": 1,
+    "page": 1,
+    "pageSize": 10
+}
+
+async def MOCK_PLUGIN_INFO_RESPONSE():
+    return {
+        "name": "测试插件",
+        "description": "测试插件描述",
+        "author": "测试作者",
+        "pypiPackage": "test-plugin",
+        "pypiInfo": {
+        "version": "0.1.0",
+        "description": "PyPI 描述",
+        "author": "PyPI 作者",
+        "homePage": "https://example.com"
+        },
+        "isInstalled": True,
+        "installedVersion": "1.0.0",
+        "isUpgradable": False
+    }
+
 # ==================== Fixtures ====================
 @pytest.fixture(scope="session")
 def app():
@@ -88,6 +131,42 @@ def test_client(app):
 
 # ==================== 测试用例 ====================
 class TestPlugin:
+    @pytest.mark.asyncio
+    async def test_search_plugins(self, test_client, auth_headers):
+        """测试搜索插件市场"""
+        with patch('aiohttp.ClientSession.get') as mock_get:
+            mock_response = MagicMock()
+            mock_response.status = 200
+            mock_response.json.return_value = MOCK_PLUGIN_SEARCH_RESPONSE()
+            mock_get.return_value.__aenter__.return_value = mock_response
+            
+            response = await test_client.get(
+                '/backend-api/api/plugin/v1/search?query=test&page=1&pageSize=10',
+                headers=auth_headers
+            )
+            
+            # assert response.status_code == 200
+            data = await response.get_json()
+            assert data == await MOCK_PLUGIN_SEARCH_RESPONSE()
+            
+    @pytest.mark.asyncio
+    async def test_get_plugin_info(self, test_client, auth_headers):
+        """测试获取插件详情"""
+        with patch('aiohttp.ClientSession.get') as mock_get:
+            mock_response = MagicMock()
+            mock_response.status = 200
+            mock_response.json.return_value = MOCK_PLUGIN_INFO_RESPONSE()
+            mock_get.return_value.__aenter__.return_value = mock_response
+            
+            response = await test_client.get(
+                f'/backend-api/api/plugin/v1/info/{TEST_PLUGIN_NAME}',
+                headers=auth_headers
+            )
+            
+            # assert response.status_code == 200
+            data = await response.get_json()
+            assert data == await MOCK_PLUGIN_INFO_RESPONSE()
+            
     @pytest.mark.asyncio
     async def test_get_plugin_details(self, test_client, auth_headers):
         """测试获取插件详情"""

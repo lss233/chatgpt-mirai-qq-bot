@@ -112,6 +112,73 @@ PUT/backend-api/api/plugin/plugins/{plugin_name}
 
 更新插件到最新版本。注意：内部插件不支持更新。
 
+### 搜索插件市场
+
+```http
+GET/backend-api/api/v1/search?query={query}&page={page}&pageSize={pageSize}
+```
+
+在插件市场中搜索插件。
+
+**参数：**
+- `query`: 搜索关键词
+- `page`: 页码 (默认为 1)
+- `pageSize`: 每页数量 (默认为 10)
+
+**响应示例：**
+```json
+{
+  "plugins": [
+    {
+      "name": "图像处理",
+      "description": "提供图像处理功能",
+      "author": "开发者",
+      "pypiPackage": "image-processing",
+      "pypiInfo": {
+        "version": "1.0.0",
+        "description": "PyPI 描述",
+        "author": "PyPI 作者",
+        "homePage": "https://example.com"
+      },
+      "isInstalled": false,
+      "installedVersion": null,
+      "isUpgradable": false
+    }
+  ],
+  "totalCount": 1,
+  "totalPages": 1,
+  "page": 1,
+  "pageSize": 10
+}
+```
+
+### 获取插件市场中插件的详细信息
+
+```http
+GET/backend-api/api/v1/info/{plugin_name}
+```
+
+获取插件市场中指定插件的详细信息。
+
+**响应示例：**
+```json
+{
+  "name": "图像处理",
+  "description": "提供图像处理功能",
+  "author": "开发者",
+  "pypiPackage": "image-processing",
+  "pypiInfo": {
+    "version": "1.0.0",
+    "description": "PyPI 描述",
+    "author": "PyPI 作者",
+    "homePage": "https://example.com"
+  },
+  "isInstalled": false,
+  "installedVersion": null,
+  "isUpgradable": false
+}
+```
+
 ## 数据模型
 
 ### PluginInfo
@@ -213,6 +280,26 @@ import requests
 
 response = requests.put(
     'http://localhost:8080/api/plugin/plugins/image-processing',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+### 搜索插件市场
+```python
+import requests
+
+response = requests.get(
+    'http://localhost:8080/api/v1/search?query=image&page=1&pageSize=10',
+    headers={'Authorization': f'Bearer {token}'}
+)
+```
+
+### 获取插件市场中插件的详细信息
+```python
+import requests
+
+response = requests.get(
+    'http://localhost:8080/api/v1/info/image-processing',
     headers={'Authorization': f'Bearer {token}'}
 )
 ```

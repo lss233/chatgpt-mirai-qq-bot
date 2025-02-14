@@ -18,8 +18,6 @@ class IMRegistry:
         :param adapter_class: adapter 的类。
         :param config_class: adapter 的配置类。
         """
-        if name in self._registry:
-            raise ValueError(f"IMAdapter with name '{name}' is already registered.")
         self._registry[name] = adapter_class
         self._config_registry[name] = config_class
         

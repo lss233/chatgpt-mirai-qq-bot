@@ -55,6 +55,7 @@ class WebConfig(BaseModel):
 class PluginConfig(BaseModel):
     """插件配置"""
     enable: List[str] = Field(default=[], description="启用的外部插件列表")
+    market_base_url: str = Field(default="https://kirara-plugin.app.lss233.com/api/v1", description="插件市场基础URL")
 
 class GlobalConfig(BaseModel):
     ims: List[IMConfig] = Field(default=[], description="IM配置列表")
