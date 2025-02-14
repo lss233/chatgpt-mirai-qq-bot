@@ -1,6 +1,7 @@
 from framework.workflow.core.workflow.builder import WorkflowBuilder
 from framework.workflow.core.workflow import Workflow
 from framework.ioc.container import DependencyContainer
+from framework.workflow.implementations.blocks.im.basic import ExtractChatSender
 from framework.workflow.implementations.blocks.system.help import GenerateHelp
 from framework.workflow.implementations.blocks.im.messages import GetIMMessage, SendIMMessage
 from framework.workflow.implementations.blocks.memory.clear_memory import ClearMemory
@@ -21,5 +22,6 @@ class SystemWorkflowFactory:
         """创建清空记忆工作流"""
         return (WorkflowBuilder("清空记忆")
             .use(GetIMMessage)
+            .chain(ExtractChatSender)
             .chain(ClearMemory)
             .chain(SendIMMessage))

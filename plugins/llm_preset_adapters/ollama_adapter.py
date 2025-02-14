@@ -31,7 +31,7 @@ class OllamaAdapter(LLMBackendAdapter):
         data = {
             "model": req.model,
             "messages": messages,
-            "stream": req.stream,
+            "stream": False,
             "options": {
                 "temperature": req.temperature,
                 "top_p": req.top_p,

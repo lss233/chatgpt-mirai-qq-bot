@@ -69,39 +69,6 @@
     category: system
     permission: user
   prefix: /help
-- rule_id: system_status
-  name: 系统状态
-  description: 显示系统状态
-  type: prefix
-  priority: 10
-  workflow_id: system:status
-  enabled: true
-  metadata:
-    category: system
-    permission: user
-  prefix: /status
-- rule_id: system_admin
-  name: 管理员命令
-  description: 管理员命令，需要管理员权限
-  type: regex
-  priority: 20
-  workflow_id: system:admin
-  enabled: true
-  metadata:
-    category: system
-    permission: admin
-  pattern: ^/(ban|unban|kick|mute) \S+
-- rule_id: system_settings
-  name: 系统设置
-  description: 修改系统设置
-  type: prefix
-  priority: 10
-  workflow_id: system:settings
-  enabled: true
-  metadata:
-    category: system
-    permission: admin
-  prefix: /settings
 - rule_id: system_clear_memory
   name: 清空记忆
   description: 清空当前对话的记忆
@@ -121,3 +88,13 @@
   workflow_id: chat:normal
   enabled: true
   metadata: {}
+- rule_id: asd
+  name: dsa
+  description: asd
+  type: keyword
+  priority: 5
+  workflow_id: game:gacha
+  enabled: true
+  metadata: {}
+  keywords:
+  - asdsd

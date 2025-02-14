@@ -28,7 +28,7 @@ TEST_WORKFLOW_DESC = "A test workflow"
 class MessageBlock(Block):
     name = "message_block"
     inputs = {}
-    outputs = {"output": Output("output", str, "Output message")}
+    outputs = {"output": Output("output", "输出", str, "Output message")}
     container: DependencyContainer
 
     def __init__(self, text: str = ""):
@@ -41,8 +41,8 @@ class MessageBlock(Block):
 
 class LLMBlock(Block):
     name = "llm_block"
-    inputs = {"input": Input("input", str, "Input message")}
-    outputs = {"output": Output("output", str, "Output message")}
+    inputs = {"input": Input("input", "输入", str, "Input message")}
+    outputs = {"output": Output("output", "输出", str, "Output message")}
     container: DependencyContainer
 
     def __init__(self, prompt: str = ""):

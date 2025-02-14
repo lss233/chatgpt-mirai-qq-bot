@@ -9,24 +9,32 @@ class BlockRegistry:
     
     def __init__(self):
         self._blocks = {}
+        self._localized_names = {}
     
-    def register(self, block_id: str, group_id: str, block_class: Type[Block]):
+    def register(self, block_id: str, group_id: str, block_class: Type[Block], localized_name: Optional[str] = None):
         """注册一个 block
         
         Args:
             block_id: block 的唯一标识
             group_id: 组标识（internal 为框架内置）
             block_class: block 类
+            localized_name: 本地化名称
         """
         full_name = f"{group_id}:{block_id}"
         if full_name in self._blocks:
             raise ValueError(f"Block {full_name} already registered")
         self._blocks[full_name] = block_class
         block_class.id = block_id
+        if localized_name:
+            self._localized_names[full_name] = localized_name
         
     def get(self, full_name: str) -> Optional[Type[Block]]:
         """获取已注册的 block 类"""
         return self._blocks.get(full_name)
+    
+    def get_localized_name(self, block_id: str) -> Optional[str]:
+        """获取本地化名称"""
+        return self._localized_names.get(block_id, block_id)
     
     def clear(self):
         """清空注册表"""
@@ -67,6 +75,7 @@ class BlockRegistry:
         for name, input_info in getattr(block_type, 'inputs', {}).items():
             inputs[name] = BlockInput(
                 name=name,
+                label=input_info.label,
                 description=input_info.description,
                 type=input_info.data_type.__name__ if hasattr(input_info.data_type, '__name__') else str(input_info.data_type),
                 required=True,  # 假设所有输入都是必需的
@@ -77,6 +86,7 @@ class BlockRegistry:
         for name, output_info in getattr(block_type, 'outputs', {}).items():
             outputs[name] = BlockOutput(
                 name=name,
+                label=output_info.label,
                 description=output_info.description,
                 type=output_info.data_type.__name__ if hasattr(output_info.data_type, '__name__') else str(output_info.data_type)
             )

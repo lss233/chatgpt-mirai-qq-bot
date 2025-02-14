@@ -2,10 +2,12 @@ from datetime import datetime
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.workflow import Workflow
 from framework.workflow.core.workflow.builder import WorkflowBuilder
+from framework.workflow.implementations.blocks.im.basic import ExtractChatSender
 from framework.workflow.implementations.blocks.im.messages import GetIMMessage, SendIMMessage
 from framework.workflow.implementations.blocks.im.states import ToggleEditState
 from framework.workflow.implementations.blocks.memory.chat_memory import ChatMemoryQuery, ChatMemoryStore
 from framework.workflow.implementations.blocks.llm.chat import ChatMessageConstructor, ChatCompletion, ChatResponseConverter
+from framework.workflow.implementations.blocks.system.basic import TextBlock
 
 class DefaultWorkflowFactory:
     """
@@ -70,7 +72,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 当前日期时间：{datetime.now()}
 
 # Memories
-以下是之前发生过的对话记录：
+以下是之前发生过的对话记录，其中 <@llm> 开头的内容表示你当前扮演角色的回答。
 -- 对话记录开始 --
 {{memory_content}}
 -- 对话记录结束 --
@@ -87,10 +89,10 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
                 (ToggleEditState, {"is_editing": True}),
                 (ChatMemoryQuery, "query_memory", {"scope_type": 'member'})
             ])
+            .chain(TextBlock, name="system_prompt", text=system_prompt)
+            .chain(TextBlock, name="user_prompt", text=user_prompt)
             .chain(ChatMessageConstructor,
-                wire_from=["query_memory", "get_message"],
-                system_prompt_format=system_prompt,
-                user_prompt_format=user_prompt)
+                wire_from=["query_memory", "get_message", "system_prompt", "user_prompt"])
             .chain(ChatCompletion, name="llm_chat")
             .chain(ChatResponseConverter)
             .parallel([

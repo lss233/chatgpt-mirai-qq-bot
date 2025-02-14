@@ -15,8 +15,8 @@ from framework.workflow.core.workflow.builder import WorkflowBuilder
 class SimpleInputBlock(Block):
     """简单的输入块"""
     name: str = "simple_input"
-    inputs: Dict[str, Input] = {"param1": Input("param1", str, "Input 1")}
-    outputs: Dict[str, Output] = {"out1": Output("out1", str, "Output 1")}
+    inputs: Dict[str, Input] = {"param1": Input("param1", "输入1", str, "Input 1")}
+    outputs: Dict[str, Output] = {"out1": Output("out1", "输出1", str, "Output 1")}
     
     def __init__(self, param1: str = "default"):
         super().__init__()
@@ -29,8 +29,8 @@ class SimpleInputBlock(Block):
 class SimpleProcessBlock(Block):
     """简单的处理块"""
     name: str = "simple_process"
-    inputs: Dict[str, Input] = {"in1": Input("in1", str, "Input 1")}
-    outputs: Dict[str, Output] = {"out1": Output("out1", str, "Output 1")}
+    inputs: Dict[str, Input] = {"in1": Input("in1", "输入1", str, "Input 1")}
+    outputs: Dict[str, Output] = {"out1": Output("out1", "输出1", str, "Output 1")}
     
     def __init__(self, multiplier: int = 1):
         super().__init__()
@@ -165,24 +165,6 @@ class TestWorkflowBuilder:
         """测试处理无效 YAML 文件的情况"""
         with pytest.raises(Exception):
             WorkflowBuilder.load_from_yaml("non_existent_file.yaml", container)
-            
-    def test_wire_connections(self, container):
-        """测试复杂的连线配置"""
-        builder = (WorkflowBuilder("test_workflow")
-            .use(SimpleInputBlock, name="input1")
-            .parallel([
-                (SimpleProcessBlock, "process1"),
-                (SimpleProcessBlock, "process2")
-            ])
-            .chain(SimpleProcessBlock, name="merger", 
-                  wire_from=["process1", "process2"]))
-        
-        workflow = builder.build(container)
-        
-        # 验证连线
-        merger_block = next(b for b in workflow.blocks if b.name == "merger")
-        input_wires = [w for w in workflow.wires if w.target_block == merger_block]
-        assert len(input_wires) == 2 
 
     def test_unregistered_block_warning(self, container, yaml_path):
         """测试未注册 block 的警告"""

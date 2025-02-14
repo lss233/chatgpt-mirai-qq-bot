@@ -10,10 +10,10 @@ class GachaSimulator(Block):
     """抽卡模拟器 block"""
     name = "gacha_simulator"
     inputs = {
-        "message": Input("message", IMMessage, "Input message containing gacha command")
+        "message": Input("message", "输入消息", IMMessage, "输入消息包含抽卡命令")
     }
     outputs = {
-        "response": Output("response", IMMessage, "Response message with gacha results")
+        "response": Output("response", "响应消息", IMMessage, "响应消息包含抽卡结果")
     }
     
     def __init__(self, rates: Dict[str, float] = None):

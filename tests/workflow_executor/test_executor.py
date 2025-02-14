@@ -7,11 +7,11 @@ from framework.workflow.core.execution.executor import WorkflowExecutor
 
 # Define test blocks
 input_block = Block(name="InputBlock", inputs={}, outputs={"output1": Output(
-    name="output1", data_type=str, description="Input data")})
-process_block1 = Block(name="ProcessBlock1", inputs={"input1": Input(name="input1", data_type=str, description="Input data")},
-                       outputs={"output1": Output(name="output1", data_type=str, description="Processed data")})
-process_block2 = Block(name="ProcessBlock2", inputs={"input1": Input(name="input1", data_type=str, description="Input data")},
-                       outputs={"output1": Output(name="output1", data_type=str, description="Processed data")})
+    name="output1", label="输出1", data_type=str, description="Input data")})
+process_block1 = Block(name="ProcessBlock1", inputs={"input1": Input(name="input1", label="输入1", data_type=str, description="Input data")},
+                       outputs={"output1": Output(name="output1", label="输出1", data_type=str, description="Processed data")})
+process_block2 = Block(name="ProcessBlock2", inputs={"input1": Input(name="input1", label="输入1", data_type=str, description="Input data")},
+                       outputs={"output1": Output(name="output1", label="输出1", data_type=str, description="Processed data")})
 
 # Define test wires
 wire1 = Wire(source_block=input_block, source_output="output1",
@@ -32,8 +32,8 @@ class FailingBlock(Block):
         raise RuntimeError("This block is supposed to fail.")
 
 
-failing_block = FailingBlock(name="FailingBlock", inputs={"input1": Input(name="input1", data_type=str, description="Input data")}, outputs={
-                             "output1": Output(name="output1", data_type=str, description="Failing output")})
+failing_block = FailingBlock(name="FailingBlock", inputs={"input1": Input(name="input1", label="输入1", data_type=str, description="Input data")}, outputs={
+                             "output1": Output(name="output1", label="输出1", data_type=str, description="Failing output")})
 
 # Define a workflow with a failing block
 failing_workflow = Workflow(name="failing_workflow", blocks=[input_block, failing_block], wires=[Wire(
@@ -60,8 +60,8 @@ async def test_executor_run():
 def test_executor_type_mismatch():
     """Test type mismatch in executor."""
     # Create a wire with mismatched types
-    wrong_process_block = Block(name="ProcessBlock1", inputs={"input1": Input(name="input1", data_type=int, description="Input data")},
-                       outputs={"output1": Output(name="output1", data_type=str, description="Processed data")})
+    wrong_process_block = Block(name="ProcessBlock1", inputs={"input1": Input(name="input1", label="输入1", data_type=int, description="Input data")},
+                       outputs={"output1": Output(name="output1", label="输出1", data_type=str, description="Processed data")})
     
     mismatched_wire = Wire(
         source_block=input_block,
@@ -102,10 +102,10 @@ async def test_executor_with_multiple_outputs():
     multi_output_block = Block(
         name="MultiOutputBlock",
         inputs={"input1": Input(
-            name="input1", data_type=str, description="Input data")},
+            name="input1", label="输入1", data_type=str, description="Input data")},
         outputs={
-            "output1": Output(name="output1", data_type=str, description="First output"),
-            "output2": Output(name="output2", data_type=int, description="Second output"),
+            "output1": Output(name="output1", label="输出1", data_type=str, description="First output"),
+            "output2": Output(name="output2", label="输出2", data_type=int, description="Second output"),
         }
     )
 

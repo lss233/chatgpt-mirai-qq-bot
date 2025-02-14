@@ -17,15 +17,13 @@ from framework.workflow.core.execution.executor import WorkflowExecutor
 class ChatMessageConstructor(Block):
     name = "chat_message_constructor"
     inputs = {
-        "user_msg": Input("user_msg", IMMessage, "Input message"),
-        "memory_content": Input("memory_content", str, "Memory content")
+        "user_msg": Input("user_msg", "本轮消息", IMMessage, "用户消息"),
+        "memory_content": Input("memory_content", "上下文消息", str, "历史消息对话"),
+        "system_prompt_format": Input("system_prompt_format", "上下文消息格式", str, "上下文消息格式", default=""),
+        "user_prompt_format": Input("user_prompt_format", "本轮消息格式", str, "本轮消息格式", default="")
     }
-    outputs = {"llm_msg": Output("llm_msg", List[LLMChatMessage], "LLM message")}
+    outputs = {"llm_msg": Output("llm_msg", "LLM 对话记录", List[LLMChatMessage], "LLM 对话记录")}
     container: DependencyContainer
-
-    def __init__(self, system_prompt_format: str, user_prompt_format: str):
-        self.system_prompt_format = system_prompt_format
-        self.user_prompt_format = user_prompt_format
 
     def substitute_variables(self, text: str, executor: WorkflowExecutor) -> str:
         """
@@ -62,7 +60,7 @@ class ChatMessageConstructor(Block):
             
         return re.sub(r'\{([^}]+)\}', replace_var, text)
 
-    def execute(self, user_msg: IMMessage, memory_content: str) -> Dict[str, Any]:
+    def execute(self, user_msg: IMMessage, memory_content: str, system_prompt_format: str = "", user_prompt_format: str = "") -> Dict[str, Any]:
         # 获取当前执行器
         executor = self.container.resolve(WorkflowExecutor)
         
@@ -87,8 +85,8 @@ class ChatMessageConstructor(Block):
 
 class ChatCompletion(Block):
     name = "chat_completion"
-    inputs = {"prompt": Input("prompt", List[LLMChatMessage], "LLM prompt")}
-    outputs = {"resp": Output("resp", LLMChatResponse, "LLM response")}
+    inputs = {"prompt": Input("prompt", "LLM 对话记录", List[LLMChatMessage], "LLM 对话记录")}
+    outputs = {"resp": Output("resp", "LLM 对话响应", LLMChatResponse, "LLM 对话响应")}
     container: DependencyContainer
 
     def __init__(self, model_name: Optional[str] = None):
@@ -116,8 +114,8 @@ class ChatCompletion(Block):
 
 class ChatResponseConverter(Block):
     name = "chat_response_converter"
-    inputs = {"resp": Input("resp", LLMChatResponse, "LLM response")}
-    outputs = {"msg": Output("msg", IMMessage, "Output message")}
+    inputs = {"resp": Input("resp", "LLM 响应", LLMChatResponse, "LLM 响应")}
+    outputs = {"msg": Output("msg", "IM 消息", IMMessage, "IM 消息")}
     container: DependencyContainer
 
     def execute(self, resp: LLMChatResponse) -> Dict[str, Any]:

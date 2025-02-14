@@ -10,8 +10,8 @@ T = TypeVar('T')
 class SetVariableBlock(Block):
     def __init__(self, container: DependencyContainer):
         inputs = {
-            "name": Input("name", str, "Variable name"),
-            "value": Input("value", Any, "Variable value")
+            "name": Input("name", "变量名", str, "变量名"),
+            "value": Input("value", "变量值", Any, "变量值")
         }
         outputs = {}  # 这个 block 不需要输出
         super().__init__("set_variable", inputs, outputs)
@@ -25,11 +25,11 @@ class SetVariableBlock(Block):
 class GetVariableBlock(Block):
     def __init__(self, container: DependencyContainer, var_type: Type[T]):
         inputs = {
-            "name": Input("name", str, "Variable name"),
-            "default": Input("default", var_type, "Default value if variable not found", optional=True)
+            "name": Input("name", "变量名", str, "变量名"),
+            "default": Input("default", "默认值", var_type, "默认值", optional=True)
         }
         outputs = {
-            "value": Output("value", var_type, "Variable value")
+            "value": Output("value", "变量值", var_type, "变量值")
         }
         super().__init__("get_variable", inputs, outputs)
         self.container = container

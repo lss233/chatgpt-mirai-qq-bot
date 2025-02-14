@@ -11,7 +11,7 @@ class GenerateHelp(Block):
     name = "generate_help"
     inputs = {}  # 不需要输入
     outputs = {
-        "response": Output("response", IMMessage, "Help message")
+        "response": Output("response", "帮助信息", IMMessage, "帮助信息")
     }
     container: DependencyContainer
         

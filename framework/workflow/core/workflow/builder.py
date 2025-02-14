@@ -297,20 +297,24 @@ class WorkflowBuilder:
         return self
 
     def _connect_blocks(self, source_block: Block, target_block: Block):
-        """连接两个块，自动处理输入输出匹配"""
-        for output_name, output in source_block.outputs.items():
-            for input_name, input in target_block.inputs.items():
+        """连接两个块，自动处理输入输出匹配，只连接一次"""
+        is_connected = False
+        for input_name, input in target_block.inputs.items():
+            for output_name, output in source_block.outputs.items():
                 # 检查数据类型是否匹配
                 if output.data_type == input.data_type:
                     # 创建新的连线
                     wire = Wire(source_block, output_name, target_block, input_name)
-                    # 检查是否已存在相同的连线
-                    if not any(w.source_block == wire.source_block and 
-                             w.target_block == wire.target_block and
-                             w.source_output == wire.source_output and
-                             w.target_input == wire.target_input 
-                             for w in self.wires):
+                    # 跳过已被连接的 input
+                    if not any(w.target_block == wire.target_block and
+                            w.target_input == wire.target_input 
+                            for w in self.wires):
+                        is_connected = True
                         self.wires.append(wire)
+                        break
+            # 如果连接成功，则跳出循环
+            if is_connected:
+                break
 
     def _find_parallel_nodes(self, start_node: Node) -> List[Node]:
         """查找所有并行节点"""

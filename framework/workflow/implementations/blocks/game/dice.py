@@ -13,10 +13,10 @@ class DiceRoll(Block):
     """骰子掷点 block"""
     name = "dice_roll"
     inputs = {
-        "message": Input("message", IMMessage, "Input message containing dice command")
+        "message": Input("message", "输入消息", IMMessage, "输入消息包含骰子命令")
     }
     outputs = {
-        "response": Output("response", IMMessage, "Response message with dice roll result")
+        "response": Output("response", "响应消息", IMMessage, "响应消息包含骰子掷点结果")
     }
     
     def execute(self, message: IMMessage) -> Dict[str, Any]:

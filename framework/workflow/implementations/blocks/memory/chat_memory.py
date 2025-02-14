@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 from framework.im.message import IMMessage
+from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
 from framework.workflow.core.block.input_output import Input
@@ -10,15 +11,15 @@ from framework.llm.format.response import LLMChatResponse
 
 class ChatMemoryQuery(Block):
     name = "chat_memory_query"
-    inputs = {"msg": Input("msg", IMMessage, "Input message")}
-    outputs = {"memory_content": Output("memory_content", str, "memory messages")}
+    inputs = {"chat_sender": Input("chat_sender", "聊天对象", ChatSender, "要查询记忆的聊天对象")}
+    outputs = {"memory_content": Output("memory_content", "记忆内容", str, "记忆内容")}
     container: DependencyContainer
 
     def __init__(self, scope_type: Optional[str] = None):
         self.scope_type = scope_type
 
 
-    def execute(self, msg: IMMessage) -> Dict[str, Any]:
+    def execute(self, chat_sender: ChatSender) -> Dict[str, Any]:
         self.memory_manager = self.container.resolve(MemoryManager)
         
         # 如果没有指定作用域类型，使用配置中的默认值
@@ -34,7 +35,7 @@ class ChatMemoryQuery(Block):
         decomposer_registry = self.container.resolve(DecomposerRegistry)
         
         self.decomposer = decomposer_registry.get_decomposer("default")
-        entries = self.memory_manager.query(self.scope, msg.sender)
+        entries = self.memory_manager.query(self.scope, chat_sender)
         memory_content = self.decomposer.decompose(entries)
         return {"memory_content": memory_content}
 
@@ -42,8 +43,8 @@ class ChatMemoryStore(Block):
     name = "chat_memory_store"
 
     inputs = {
-        "user_msg": Input("user_msg", IMMessage, "User message"),
-        "llm_resp": Input("llm_resp", LLMChatResponse, "LLM response message")
+        "user_msg": Input("user_msg", "用户消息", IMMessage, "用户消息"),
+        "llm_resp": Input("llm_resp", "LLM 响应", LLMChatResponse, "LLM 响应")
     }
     outputs = {}
     container: DependencyContainer

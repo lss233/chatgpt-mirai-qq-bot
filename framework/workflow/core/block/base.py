@@ -31,7 +31,7 @@ class Block:
 class ConditionBlock(Block):
     """条件判断块"""
     name: str = "condition"
-    outputs: Dict[str, Output] = {"condition_result": Output("condition_result", bool, "Condition result")}
+    outputs: Dict[str, Output] = {"condition_result": Output("condition_result", "条件结果", bool, "条件结果")}
     
     def __init__(self, condition_func: Callable[[Dict[str, Any]], bool], inputs: Dict[str, 'Input']):
         super().__init__()
@@ -46,8 +46,8 @@ class LoopBlock(Block):
     """循环控制块"""
     name: str = "loop"
     outputs: Dict[str, Output] = {
-        "should_continue": Output("should_continue", bool, "Continue loop?"),
-        "iteration": Output("iteration", dict, "Current iteration data")
+        "should_continue": Output("should_continue", "是否继续", bool, "是否继续"),
+        "iteration": Output("iteration", "当前迭代数据", dict, "当前迭代数据")
     }
     
     def __init__(self, 
@@ -74,7 +74,7 @@ class LoopBlock(Block):
 class LoopEndBlock(Block):
     """循环结束块，收集循环结果"""
     name: str = "loop_end"
-    outputs: Dict[str, Output] = {"loop_results": Output("loop_results", list, "Collected loop results")}
+    outputs: Dict[str, Output] = {"loop_results": Output("loop_results", "收集的循环结果", list, "收集的循环结果")}
     
     def __init__(self, inputs: Dict[str, 'Input']):
         super().__init__()

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class BlockInput(BaseModel):
     """Block输入定义"""
     name: str
+    label: str
     description: str
     type: str
     required: bool = True
@@ -14,6 +15,7 @@ class BlockInput(BaseModel):
 class BlockOutput(BaseModel):
     """Block输出定义"""
     name: str
+    label: str
     description: str
     type: str
 

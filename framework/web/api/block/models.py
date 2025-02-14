@@ -7,6 +7,7 @@ class BlockType(BaseModel):
     """Block类型信息"""
     type_name: str
     name: str
+    label: str
     description: str
     inputs: List[BlockInput]
     outputs: List[BlockOutput]
