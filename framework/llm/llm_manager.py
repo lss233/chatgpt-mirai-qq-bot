@@ -23,6 +23,7 @@ class LLMManager:
         self.backend_registry = backend_registry
         self.logger = get_logger("LLMAdapter")
         self.active_backends = {}
+        self.backends: Dict[str, LLMBackendAdapter] = {}
     
     def load_config(self):
         """加载配置文件中的所有启用的后端"""
@@ -62,6 +63,7 @@ class LLMManager:
                 if model not in self.active_backends:
                     self.active_backends[model] = []
                 self.active_backends[model].append(adapter)
+                self.backends[backend_name] = adapter
         
         self.logger.info(f"Backend {backend_name} loaded successfully")
     
@@ -78,6 +80,7 @@ class LLMManager:
         for model in backend.models:
             if model in self.active_backends:
                 self.active_backends[model] = []
+        self.backends.pop(backend_name)
     
     async def reload_backend(self, backend_name: str):
         """
@@ -105,6 +108,14 @@ class LLMManager:
             model in self.active_backends and len(self.active_backends[model]) > 0
             for model in backend.models
         )
+    
+    def get(self, backend_name: str) -> Optional[LLMBackendAdapter]:
+        """
+        获取指定后端的适配器实例
+        :param backend_name: 后端名称
+        :return: LLM适配器实例,如果没有找到则返回None
+        """
+        return self.backends.get(backend_name)
     
     def get_llm(self, model_id: str) -> Optional[LLMBackendAdapter]:
         """

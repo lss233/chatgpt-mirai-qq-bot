@@ -1,15 +1,16 @@
 from pydantic import ConfigDict, BaseModel
 import requests
-from framework.llm.adapter import LLMBackendAdapter
+from framework.llm.adapter import LLMBackendAdapter, AutoDetectModelsProtocol
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
 from framework.logger import get_logger
+import aiohttp
 
 class OllamaConfig(BaseModel):
     api_base: str = "http://localhost:11434"
     model_config = ConfigDict(frozen=True)
 
-class OllamaAdapter(LLMBackendAdapter):
+class OllamaAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
     def __init__(self, config: OllamaConfig):
         self.config = config
         self.logger = get_logger("OllamaAdapter")
@@ -75,3 +76,12 @@ class OllamaAdapter(LLMBackendAdapter):
         }
         
         return LLMChatResponse(**transformed_response) 
+    
+    async def auto_detect_models(self) -> list[str]:
+        api_url = f"{self.config.api_base}/api/tags"
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.get(api_url) as response:
+                response.raise_for_status()
+                response_data = await response.json()
+                return [tag["name"] for tag in response_data]
+

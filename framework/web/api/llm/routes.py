@@ -2,6 +2,7 @@ from quart import Blueprint, request, jsonify, g
 from framework.config.config_loader import ConfigLoader
 from framework.config.global_config import GlobalConfig
 from framework.ioc.container import DependencyContainer
+from framework.llm.adapter import AutoDetectModelsProtocol
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
 from framework.web.api.llm.models import (
@@ -189,4 +190,37 @@ async def get_adapter_config_schema(adapter_type: str):
         schema = config_class.model_json_schema()
         return LLMAdapterConfigSchema(configSchema=schema).model_dump()
     except Exception as e:
-        return LLMAdapterConfigSchema(error=str(e)).model_dump() 
+        return LLMAdapterConfigSchema(error=str(e)).model_dump()
+
+@llm_bp.route('/types/<adapter_type>/supports-auto-detect-models', methods=['GET'])
+@require_auth
+async def supports_auto_detect_models(adapter_type: str):
+    """检查指定适配器类型是否支持自动检测模型"""
+    try:
+        registry: LLMBackendRegistry = g.container.resolve(LLMBackendRegistry)
+        adapter_class = registry.get(adapter_type)
+        if not adapter_class:
+            return jsonify({"error": f"Adapter type {adapter_type} not found"}), 404
+        if not issubclass(adapter_class, AutoDetectModelsProtocol):
+            return jsonify({"error": f"Adapter type {adapter_type} does not support auto-detect models"}), 400
+        return jsonify({"supportsAutoDetectModels": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@llm_bp.route('/backends/<backend_name>/auto-detect-models', methods=['GET'])
+@require_auth
+async def auto_detect_models(backend_name: str):
+    """自动检测指定后端的模型列表"""
+    try:
+        manager: LLMManager = g.container.resolve(LLMManager)
+        adapter = manager.get(backend_name)
+        if not adapter:
+            return jsonify({"error": f"Backend {backend_name} not found"}), 404
+        if not isinstance(adapter, AutoDetectModelsProtocol):
+            return jsonify({"error": f"Backend {backend_name} does not support auto-detect models"}), 400
+        models = await adapter.auto_detect_models()
+        return jsonify({"models": models})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
