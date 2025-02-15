@@ -88,13 +88,3 @@
   workflow_id: chat:normal
   enabled: true
   metadata: {}
-- rule_id: asd
-  name: dsa
-  description: asd
-  type: keyword
-  priority: 5
-  workflow_id: game:gacha
-  enabled: true
-  metadata: {}
-  keywords:
-  - asdsd
