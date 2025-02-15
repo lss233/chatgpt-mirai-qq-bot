@@ -63,11 +63,11 @@ class ChatMessageConstructor(Block):
         executor = self.container.resolve(WorkflowExecutor)
         
         # 先替换自有的两个变量
-        system_prompt_format = self.system_prompt_format.replace("{user_msg}", user_msg.content)
+        system_prompt_format = system_prompt_format.replace("{user_msg}", user_msg.content)
         system_prompt_format = system_prompt_format.replace("{user_name}", user_msg.sender.display_name)
         system_prompt_format = system_prompt_format.replace("{memory_content}", memory_content)
         
-        user_prompt_format = self.user_prompt_format.replace("{user_msg}", user_msg.content)
+        user_prompt_format = user_prompt_format.replace("{user_msg}", user_msg.content)
         user_prompt_format = user_prompt_format.replace("{user_name}", user_msg.sender.display_name)
         user_prompt_format = user_prompt_format.replace("{memory_content}", memory_content)
         
