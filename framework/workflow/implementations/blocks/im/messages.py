@@ -1,14 +1,13 @@
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Annotated
+
+from pydantic import Field
 from framework.im.adapter import IMAdapter
 from framework.im.manager import IMManager
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
-
+from framework.workflow.core.block import Block, Input, Output, ParamMeta
 
 class GetIMMessage(Block):
     """获取 IM 消息"""
@@ -30,7 +29,7 @@ class SendIMMessage(Block):
     outputs = {}
     container: DependencyContainer
     
-    def __init__(self, im_name: Optional[str] = None):
+    def __init__(self, im_name: Annotated[Optional[str], ParamMeta(label="IM 适配器名称")] = None):
         self.im_name = im_name
 
     def execute(self, msg: IMMessage) -> Dict[str, Any]:

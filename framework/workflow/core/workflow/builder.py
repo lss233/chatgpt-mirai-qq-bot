@@ -40,6 +40,7 @@ class Node:
     is_loop: bool = False  # 添加 is_loop 标记
     parent: 'Node' = None
     spec: BlockSpec = None
+    position: Optional[Dict[str, int]] = None
 
     def __post_init__(self):
         self.next_nodes = self.next_nodes or []
@@ -339,6 +340,11 @@ class WorkflowBuilder:
             block.container = container
 
         return Workflow(self.name, self.blocks, self.wires)
+    
+    def update_position(self, name: str, position: Tuple[int, int]):
+        """更新节点的位置"""
+        node = self.nodes_by_name[name]
+        node.position = position
 
     def save_to_yaml(self, file_path: str, container: DependencyContainer):
         """将工作流保存为 YAML 格式"""
@@ -356,7 +362,8 @@ class WorkflowBuilder:
             block_data = {
                 'type': registry.get_block_type_name(node.block.__class__),
                 'name': node.block.name,
-                'params': node.spec.kwargs
+                'params': node.spec.kwargs,
+                'position': node.position
             }
 
             if node.is_parallel:
@@ -443,7 +450,7 @@ class WorkflowBuilder:
                     builder.use(block_class, name=block_data['name'], **params)
                 else:
                     builder.chain(block_class, name=block_data['name'], **params)
-        
+            builder.update_position(block_data['name'], block_data['position'])
         # 第二遍：建立连接
         for block_data in workflow_data['blocks']:
             if 'connected_to' in block_data:

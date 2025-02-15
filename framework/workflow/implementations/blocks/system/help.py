@@ -1,7 +1,5 @@
-from typing import Any, Dict, List
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
+from typing import Annotated, Any, Dict, List
+from framework.workflow.core.block import Block, Input, Output, ParamMeta
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.im.message import IMMessage, TextMessage

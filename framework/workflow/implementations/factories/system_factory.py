@@ -22,6 +22,5 @@ class SystemWorkflowFactory:
         """创建清空记忆工作流"""
         return (WorkflowBuilder("清空记忆")
             .use(GetIMMessage)
-            .chain(ExtractChatSender)
             .chain(ClearMemory)
             .chain(SendIMMessage))

@@ -1,12 +1,10 @@
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Annotated, Any, Dict
 from framework.im.adapter import EditStateAdapter, IMAdapter
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
+from framework.workflow.core.block import Block, Input, ParamMeta
 
 # Toggle edit state
 class ToggleEditState(Block):
@@ -15,7 +13,7 @@ class ToggleEditState(Block):
     outputs = {}
     container: DependencyContainer
 
-    def __init__(self, is_editing: bool):
+    def __init__(self, is_editing: Annotated[bool, ParamMeta(label="是否编辑", description="是否切换到编辑状态")]):
         self.is_editing = is_editing
 
     def execute(self, sender: ChatSender) -> Dict[str, Any]:

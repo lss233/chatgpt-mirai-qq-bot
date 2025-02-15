@@ -1,8 +1,71 @@
 from inspect import Parameter, signature
-from typing import Dict, List, Tuple, Type, Optional
+from typing import Dict, List, Tuple, Type, Optional, get_origin, get_args, Annotated, Union
 import warnings
 from framework.workflow.core.block import Block
+from framework.workflow.core.block.param import ParamMeta
 from .schema import BlockConfig, BlockInput, BlockOutput
+
+def extract_block_param(param):
+    """
+    提取 Block 参数信息，包括类型字符串、标签、是否必需、描述和默认值。
+    """
+    param_type = param.annotation
+    required = True
+    label = param.name
+    description = None
+    default = param.default if param.default != Parameter.empty else None
+    
+    if get_origin(param_type) is Annotated:
+        args = get_args(param_type)
+        if len(args) > 0:
+            actual_type = args[0]
+            metadata = args[1] if len(args) > 1 else None
+
+            if isinstance(metadata, ParamMeta):
+                label = metadata.label
+                description = metadata.description
+
+            # 递归调用 extract_block_param 处理实际类型
+            block_config = extract_block_param(Parameter(name=param.name, kind=Parameter.POSITIONAL_OR_KEYWORD, annotation=actual_type, default=default))
+            type_string = block_config.type
+            required = block_config.required  # 继承 required 属性
+        else:
+            type_string = "Any"
+    elif get_origin(param_type) is Union:
+        args = get_args(param_type)
+        # 检查 Union 中是否包含 NoneType
+        if type(None) in args:
+            required = False
+            # 移除 NoneType，并递归处理剩余的类型
+            non_none_args = [arg for arg in args if arg is not type(None)]
+            if len(non_none_args) == 1:
+                block_config = extract_block_param(Parameter(name=param.name, kind=Parameter.POSITIONAL_OR_KEYWORD, annotation=non_none_args[0], default=default))
+                type_string = block_config.type
+            else:
+                # 如果 Union 中包含多个非 NoneType，则返回 Union 类型
+                type_string = f"Union[{', '.join(get_type_name(arg) for arg in non_none_args)}]"
+        else:
+            # 如果 Union 中不包含 NoneType，则直接返回 Union 类型
+            type_string = f"Union[{', '.join(get_type_name(arg) for arg in args)}]"
+    else:
+        type_string = get_type_name(param_type)
+        
+    return BlockConfig(
+        name=param.name,  # 设置名称
+        description=description,
+        type=type_string,
+        required=required,
+        default=default,  # 设置默认值
+        label=label
+    )
+
+def get_type_name(type_obj):
+    """
+    获取类型的名称。
+    """
+    if hasattr(type_obj, '__name__'):
+        return type_obj.__name__
+    return str(type_obj)
 
 class BlockRegistry:
     """Block 注册表，用于管理所有已注册的 block"""
@@ -102,21 +165,9 @@ class BlockRegistry:
             if param.name in builtin_params:
                 continue
                 
-            param_type = param.annotation
-            # 解 Optional[T] 类型
-            if hasattr(param_type, '__args__') and param_type.__name__ == 'Optional':
+            block_config = extract_block_param(param)
 
-                actual_type = param_type.__args__[0]
-            else:
-                actual_type = param_type
-
-            configs[param.name] = BlockConfig(
-                name=param.name,
-                description='',  # 暂时没有描述信息
-                type=str(actual_type.__name__),
-                required=param.default == Parameter.empty,  # 没有默认值则为必需
-                default=param.default if param.default != Parameter.empty else None
-            )
+            configs[param.name] = block_config
         return inputs, outputs, configs
 
     def get_builtin_params(self) -> List[str]:

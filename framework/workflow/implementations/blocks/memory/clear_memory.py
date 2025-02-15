@@ -1,10 +1,8 @@
-from typing import Dict, Any
+from typing import Annotated, Dict, Any
 from framework.im.message import IMMessage, TextMessage
 from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
+from framework.workflow.core.block import Block, Input, Output, ParamMeta
 from framework.memory.memory_manager import MemoryManager
 from framework.memory.registry import ScopeRegistry
 
@@ -15,7 +13,7 @@ class ClearMemory(Block):
     outputs = {"response": Output("response", "响应", IMMessage, "响应")}
     container: DependencyContainer
     
-    def __init__(self, scope_type: str = 'member'):
+    def __init__(self, scope_type: Annotated[str, ParamMeta(label="级别", description="要清空记忆的级别")] = 'member'):
         self.scope_type = scope_type
 
     def execute(self, chat_sender: ChatSender) -> Dict[str, Any]:

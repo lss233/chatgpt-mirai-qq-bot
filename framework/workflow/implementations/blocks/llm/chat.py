@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 import re
 from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
@@ -7,9 +7,7 @@ from framework.llm.llm_manager import LLMManager
 from framework.ioc.container import DependencyContainer
 from framework.llm.llm_registry import LLMAbility
 from framework.logger import get_logger
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
+from framework.workflow.core.block import Block, Input, Output, ParamMeta
 from framework.config.global_config import GlobalConfig
 from framework.im.message import IMMessage, TextMessage
 from framework.workflow.core.execution.executor import WorkflowExecutor
@@ -89,7 +87,7 @@ class ChatCompletion(Block):
     outputs = {"resp": Output("resp", "LLM 对话响应", LLMChatResponse, "LLM 对话响应")}
     container: DependencyContainer
 
-    def __init__(self, model_name: Optional[str] = None):
+    def __init__(self, model_name: Annotated[Optional[str], ParamMeta(label="模型 ID", description="要使用的模型 ID")] = None):
         self.model_name = model_name
         self.logger = get_logger("ChatCompletionBlock")
 

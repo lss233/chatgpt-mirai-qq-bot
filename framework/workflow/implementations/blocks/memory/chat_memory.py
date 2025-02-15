@@ -1,10 +1,8 @@
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
+from framework.workflow.core.block import Block, ParamMeta, Input, Output
 from framework.memory.memory_manager import MemoryManager
 from framework.memory.registry import ScopeRegistry, ComposerRegistry, DecomposerRegistry
 from framework.llm.format.response import LLMChatResponse
@@ -15,7 +13,7 @@ class ChatMemoryQuery(Block):
     outputs = {"memory_content": Output("memory_content", "记忆内容", str, "记忆内容")}
     container: DependencyContainer
 
-    def __init__(self, scope_type: Optional[str] = None):
+    def __init__(self, scope_type: Annotated[Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")]):
         self.scope_type = scope_type
 
 
@@ -49,7 +47,7 @@ class ChatMemoryStore(Block):
     outputs = {}
     container: DependencyContainer
     
-    def __init__(self, scope_type: Optional[str] = None):
+    def __init__(self, scope_type: Annotated[Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")]):
         self.scope_type = scope_type
 
     def execute(self, user_msg: IMMessage, llm_resp: LLMChatResponse) -> Dict[str, Any]:

@@ -22,7 +22,8 @@ class BlockOutput(BaseModel):
 class BlockConfig(BaseModel):
     """Block配置项定义"""
     name: str
-    description: str
+    description: Optional[str] = None
     type: str
     required: bool = True
     default: Optional[Any] = None
+    label: Optional[str] = None

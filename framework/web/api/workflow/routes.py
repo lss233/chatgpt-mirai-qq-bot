@@ -52,7 +52,7 @@ async def get_workflow(group_id: str, workflow_id: str):
             'type_name': block_registry.get_block_type_name(block.__class__),
             'name': block.name,
             'config': builder.nodes_by_name[block.name].spec.kwargs,
-            'position': block.position if hasattr(block, 'position') else {'x': 0, 'y': 0}
+            'position': builder.nodes_by_name[block.name].position if hasattr(builder.nodes_by_name[block.name], 'position') else {'x': 0, 'y': 0}
         })
 
     wires = []
@@ -107,7 +107,9 @@ async def create_workflow(group_id: str, workflow_id: str):
                 builder.use(block_class, name=block_def.name, **block_def.config)
             else:
                 builder.chain(block_class, name=block_def.name, **block_def.config)
-                
+            
+            builder.update_position(block_def.name, block_def.position)
+            
         # 添加连接
         for wire in workflow_def.wires:
             source_block = next(b for b in builder.blocks if b.name == wire.source_block)
@@ -156,6 +158,7 @@ async def update_workflow(group_id: str, workflow_id: str):
             else:
                 builder.chain(block_class, name=block_def.name, **block_def.config)
                 
+            builder.update_position(block_def.name, block_def.position)
         # 添加连接
         for wire in workflow_def.wires:
             source_block = next(b for b in builder.blocks if b.name == wire.source_block)
