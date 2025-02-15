@@ -81,7 +81,7 @@ class ChatMemoryDirectStore(Block):
     name = "chat_memory_store"
 
     inputs = {
-        "user_msg": Input("user_msg", IMMessage, "User message")
+        "user_msg": Input("user_msg", "用户消息", IMMessage, "User message")
     }
     outputs = {}
     container: DependencyContainer
