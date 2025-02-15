@@ -2,12 +2,11 @@ from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
+from framework.workflow.core.workflow.base import Workflow
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
-from framework.workflow.core.dispatch.rule import DispatchRule, FallbackMatchRule
+from framework.workflow.core.dispatch.rule import DispatchRule
 from framework.workflow.core.execution.executor import WorkflowExecutor
-from framework.workflow.implementations.factories.default_factory import DefaultWorkflowFactory
-
 
 class WorkflowDispatcher:
     """工作流调度器"""
@@ -18,15 +17,6 @@ class WorkflowDispatcher:
         # 从容器获取注册表
         self.workflow_registry = container.resolve(WorkflowRegistry)
         self.dispatch_registry = container.resolve(DispatchRuleRegistry)
-        
-        # 初始化默认的兜底规则
-        self.__init_fallback()
-
-    def __init_fallback(self):
-        """初始化默认的兜底规则"""
-        fallback_factory = DefaultWorkflowFactory()
-        self.dispatch_registry.register(FallbackMatchRule(fallback_factory.create_default_workflow))
-        self.logger.info("Registered fallback dispatch rule")
 
     def register_rule(self, rule: DispatchRule):
         """注册一个调度规则"""
@@ -37,7 +27,10 @@ class WorkflowDispatcher:
         """
         根据消息内容选择第一个匹配的规则进行处理
         """
-        for rule in self.dispatch_registry.get_rules():
+        # 获取所有已启用的规则，按优先级排序
+        active_rules = self.dispatch_registry.get_active_rules()
+        
+        for rule in active_rules:
             if rule.match(message):
                 self.logger.debug(f"Matched rule {rule}, executing workflow")
                 with self.container.scoped() as scoped_container:
@@ -45,7 +38,12 @@ class WorkflowDispatcher:
                     scoped_container.register(IMMessage, message)
                     workflow = rule.get_workflow(scoped_container)
                     executor = WorkflowExecutor(workflow)
-                    return await executor.run()
-                
+                    scoped_container.register(Workflow, workflow)
+                    scoped_container.register(WorkflowExecutor, executor)
+                    try:
+                        return await executor.run()
+                    except Exception as e:
+                        self.logger.error(f"Workflow execution failed: {e}")
+                        raise e
         self.logger.debug("No matching rule found for message")
         return None

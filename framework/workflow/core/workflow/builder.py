@@ -1,5 +1,7 @@
+import copy
 from typing import List, Type, Union, Callable, Dict, Any, Optional, TextIO, Tuple
 from dataclasses import dataclass
+from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block
 from framework.workflow.core.workflow import Workflow, Wire
 from framework.workflow.core.block.registry import BlockRegistry
@@ -13,6 +15,19 @@ import warnings
 import os
 
 @dataclass
+class BlockSpec:
+    """Block 规格的数据类，用于统一处理 block 的创建参数"""
+    block_class: Type[Block]
+    name: Optional[str] = None
+    kwargs: Dict[str, Any] = None
+    wire_from: Optional[Union[str, List[str]]] = None
+
+    def __post_init__(self):
+        self.kwargs = self.kwargs or {}
+        if isinstance(self.wire_from, str):
+            self.wire_from = [self.wire_from]
+
+@dataclass
 class Node:
     block: Block
     name: Optional[str] = None  # 可选的 name 属性
@@ -24,6 +39,8 @@ class Node:
     is_conditional: bool = False
     is_loop: bool = False  # 添加 is_loop 标记
     parent: 'Node' = None
+    spec: BlockSpec = None
+    position: Optional[Dict[str, int]] = None
 
     def __post_init__(self):
         self.next_nodes = self.next_nodes or []
@@ -38,19 +55,6 @@ class Node:
             result.append(current)
             current = current.parent
         return result
-
-@dataclass
-class BlockSpec:
-    """Block 规格的数据类，用于统一处理 block 的创建参数"""
-    block_class: Type[Block]
-    name: Optional[str] = None
-    kwargs: Dict[str, Any] = None
-    wire_from: Optional[Union[str, List[str]]] = None
-
-    def __post_init__(self):
-        self.kwargs = self.kwargs or {}
-        if isinstance(self.wire_from, str):
-            self.wire_from = [self.wire_from]
 
 class WorkflowBuilder:
     """工作流构建器，提供流畅的 DSL 语法来构建工作流。
@@ -133,16 +137,13 @@ class WorkflowBuilder:
     4. 节点名称在工作流中必须唯一
     """
 
-    def __init__(self, name: str, container):
+    def __init__(self, name: str):
         self.name = name
-        self.container = container
         self.head: Node = None
         self.current: Node = None
         self.blocks: List[Block] = []
         self.wires: List[Wire] = []
         self.nodes_by_name: Dict[str, Node] = {}
-        self.registry = container.resolve(BlockRegistry)  # 从容器获取 registry
-
     def _generate_unique_name(self, base_name: str) -> str:
         """生成唯一的块名称"""
         while True:
@@ -177,7 +178,10 @@ class WorkflowBuilder:
 
     def _create_node(self, spec: BlockSpec, is_parallel: bool = False) -> Node:
         """创建并初始化一个新的节点"""
-        block = spec.block_class(self.container, **spec.kwargs)
+        try:
+            block = spec.block_class(**spec.kwargs)
+        except Exception as e:
+            raise ValueError(f"Failed to create block {spec.block_class.__name__}: {e}")
         
         # 设置 block 名称
         if spec.name:
@@ -185,7 +189,7 @@ class WorkflowBuilder:
         else:
             block.name = self._generate_unique_name(block.name)
             
-        node = Node(block=block, name=block.name, is_parallel=is_parallel)
+        node = Node(block=block, name=block.name, is_parallel=is_parallel, spec=spec)
         self.blocks.append(block)
         self.nodes_by_name[node.name] = node
         
@@ -294,20 +298,24 @@ class WorkflowBuilder:
         return self
 
     def _connect_blocks(self, source_block: Block, target_block: Block):
-        """连接两个块，自动处理输入输出匹配"""
-        for output_name, output in source_block.outputs.items():
-            for input_name, input in target_block.inputs.items():
+        """连接两个块，自动处理输入输出匹配，只连接一次"""
+        is_connected = False
+        for input_name, input in target_block.inputs.items():
+            for output_name, output in source_block.outputs.items():
                 # 检查数据类型是否匹配
                 if output.data_type == input.data_type:
                     # 创建新的连线
                     wire = Wire(source_block, output_name, target_block, input_name)
-                    # 检查是否已存在相同的连线
-                    if not any(w.source_block == wire.source_block and 
-                             w.target_block == wire.target_block and
-                             w.source_output == wire.source_output and
-                             w.target_input == wire.target_input 
-                             for w in self.wires):
+                    # 跳过已被连接的 input
+                    if not any(w.target_block == wire.target_block and
+                            w.target_input == wire.target_input 
+                            for w in self.wires):
+                        is_connected = True
                         self.wires.append(wire)
+                        break
+            # 如果连接成功，则跳出循环
+            if is_connected:
+                break
 
     def _find_parallel_nodes(self, start_node: Node) -> List[Node]:
         """查找所有并行节点"""
@@ -322,60 +330,42 @@ class WorkflowBuilder:
                 break
         return parallel_nodes
 
-    def build(self) -> Workflow:
+    def build(self, container: DependencyContainer) -> Workflow:
         """构建工作流"""
         # Add unique name for each unnamed block
+        # TODO: 需要优化，不能直接修改 blocks 列表
         for block in self.blocks:
             if not block.name:
-                block.name = f"{block.__class__.__name__}_{id(block)}"
-        return Workflow(self.name, self.blocks, self.wires)
+                block.name = self._generate_unique_name(block.__class__.__name__)
+            block.container = container
 
-    def save_to_yaml(self, file_path: str):
+        return Workflow(self.name, self.blocks, self.wires)
+    
+    def update_position(self, name: str, position: Tuple[int, int]):
+        """更新节点的位置"""
+        node = self.nodes_by_name[name]
+        node.position = position
+
+    def save_to_yaml(self, file_path: str, container: DependencyContainer):
         """将工作流保存为 YAML 格式"""
+        registry: BlockRegistry = container.resolve(BlockRegistry)
         yaml = YAML()
         yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.width = 4096
-        
-        def get_block_type_name(block_class: Type[Block]) -> str:
-            """获取 block 的类型名称，优先使用注册名称"""
-            # 遍历注册表查找匹配的 block 类
-            for full_name, registered_class in self.registry._blocks.items():
-                if registered_class == block_class:
-                    return full_name
-                    
-            warnings.warn(
-                f"Block class {block_class.__name__} is not registered. Using class path instead.",
-                UserWarning
-            )
-            return f"!!{block_class.__module__}.{block_class.__name__}"
-        
         workflow_data = {
             'name': self.name,
             'blocks': []
         }
+
         
         def serialize_node(node: Node) -> dict:
             block_data = {
-                'type': get_block_type_name(node.block.__class__),
+                'type': registry.get_block_type_name(node.block.__class__),
                 'name': node.block.name,
-                'params': {}
+                'params': node.spec.kwargs,
+                'position': node.position
             }
-            
-            # 获取构造函数的参数信息
-            sig = signature(node.block.__class__.__init__)
-            params = {
-                name: param 
-                for name, param in sig.parameters.items() 
-                if name not in ['self', 'container']
-            }
-            
-            # 只序列化在 __init__ 中定义的参数
-            for param_name in params:
-                if hasattr(node.block, param_name):
-                    value = getattr(node.block, param_name)
-                    if isinstance(value, (str, int, float, bool, list, dict)):
-                        block_data['params'][param_name] = value
-                
+
             if node.is_parallel:
                 block_data['parallel'] = True
                 
@@ -413,7 +403,7 @@ class WorkflowBuilder:
     
 
     @classmethod
-    def load_from_yaml(cls, file_path: str, container) -> 'WorkflowBuilder':
+    def load_from_yaml(cls, file_path: str, container: DependencyContainer) -> 'WorkflowBuilder':
         """从 YAML 文件加载工作流
         
         Args:
@@ -427,8 +417,8 @@ class WorkflowBuilder:
         with open(file_path, 'r', encoding='utf-8') as f:
             workflow_data = yaml.load(f)
             
-        builder = cls(workflow_data['name'], container)
-        registry = container.resolve(BlockRegistry)
+        builder: WorkflowBuilder = cls(workflow_data['name'])
+        registry: BlockRegistry = container.resolve(BlockRegistry)
         
         def get_block_class(type_name: str) -> Type[Block]:
             if type_name.startswith('!!'):
@@ -460,7 +450,7 @@ class WorkflowBuilder:
                     builder.use(block_class, name=block_data['name'], **params)
                 else:
                     builder.chain(block_class, name=block_data['name'], **params)
-        
+            builder.update_position(block_data['name'], block_data['position'])
         # 第二遍：建立连接
         for block_data in workflow_data['blocks']:
             if 'connected_to' in block_data:

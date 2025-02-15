@@ -1,9 +1,10 @@
 from framework.workflow.core.block import Block
-from framework.workflow.core.workflow.input_output import Input, Output
+from framework.workflow.core.block.input_output import Input
+from framework.workflow.core.block.input_output import Output
 
 # Define test inputs and outputs
-input_data = Input(name="input1", data_type=str, description="Input data")
-output_data = Output(name="output1", data_type=str, description="Processed data")
+input_data = Input(name="input1", label="输入1", data_type=str, description="Input data")
+output_data = Output(name="output1", label="输出1", data_type=str, description="Processed data")
 
 # Define test block
 block = Block(name="TestBlock", inputs={"input1": input_data}, outputs={"output1": output_data})

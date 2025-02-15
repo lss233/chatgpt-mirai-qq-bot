@@ -1,0 +1,59 @@
+---
+description: 创建 Workflow
+globs: 
+---
+You are an expert in Python, writing an AI application called chatgpt-mirai-qq-bot. it's a workflow based chatbot system. 
+
+Application
+- Entrypoint: [main.py](mdc:main.py)
+- IOC framework: [container.py](mdc:framework/ioc/container.py) [inject.py](mdc:framework/ioc/inject.py)
+- Workflow system is consisted by a group of blocks that runs in workflow, workflow is run by executor. 
+  - blocks: [base.py](mdc:framework/workflow/core/block/base.py) [registry.py](mdc:framework/workflow/core/block/registry.py)
+  - workflow: [base.py](mdc:framework/workflow/core/workflow/base.py) [registry.py](mdc:framework/workflow/core/workflow/registry.py)
+  - executor: [executor.py](mdc:framework/workflow/core/execution/executor.py)
+  - im adapter can choose which workflow to run in [dispatcher.py](mdc:framework/workflow/core/dispatch/dispatcher.py), rules is described by [rule.py](mdc:framework/workflow/core/dispatch/rule.py). 
+    User defined rules located at folder `data/dispatch_rules`
+  - system/internal blocks implementation located at `framework/worflow/implementations`
+- Memory system: [memory_manager.py](mdc:framework/memory/memory_manager.py). 
+
+Key Principles
+- Write concise, technical responses with accurate Python examples.
+- Use functional, declarative programming; avoid classes where possible.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission).
+- Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
+- Favor named exports for routes and utility functions.
+- Use the Receive an Object, Return an Object (RORO) pattern.
+
+Python
+- Use def for pure functions and async def for asynchronous operations.
+- Use type hints for all function signatures. Prefer Pydantic models over raw dictionaries for input validation.
+- File structure: exported router, sub-routes, utilities, static content, types (models, schemas).
+- Avoid unnecessary curly braces in conditional statements.
+- For single-line statements in conditionals, omit curly braces.
+- Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
+
+Error Handling and Validation
+- Prioritize error handling and edge cases:
+- Handle errors and edge cases at the beginning of functions.
+- Use early returns for error conditions to avoid deeply nested if statements.
+- Place the happy path last in the function for improved readability.
+- Avoid unnecessary else statements; use the if-return pattern instead.
+- Use guard clauses to handle preconditions and invalid states early.
+- Implement proper error logging and user-friendly error messages.
+- Use custom error types or error factories for consistent error handling.
+
+Dependencies
+- Pydantic v2
+- Quart for HTTP Service
+- rumel.yaml for YAML serialization
+- asyncio for async programmig
+
+Highlights on Workflow:
+- IM Message get and send: [chat.py](mdc:framework/workflow/implementations/blocks/llm/chat.py)
+- memory interaction: [chat_memory.py](mdc:framework/workflow/implementations/blocks/memory/chat_memory.py)
+- LLM interaction: [chat.py](mdc:framework/workflow/implementations/blocks/llm/chat.py)
+
+Key Conventions
+1. Rely on App's dependency injection system for managing state and shared resources.
+2. Respond in Chinese

@@ -1,14 +1,25 @@
-import re
+import asyncio
+import random
 from typing import Any
-from telegram import Update
+from functools import lru_cache
+from telegram import Update, User
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
-from framework.im.adapter import IMAdapter
+from framework.im.adapter import EditStateAdapter, IMAdapter, UserProfileAdapter
 from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
 from framework.im.sender import ChatSender, ChatType
 from framework.logger import get_logger
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from pydantic import ConfigDict, BaseModel, Field
 import telegramify_markdown
+from framework.im.profile import UserProfile, Gender
+
+def get_display_name(user: User):
+    if user.username:
+        return user.username
+    elif user.first_name or user.last_name:
+        return f"{user.first_name} {user.last_name}".strip()
+    else:
+        return user.id
 
 class TelegramConfig(BaseModel):
     """
@@ -17,10 +28,11 @@ class TelegramConfig(BaseModel):
     token: str = Field(description="Telegram Bot Token")
     model_config = ConfigDict(extra="allow")
 
+
     def __repr__(self):
         return f"TelegramConfig(token={self.token})"
     
-class TelegramAdapter(IMAdapter):
+class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
     """
     Telegram Adapter，包含 Telegram Bot 的所有逻辑。
     """
@@ -47,10 +59,10 @@ class TelegramAdapter(IMAdapter):
         """处理接收到的消息"""
         # 将 Telegram 消息转换为 Message 对象
         message = self.convert_to_message(update)
-
-        await self.dispatcher.dispatch(self, message)
-        # 打印转换后的 Message 对象
-        print("Converted Message:", message.to_dict())
+        try:
+            await self.dispatcher.dispatch(self, message)
+        except Exception as e:
+            await update.message.reply_text(f"Workflow execution failed, please try again later: {str(e)}")
 
     def convert_to_message(self, raw_message: Update) -> IMMessage:
         """
@@ -58,11 +70,16 @@ class TelegramAdapter(IMAdapter):
         :param raw_message: Telegram 的 Update 对象。
         :return: 转换后的 Message 对象。
         """
-        if raw_message.message.chat.type == "group":
-            sender = ChatSender.from_group_chat(user_id=raw_message.message.chat_id, group_id=raw_message.message.chat_id)
+        if raw_message.message.chat.type == "group" or raw_message.message.chat.type == "supergroup":
+            sender = ChatSender.from_group_chat(user_id=raw_message.message.sender_chat.id, 
+                                                group_id=raw_message.message.chat_id,
+                                                display_name=get_display_name(raw_message.message.from_user))
         else:   
-            sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id)
+            sender = ChatSender.from_c2c_chat(user_id=raw_message.message.chat_id,
+                                              display_name=get_display_name(raw_message.message.from_user))
+
             
+
         message_elements = []
         raw_message_dict = raw_message.message.to_dict()
 
@@ -106,13 +123,22 @@ class TelegramAdapter(IMAdapter):
         
         for element in message.message_elements:
             if isinstance(element, TextMessage):
+                await self.application.bot.send_chat_action(chat_id=chat_id, action="typing")
                 text = telegramify_markdown.markdownify(element.text)
+                # 如果是非首条消息，适当停顿，模拟打字
+                if message.message_elements.index(element) > 0:
+                    # 停顿通常和字数有关，但是会带一些随机
+                    duration = len(element.text) * 0.1 + random.uniform(0, 1) * 0.1
+                    await asyncio.sleep(duration)
                 await self.application.bot.send_message(chat_id=chat_id, text=text, parse_mode="MarkdownV2")
+
             elif isinstance(element, ImageMessage):
+                await self.application.bot.send_chat_action(chat_id=chat_id, action="upload_photo")
                 await self.application.bot.send_photo(chat_id=chat_id, photo=element.url, parse_mode="MarkdownV2")
             elif isinstance(element, VoiceMessage):
+                await self.application.bot.send_chat_action(chat_id=chat_id, action="upload_voice")
                 await self.application.bot.send_voice(chat_id=chat_id, voice=element.url, parse_mode="MarkdownV2")
-
+    
     async def start(self):
         """启动 Bot"""
         await self.application.initialize()
@@ -125,13 +151,14 @@ class TelegramAdapter(IMAdapter):
         await self.application.stop()
         await self.application.shutdown()
     
-    async def set_chat_editing_state(self, chat_id: int, is_editing: bool = True):
+    async def set_chat_editing_state(self, chat_sender: ChatSender, is_editing: bool = True):
         """
         设置或取消对话的编辑状态
-        :param chat_id: Telegram 聊天 ID
+        :param chat_sender: 对话的发送者
         :param is_editing: True 表示正在编辑，False 表示取消编辑状态
         """
         action = "typing" if is_editing else "cancel"
+        chat_id = chat_sender.user_id if chat_sender.chat_type == ChatType.C2C else chat_sender.group_id
         try:
             self.logger.debug(f"Setting chat editing state to {is_editing} for chat_id {chat_id}")
             if is_editing:
@@ -141,3 +168,58 @@ class TelegramAdapter(IMAdapter):
                 await self.application.bot.send_chat_action(chat_id=chat_id, action=action)
         except Exception as e:
             self.logger.warning(f"Failed to set chat editing state: {str(e)}")
+
+    @lru_cache(maxsize=10)
+    async def _cached_get_chat(self, user_id):
+        """
+        带缓存的获取用户信息方法
+        :param user_id: 用户ID
+        :return: 用户对象
+        """
+        return await self.application.bot.get_chat(user_id)
+
+    async def query_user_profile(self, chat_sender: ChatSender) -> UserProfile:
+        """
+        查询 Telegram 用户资料
+        :param chat_sender: 用户的聊天发送者信息
+        :return: 用户资料
+        """
+        try:
+            # 获取用户 ID
+            user_id = chat_sender.user_id
+            # 获取用户对象（使用缓存）
+            user = await self._cached_get_chat(user_id)
+            
+            # 确定性别
+            gender = Gender.UNKNOWN
+            if hasattr(user, 'gender'):
+                if user.gender == 'male':
+                    gender = Gender.MALE
+                elif user.gender == 'female':
+                    gender = Gender.FEMALE
+
+            # 构建用户资料
+            profile = UserProfile(
+                user_id=str(user_id),
+                username=user.username,
+                display_name=get_display_name(user),
+                full_name=f"{user.first_name or ''} {user.last_name or ''}".strip(),
+                gender=gender,
+                avatar_url=None,  # Telegram 需要额外处理获取头像
+                language=user.language_code,
+                extra_info={
+                    'is_bot': user.is_bot,
+                    'is_premium': getattr(user, 'is_premium', False)
+                }
+            )
+            
+            return profile
+        
+        except Exception as e:
+            self.logger.warning(f"Failed to query user profile: {str(e)}")
+            # 返回部分信息
+            return UserProfile(
+                user_id=str(chat_sender.user_id),
+                display_name=chat_sender.display_name
+            )
+

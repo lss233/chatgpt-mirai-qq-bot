@@ -1,3 +1,4 @@
+import re
 from typing import Any
 from loguru import logger
 import os
@@ -50,29 +51,31 @@ def get_logger(tag: str):
     """
     return _global_logger.bind(tag=tag)
 
-class AsyncLogger:
+class HypercornLoggerWrapper:
     def __init__(self, logger):
         self.logger = logger
-
-    async def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
+        
+    def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.critical(message, *args, **kwargs)
 
-    async def error(self, message: str, *args: Any, **kwargs: Any) -> None:
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.error(message, *args, **kwargs)
 
-    async def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.warning(message, *args, **kwargs)
 
-    async def info(self, message: str, *args: Any, **kwargs: Any) -> None:
-        self.logger.info(message, *args, **kwargs)
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
+        log_fmt = re.sub(r'%\((\w+)\)s', r'{\1}', message)
+        atoms = args[0] if args else {}
+        self.logger.info(log_fmt, **atoms)
 
-    async def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
+    def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.debug(message, *args, **kwargs)
 
-    async def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
+    def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.exception(message, *args, **kwargs)
 
-    async def log(self, level: int, message: str, *args: Any, **kwargs: Any) -> None:
+    def log(self, level: int, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.log(level, message, *args, **kwargs)
 
 def get_async_logger(tag: str):
@@ -81,4 +84,4 @@ def get_async_logger(tag: str):
     :param tag: 日志标签
     :return: 日志记录器
     """
-    return AsyncLogger(_global_logger.bind(tag=tag))
+    return HypercornLoggerWrapper(_global_logger.bind(tag=tag))

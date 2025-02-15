@@ -13,12 +13,13 @@ class WorkflowExecutor:
     def __init__(self, workflow: Workflow):
         """
         初始化 WorkflowExecutor 实例。
-
+        
         :param workflow: 要执行的工作流对象
         """
         self.logger = get_logger("WorkflowExecutor")
         self.workflow = workflow
         self.results = defaultdict(dict)
+        self.variables = {}  # 存储工作流变量
         self.logger.info(f"Initializing WorkflowExecutor for workflow '{workflow.name}'")
         # self.logger.debug(f"Workflow has {len(workflow.blocks)} blocks and {len(workflow.wires)} wires")
         self._build_execution_graph()
@@ -27,11 +28,11 @@ class WorkflowExecutor:
         """构建执行图，包含并行和条件逻辑"""
         self.execution_graph = defaultdict(list)
         # self.logger.debug("Building execution graph...")
-
+        
         for wire in self.workflow.wires:
             # self.logger.debug(f"Processing wire: {wire.source_block.name}.{wire.source_output} -> "
             #                  f"{wire.target_block.name}.{wire.target_input}")
-
+            
             # 验证连线的数据类型是否匹配
             source_output = wire.source_block.outputs[wire.source_output]
             target_input = wire.target_block.inputs[wire.target_input]
@@ -58,14 +59,14 @@ class WorkflowExecutor:
             entry_blocks = [block for block in self.workflow.blocks if not block.inputs]
             # self.logger.debug(f"Identified entry blocks: {[b.name for b in entry_blocks]}")
             await self._execute_nodes(entry_blocks, executor, loop)
-
+        
         self.logger.info("Workflow execution completed")
         return self.results
 
     async def _execute_nodes(self, blocks: List[Block], executor, loop):
         """执行一组节点"""
         # self.logger.debug(f"Executing node group: {[b.name for b in blocks]}")
-
+        
         for block in blocks:
             # self.logger.debug(f"Processing block: {block.name} ({type(block).__name__})")
             if isinstance(block, ConditionBlock):
@@ -80,7 +81,7 @@ class WorkflowExecutor:
         self.logger.info(f"Executing ConditionBlock: {block.name}")
         inputs = self._gather_inputs(block)
         # self.logger.debug(f"ConditionBlock inputs: {list(inputs.keys())}")
-
+        
         result = await loop.run_in_executor(executor, block.execute, **inputs)
         self.results[block.name] = result
         self.logger.info(f"ConditionBlock {block.name} evaluation result: {result['condition_result']}")
@@ -100,13 +101,13 @@ class WorkflowExecutor:
         """执行循环"""
         self.logger.info(f"Starting LoopBlock: {block.name}")
         iteration = 0
-
+        
         while True:
             iteration += 1
             # self.logger.debug(f"LoopBlock {block.name} iteration #{iteration}")
             inputs = self._gather_inputs(block)
             # self.logger.debug(f"LoopBlock inputs: {list(inputs.keys())}")
-
+            
             result = await loop.run_in_executor(executor, block.execute, **inputs)
             self.results[block.name] = result
             self.logger.info(f"LoopBlock {block.name} continuation check: {result['should_continue']}")
@@ -123,12 +124,12 @@ class WorkflowExecutor:
         """执行普通块"""
         # self.logger.debug(f"Evaluating Block: {block.name}")
         futures = []
-
+        
         if self._can_execute(block):
             inputs = self._gather_inputs(block)
             self.logger.info(f"Executing Block: {block.name}")
             # self.logger.debug(f"Input parameters: {list(inputs.keys())}")
-
+            
             future = loop.run_in_executor(
                 executor,
                 functools.partial(block.execute, **inputs)
@@ -166,33 +167,25 @@ class WorkflowExecutor:
         if block.name in self.results:
             # self.logger.debug(f"Block {block.name} has already been executed")
             return False
-
-        # 获取所有直接前置blocks
-        predecessor_blocks = set()
-        for wire in self.workflow.wires:
-            if wire.target_block == block:
-                predecessor_blocks.add(wire.source_block)
-
-        # 确保所有前置blocks都已执行完成
-        for pred_block in predecessor_blocks:
-            if pred_block.name not in self.results:
-                # self.logger.debug(f"Predecessor block {pred_block.name} not yet executed")
-                return False
-
-        # 验证所有输入是否都能从正确的前置block获取
+    
+        if not block.inputs:
+            # self.logger.debug("No inputs required, ready to execute")
+            return True
+            
         for input_name in block.inputs:
             input_satisfied = False
             for wire in self.workflow.wires:
-                if (wire.target_block == block and
+                if (wire.target_block == block and 
                     wire.target_input == input_name and
                     wire.source_block.name in self.results):
+                    # self.logger.debug(f"Input {input_name} satisfied by {wire.source_block.name}")
                     input_satisfied = True
                     break
-
+            
             if not input_satisfied:
                 # self.logger.debug(f"Input {input_name} not satisfied")
                 return False
-
+        
         # self.logger.debug("All inputs satisfied")
         return True
 
@@ -200,23 +193,34 @@ class WorkflowExecutor:
         """收集节点的输入数据"""
         # self.logger.debug(f"Gathering inputs for Block: {block.name}")
         inputs = {}
-
-        # 创建输入名称到wire的映射
-        input_wire_map = {}
-        for wire in self.workflow.wires:
-            if wire.target_block == block:
-                input_wire_map[wire.target_input] = wire
-
-        # 根据wire的连接关系收集输入
+        
         for input_name in block.inputs:
-            if input_name in input_wire_map:
-                wire = input_wire_map[input_name]
-                if wire.source_block.name in self.results:
+            for wire in self.workflow.wires:
+                if (wire.target_block == block and 
+                    wire.target_input == input_name and
+                    wire.source_block.name in self.results):
                     inputs[input_name] = self.results[wire.source_block.name][wire.source_output]
-                    # self.logger.debug(f"Resolved input {input_name} from {wire.source_block.name}.{wire.source_output}")
-                else:
-                    raise RuntimeError(f"Source block {wire.source_block.name} not executed for input {input_name}")
-            else:
-                raise RuntimeError(f"Missing wire connection for required input {input_name} in block {block.name}")
-
+                    # self.logger.debug(f"Resolved input {input_name} from {wire.source_block.name}")
+                    break
+        
+        # self.logger.debug(f"Collected {len(inputs)} inputs")
         return inputs
+
+    def set_variable(self, name: str, value: Any) -> None:
+        """
+        设置工作流变量
+        
+        :param name: 变量名
+        :param value: 变量值
+        """
+        self.variables[name] = value
+        
+    def get_variable(self, name: str, default: Any = None) -> Any:
+        """
+        获取工作流变量
+        
+        :param name: 变量名
+        :param default: 默认值，如果变量不存在则返回此值
+        :return: 变量值
+        """
+        return self.variables.get(name, default)

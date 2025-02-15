@@ -1,5 +1,6 @@
 from typing import Dict, Type
-from .memory_adapter import MemoryScope, MemoryComposer, MemoryDecomposer
+from framework.memory.scopes import MemoryScope
+from framework.memory.composes import MemoryComposer, MemoryDecomposer
 
 class Registry:
     """基础注册表类"""

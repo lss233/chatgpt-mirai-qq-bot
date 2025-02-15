@@ -20,9 +20,11 @@ def create_message():
 
 def test_dice_roll_basic(container, create_message):
     """测试基本的骰子命令"""
-    block = DiceRoll(container)
+    block = DiceRoll()
+    block.container = container
     result = block.execute(create_message(".roll 2d6"))
     
+
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
@@ -32,9 +34,11 @@ def test_dice_roll_basic(container, create_message):
 
 def test_dice_roll_invalid(container, create_message):
     """测试无效的骰子命令"""
-    block = DiceRoll(container)
+    block = DiceRoll()
+    block.container = container
     result = block.execute(create_message("invalid command"))
     
+
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
@@ -42,9 +46,11 @@ def test_dice_roll_invalid(container, create_message):
 
 def test_dice_roll_too_many(container, create_message):
     """测试超过限制的骰子数量"""
-    block = DiceRoll(container)
+    block = DiceRoll()
+    block.container = container
     result = block.execute(create_message(".roll 101d6"))
     
+
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
@@ -52,9 +58,11 @@ def test_dice_roll_too_many(container, create_message):
 
 def test_gacha_single_pull(container, create_message):
     """测试单次抽卡"""
-    block = GachaSimulator(container)
+    block = GachaSimulator()
+    block.container = container
     result = block.execute(create_message("单抽"))
     
+
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
@@ -65,9 +73,11 @@ def test_gacha_single_pull(container, create_message):
 
 def test_gacha_ten_pull(container, create_message):
     """测试十连抽卡"""
-    block = GachaSimulator(container)
+    block = GachaSimulator()
+    block.container = container
     result = block.execute(create_message("十连"))
     
+
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
@@ -82,9 +92,11 @@ def test_gacha_custom_rates(container, create_message):
         "SR": 0.0,
         "R": 0.0
     }
-    block = GachaSimulator(container, rates=rates)
+    block = GachaSimulator(rates)
+    block.container = container
     result = block.execute(create_message("单抽"))
     
+
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)

@@ -18,10 +18,16 @@ class IMRegistry:
         :param adapter_class: adapter 的类。
         :param config_class: adapter 的配置类。
         """
-        if name in self._registry:
-            raise ValueError(f"IMAdapter with name '{name}' is already registered.")
         self._registry[name] = adapter_class
         self._config_registry[name] = config_class
+        
+    def unregister(self, name: str):
+        """
+        注销一个 adapter。
+        :param name: adapter 的名称。
+        """
+        del self._registry[name]
+        del self._config_registry[name]
 
     def get(self, name: str) -> Type[IMAdapter]:
         """
@@ -42,3 +48,11 @@ class IMRegistry:
         if name not in self._config_registry:
             raise ValueError(f"Config class for adapter '{name}' is not registered.")
         return self._config_registry[name]
+    
+    def get_all_adapters(self) -> Dict[str, Type[IMAdapter]]:
+        """
+        获取所有已注册的 adapter。
+        :return: 所有已注册的 adapter。
+        """
+        return self._registry
+
