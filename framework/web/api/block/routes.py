@@ -27,7 +27,6 @@ async def list_block_types():
             outputs=outputs.values(),
             configs=configs.values()
         ))
-        print(block_type.name, type_name, registry.get_localized_name(block_type.name))
         
     return BlockTypeList(types=types).model_dump()
 

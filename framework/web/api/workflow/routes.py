@@ -48,11 +48,12 @@ async def get_workflow(group_id: str, workflow_id: str):
     # 构建工作流定义
     blocks = []
     for block in builder.blocks:
+        position = builder.nodes_by_name[block.name].position
         blocks.append({
             'type_name': block_registry.get_block_type_name(block.__class__),
             'name': block.name,
             'config': builder.nodes_by_name[block.name].spec.kwargs,
-            'position': builder.nodes_by_name[block.name].position if hasattr(builder.nodes_by_name[block.name], 'position') else {'x': 0, 'y': 0}
+            'position': position if position else {'x': 0, 'y': 0}
         })
 
     wires = []
