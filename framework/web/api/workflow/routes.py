@@ -112,10 +112,11 @@ async def create_workflow(group_id: str, workflow_id: str):
             builder.update_position(block_def.name, block_def.position)
             
         # 添加连接
+        builder.wires = []
         for wire in workflow_def.wires:
             source_block = next(b for b in builder.blocks if b.name == wire.source_block)
             target_block = next(b for b in builder.blocks if b.name == wire.target_block)
-            builder._connect_blocks(source_block, target_block)
+            builder.force_connect(source_block, target_block, wire.source_output, wire.target_input)
             
         # 保存工作流
         file_path = registry.get_workflow_path(group_id, workflow_id)
@@ -161,10 +162,11 @@ async def update_workflow(group_id: str, workflow_id: str):
                 
             builder.update_position(block_def.name, block_def.position)
         # 添加连接
+        builder.wires = []
         for wire in workflow_def.wires:
             source_block = next(b for b in builder.blocks if b.name == wire.source_block)
             target_block = next(b for b in builder.blocks if b.name == wire.target_block)
-            builder._connect_blocks(source_block, target_block)
+            builder.force_connect(source_block, target_block, wire.source_output, wire.target_input)
             
         # 保存工作流
         file_path = registry.get_workflow_path(group_id, workflow_id)

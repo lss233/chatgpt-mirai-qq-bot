@@ -317,6 +317,11 @@ class WorkflowBuilder:
             if is_connected:
                 break
 
+    def force_connect(self, source_block: Block, target_block: Block, source_output: str, target_input: str):
+        """强制连接两个块"""
+        wire = Wire(source_block, source_output, target_block, target_input)
+        self.wires.append(wire)
+
     def _find_parallel_nodes(self, start_node: Node) -> List[Node]:
         """查找所有并行节点"""
         parallel_nodes = []
@@ -452,11 +457,12 @@ class WorkflowBuilder:
                     builder.chain(block_class, name=block_data['name'], **params)
             builder.update_position(block_data['name'], block_data['position'])
         # 第二遍：建立连接
+        builder.wires = []
         for block_data in workflow_data['blocks']:
             if 'connected_to' in block_data:
                 source_node = builder.nodes_by_name[block_data['name']]
                 for connection in block_data['connected_to']:
                     target_node = builder.nodes_by_name[connection['target']]
-                    builder._connect_blocks(source_node.block, target_node.block)
+                    builder.force_connect(source_node.block, target_node.block, connection['mapping']['from'], connection['mapping']['to'])
                     
         return builder 

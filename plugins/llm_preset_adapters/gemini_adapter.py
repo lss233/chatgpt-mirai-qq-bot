@@ -41,7 +41,7 @@ class GeminiAdapter(LLMBackendAdapter):
             "safetySettings": []
         }
 
-        self.logger.debug(f"Contents: {data['contents'][0]['parts'][0]['text']}")
+        self.logger.debug(f"Contents: {data['contents']}")
         # Remove None fields
         data = {k: v for k, v in data.items() if v is not None}
         

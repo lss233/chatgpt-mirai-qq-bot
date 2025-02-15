@@ -16,9 +16,9 @@ class ChatMessageConstructor(Block):
     name = "chat_message_constructor"
     inputs = {
         "user_msg": Input("user_msg", "本轮消息", IMMessage, "用户消息"),
+        "user_prompt_format": Input("user_prompt_format", "本轮消息格式", str, "本轮消息格式", default=""),
         "memory_content": Input("memory_content", "上下文消息", str, "历史消息对话"),
         "system_prompt_format": Input("system_prompt_format", "上下文消息格式", str, "上下文消息格式", default=""),
-        "user_prompt_format": Input("user_prompt_format", "本轮消息格式", str, "本轮消息格式", default="")
     }
     outputs = {"llm_msg": Output("llm_msg", "LLM 对话记录", List[LLMChatMessage], "LLM 对话记录")}
     container: DependencyContainer
@@ -74,7 +74,6 @@ class ChatMessageConstructor(Block):
         # 再替换其他变量
         system_prompt = self.substitute_variables(system_prompt_format, executor)
         user_prompt = self.substitute_variables(user_prompt_format, executor)
-        
         llm_msg = [
             LLMChatMessage(role='system', content=system_prompt),
             LLMChatMessage(role='user', content=user_prompt)
