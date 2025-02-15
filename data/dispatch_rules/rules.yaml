@@ -85,7 +85,7 @@
   description: 当上述规则均没有匹配成功时，执行此工作流。
   type: fallback
   priority: 0
-  workflow_id: chat:normal
+  workflow_id: chat:directStore
   enabled: true
   metadata: {}
 - rule_id: asd

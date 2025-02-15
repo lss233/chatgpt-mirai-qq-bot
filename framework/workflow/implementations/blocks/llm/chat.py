@@ -12,7 +12,7 @@ from framework.config.global_config import GlobalConfig
 from framework.im.message import IMMessage, TextMessage
 from datetime import datetime
 from framework.workflow.core.execution.executor import WorkflowExecutor
-
+from datetime import datetime
 class ChatMessageConstructor(Block):
     name = "chat_message_constructor"
     inputs = {
