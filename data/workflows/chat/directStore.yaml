@@ -1,6 +1,7 @@
 name: 直接保存聊天记录
 blocks:
-  - type: internal:get_message
+  - position:
+    type: internal:get_message
     name: 6233e64c-433e-4087-9035-cb96914349f7
     params: {}
     connected_to:
@@ -8,7 +9,8 @@ blocks:
         mapping:
           from: msg
           to: user_msg
-  - type: internal:chat_memory_direct_store
+  - position:
+    type: internal:chat_memory_direct_store
     name: 86354196-f249-4393-9620-941b01bc344e
     params:
       scope_type: group
