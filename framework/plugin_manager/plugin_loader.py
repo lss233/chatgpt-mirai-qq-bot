@@ -294,6 +294,7 @@ class PluginLoader:
             # 找到并停止插件实例
             if plugin_name in self.plugins:
                 plugin = self.plugins[plugin_name]
+                print(isinstance(plugin, Plugin))
                 plugin.on_stop()
                 del self.plugins[plugin_name]
             
@@ -302,6 +303,7 @@ class PluginLoader:
                 self.config.plugins.enable.remove(plugin_name)
             
             plugin_info.is_enabled = False
+            self.plugin_infos[plugin_name] = plugin_info
             
             self.logger.info(f"Plugin {plugin_name} disabled")
             return True

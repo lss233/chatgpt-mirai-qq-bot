@@ -206,6 +206,7 @@ async def disable_plugin(plugin_name: str):
     try:
         # 禁用插件
         await loader.disable_plugin(plugin_name)
+        plugin_info = loader.get_plugin_info(plugin_name)
         
         # 更新配置
         if plugin_name and plugin_name in config.plugins.enable and not plugin_info.is_internal:

@@ -57,13 +57,13 @@ class LLMManager:
         with self.container.scoped() as scoped_container:
             scoped_container.register(config_class, config_class(**backend.config))
             adapter = Inject(scoped_container).create(adapter_class)()
+            self.backends[backend_name] = adapter
             
             # 注册到每个支持的模型
             for model in backend.models:
                 if model not in self.active_backends:
                     self.active_backends[model] = []
                 self.active_backends[model].append(adapter)
-                self.backends[backend_name] = adapter
         
         self.logger.info(f"Backend {backend_name} loaded successfully")
     

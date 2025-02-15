@@ -20,16 +20,33 @@ GET/backend-api/api/dispatch/rules
       "rule_id": "chat_normal",
       "name": "普通聊天",
       "description": "普通聊天，使用默认参数",
-      "pattern": "/chat",
-      "priority": 5,
       "workflow_id": "chat:normal",
+      "priority": 5,
       "enabled": true,
+      "rule_groups": [
+        {
+          "operator": "or",
+          "rules": [
+            {
+              "type": "prefix",
+              "config": {
+                "prefix": "/chat"
+              }
+            },
+            {
+              "type": "keyword",
+              "config": {
+                "keywords": ["聊天", "对话"]
+              }
+            }
+          ]
+        }
+      ],
       "metadata": {
         "category": "chat",
         "permission": "user",
         "temperature": 0.7
-      },
-      "is_active": true
+      }
     }
   ]
 }
@@ -57,11 +74,28 @@ POST/backend-api/api/dispatch/rules
   "rule_id": "chat_creative",
   "name": "创意聊天",
   "description": "创意聊天，使用更高的温度参数",
-  "type": "keyword",
   "workflow_id": "chat:creative",
-  "keywords": ["创意", "发散", "brainstorm"],
   "priority": 5,
   "enabled": true,
+  "rule_groups": [
+    {
+      "operator": "and",
+      "rules": [
+        {
+          "type": "prefix",
+          "config": {
+            "prefix": "/creative"
+          }
+        },
+        {
+          "type": "keyword",
+          "config": {
+            "keywords": ["创意", "发散"]
+          }
+        }
+      ]
+    }
+  ],
   "metadata": {
     "category": "chat",
     "permission": "user",
@@ -104,31 +138,81 @@ POST/backend-api/api/dispatch/rules/{rule_id}/disable
 
 ## 数据模型
 
-### DispatchRuleConfig
+### SimpleRule
+- `type`: 规则类型 (prefix/keyword/regex)
+- `config`: 规则类型特定的配置
+
+### RuleGroup
+- `operator`: 组合操作符 (and/or)
+- `rules`: 规则列表
+
+### CombinedDispatchRule
 - `rule_id`: 规则唯一标识符
 - `name`: 规则名称
 - `description`: 规则描述
-- `type`: 规则类型 (prefix/keyword/regex)
 - `workflow_id`: 关联的工作流ID
-- `pattern`/`prefix`/`keywords`: 匹配规则(根据类型不同)
 - `priority`: 优先级(数字越大优先级越高)
 - `enabled`: 是否启用
+- `rule_groups`: 规则组列表（组之间是 AND 关系）
 - `metadata`: 元数据(可选)
-
-### DispatchRuleStatus
-继承自 DispatchRuleConfig，额外包含：
-- `is_active`: 规则是否处于活动状态
 
 ## 规则类型
 
 ### 前缀匹配 (prefix)
 根据消息前缀进行匹配，例如 "/help"。
 
+配置参数：
+- `prefix`: 要匹配的前缀
+
 ### 关键词匹配 (keyword)
 检查消息中是否包含指定关键词。
 
+配置参数：
+- `keywords`: 关键词列表
+
 ### 正则匹配 (regex)
 使用正则表达式进行匹配，提供最灵活的匹配方式。
+
+配置参数：
+- `pattern`: 正则表达式模式
+
+## 组合规则说明
+
+新版本的调度规则系统支持复杂的条件组合：
+
+1. 每个规则可以包含多个规则组（RuleGroup）
+2. 规则组之间是 AND 关系，即所有规则组都满足时才会触发
+3. 每个规则组内可以包含多个简单规则（SimpleRule）
+4. 规则组内的规则可以选择 AND 或 OR 关系
+5. 每个简单规则都有自己的类型和配置
+
+例如，可以创建如下规则：
+
+```json
+{
+  "rule_groups": [
+    {
+      "operator": "or",
+      "rules": [
+        { "type": "prefix", "config": { "prefix": "/creative" } },
+        { "type": "keyword", "config": { "keywords": ["创意", "发散"] } }
+      ]
+    },
+    {
+      "operator": "and",
+      "rules": [
+        { "type": "regex", "config": { "pattern": ".*问题.*" } },
+        { "type": "keyword", "config": { "keywords": ["帮我", "请问"] } }
+      ]
+    }
+  ]
+}
+```
+
+这个规则表示：
+- 当消息以 "/creative" 开头 或 包含 "创意"/"发散" 关键词
+- 且 消息包含 "问题" 且 包含 "帮我"/"请问" 中的任一关键词
+时触发。
 
 ## 相关代码
 
@@ -155,7 +239,7 @@ POST/backend-api/api/dispatch/rules/{rule_id}/disable
 
 ## 使用示例
 
-### 创建新规则
+### 创建组合规则
 ```python
 import requests
 
@@ -163,11 +247,28 @@ rule_data = {
     "rule_id": "chat_creative",
     "name": "创意聊天",
     "description": "创意聊天模式",
-    "type": "keyword",
     "workflow_id": "chat:creative",
-    "keywords": ["创意", "发散"],
     "priority": 5,
-    "enabled": True
+    "enabled": True,
+    "rule_groups": [
+        {
+            "operator": "or",
+            "rules": [
+                {
+                    "type": "prefix",
+                    "config": {
+                        "prefix": "/creative"
+                    }
+                },
+                {
+                    "type": "keyword",
+                    "config": {
+                        "keywords": ["创意", "发散"]
+                    }
+                }
+            ]
+        }
+    ]
 }
 
 response = requests.post(

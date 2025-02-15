@@ -5,6 +5,7 @@ from framework.ioc.container import DependencyContainer
 from framework.llm.adapter import AutoDetectModelsProtocol
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMBackendRegistry
+from framework.logger import get_logger
 from framework.web.api.llm.models import (
     LLMBackendInfo,
     LLMBackendList,
@@ -16,9 +17,8 @@ from framework.web.api.llm.models import (
     LLMAdapterConfigSchema
 )
 from ...auth.middleware import require_auth
-
 llm_bp = Blueprint('llm', __name__)
-
+logger = get_logger('WebServer.LLM')
 @llm_bp.route('/types', methods=['GET'])
 @require_auth
 async def get_adapter_types():
