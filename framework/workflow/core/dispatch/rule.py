@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+import random
 from typing import Type, Callable, Dict, Any, Optional, List, ClassVar, Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from framework.im.message import IMMessage
+from framework.im.sender import ChatType
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.workflow import Workflow
 from framework.workflow.core.workflow.registry import WorkflowRegistry
@@ -12,15 +14,24 @@ class RuleConfig(BaseModel):
 
 class RegexRuleConfig(RuleConfig):
     """正则规则配置"""
-    pattern: str
+    pattern: str = Field(title="正则表达式", description="正则表达式")
 
 class PrefixRuleConfig(RuleConfig):
     """前缀规则配置"""
-    prefix: str
+    prefix: str = Field(title="前缀", description="前缀")
 
 class KeywordRuleConfig(RuleConfig):
     """关键词规则配置"""
-    keywords: List[str]
+    keywords: List[str] = Field(title="关键词", description="关键词列表")
+    
+class RandomChanceRuleConfig(RuleConfig):
+    """随机概率规则配置"""
+    chance: int = Field(default=50, ge=0, le=100, title="随机概率", description="随机概率，范围为0-100")
+
+class ChatSenderMatchRuleConfig(RuleConfig):
+    """聊天发送者规则配置"""
+    sender_id: str = Field(title="发送者ID", description="发送者ID")
+    sender_group: str = Field(title="发送者群号（可空）", description="发送者群号", default='')
 
 class SimpleDispatchRule(BaseModel):
     """简单规则，包含规则类型和配置"""
@@ -248,6 +259,51 @@ class KeywordMatchRule(DispatchRule):
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.rule_id}', keywords={self.keywords}, priority={self.priority}, enabled={self.enabled})"
 
+class RandomChanceMatchRule(DispatchRule):
+    """根据随机概率匹配的规则"""
+    config_class = RandomChanceRuleConfig
+    type_name = "random"
+    
+    def __init__(self, chance: float, workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
+        self.chance = chance
+        
+    def match(self, message: IMMessage) -> bool:
+        return random.random() / 100 < self.chance
+    
+class ChatSenderMatchRule(DispatchRule):
+    """根据聊天发送者匹配的规则"""
+    config_class = ChatSenderMatchRuleConfig
+    type_name = "sender"
+    
+    def __init__(self, sender_id: str, sender_group: Optional[str], workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
+        self.sender_id = sender_id
+        self.sender_group = sender_group
+        
+    def match(self, message: IMMessage) -> bool:
+        if self.sender_group:
+            match_group = message.sender.group_id == self.sender_group
+        else:
+            match_group = True
+        return match_group and message.sender.user_id == self.sender_id
+
+class ChatSenderMismatchRule(DispatchRule):
+    """根据聊天发送者不匹配的规则"""
+    config_class = ChatSenderMatchRuleConfig
+    type_name = "sender_mismatch"
+    
+    def __init__(self, sender_id: str, sender_group: Optional[str], workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
+        self.sender_id = sender_id
+        self.sender_group = sender_group
+        
+    def match(self, message: IMMessage) -> bool:
+        if self.sender_group:
+            match_group = message.sender.group_id != self.sender_group
+        else:
+            match_group = True
+        return match_group and message.sender.user_id != self.sender_id
 
 class FallbackMatchRule(DispatchRule):
     """默认的兜底规则，总是匹配"""
@@ -274,3 +330,6 @@ DispatchRule.register_rule_type(RegexMatchRule)
 DispatchRule.register_rule_type(PrefixMatchRule)
 DispatchRule.register_rule_type(KeywordMatchRule)
 DispatchRule.register_rule_type(FallbackMatchRule)
+DispatchRule.register_rule_type(RandomChanceMatchRule)
+DispatchRule.register_rule_type(ChatSenderMatchRule)
+DispatchRule.register_rule_type(ChatSenderMismatchRule)
