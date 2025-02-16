@@ -4,7 +4,7 @@
 <p align="center">
   <h2 align="center">ChatGPT for Bot</h2>
   <p align="center">
-    一款支持各种主流语言模型的聊天的机器人！
+    一款支持主流大语言模型、主流聊天平台的聊天的机器人！
     <br/>
     <br/>
     <a href="https://chatgpt-qq.lss233.com/"><strong>» 查看使用教程 »</strong></a>
