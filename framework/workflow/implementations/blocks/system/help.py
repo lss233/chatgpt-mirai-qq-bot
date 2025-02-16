@@ -40,7 +40,7 @@ class GenerateHelp(Block):
         # 从容器获取调度规则注册表
         registry = self.container.resolve(DispatchRuleRegistry)
         rules = registry.get_active_rules()
-        
+
         # 按类别组织命令
         commands = {}
         for rule in rules:
@@ -62,7 +62,7 @@ class GenerateHelp(Block):
                 'format': rule_format,
                 'description': rule.description
             })
-            
+
         # 生成帮助文本
         help_text = "🤖 机器人命令帮助\n\n"
         
@@ -75,10 +75,10 @@ class GenerateHelp(Block):
                     help_text += f"  说明: {cmd['description']}\n"
                 help_text += "\n"
             help_text += "\n"
-            
+
         return {
             "response": IMMessage(
                 sender="<@bot>",
                 message_elements=[TextMessage(help_text)]
             )
-        } 
+        }

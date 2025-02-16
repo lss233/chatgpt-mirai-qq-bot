@@ -71,7 +71,7 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
         :return: 转换后的 Message 对象。
         """
         if raw_message.message.chat.type == "group" or raw_message.message.chat.type == "supergroup":
-            sender = ChatSender.from_group_chat(user_id=raw_message.message.sender_chat.id, 
+            sender = ChatSender.from_group_chat(user_id=raw_message.message.from_user.id, 
                                                 group_id=raw_message.message.chat_id,
                                                 display_name=get_display_name(raw_message.message.from_user))
         else:   

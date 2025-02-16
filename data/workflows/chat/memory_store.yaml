@@ -1,0 +1,21 @@
+name: 记录聊天内容
+description: 默默记下大家的聊天内容，可以使用查询记忆模块读取出来。
+blocks:
+  - type: internal:get_message
+    name: 6233e64c-433e-4087-9035-cb96914349f7
+    params: {}
+    position:
+      x: 100
+      y: 138
+    connected_to:
+      - target: 86354196-f249-4393-9620-941b01bc344e
+        mapping:
+          from: msg
+          to: user_msg
+  - type: internal:chat_memory_store
+    name: 86354196-f249-4393-9620-941b01bc344e
+    params:
+      scope_type: group
+    position:
+      x: 420
+      y: 138
