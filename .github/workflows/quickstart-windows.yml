@@ -13,8 +13,8 @@ on:
       - 'master'
       - 'dev'
       - 'refactoring-v3-mvp'
-    tags:
-      - '**'
+  tags:
+    - '**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -86,7 +86,7 @@ jobs:
 
         # 解压 dist.zip 文件到 C:/generated_files 目录
         Expand-Archive -Path "C:\generated_files\dist.zip" -DestinationPath "C:\generated_files\kirara_ai\web"
-
+        rm C:\generated_files\dist.zip
     - name: Archive production artifacts
       uses: actions/upload-artifact@v4
       with:
