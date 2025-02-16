@@ -31,7 +31,7 @@ class WorkflowDispatcher:
         active_rules = self.dispatch_registry.get_active_rules()
         
         for rule in active_rules:
-            if rule.match(message):
+            if rule.match(message, self.workflow_registry):
                 self.logger.debug(f"Matched rule {rule}, executing workflow")
                 with self.container.scoped() as scoped_container:
                     scoped_container.register(IMAdapter, source)

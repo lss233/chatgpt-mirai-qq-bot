@@ -20,6 +20,34 @@ from .api.plugin import plugin_bp
 from .api.system import system_bp
 
 from framework.web.auth.services import AuthService, FileBasedAuthService
+ERROR_MESSAGE = """
+<h1>WebUI launch failed!</h1>
+<p lang="en">Web UI not found. Please download from <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>here</a> and extract to the <span>web</span> folder, make sure the <span>web/index.html</span> file exists.</p>
+<h1>WebUI 启动失败！</h1>
+<p lang="zh-CN">Web UI 未找到。请从 <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>这里</a> 下载并解压到 <span>web</span> 文件夹，确保 <span>web/index.html</span> 文件存在。</p>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        color: #333;
+        padding: 20px;
+    }
+    h1 {
+        color: #333;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    p {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+    a {
+        color: #007bff;
+        text-decoration: none;
+    }
+</style>
+"""
 
 def create_app(container: DependencyContainer) -> Quart:
     app = Quart(__name__)
@@ -30,7 +58,7 @@ def create_app(container: DependencyContainer) -> Quart:
         try:
             return await app.send_static_file('index.html')
         except Exception as e:
-            return "Error: Web UI not found. Please install from <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>here</a>."
+            return ERROR_MESSAGE
     @app.route('/<path:path>')
     async def serve_static(path):
         if path.startswith('backend-api'):

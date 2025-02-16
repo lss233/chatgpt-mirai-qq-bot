@@ -1,6 +1,7 @@
+import aiohttp
 from pydantic import ConfigDict, BaseModel
 import requests
-from framework.llm.adapter import LLMBackendAdapter
+from framework.llm.adapter import LLMBackendAdapter, AutoDetectModelsProtocol
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
 from framework.logger import get_logger
@@ -25,7 +26,7 @@ def convert_messages_to_claude_prompt(messages) -> str:
     prompt += "Assistant: "
     return prompt
 
-class ClaudeAdapter(LLMBackendAdapter):
+class ClaudeAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
     def __init__(self, config: ClaudeConfig):
         self.config = config
         self.logger = get_logger("ClaudeAdapter")
@@ -94,3 +95,24 @@ class ClaudeAdapter(LLMBackendAdapter):
         }
         
         return LLMChatResponse(**transformed_response) 
+    
+    async def auto_detect_models(self) -> list[str]:
+        # {
+        #   "data": [
+        #     {
+        #       "type": "model",
+        #       "id": "claude-3-5-sonnet-20241022",
+        #       "display_name": "Claude 3.5 Sonnet (New)",
+        #       "created_at": "2024-10-22T00:00:00Z"
+        #     }
+        #   ],
+        #   "has_more": true,
+        #   "first_id": "<string>",
+        #   "last_id": "<string>"
+        # }
+        api_url = f"{self.config.api_base}/models"
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.get(api_url, headers={"x-api-key": self.config.api_key}) as response:
+                response.raise_for_status()
+                response_data = await response.json()
+                return [model["id"] for model in response_data["data"]]

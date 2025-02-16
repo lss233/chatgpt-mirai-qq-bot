@@ -84,6 +84,8 @@ def app():
     manager = LLMManager(container)
     container.register(LLMManager, manager)
     
+    manager.load_config()
+    
     app = create_app(container)
     app.container = container
     return app
@@ -185,6 +187,7 @@ class TestLLMBackend:
         )
         
         data = await response.get_json()
+        assert not data.get('error')
         assert 'data' in data
         backend = data.get('data')
         assert backend.get('name') == TEST_BACKEND_NAME
@@ -203,6 +206,7 @@ class TestLLMBackend:
         )
         
         data = await response.get_json()
+        assert not data.get('error')
         assert 'data' in data
         backend = data.get('data')
         assert backend.get('name') == TEST_BACKEND_NAME

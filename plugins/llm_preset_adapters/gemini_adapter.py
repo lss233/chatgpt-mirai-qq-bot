@@ -1,6 +1,7 @@
+import aiohttp
 from pydantic import ConfigDict, BaseModel
 import requests
-from framework.llm.adapter import LLMBackendAdapter
+from framework.llm.adapter import LLMBackendAdapter, AutoDetectModelsProtocol
 from framework.llm.format.message import LLMChatMessage
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
@@ -17,7 +18,7 @@ def convert_llm_chat_message_to_gemini_message(msg: LLMChatMessage) -> dict:
         "parts": [{"text": msg.content}]
     }
 
-class GeminiAdapter(LLMBackendAdapter):
+class GeminiAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
     def __init__(self, config: GeminiConfig):
         self.config = config
         self.logger = get_logger("GeminiAdapter")
@@ -41,7 +42,7 @@ class GeminiAdapter(LLMBackendAdapter):
             "safetySettings": []
         }
 
-        self.logger.debug(f"Contents: {data['contents'][0]['parts'][0]['text']}")
+        self.logger.debug(f"Contents: {data['contents']}")
         # Remove None fields
         data = {k: v for k, v in data.items() if v is not None}
         
@@ -76,3 +77,11 @@ class GeminiAdapter(LLMBackendAdapter):
         }
         
         return LLMChatResponse(**transformed_response)
+
+    async def auto_detect_models(self) -> list[str]:
+        api_url = f"{self.config.api_base}/models"
+        async with aiohttp.ClientSession(trust_env=True) as session:
+            async with session.get(api_url, headers={"x-goog-api-key": self.config.api_key}) as response:
+                response.raise_for_status()
+                response_data = await response.json()
+                return [model["name"].removeprefix("models/") for model in response_data["models"] if 'generateContent' in model["supportedGenerationMethods"]]

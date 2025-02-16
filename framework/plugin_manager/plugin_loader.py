@@ -17,7 +17,7 @@ from framework.plugin_manager.utils import get_package_metadata
 
 class PluginLoader:
     def __init__(self, container: DependencyContainer, plugin_dir: str):
-        self.plugins = []
+        self.plugins: Dict[str, Plugin] = {}  # 存储插件实例
         self.plugin_infos: Dict[str, PluginInfo] = {}  # 存储插件信息
         self.container = container
         self.logger = get_logger("PluginLoader")
@@ -30,7 +30,8 @@ class PluginLoader:
     def register_plugin(self, plugin_class: Type[Plugin], plugin_name: str = None):
         """注册一个插件类，主要用于测试"""
         plugin = self.instantiate_plugin(plugin_class)
-        self.plugins.append(plugin)
+        key = plugin_name or plugin_class.__name__
+        self.plugins[key] = plugin
         
         # 创建并存储插件信息
         plugin_info = PluginInfo(
@@ -43,7 +44,6 @@ class PluginLoader:
             is_enabled=True,
             metadata=getattr(plugin, 'metadata', None)
         )
-        key = plugin_name or plugin_class.__name__
         self.plugin_infos[key] = plugin_info
         self.logger.info(f"Registered test plugin: {key}")
         return plugin
@@ -90,7 +90,7 @@ class PluginLoader:
             raise ValueError(f"No valid plugin class found in module {plugin_name}")
         plugin_class = plugin_classes[0]
         plugin = self.instantiate_plugin(plugin_class)
-        self.plugins.append(plugin)
+        self.plugins[plugin_name] = plugin
         
         # 创建并存储插件信息
         plugin_info = PluginInfo(
@@ -127,7 +127,7 @@ class PluginLoader:
             
             # 实例化插件并启动
             plugin: Plugin = self.instantiate_plugin(plugin_class)
-            self.plugins.append(plugin)
+            self.plugins[plugin_name] = plugin
             
             self.logger.info(f"Successfully loaded external plugin: {plugin_name}")
             return plugin
@@ -145,7 +145,7 @@ class PluginLoader:
     def load_plugins(self):
         """Initializes all loaded plugins."""
         self.logger.info("Initializing plugins...")
-        for plugin in self.plugins:
+        for plugin_name, plugin in self.plugins.items():
             try:
                 plugin.on_load()
                 self.logger.info(f"Plugin {plugin.__class__.__name__} initialized")
@@ -155,7 +155,7 @@ class PluginLoader:
     def start_plugins(self):
         """Starts all loaded plugins."""
         self.logger.info("Starting plugins...")
-        for plugin in self.plugins:
+        for plugin_name, plugin in self.plugins.items():
             try:
                 plugin.on_start()
                 self.logger.info(f"Plugin {plugin.__class__.__name__} started")
@@ -165,7 +165,7 @@ class PluginLoader:
     def stop_plugins(self):
         """Stops all loaded plugins."""
         self.logger.info("Stopping plugins...")
-        for plugin in self.plugins:
+        for plugin_name, plugin in self.plugins.items():
             try:
                 plugin.on_stop()
                 plugin.event_bus.unregister_all()
@@ -292,16 +292,18 @@ class PluginLoader:
             
         try:
             # 找到并停止插件实例
-            plugin = next((p for p in self.plugins if p.__class__.__name__ == plugin_name), None)
-            if plugin:
+            if plugin_name in self.plugins:
+                plugin = self.plugins[plugin_name]
+                print(isinstance(plugin, Plugin))
                 plugin.on_stop()
-                self.plugins.remove(plugin)
+                del self.plugins[plugin_name]
             
             # 更新配置
             if plugin_name in self.config.plugins.enable:
                 self.config.plugins.enable.remove(plugin_name)
             
             plugin_info.is_enabled = False
+            self.plugin_infos[plugin_name] = plugin_info
             
             self.logger.info(f"Plugin {plugin_name} disabled")
             return True

@@ -72,18 +72,21 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 当前日期时间：{datetime.now()}
 
 # Memories
-以下是之前发生过的对话记录，其中 <@llm> 开头的内容表示你当前扮演角色的回答。
+以下是之前发生过的对话记录。
 -- 对话记录开始 --
 {{memory_content}}
 -- 对话记录结束 --
 
-请注意，`<break>` 只是一个标记，用于表示聊天时发送消息的操作。
-接下来，请你扮演以上的角色，与用户继续交流。
+请注意，下面这些符号只是标记：
+1. `<break>` 用于表示聊天时发送消息的操作。
+2. `<@llm>` 开头的内容表示你当前扮演角色的回答，请不要在你的回答中带上这个标记。
+
+接下来，请基于以上的信息，与用户继续扮演角色。
 """.strip()
 
         user_prompt = """{user_name}说：{user_msg}"""
         
-        return (WorkflowBuilder("（默认）角色扮演")
+        return (WorkflowBuilder("默认 - 角色扮演")
             .use(GetIMMessage, name="get_message")
             .parallel([
                 (ToggleEditState, {"is_editing": True}),
@@ -92,7 +95,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
             .chain(TextBlock, name="system_prompt", text=system_prompt)
             .chain(TextBlock, name="user_prompt", text=user_prompt)
             .chain(ChatMessageConstructor,
-                wire_from=["query_memory", "get_message", "system_prompt", "user_prompt"])
+                wire_from=["get_message", "user_prompt", "query_memory", "get_message", "system_prompt"])
             .chain(ChatCompletion, name="llm_chat")
             .chain(ChatResponseConverter)
             .parallel([

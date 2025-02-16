@@ -25,22 +25,24 @@ TEST_SECRET_KEY = "test-secret-key"
 TEST_PLUGIN_NAME = "test-plugin"
 
 # ==================== 测试用插件 ====================
-class TestPlugin(Plugin):
-    """测试用插件"""
-    __test__ = False
-    
-    def __init__(self):
-        self.initialized = False
-        self.started = False
+def make_test_plugin():
+    class TestPlugin(Plugin):
+        """测试用插件"""
+        __test__ = True
         
-    def on_load(self):
-        self.initialized = True
-        
-    def on_start(self):
-        self.started = True
-        
-    def on_stop(self):
-        self.started = False
+        def __init__(self):
+            self.initialized = False
+            self.started = False
+            
+        def on_load(self):
+            self.initialized = True
+            
+        def on_start(self):
+            self.started = True
+            
+        def on_stop(self):
+            self.started = False
+    return TestPlugin
 
 # ==================== Mock 数据 ====================
 async def MOCK_PLUGIN_SEARCH_RESPONSE():
@@ -59,7 +61,8 @@ async def MOCK_PLUGIN_SEARCH_RESPONSE():
             },
             "isInstalled": True,
             "installedVersion": "1.0.0",
-            "isUpgradable": False
+            "isUpgradable": False,
+            "isEnabled": True
         }
     ],
     "totalCount": 1,
@@ -82,7 +85,8 @@ async def MOCK_PLUGIN_INFO_RESPONSE():
         },
         "isInstalled": True,
         "installedVersion": "1.0.0",
-        "isUpgradable": False
+        "isUpgradable": False,
+        "isEnabled": True
     }
 
 # ==================== Fixtures ====================
@@ -117,7 +121,7 @@ def app():
     
     # 创建插件加载器并注册测试插件
     plugin_loader = PluginLoader(container, "plugins")
-    plugin_loader.register_plugin(TestPlugin, TEST_PLUGIN_NAME)
+    plugin_loader.register_plugin(make_test_plugin(), TEST_PLUGIN_NAME)
     container.register(PluginLoader, plugin_loader)
     
     app = create_app(container)

@@ -18,7 +18,7 @@ class TelegramAdapterPlugin(Plugin):
             tasks = []
             loop = asyncio.get_event_loop()
             for key, adapter in self.im_manager.get_adapters().items():
-                if isinstance(adapter, TelegramAdapter):
+                if isinstance(adapter, TelegramAdapter) and adapter.is_running:
                     tasks.append(self.im_manager.stop_adapter(key, loop))
             for key in list(self.im_manager.get_adapters().keys()):
                 self.im_manager.delete_adapter(key)

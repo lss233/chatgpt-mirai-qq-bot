@@ -1,6 +1,8 @@
 from quart import Blueprint, g, jsonify, request
 import aiohttp
 from packaging.version import Version
+
+from framework.logger import get_logger
 from ...auth.middleware import require_auth
 from framework.plugin_manager.models import PluginInfo
 from framework.plugin_manager.plugin_loader import PluginLoader
@@ -9,6 +11,8 @@ from framework.config.config_loader import ConfigLoader
 from .models import InstallPluginRequest, PluginList, PluginResponse
 
 plugin_bp = Blueprint('plugin', __name__)
+
+logger = get_logger("WebServer")
 
 def is_upgradable(installed_version: str, market_version: str) -> bool:
     """检查插件是否可升级"""
@@ -20,8 +24,9 @@ def is_upgradable(installed_version: str, market_version: str) -> bool:
 async def fetch_from_market(path: str, params: dict = None) -> dict:
     """从插件市场获取数据的通用方法"""
     plugin_market_base_url = g.container.resolve(GlobalConfig).plugins.market_base_url
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(trust_env=True) as session:
         url = f"{plugin_market_base_url}/{path}"
+        logger.info(f"Fetching from market: {url}")
         async with session.get(url, params=params) as response:
             if response.status != 200:
                 raise Exception(f"插件市场请求失败: {response.status}")
@@ -44,6 +49,7 @@ async def enrich_plugin_data(plugins: list, loader: PluginLoader) -> list:
             if installed_plugin
             else False
         )
+        plugin['isEnabled'] = installed_plugin.is_enabled if installed_plugin else False
     
     return plugins
 
@@ -200,6 +206,7 @@ async def disable_plugin(plugin_name: str):
     try:
         # 禁用插件
         await loader.disable_plugin(plugin_name)
+        plugin_info = loader.get_plugin_info(plugin_name)
         
         # 更新配置
         if plugin_name and plugin_name in config.plugins.enable and not plugin_info.is_internal:

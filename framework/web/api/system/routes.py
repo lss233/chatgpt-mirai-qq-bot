@@ -1,5 +1,7 @@
 import psutil
 import time
+import tomli
+from pathlib import Path
 from quart import Blueprint, g
 from framework.im.manager import IMManager
 from framework.llm.llm_manager import LLMManager
@@ -12,6 +14,16 @@ system_bp = Blueprint('system', __name__)
 
 # 记录启动时间
 start_time = time.time()
+
+def get_version() -> str:
+    """从 pyproject.toml 读取版本号"""
+    try:
+        pyproject_path = Path(__file__).parent.parent.parent.parent.parent / "pyproject.toml"
+        with open(pyproject_path, "rb") as f:
+            pyproject = tomli.load(f)
+            return pyproject["project"]["version"]
+    except Exception:
+        return "0.0.0"  # 如果读取失败，返回默认版本号
 
 @system_bp.route('/status', methods=['GET'])
 @require_auth
@@ -53,7 +65,8 @@ async def get_system_status():
         loaded_plugins=loaded_plugins,
         workflow_count=workflow_count,
         memory_usage=memory_usage,
-        cpu_usage=cpu_usage
+        cpu_usage=cpu_usage,
+        version=get_version()
     )
     
     return SystemStatusResponse(status=status).model_dump() 
