@@ -32,18 +32,22 @@ class WorkflowDispatcher:
         
         for rule in active_rules:
             if rule.match(message, self.workflow_registry):
-                self.logger.debug(f"Matched rule {rule}, executing workflow")
-                with self.container.scoped() as scoped_container:
-                    scoped_container.register(IMAdapter, source)
-                    scoped_container.register(IMMessage, message)
-                    workflow = rule.get_workflow(scoped_container)
-                    executor = WorkflowExecutor(workflow)
-                    scoped_container.register(Workflow, workflow)
-                    scoped_container.register(WorkflowExecutor, executor)
-                    try:
+                try:
+                    self.logger.debug(f"Matched rule {rule}, executing workflow")
+                    with self.container.scoped() as scoped_container:
+                        scoped_container.register(IMAdapter, source)
+                        scoped_container.register(IMMessage, message)
+                        workflow = rule.get_workflow(scoped_container)
+                        if workflow is None:
+                            self.logger.error(f"Workflow {rule} not found")
+                            continue
+                        executor = WorkflowExecutor(workflow)
+                        scoped_container.register(Workflow, workflow)
+                        scoped_container.register(WorkflowExecutor, executor)
                         return await executor.run()
-                    except Exception as e:
-                        self.logger.error(f"Workflow execution failed: {e}")
-                        raise e
+                except Exception as e:
+                    self.logger.exception(e)
+                    self.logger.error(f"Workflow execution failed: {e}")
+                    raise e
         self.logger.debug("No matching rule found for message")
         return None

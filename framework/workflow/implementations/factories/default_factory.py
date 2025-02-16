@@ -79,7 +79,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 
 请注意，下面这些符号只是标记：
 1. `<break>` 用于表示聊天时发送消息的操作。
-2. `<@llm>` 开头的内容表示你当前扮演角色的回答，请不要在你的回答中带上这个标记。
+2. `<@llm>` 开头的内容表示你当前扮演角色的回答，禁止在回答中使用这个标记。
 
 接下来，请基于以上的信息，与用户继续扮演角色。
 """.strip()
@@ -90,7 +90,7 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
             .use(GetIMMessage, name="get_message")
             .parallel([
                 (ToggleEditState, {"is_editing": True}),
-                (ChatMemoryQuery, "query_memory", {"scope_type": 'member'})
+                (ChatMemoryQuery, "query_memory", {"scope_type": 'group'})
             ])
             .chain(TextBlock, name="system_prompt", text=system_prompt)
             .chain(TextBlock, name="user_prompt", text=user_prompt)
@@ -100,5 +100,5 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
             .chain(ChatResponseConverter)
             .parallel([
                 SendIMMessage,
-                (ChatMemoryStore, {"scope_type": 'member'}, ["get_message", "llm_chat"]),
+                (ChatMemoryStore, {"scope_type": 'group'}, ["get_message", "llm_chat"]),
             ]))

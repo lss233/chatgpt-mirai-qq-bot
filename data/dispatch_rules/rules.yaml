@@ -1,90 +1,122 @@
 - rule_id: chat_normal
   name: 普通聊天
   description: 普通聊天，使用默认参数
-  type: prefix
-  priority: 5
   workflow_id: chat:normal
+  priority: 5
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: prefix
+      config:
+        prefix: /chat
   metadata:
     category: chat
     permission: user
     temperature: 0.7
-  prefix: /chat
 - rule_id: chat_creative
   name: 创意聊天
   description: 创意聊天，使用更高的温度参数
-  type: keyword
-  priority: 5
   workflow_id: chat:creative
+  priority: 5
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: keyword
+      config:
+        keywords:
+        - 创意
+        - 发散
+        - brainstorm
   metadata:
     category: chat
     permission: user
     temperature: 0.9
-  keywords:
-  - 创意
-  - 发散
-  - brainstorm
 - rule_id: chat_roleplay
   name: 角色扮演
   description: 角色扮演聊天，自动提取角色设定
-  type: regex
-  priority: 8
   workflow_id: chat:roleplay
+  priority: 8
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: regex
+      config:
+        pattern: ^扮演(.+?)[:：]
   metadata:
     category: chat
     permission: user
     temperature: 0.8
-  pattern: ^扮演(.+?)[:：]
 - rule_id: game_dice
   name: 骰子
   description: 骰子游戏，支持 XdY 格式
-  type: regex
-  priority: 5
   workflow_id: game:dice
+  priority: 5
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: regex
+      config:
+        pattern: ^[.。]roll\s*(\d+)?d(\d+)
   metadata: {}
-  pattern: ^[.。]roll\s*(\d+)?d(\d+)
 - rule_id: game_gacha
   name: 抽卡
   description: 抽卡模拟器
-  type: keyword
-  priority: 5
   workflow_id: game:gacha
+  priority: 5
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: keyword
+      config:
+        keywords:
+        - 抽卡
+        - 十连
+        - 单抽
   metadata: {}
-  keywords:
-  - 抽卡
-  - 十连
-  - 单抽
 - rule_id: system_help
   name: 帮助命令
   description: 显示帮助信息
-  type: prefix
-  priority: 10
   workflow_id: system:help
+  priority: 10
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: prefix
+      config:
+        prefix: /help
   metadata:
     category: system
     permission: user
-  prefix: /help
 - rule_id: system_clear_memory
   name: 清空记忆
   description: 清空当前对话的记忆
-  type: prefix
-  priority: 10
   workflow_id: system:clear_memory
+  priority: 10
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: prefix
+      config:
+        prefix: /清空记忆
   metadata:
     category: system
     permission: user
-  prefix: /清空记忆
 - rule_id: fallback
   name: 默认规则
   description: 当上述规则均没有匹配成功时，执行此工作流。
-  type: fallback
+  workflow_id: chat:memory_store
   priority: 0
-  workflow_id: chat:directStore
   enabled: true
+  rule_groups:
+  - operator: and
+    rules:
+    - type: fallback
+      config: {}
   metadata: {}

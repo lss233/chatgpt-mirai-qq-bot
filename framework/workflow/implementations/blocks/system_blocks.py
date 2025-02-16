@@ -5,7 +5,7 @@ from framework.workflow.implementations.blocks.memory.clear_memory import ClearM
 from framework.workflow.implementations.blocks.system.basic import TextBlock
 from .im.messages import GetIMMessage, SendIMMessage
 from .im.states import ToggleEditState
-from .memory.chat_memory import ChatMemoryQuery, ChatMemoryStore, ChatMemoryDirectStore
+from .memory.chat_memory import ChatMemoryQuery, ChatMemoryStore
 from .llm.chat import ChatMessageConstructor, ChatCompletion, ChatResponseConverter
 from .game.dice import DiceRoll
 from .game.gacha import GachaSimulator
@@ -28,7 +28,6 @@ def register_system_blocks(registry: BlockRegistry):
     registry.register("chat_completion", "internal", ChatCompletion, "LLM: 执行对话")
     registry.register("chat_response_converter", "internal", ChatResponseConverter, "LLM->IM: 转换消息")
     registry.register("chat_memory_store", "internal", ChatMemoryStore, "LLM: 存储记忆")
-    registry.register("chat_memory_direct_store", "internal", ChatMemoryDirectStore)
 
     # 画图相关 blocks
     registry.register("simple_stable_diffusion_webui", "internal", SimpleStableDiffusionWebUI, "画图: 简单 Stable Diffusion WebUI")

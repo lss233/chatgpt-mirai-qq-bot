@@ -22,5 +22,8 @@ class SystemWorkflowFactory:
         """创建清空记忆工作流"""
         return (WorkflowBuilder("清空记忆")
             .use(GetIMMessage)
-            .chain(ClearMemory)
+            .parallel([
+                (ClearMemory, {"scope_type": "group"}),
+                (ClearMemory, {"scope_type": "member"})
+            ])
             .chain(SendIMMessage))

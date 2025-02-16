@@ -144,7 +144,7 @@ class WorkflowExecutor:
             try:
                 result = await future
                 self.results[block.name] = result
-                self.logger.info(f"Block {block.name} executed successfully")
+                self.logger.info(f"Block [{block.name}] executed successfully")
                 if result:
                     # self.logger.debug(f"Execution result keys: {list(result.keys())}")
                     pass
@@ -189,9 +189,10 @@ class WorkflowExecutor:
                     wire.source_block.name in self.results):
                     input_satisfied = True
                     break
-
-            if not input_satisfied:
-                # self.logger.debug(f"Input {input_name} not satisfied")
+                
+            # 如果输入没有被满足，并且输入不是可空的，则返回False
+            if not input_satisfied and not block.inputs[input_name].nullable:
+                self.logger.info(f"Input [{block.name}.{input_name}] not satisfied")
                 return False
 
         # self.logger.debug("All inputs satisfied and predecessors completed")
@@ -217,7 +218,7 @@ class WorkflowExecutor:
                     # self.logger.debug(f"Resolved input {input_name} from {wire.source_block.name}.{wire.source_output}")
                 else:
                     raise RuntimeError(f"Source block {wire.source_block.name} not executed for input {input_name}")
-            else:
+            elif not block.inputs[input_name].nullable:
                 raise RuntimeError(f"Missing wire connection for required input {input_name} in block {block.name}")
 
         return inputs
