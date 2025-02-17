@@ -36,18 +36,18 @@ class TextReplaceBlock(Block):
     name = "text_replace_block"
     inputs = {
         "text": Input("text", "原始文本", str, "原始文本"),
-        "variable": Input("variable", "被替换的文本", Any, "被替换的文本"),
+        "new_text": Input("new_text", "新文本", Any, "新文本"),
     }
     outputs = {"text": Output("text", "替换后的文本", str, "替换后的文本")}
 
     def __init__(
-        self, name: Annotated[str, ParamMeta(label="变量名称", description="变量名称")]
+        self, variable: Annotated[str, ParamMeta(label="被替换的文本", description="被替换的文本")]
     ):
-        self.name = name
+        self.variable = variable
 
-    def execute(self) -> Dict[str, Any]:
+    def execute(self, text: str, new_text: Any) -> Dict[str, Any]:
         return {
-            "text": self.text.value.replace(self.variable.value, str(self.variable))
+            "text": text.replace(self.variable, str(new_text))
         }
 
 
@@ -56,6 +56,10 @@ class TextExtractByRegexBlock(Block):
     name = "text_extract_by_regex_block"
     inputs = {"text": Input("text", "原始文本", str, "原始文本")}
     outputs = {"text": Output("text", "提取后的文本", str, "提取后的文本")}
+    def __init__(
+        self, regex: Annotated[str, ParamMeta(label="正则表达式", description="正则表达式")]
+    ):
+        self.regex = regex
 
     def execute(self) -> Dict[str, Any]:
         # 使用正则表达式提取文本
@@ -65,3 +69,4 @@ class TextExtractByRegexBlock(Block):
             return {"text": match.group(0)}
         else:
             return {"text": ""}
+        

@@ -2,7 +2,8 @@ from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.implementations.blocks.im.basic import ExtractChatSender
 from framework.workflow.implementations.blocks.llm.image import SimpleStableDiffusionWebUI
 from framework.workflow.implementations.blocks.memory.clear_memory import ClearMemory
-from framework.workflow.implementations.blocks.system.basic import TextBlock
+from framework.workflow.implementations.blocks.system.basic import (TextBlock, TextConcatBlock, TextExtractByRegexBlock,
+                                                                    TextReplaceBlock)
 
 from .game.dice import DiceRoll
 from .game.gacha import GachaSimulator
@@ -17,6 +18,9 @@ def register_system_blocks(registry: BlockRegistry):
     """注册系统自带的 block"""
     # 基础 blocks
     registry.register("text_block", "internal", TextBlock, "基础：文本")
+    registry.register("text_concat_block", "internal", TextConcatBlock, "基础：拼接文本")
+    registry.register("text_replace_block", "internal", TextReplaceBlock, "基础：替换文本")
+    registry.register("text_extract_by_regex_block", "internal", TextExtractByRegexBlock, "基础：正则表达式提取文本")
 
     # IM 相关 blocks
     registry.register("get_message", "internal", GetIMMessage, "IM: 获取最新消息")
