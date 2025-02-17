@@ -88,21 +88,25 @@ class IMManager:
             loop = asyncio.new_event_loop()
         tasks = []
         for im in self.config.ims:
-            # 动态获取 adapter 类
-            adapter_class = self.im_registry.get(im.adapter)
-            # 动态获取 adapter 的配置类
-            config_class = self.im_registry.get_config_class(im.adapter)
-            # 动态实例化 adapter 的配置对象
-            adapter_config = config_class(**im.config)
+            try:
+                # 动态获取 adapter 类
+                adapter_class = self.im_registry.get(im.adapter)
+                # 动态获取 adapter 的配置类
+                config_class = self.im_registry.get_config_class(im.adapter)
+                # 动态实例化 adapter 的配置对象
+                adapter_config = config_class(**im.config)
 
-            # 创建 adapter 实例
-            adapter = self.create_adapter(im.name, adapter_class, adapter_config)
-            if im.enable:
-                tasks.append(
-                    asyncio.ensure_future(
-                        self._start_adapter(im.name, adapter), loop=loop
+                # 创建 adapter 实例
+                adapter = self.create_adapter(im.name, adapter_class, adapter_config)
+                if im.enable:
+                    tasks.append(
+                        asyncio.ensure_future(
+                            self._start_adapter(im.name, adapter), loop=loop
+                        )
                     )
-                )
+            except Exception as e:
+                logger.error(f"Failed to start adapter {im.name}: {e}")
+                continue
         if len(tasks) > 0:
             loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         else:

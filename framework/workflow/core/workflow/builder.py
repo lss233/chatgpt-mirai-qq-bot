@@ -10,7 +10,8 @@ from ruamel.yaml import YAML
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block, ConditionBlock, LoopBlock, LoopEndBlock
 from framework.workflow.core.block.registry import BlockRegistry
-from framework.workflow.core.workflow import Wire, Workflow
+
+from .base import Wire, Workflow
 
 
 @dataclass

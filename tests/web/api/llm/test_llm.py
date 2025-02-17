@@ -12,7 +12,7 @@ from framework.llm.format.response import LLMChatResponse
 from framework.llm.llm_manager import LLMManager
 from framework.llm.llm_registry import LLMAbility, LLMBackendRegistry
 from framework.web.app import create_app
-from tests.utils.auth_test_utils import setup_auth_service
+from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"

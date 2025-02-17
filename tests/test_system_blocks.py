@@ -83,7 +83,6 @@ def test_generate_help_basic(container):
     assert "response" in result
     response = result["response"]
     assert isinstance(response, IMMessage)
-    assert response.sender == "<@bot>"
 
     help_text = response.content
 

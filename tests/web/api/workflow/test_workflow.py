@@ -8,7 +8,7 @@ from framework.workflow.core.block import Block, BlockRegistry
 from framework.workflow.core.block.input_output import Input, Output
 from framework.workflow.core.workflow import WorkflowRegistry
 from framework.workflow.core.workflow.builder import WorkflowBuilder
-from tests.utils.auth_test_utils import setup_auth_service
+from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
