@@ -1,21 +1,22 @@
 from datetime import datetime
-from framework.ioc.container import DependencyContainer
-from framework.workflow.core.workflow import Workflow
+
 from framework.workflow.core.workflow.builder import WorkflowBuilder
-from framework.workflow.implementations.blocks.im.basic import ExtractChatSender
 from framework.workflow.implementations.blocks.im.messages import GetIMMessage, SendIMMessage
 from framework.workflow.implementations.blocks.im.states import ToggleEditState
+from framework.workflow.implementations.blocks.llm.chat import (ChatCompletion, ChatMessageConstructor,
+                                                                ChatResponseConverter)
 from framework.workflow.implementations.blocks.memory.chat_memory import ChatMemoryQuery, ChatMemoryStore
-from framework.workflow.implementations.blocks.llm.chat import ChatMessageConstructor, ChatCompletion, ChatResponseConverter
 from framework.workflow.implementations.blocks.system.basic import TextBlock
+
 
 class DefaultWorkflowFactory:
     """
     构建默认的聊天工作流，提供基本的聊天 bot 能力。
     """
+
     @staticmethod
     def create_default_workflow() -> WorkflowBuilder:
-        """使用 DSL 创建默认工作流"""    
+        """使用 DSL 创建默认工作流"""
         system_prompt = f"""# Role: 角色扮演
 
 ## 基本信息
@@ -85,20 +86,38 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 """.strip()
 
         user_prompt = """{user_name}说：{user_msg}"""
-        
-        return (WorkflowBuilder("默认 - 角色扮演")
+
+        return (
+            WorkflowBuilder("默认 - 角色扮演")
             .use(GetIMMessage, name="get_message")
-            .parallel([
-                (ToggleEditState, {"is_editing": True}),
-                (ChatMemoryQuery, "query_memory", {"scope_type": 'group'})
-            ])
+            .parallel(
+                [
+                    (ToggleEditState, {"is_editing": True}),
+                    (ChatMemoryQuery, "query_memory", {"scope_type": "group"}),
+                ]
+            )
             .chain(TextBlock, name="system_prompt", text=system_prompt)
             .chain(TextBlock, name="user_prompt", text=user_prompt)
-            .chain(ChatMessageConstructor,
-                wire_from=["get_message", "user_prompt", "query_memory", "get_message", "system_prompt"])
+            .chain(
+                ChatMessageConstructor,
+                wire_from=[
+                    "get_message",
+                    "user_prompt",
+                    "query_memory",
+                    "get_message",
+                    "system_prompt",
+                ],
+            )
             .chain(ChatCompletion, name="llm_chat")
             .chain(ChatResponseConverter)
-            .parallel([
-                SendIMMessage,
-                (ChatMemoryStore, {"scope_type": 'group'}, ["get_message", "llm_chat"]),
-            ]))
+            .parallel(
+                [
+                    SendIMMessage,
+                    (
+                        ChatMemoryStore,
+                        {"scope_type": "group"},
+                        ["get_message", "llm_chat"],
+                    ),
+                ]
+            )
+        )

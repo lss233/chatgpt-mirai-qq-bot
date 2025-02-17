@@ -1,8 +1,8 @@
 from .base import Block, ConditionBlock, LoopBlock, LoopEndBlock
-from .registry import BlockRegistry
-from .schema import BlockInput, BlockOutput, BlockConfig
-from .param import ParamMeta
 from .input_output import Input, Output
+from .param import ParamMeta
+from .registry import BlockRegistry
+from .schema import BlockConfig, BlockInput, BlockOutput
 
 __all__ = [
     "Block",
@@ -15,5 +15,5 @@ __all__ = [
     "BlockConfig",
     "ParamMeta",
     "Input",
-    "Output"
+    "Output",
 ]

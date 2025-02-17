@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="chatgpt-mirai-telegram-adapter",
@@ -6,13 +6,10 @@ setup(
     description="Telegram adapter plugin for ChatGPT-Mirai",
     author="Internal",
     packages=find_packages(),
-    install_requires=[
-        "python-telegram-bot",
-        "telegramify-markdown"
-    ],
+    install_requires=["python-telegram-bot", "telegramify-markdown"],
     entry_points={
         "chatgpt_mirai.plugins": [
             "telegram = im_telegram_adapter.plugin:TelegramAdapterPlugin"
         ]
-    }
-) 
+    },
+)

@@ -10,18 +10,26 @@ from framework.ioc.inject import Inject
 from framework.logger import get_logger
 
 logger = get_logger("IMManager")
+
+
 class IMManager:
     """
     IM 生命周期管理器，负责管理所有 adapter 的启动、运行和停止。
     """
+
     container: DependencyContainer
-    
+
     config: GlobalConfig
-    
+
     im_registry: IMRegistry
-    
+
     @Inject()
-    def __init__(self, container: DependencyContainer, config: GlobalConfig, adapter_registry: IMRegistry):
+    def __init__(
+        self,
+        container: DependencyContainer,
+        config: GlobalConfig,
+        adapter_registry: IMRegistry,
+    ):
         self.container = container
         self.config = config
         self.im_registry = adapter_registry
@@ -34,7 +42,7 @@ class IMManager:
         :return: adapter 的类型
         """
         return self.get_adapter_config(name).adapter
-    
+
     def has_adapter(self, name: str) -> bool:
         """
         检查指定名称的 adapter 是否存在。
@@ -42,7 +50,7 @@ class IMManager:
         :return: 如果 adapter 存在返回 True，否则返回 False
         """
         return name in self.adapters
-    
+
     def get_adapter_config(self, name: str) -> IMConfig:
         """
         获取指定名称的 adapter 的配置。
@@ -53,7 +61,7 @@ class IMManager:
             if im.name == name:
                 return im
         raise ValueError(f"Adapter {name} not found")
-    
+
     def update_adapter_config(self, name: str, config: IMConfig):
         """
         更新指定名称的 adapter 的配置。
@@ -61,7 +69,7 @@ class IMManager:
         :param config: adapter 的配置
         """
         self.get_adapter_config(name).config = config.model_dump()
-        
+
     def delete_adapter(self, name: str):
         """
         删除指定名称的 adapter。
@@ -90,8 +98,12 @@ class IMManager:
             # 创建 adapter 实例
             adapter = self.create_adapter(im.name, adapter_class, adapter_config)
             if im.enable:
-                tasks.append(asyncio.ensure_future(self._start_adapter(im.name, adapter), loop=loop))
-        if len(tasks) > 0:  
+                tasks.append(
+                    asyncio.ensure_future(
+                        self._start_adapter(im.name, adapter), loop=loop
+                    )
+                )
+        if len(tasks) > 0:
             loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         else:
             logger.warning("No adapters to start, please check your config")
@@ -103,17 +115,17 @@ class IMManager:
         """
         if loop is None:
             loop = asyncio.get_event_loop()
-            
+
         for key, adapter in self.adapters.items():
             loop.run_until_complete(self._stop_adapter(key, adapter))
-            
+
     def get_adapters(self) -> Dict[str, IMAdapter]:
         """
         获取所有已启动的 adapter。
         :return: 已启动的 adapter 字典。
         """
         return self.adapters
-    
+
     def get_adapter(self, key: str) -> IMAdapter:
         """
         获取指定 key 的 adapter。
@@ -121,7 +133,7 @@ class IMManager:
         :return: 指定 key 的 adapter
         """
         return self.adapters[key]
-    
+
     async def _start_adapter(self, key: str, adapter: IMAdapter):
         logger.info(f"Starting adapter: {key}")
         await adapter.start()
@@ -144,7 +156,9 @@ class IMManager:
         if adapter_id not in self.adapters:
             raise ValueError(f"Adapter {adapter_id} not found")
         adapter = self.adapters[adapter_id]
-        return asyncio.ensure_future(self._start_adapter(adapter_id, adapter), loop=loop)
+        return asyncio.ensure_future(
+            self._start_adapter(adapter_id, adapter), loop=loop
+        )
 
     def is_adapter_running(self, key: str) -> bool:
         """
@@ -155,12 +169,12 @@ class IMManager:
 
         return key in self.adapters and getattr(self.adapters[key], "is_running", False)
 
-    def create_adapter(self, name: str, adapter_class: Type[IMAdapter], adapter_config: IMConfig) -> IMAdapter:
+    def create_adapter(
+        self, name: str, adapter_class: Type[IMAdapter], adapter_config: IMConfig
+    ) -> IMAdapter:
         with self.container.scoped() as scoped_container:
             scoped_container.register(adapter_config.__class__, adapter_config)
             adapter = Inject(scoped_container).create(adapter_class)()
             adapter.is_running = False
         self.adapters[name] = adapter
         return adapter
-
-

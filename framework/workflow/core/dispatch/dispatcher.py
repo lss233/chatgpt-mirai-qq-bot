@@ -2,18 +2,20 @@ from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
-from framework.workflow.core.workflow.base import Workflow
-from framework.workflow.core.workflow.registry import WorkflowRegistry
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.workflow.core.dispatch.rule import DispatchRule
 from framework.workflow.core.execution.executor import WorkflowExecutor
+from framework.workflow.core.workflow.base import Workflow
+from framework.workflow.core.workflow.registry import WorkflowRegistry
+
 
 class WorkflowDispatcher:
     """工作流调度器"""
+
     def __init__(self, container: DependencyContainer):
         self.container = container
         self.logger = get_logger("WorkflowDispatcher")
-        
+
         # 从容器获取注册表
         self.workflow_registry = container.resolve(WorkflowRegistry)
         self.dispatch_registry = container.resolve(DispatchRuleRegistry)
@@ -29,7 +31,7 @@ class WorkflowDispatcher:
         """
         # 获取所有已启用的规则，按优先级排序
         active_rules = self.dispatch_registry.get_active_rules()
-        
+
         for rule in active_rules:
             if rule.match(message, self.workflow_registry):
                 try:

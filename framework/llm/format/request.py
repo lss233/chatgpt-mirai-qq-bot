@@ -8,6 +8,7 @@ from framework.llm.format.message import LLMChatMessage
 class ResponseFormat(BaseModel):
     type: Optional[str] = None
 
+
 class LLMChatRequest(BaseModel):
     messages: Optional[List[LLMChatMessage]] = None
     model: Optional[str] = None

@@ -1,14 +1,17 @@
 import aiohttp
-from pydantic import ConfigDict, BaseModel
 import requests
-from framework.llm.adapter import LLMBackendAdapter, AutoDetectModelsProtocol
+from pydantic import BaseModel, ConfigDict
+
+from framework.llm.adapter import AutoDetectModelsProtocol, LLMBackendAdapter
 from framework.llm.format.request import LLMChatRequest
 from framework.llm.format.response import LLMChatResponse
+
 
 class OpenAIConfig(BaseModel):
     api_key: str
     api_base: str = "https://api.openai.com/v1"
     model_config = ConfigDict(frozen=True)
+
 
 class OpenAIAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
     def __init__(self, config: OpenAIConfig):
@@ -18,11 +21,11 @@ class OpenAIAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
         api_url = f"{self.config.api_base}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
         data = {
-            "messages": [msg.model_dump(mode='json') for msg in req.messages],
+            "messages": [msg.model_dump(mode="json") for msg in req.messages],
             "model": req.model,
             "frequency_penalty": req.frequency_penalty,
             "max_tokens": req.max_tokens,
@@ -41,7 +44,7 @@ class OpenAIAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
 
         # Remove None fields
         data = {k: v for k, v in data.items() if v is not None}
-        
+
         response = requests.post(api_url, json=data, headers=headers)
         try:
             response.raise_for_status()
@@ -51,11 +54,13 @@ class OpenAIAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
             raise e
         print(response_data)
         return LLMChatResponse(**response_data)
-    
+
     async def auto_detect_models(self) -> list[str]:
         api_url = f"{self.config.api_base}/models"
         async with aiohttp.ClientSession(trust_env=True) as session:
-            async with session.get(api_url, headers={"Authorization": f"Bearer {self.config.api_key}"}) as response:
+            async with session.get(
+                api_url, headers={"Authorization": f"Bearer {self.config.api_key}"}
+            ) as response:
                 response.raise_for_status()
                 response_data = await response.json()
                 return [model["id"] for model in response_data["data"]]

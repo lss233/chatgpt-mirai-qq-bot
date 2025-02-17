@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Dict, Any
-from framework.im.sender import ChatSender
 from datetime import datetime
+from typing import Any, Dict
+
+from framework.im.sender import ChatSender
+
 
 @dataclass
 class MemoryEntry:

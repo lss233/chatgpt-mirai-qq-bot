@@ -1,9 +1,13 @@
 import asyncio
+
 from im_telegram_adapter.adapter import TelegramAdapter, TelegramConfig
+
 from framework.logger import get_logger
 from framework.plugin_manager.plugin import Plugin
 
 logger = get_logger("TG-Adapter")
+
+
 class TelegramAdapterPlugin(Plugin):
     def __init__(self):
         pass
@@ -13,6 +17,7 @@ class TelegramAdapterPlugin(Plugin):
 
     def on_start(self):
         pass
+
     def on_stop(self):
         try:
             tasks = []

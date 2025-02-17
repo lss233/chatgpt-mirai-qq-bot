@@ -2,8 +2,15 @@ from typing import Any, Optional
 
 
 class Input:
-    def __init__(self, name: str, label: str, data_type: type, description: str,
-                nullable: bool = False, default: Optional[Any] = None):
+    def __init__(
+        self,
+        name: str,
+        label: str,
+        data_type: type,
+        description: str,
+        nullable: bool = False,
+        default: Optional[Any] = None,
+    ):
         self.name = name
         self.label = label
         self.data_type = data_type

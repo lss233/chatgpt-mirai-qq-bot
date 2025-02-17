@@ -1,19 +1,26 @@
 from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
+from framework.workflow.core.block.input_output import Input, Output
 
 # Define test inputs and outputs
-input_data = Input(name="input1", label="输入1", data_type=str, description="Input data")
-output_data = Output(name="output1", label="输出1", data_type=str, description="Processed data")
+input_data = Input(
+    name="input1", label="输入1", data_type=str, description="Input data"
+)
+output_data = Output(
+    name="output1", label="输出1", data_type=str, description="Processed data"
+)
 
 # Define test block
-block = Block(name="TestBlock", inputs={"input1": input_data}, outputs={"output1": output_data})
+block = Block(
+    name="TestBlock", inputs={"input1": input_data}, outputs={"output1": output_data}
+)
+
 
 def test_block_creation():
     """Test block creation."""
     assert block.name == "TestBlock"
     assert block.inputs["input1"].data_type == str
     assert block.outputs["output1"].data_type == str
+
 
 def test_block_execute():
     """Test block execution."""

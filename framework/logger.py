@@ -1,8 +1,8 @@
+import os
 import re
 from typing import Any
+
 from loguru import logger
-import os
-from datetime import datetime
 
 # 创建 logs 文件夹
 LOG_DIR = "logs"
@@ -43,6 +43,7 @@ logger.add(
 # 全局日志实例
 _global_logger = logger
 
+
 def get_logger(tag: str):
     """
     获取带有特定标签的日志记录器
@@ -51,10 +52,11 @@ def get_logger(tag: str):
     """
     return _global_logger.bind(tag=tag)
 
+
 class HypercornLoggerWrapper:
     def __init__(self, logger):
         self.logger = logger
-        
+
     def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.critical(message, *args, **kwargs)
 
@@ -65,7 +67,7 @@ class HypercornLoggerWrapper:
         self.logger.warning(message, *args, **kwargs)
 
     def info(self, message: str, *args: Any, **kwargs: Any) -> None:
-        log_fmt = re.sub(r'%\((\w+)\)s', r'{\1}', message)
+        log_fmt = re.sub(r"%\((\w+)\)s", r"{\1}", message)
         atoms = args[0] if args else {}
         self.logger.info(log_fmt, **atoms)
 
@@ -77,6 +79,7 @@ class HypercornLoggerWrapper:
 
     def log(self, level: int, message: str, *args: Any, **kwargs: Any) -> None:
         self.logger.log(level, message, *args, **kwargs)
+
 
 def get_async_logger(tag: str):
     """

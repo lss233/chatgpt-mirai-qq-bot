@@ -1,4 +1,5 @@
 from typing import Callable, List, Type
+
 from framework.events.event_bus import EventBus
 
 

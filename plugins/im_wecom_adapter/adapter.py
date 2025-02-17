@@ -1,29 +1,31 @@
-import json
 from typing import Any
 
 from framework.workflow.core.dispatch.dispatcher import WorkflowDispatcher
 
 # 兼容新旧版本的 wechatpy 导入
 try:
-    from wechatpy.enterprise.crypto import WeChatCrypto
+    from wechatpy.enterprise import create_reply, parse_message
     from wechatpy.enterprise.client import WeChatClient
+    from wechatpy.enterprise.crypto import WeChatCrypto
     from wechatpy.enterprise.exceptions import InvalidCorpIdException
-    from wechatpy.enterprise import parse_message, create_reply
 except ImportError:
     from wechatpy.work.crypto import WeChatCrypto
     from wechatpy.work.client import WeChatClient
     from wechatpy.work.exceptions import InvalidCorpIdException
     from wechatpy.work import parse_message, create_reply
 
-from wechatpy.exceptions import InvalidSignatureException
-from quart import Quart, request, abort
-from pydantic import ConfigDict, BaseModel, Field
-from framework.im.adapter import IMAdapter
-from framework.im.message import IMMessage, TextMessage, VoiceMessage, ImageMessage
-from framework.logger import get_logger
 import asyncio
 import base64
 from io import BytesIO
+
+from pydantic import BaseModel, ConfigDict, Field
+from quart import Quart, abort, request
+from wechatpy.exceptions import InvalidSignatureException
+
+from framework.im.adapter import IMAdapter
+from framework.im.message import ImageMessage, IMMessage, TextMessage, VoiceMessage
+from framework.logger import get_logger
+
 
 class WecomConfig(BaseModel):
     """企业微信配置
@@ -31,7 +33,7 @@ class WecomConfig(BaseModel):
     """
 
     corp_id: str = Field(description="企业ID")
-    agent_id: int = Field(description="应用ID") 
+    agent_id: int = Field(description="应用ID")
     secret: str = Field(description="应用Secret")
     token: str = Field(description="Token")
     encoding_aes_key: str = Field(description="EncodingAESKey")
@@ -40,14 +42,18 @@ class WecomConfig(BaseModel):
     debug: bool = Field(default=False, description="是否开启调试模式")
     model_config = ConfigDict(extra="allow")
 
+
 class WecomAdapter(IMAdapter):
     """企业微信适配器"""
+
     dispatcher: WorkflowDispatcher
 
     def __init__(self, config: WecomConfig):
         self.config = config
         self.app = Quart(__name__)
-        self.crypto = WeChatCrypto(config.token, config.encoding_aes_key, config.corp_id)
+        self.crypto = WeChatCrypto(
+            config.token, config.encoding_aes_key, config.corp_id
+        )
         self.client = WeChatClient(config.corp_id, config.secret)
         self.logger = get_logger("Wecom-Adapter")
         self.setup_routes()
@@ -62,13 +68,17 @@ class WecomAdapter(IMAdapter):
             if request.method == "GET":
                 echo_str = request.args.get("echostr", "")
                 try:
-                    echo_str = self.crypto.check_signature(signature, timestamp, nonce, echo_str)
+                    echo_str = self.crypto.check_signature(
+                        signature, timestamp, nonce, echo_str
+                    )
                 except InvalidSignatureException:
                     abort(403)
                 return echo_str
             else:
                 try:
-                    msg = self.crypto.decrypt_message(await request.data, signature, timestamp, nonce)
+                    msg = self.crypto.decrypt_message(
+                        await request.data, signature, timestamp, nonce
+                    )
                 except (InvalidSignatureException, InvalidCorpIdException):
                     abort(403)
                 msg = parse_message(msg)
@@ -96,13 +106,13 @@ class WecomAdapter(IMAdapter):
         return IMMessage(
             sender=sender,
             message_elements=message_elements,
-            raw_message=raw_message_dict
+            raw_message=raw_message_dict,
         )
 
     async def send_message(self, message: IMMessage, recipient: Any):
         """发送消息到企业微信"""
         user_id = recipient
-        
+
         for element in message.message_elements:
             if isinstance(element, TextMessage):
                 await self._send_text(user_id, element.text)
@@ -138,20 +148,18 @@ class WecomAdapter(IMAdapter):
 
     async def start(self):
         """启动服务"""
-        from hypercorn.config import Config
         from hypercorn.asyncio import serve
+        from hypercorn.config import Config
 
         config = Config()
         config.bind = [f"{self.config.host}:{self.config.port}"]
         config._log = get_logger("Wecom-API")
-        
-        self.server_task = asyncio.create_task(
-            serve(self.app, config)
-        )
+
+        self.server_task = asyncio.create_task(serve(self.app, config))
 
     async def stop(self):
         """停止服务"""
-        if hasattr(self, 'server_task'):
+        if hasattr(self, "server_task"):
             self.server_task.cancel()
             try:
                 await self.server_task

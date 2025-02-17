@@ -1,10 +1,13 @@
-from typing import Dict, Any, List, Optional
+from typing import List
+
 from pydantic import BaseModel
 
-from framework.workflow.core.block.schema import BlockInput, BlockOutput, BlockConfig
+from framework.workflow.core.block.schema import BlockConfig, BlockInput, BlockOutput
+
 
 class BlockType(BaseModel):
     """Block类型信息"""
+
     type_name: str
     name: str
     label: str
@@ -13,10 +16,14 @@ class BlockType(BaseModel):
     outputs: List[BlockOutput]
     configs: List[BlockConfig]
 
+
 class BlockTypeList(BaseModel):
     """Block类型列表响应"""
+
     types: List[BlockType]
+
 
 class BlockTypeResponse(BaseModel):
     """单个Block类型响应"""
-    type: BlockType 
+
+    type: BlockType

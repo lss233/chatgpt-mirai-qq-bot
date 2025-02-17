@@ -2,11 +2,11 @@ from functools import wraps
 from inspect import signature
 from typing import Any, Callable, Optional, Type
 
-
 from framework.ioc.container import DependencyContainer
 
+
 def get_all_attributes(cls):
-    if not hasattr(cls, '__annotations__'):
+    if not hasattr(cls, "__annotations__"):
         return {}
     attributes = dict(cls.__annotations__.items())
     # 获取父类的属性和方法
@@ -19,13 +19,13 @@ def get_all_attributes(cls):
 class Inject:
     def __init__(self, container: Any = None):
         self.container = container  # 允许外部传入 container
-        
+
     def create(self, target: type):
         # 注入类
         injected_class = self.__call__(target)
         # 注入构造函数
         return self.inject_function(injected_class)
-    
+
     def __call__(self, target: Any):
         # 如果修饰的是一个类
         if isinstance(target, type):
@@ -37,7 +37,9 @@ class Inject:
         elif isinstance(target, property):
             return self.inject_property(target)
         else:
-            raise TypeError("Inject can only be used on classes, functions, or properties.")
+            raise TypeError(
+                "Inject can only be used on classes, functions, or properties."
+            )
 
     def inject_class(self, cls: Type):
         # 遍历类的属性，尝试注入依赖
@@ -45,6 +47,7 @@ class Inject:
             attr = getattr(cls, name) if hasattr(cls, name) else None
             setattr(cls, name, self.inject_property(name, cls, injecting_type, attr))
         return cls
+
     def inject_function(self, func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -60,8 +63,14 @@ class Inject:
             bound_args = sig.bind_partial(*args, **kwargs)
             bound_args.apply_defaults()
             for name, param in sig.parameters.items():
-                if param.annotation != param.empty and name not in kwargs and self.container:
-                    bound_args.arguments[name] = self.container.resolve(param.annotation)
+                if (
+                    param.annotation != param.empty
+                    and name not in kwargs
+                    and self.container
+                ):
+                    bound_args.arguments[name] = self.container.resolve(
+                        param.annotation
+                    )
 
             # 调用实际的函数
             return func(*bound_args.args, **bound_args.kwargs)
@@ -78,7 +87,7 @@ class Inject:
             fget = lambda self: None
             fset = lambda self, value: None
             fdel = lambda self: None
-            
+
         # 为 property 的 fget 注入依赖
         @wraps(fget)
         def new_fget(_self):

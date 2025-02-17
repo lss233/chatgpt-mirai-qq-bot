@@ -1,6 +1,8 @@
-from typing import Optional, Any
 from enum import Enum, auto
+from typing import Optional
+
 from pydantic import BaseModel, Field
+
 
 class Gender(Enum):
     MALE = auto()
@@ -8,10 +10,12 @@ class Gender(Enum):
     UNKNOWN = auto()
     OTHER = auto()
 
+
 class UserProfile(BaseModel):
     """
     通用的用户资料结构
     """
+
     user_id: str = Field(..., description="用户唯一标识")
     username: Optional[str] = Field(None, description="用户名")
     display_name: Optional[str] = Field(None, description="显示名称")
@@ -21,4 +25,4 @@ class UserProfile(BaseModel):
     avatar_url: Optional[str] = Field(None, description="头像URL")
     level: Optional[int] = Field(None, description="用户等级")
     language: Optional[str] = Field(None, description="语言")
-    extra_info: Optional[dict] = Field(None, description="平台特定的额外信息") 
+    extra_info: Optional[dict] = Field(None, description="平台特定的额外信息")

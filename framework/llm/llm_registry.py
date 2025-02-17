@@ -1,15 +1,16 @@
 from enum import Enum
-from typing import Dict, List, Type, Optional
-from pydantic import BaseModel
+from typing import Dict, List, Optional, Type
 
-from framework.llm.adapter import LLMBackendAdapter
 from framework.config.global_config import LLMBackendConfig
+from framework.llm.adapter import LLMBackendAdapter
 from framework.logger import get_logger
+
 
 class LLMAbility(Enum):
     """
     定义了 LLMAbility 的枚举类型，用于表示 LLM 的能力。
     """
+
     # 这里表示接口支持 chat 格式的对话
     Chat = 1 << 1
     TextInput = 1 << 2
@@ -24,22 +25,30 @@ class LLMAbility(Enum):
     ImageGeneration = ImageInput | ImageOutput
     TextImageMultiModal = Chat | ImageGeneration
     TextImageAudioMultiModal = TextImageMultiModal | AudioInput | AudioOutput
-    
+
+
 class LLMBackendRegistry:
     """
     LLM后端注册表
     """
+
     _adapters: Dict[str, Type[LLMBackendAdapter]]
     _configs: Dict[str, Type[LLMBackendConfig]]
     _ability_registry: Dict[str, int]
-    
+
     def __init__(self):
         self._adapters = {}
         self._configs = {}
         self._ability_registry = {}
         self.logger = get_logger(__name__)
-    
-    def register(self, adapter_type: str, adapter_class: Type[LLMBackendAdapter], config_class: Type[LLMBackendConfig], ability: LLMAbility):
+
+    def register(
+        self,
+        adapter_type: str,
+        adapter_class: Type[LLMBackendAdapter],
+        config_class: Type[LLMBackendConfig],
+        ability: LLMAbility,
+    ):
         """
         注册一个LLM后端适配器
         :param adapter_type: 适配器类型
@@ -51,7 +60,9 @@ class LLMBackendRegistry:
         self._adapters[adapter_type] = adapter_class
         self._configs[adapter_type] = config_class
         self._ability_registry[adapter_type] = ability
-        self.logger.info(f"Registered LLM backend adapter: {adapter_type}, ability: {ability}")
+        self.logger.info(
+            f"Registered LLM backend adapter: {adapter_type}, ability: {ability}"
+        )
 
     def get(self, adapter_type: str) -> Optional[Type[LLMBackendAdapter]]:
         """
@@ -60,7 +71,7 @@ class LLMBackendRegistry:
         :return: 适配器类,如果没有找到则返回None
         """
         return self._adapters.get(adapter_type)
-    
+
     def get_config_class(self, adapter_type: str) -> Optional[Type[LLMBackendConfig]]:
         """
         获取指定类型的配置类
@@ -68,7 +79,7 @@ class LLMBackendRegistry:
         :return: 配置类,如果没有找到则返回None
         """
         return self._configs.get(adapter_type)
-    
+
     def get_adapter_types(self) -> list[str]:
         """
         获取所有已注册的适配器类型
@@ -76,20 +87,33 @@ class LLMBackendRegistry:
         """
         return list(self._adapters.keys())
 
-    def get_adapter_by_ability(self, ability: LLMAbility) -> List[Type[LLMBackendAdapter]]:
+    def get_adapter_by_ability(
+        self, ability: LLMAbility
+    ) -> List[Type[LLMBackendAdapter]]:
         """
         根据指定的能力获取严格符合要求的 LLM 适配器列表。
         :param ability: 指定的能力。
         :return: 符合要求的 LLM 适配器列表。
         """
-        return [adapter_class for name, adapter_class in self._adapters.items() if self._ability_registry[name] == ability.value]
-    def search_adapter_by_ability(self, ability: LLMAbility) -> List[Type[LLMBackendAdapter]]:
+        return [
+            adapter_class
+            for name, adapter_class in self._adapters.items()
+            if self._ability_registry[name] == ability.value
+        ]
+
+    def search_adapter_by_ability(
+        self, ability: LLMAbility
+    ) -> List[Type[LLMBackendAdapter]]:
         """
         根据指定的能力模糊搜索具备该能力的 LLM 适配器列表。
         :param ability: 指定的能力。
         :return: 具备该能力的 LLM 适配器列表。
         """
-        return [adapter_class for name, adapter_class in self._adapters.items() if self._ability_registry[name].value & ability.value == ability.value]
+        return [
+            adapter_class
+            for name, adapter_class in self._adapters.items()
+            if self._ability_registry[name].value & ability.value == ability.value
+        ]
 
     def get_all_adapters(self) -> Dict[str, Type[LLMBackendAdapter]]:
         """

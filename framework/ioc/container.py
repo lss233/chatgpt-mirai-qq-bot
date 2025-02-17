@@ -1,12 +1,11 @@
 import contextvars
-from functools import wraps
-from inspect import signature
-from typing import Type, TypeVar, Any, overload
+from typing import Any, Type, TypeVar, overload
 
 T = TypeVar("T")
 
 # 使用 contextvars 实现线程和异步安全的上下文管理
 current_container = contextvars.ContextVar("current_container", default=None)
+
 
 class DependencyContainer:
     def __init__(self, parent=None):
@@ -17,12 +16,10 @@ class DependencyContainer:
         self.registry[key] = value
 
     @overload
-    def resolve(self, key: Type[T]) -> T: 
-        ...
+    def resolve(self, key: Type[T]) -> T: ...
 
     @overload
-    def resolve(self, key: Any) -> Any: 
-        ...
+    def resolve(self, key: Any) -> Any: ...
 
     def resolve(self, key: Type[T] | Any) -> T | Any:
         # 先在当前容器中查找，如果没有则递归查找父容器
@@ -37,11 +34,12 @@ class DependencyContainer:
     def scoped(self):
         """创建一个新的作用域容器"""
         new_container = ScopedContainer(self)
-        
+
         if DependencyContainer in self.registry:
             new_container.registry[DependencyContainer] = new_container
             new_container.registry[ScopedContainer] = new_container
         return new_container
+
 
 class ScopedContainer(DependencyContainer):
     def __init__(self, parent):

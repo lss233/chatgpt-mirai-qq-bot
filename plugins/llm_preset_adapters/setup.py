@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="chatgpt-mirai-llm-presets",
@@ -6,15 +6,10 @@ setup(
     description="Preset LLM adapters for ChatGPT-Mirai",
     author="Internal",
     packages=find_packages(),
-    install_requires=[
-        "openai",
-        "google-generativeai",
-        "anthropic",
-        "requests"
-    ],
+    install_requires=["openai", "google-generativeai", "anthropic", "requests"],
     entry_points={
         "chatgpt_mirai.plugins": [
             "llm_presets = llm_preset_adapters.plugin:LLMPresetsPlugin"
         ]
-    }
-) 
+    },
+)

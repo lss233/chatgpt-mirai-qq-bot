@@ -1,8 +1,8 @@
 import asyncio
-from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import functools
-from typing import Dict, Any, List
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List
 
 from framework.logger import get_logger
 from framework.workflow.core.block import Block, ConditionBlock, LoopBlock
@@ -20,7 +20,9 @@ class WorkflowExecutor:
         self.workflow = workflow
         self.results = defaultdict(dict)
         self.variables = {}  # 存储工作流变量
-        self.logger.info(f"Initializing WorkflowExecutor for workflow '{workflow.name}'")
+        self.logger.info(
+            f"Initializing WorkflowExecutor for workflow '{workflow.name}'"
+        )
         # self.logger.debug(f"Workflow has {len(workflow.blocks)} blocks and {len(workflow.wires)} wires")
         self._build_execution_graph()
 
@@ -37,9 +39,11 @@ class WorkflowExecutor:
             source_output = wire.source_block.outputs[wire.source_output]
             target_input = wire.target_block.inputs[wire.target_input]
             if not target_input.data_type == source_output.data_type:
-                error_msg = (f"Type mismatch in wire: {wire.source_block.name}.{wire.source_output} "
-                            f"({source_output.data_type}) -> {wire.target_block.name}.{wire.target_input} "
-                            f"({target_input.data_type})")
+                error_msg = (
+                    f"Type mismatch in wire: {wire.source_block.name}.{wire.source_output} "
+                    f"({source_output.data_type}) -> {wire.target_block.name}.{wire.target_input} "
+                    f"({target_input.data_type})"
+                )
                 self.logger.error(error_msg)
                 raise TypeError(error_msg)
             # 将目标块添加到源块的执行图中
@@ -84,7 +88,9 @@ class WorkflowExecutor:
 
         result = await loop.run_in_executor(executor, block.execute, **inputs)
         self.results[block.name] = result
-        self.logger.info(f"ConditionBlock {block.name} evaluation result: {result['condition_result']}")
+        self.logger.info(
+            f"ConditionBlock {block.name} evaluation result: {result['condition_result']}"
+        )
 
         next_blocks = self.execution_graph[block]
         if result["condition_result"]:
@@ -110,10 +116,14 @@ class WorkflowExecutor:
 
             result = await loop.run_in_executor(executor, block.execute, **inputs)
             self.results[block.name] = result
-            self.logger.info(f"LoopBlock {block.name} continuation check: {result['should_continue']}")
+            self.logger.info(
+                f"LoopBlock {block.name} continuation check: {result['should_continue']}"
+            )
 
             if not result["should_continue"]:
-                self.logger.info(f"Exiting LoopBlock {block.name} after {iteration} iterations")
+                self.logger.info(
+                    f"Exiting LoopBlock {block.name} after {iteration} iterations"
+                )
                 break
 
             # self.logger.debug(f"Executing loop body: {self.execution_graph[block][0].name}")
@@ -131,8 +141,7 @@ class WorkflowExecutor:
             # self.logger.debug(f"Input parameters: {list(inputs.keys())}")
 
             future = loop.run_in_executor(
-                executor,
-                functools.partial(block.execute, **inputs)
+                executor, functools.partial(block.execute, **inputs)
             )
             futures.append((future, block))
         else:
@@ -156,7 +165,9 @@ class WorkflowExecutor:
                     # self.logger.debug(f"Block {block.name} is terminal node")
                     pass
             except Exception as e:
-                self.logger.error(f"Block {block.name} execution failed: {str(e)}", exc_info=True)
+                self.logger.error(
+                    f"Block {block.name} execution failed: {str(e)}", exc_info=True
+                )
                 raise RuntimeError(f"Block {block.name} execution failed: {e}")
 
     def _can_execute(self, block: Block) -> bool:
@@ -184,12 +195,14 @@ class WorkflowExecutor:
         for input_name in block.inputs:
             input_satisfied = False
             for wire in self.workflow.wires:
-                if (wire.target_block == block and
-                    wire.target_input == input_name and
-                    wire.source_block.name in self.results):
+                if (
+                    wire.target_block == block
+                    and wire.target_input == input_name
+                    and wire.source_block.name in self.results
+                ):
                     input_satisfied = True
                     break
-                
+
             # 如果输入没有被满足，并且输入不是可空的，则返回False
             if not input_satisfied and not block.inputs[input_name].nullable:
                 self.logger.info(f"Input [{block.name}.{input_name}] not satisfied")
@@ -214,12 +227,18 @@ class WorkflowExecutor:
             if input_name in input_wire_map:
                 wire = input_wire_map[input_name]
                 if wire.source_block.name in self.results:
-                    inputs[input_name] = self.results[wire.source_block.name][wire.source_output]
+                    inputs[input_name] = self.results[wire.source_block.name][
+                        wire.source_output
+                    ]
                     # self.logger.debug(f"Resolved input {input_name} from {wire.source_block.name}.{wire.source_output}")
                 else:
-                    raise RuntimeError(f"Source block {wire.source_block.name} not executed for input {input_name}")
+                    raise RuntimeError(
+                        f"Source block {wire.source_block.name} not executed for input {input_name}"
+                    )
             elif not block.inputs[input_name].nullable:
-                raise RuntimeError(f"Missing wire connection for required input {input_name} in block {block.name}")
+                raise RuntimeError(
+                    f"Missing wire connection for required input {input_name} in block {block.name}"
+                )
 
         return inputs
 

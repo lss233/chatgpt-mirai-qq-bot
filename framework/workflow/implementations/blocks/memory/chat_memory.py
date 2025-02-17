@@ -1,22 +1,32 @@
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, Optional
+
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
-from framework.logger import get_logger
-from framework.workflow.core.block import Block, ParamMeta, Input, Output
-from framework.memory.memory_manager import MemoryManager
-from framework.memory.registry import ScopeRegistry, ComposerRegistry, DecomposerRegistry
 from framework.llm.format.response import LLMChatResponse
+from framework.logger import get_logger
+from framework.memory.memory_manager import MemoryManager
+from framework.memory.registry import ComposerRegistry, DecomposerRegistry, ScopeRegistry
+from framework.workflow.core.block import Block, Input, Output, ParamMeta
+
 
 class ChatMemoryQuery(Block):
     name = "chat_memory_query"
-    inputs = {"chat_sender": Input("chat_sender", "聊天对象", ChatSender, "要查询记忆的聊天对象")}
+    inputs = {
+        "chat_sender": Input(
+            "chat_sender", "聊天对象", ChatSender, "要查询记忆的聊天对象"
+        )
+    }
     outputs = {"memory_content": Output("memory_content", "记忆内容", str, "记忆内容")}
     container: DependencyContainer
 
-    def __init__(self, scope_type: Annotated[Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")]):
+    def __init__(
+        self,
+        scope_type: Annotated[
+            Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")
+        ],
+    ):
         self.scope_type = scope_type
-
 
     def execute(self, chat_sender: ChatSender) -> Dict[str, Any]:
         self.memory_manager = self.container.resolve(MemoryManager)
@@ -24,7 +34,6 @@ class ChatMemoryQuery(Block):
         # 如果没有指定作用域类型，使用配置中的默认值
         if self.scope_type is None:
             self.scope_type = self.memory_manager.config.default_scope
-
 
         # 获取作用域实例
         scope_registry = self.container.resolve(ScopeRegistry)
@@ -38,23 +47,34 @@ class ChatMemoryQuery(Block):
         memory_content = self.decomposer.decompose(entries)
         return {"memory_content": memory_content}
 
+
 class ChatMemoryStore(Block):
     name = "chat_memory_store"
 
     inputs = {
         "user_msg": Input("user_msg", "用户消息", IMMessage, "用户消息", nullable=True),
-        "llm_resp": Input("llm_resp", "LLM 响应", LLMChatResponse, "LLM 响应", nullable=True)
+        "llm_resp": Input(
+            "llm_resp", "LLM 响应", LLMChatResponse, "LLM 响应", nullable=True
+        ),
     }
     outputs = {}
     container: DependencyContainer
 
-    def __init__(self, scope_type: Annotated[Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")]):
+    def __init__(
+        self,
+        scope_type: Annotated[
+            Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")
+        ],
+    ):
         self.scope_type = scope_type
-        self.logger = get_logger('Block.ChatMemoryStore')
+        self.logger = get_logger("Block.ChatMemoryStore")
 
-    def execute(self, user_msg: Optional[IMMessage] = None, llm_resp: Optional[LLMChatResponse] = None) -> Dict[str, Any]:
+    def execute(
+        self,
+        user_msg: Optional[IMMessage] = None,
+        llm_resp: Optional[LLMChatResponse] = None,
+    ) -> Dict[str, Any]:
         self.memory_manager = self.container.resolve(MemoryManager)
-
 
         # 如果没有指定作用域类型，使用配置中的默认值
         if self.scope_type is None:

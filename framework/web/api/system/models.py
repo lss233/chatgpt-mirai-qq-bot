@@ -1,8 +1,11 @@
-from typing import Dict, Any, List
+from typing import Any, Dict
+
 from pydantic import BaseModel
+
 
 class SystemStatus(BaseModel):
     """系统状态信息"""
+
     version: str = "1.0.0"
     uptime: float
     active_adapters: int
@@ -12,6 +15,8 @@ class SystemStatus(BaseModel):
     memory_usage: Dict[str, Any]
     cpu_usage: float
 
+
 class SystemStatusResponse(BaseModel):
     """系统状态响应"""
-    status: SystemStatus 
+
+    status: SystemStatus

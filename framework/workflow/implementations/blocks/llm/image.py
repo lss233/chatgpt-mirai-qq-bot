@@ -1,10 +1,12 @@
-from typing import Any, Dict, Optional
-import requests
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input
-from framework.workflow.core.block.input_output import Output
 import base64
+from typing import Any, Dict, Optional
+
+import requests
+
 from framework.im.message import ImageMessage
+from framework.workflow.core.block import Block
+from framework.workflow.core.block.input_output import Input, Output
+
 
 class SimpleStableDiffusionWebUI(Block):
     name = "simple_stable_diffusion_webui"
@@ -48,7 +50,7 @@ class SimpleStableDiffusionWebUI(Block):
         if self.ckpt_name:
             payload["ckpt_name"] = self.ckpt_name
         payload["clip_skip"] = self.clip_skip
-        response = requests.post(url=f'{self.api_url}/sdapi/v1/txt2img', json=payload)
+        response = requests.post(url=f"{self.api_url}/sdapi/v1/txt2img", json=payload)
 
         if response.status_code == 200:
             r = response.json()
@@ -57,9 +59,13 @@ class SimpleStableDiffusionWebUI(Block):
             if "images" in r and r["images"]:
                 image_base64 = r["images"][0]
                 image_bytes = base64.b64decode(image_base64)
-                image_message = ImageMessage(data=image_bytes, format="png")  # 假设是 PNG 格式
+                image_message = ImageMessage(
+                    data=image_bytes, format="png"
+                )  # 假设是 PNG 格式
                 return {"image": image_message}
             else:
                 raise Exception("No image data found in the response")
         else:
-            raise Exception(f"API request failed with status code: {response.status_code}, message: {response.text}")
+            raise Exception(
+                f"API request failed with status code: {response.status_code}, message: {response.text}"
+            )

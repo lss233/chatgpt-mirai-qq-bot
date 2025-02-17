@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/PyCQA/isort
+    rev: 6.0.0
+    hooks:
+      - id: isort
+        name: isort (python3)
+        language_version: python3
+        args: ["--atomic"]
+
+  - repo: https://github.com/myint/autoflake
+    rev: v2.3.0
+    hooks:
+      - id: autoflake
+        args:
+          [
+            "--remove-all-unused-imports",
+            "--in-place",
+            "--recursive",
+          ]
