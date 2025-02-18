@@ -321,7 +321,7 @@ class RandomChanceMatchRule(DispatchRule):
         self.chance = chance
 
     def match(self, message: IMMessage) -> bool:
-        return random.random() / 100 < self.chance
+        return random.random() * 100 < self.chance
 
 
 class ChatSenderMatchRule(DispatchRule):
