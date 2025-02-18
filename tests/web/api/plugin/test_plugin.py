@@ -12,10 +12,12 @@ from framework.plugin_manager.plugin import Plugin
 from framework.plugin_manager.plugin_event_bus import PluginEventBus
 from framework.plugin_manager.plugin_loader import PluginLoader
 from framework.web.app import create_app
+from framework.workflow.core.block import BlockRegistry
 from framework.workflow.core.dispatch import WorkflowDispatcher
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
+from tests.utils.test_block_registry import create_test_block_registry
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
@@ -119,6 +121,7 @@ def app():
     container.register(DispatchRuleRegistry, DispatchRuleRegistry(container))
     container.register(WorkflowDispatcher, WorkflowDispatcher(container))
     container.register(PluginEventBus, PluginEventBus())
+    container.register(BlockRegistry, create_test_block_registry())
 
     # 创建插件加载器并注册测试插件
     plugin_loader = PluginLoader(container, "plugins")

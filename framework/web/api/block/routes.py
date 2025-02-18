@@ -90,3 +90,11 @@ async def get_block_type(type_name: str):
             configs=configs,
         )
     ).model_dump()
+
+
+@block_bp.route("/types/compatibility", methods=["GET"])
+@require_auth
+async def get_type_compatibility():
+    """获取所有类型的兼容性映射"""
+    registry: BlockRegistry = g.container.resolve(BlockRegistry)
+    return jsonify(registry.get_type_compatibility_map())

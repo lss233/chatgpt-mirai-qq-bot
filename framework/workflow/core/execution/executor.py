@@ -6,18 +6,21 @@ from typing import Any, Dict, List
 
 from framework.logger import get_logger
 from framework.workflow.core.block import Block, ConditionBlock, LoopBlock
+from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.core.workflow import Workflow
 
 
 class WorkflowExecutor:
-    def __init__(self, workflow: Workflow):
+    def __init__(self, workflow: Workflow, registry: BlockRegistry):
         """
         初始化 WorkflowExecutor 实例。
 
         :param workflow: 要执行的工作流对象
+        :param registry: Block注册表，用于类型检查
         """
         self.logger = get_logger("WorkflowExecutor")
         self.workflow = workflow
+        self.registry = registry
         self.results = defaultdict(dict)
         self.variables = {}  # 存储工作流变量
         self.logger.info(
@@ -38,14 +41,20 @@ class WorkflowExecutor:
             # 验证连线的数据类型是否匹配
             source_output = wire.source_block.outputs[wire.source_output]
             target_input = wire.target_block.inputs[wire.target_input]
-            if not target_input.data_type == source_output.data_type:
+            
+            # 使用 BlockRegistry 的类型系统进行类型兼容性检查
+            source_type = self.registry._type_system.get_type_name(source_output.data_type)
+            target_type = self.registry._type_system.get_type_name(target_input.data_type)
+            
+            if not self.registry.is_type_compatible(source_type, target_type):
                 error_msg = (
                     f"Type mismatch in wire: {wire.source_block.name}.{wire.source_output} "
-                    f"({source_output.data_type}) -> {wire.target_block.name}.{wire.target_input} "
-                    f"({target_input.data_type})"
+                    f"({source_type}) -> {wire.target_block.name}.{wire.target_input} "
+                    f"({target_type})"
                 )
                 self.logger.error(error_msg)
                 raise TypeError(error_msg)
+                
             # 将目标块添加到源块的执行图中
             self.execution_graph[wire.source_block].append(wire.target_block)
             # self.logger.debug(f"Added edge: {wire.source_block.name} -> {wire.target_block.name}")

@@ -2,6 +2,7 @@ from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
+from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
 from framework.workflow.core.dispatch.rule import DispatchRule
 from framework.workflow.core.execution.executor import WorkflowExecutor
@@ -37,13 +38,14 @@ class WorkflowDispatcher:
                 try:
                     self.logger.debug(f"Matched rule {rule}, executing workflow")
                     with self.container.scoped() as scoped_container:
+                        block_registry = self.container.resolve(BlockRegistry)
                         scoped_container.register(IMAdapter, source)
                         scoped_container.register(IMMessage, message)
                         workflow = rule.get_workflow(scoped_container)
                         if workflow is None:
                             self.logger.error(f"Workflow {rule} not found")
                             continue
-                        executor = WorkflowExecutor(workflow)
+                        executor = WorkflowExecutor(workflow, block_registry)
                         scoped_container.register(Workflow, workflow)
                         scoped_container.register(WorkflowExecutor, executor)
                         return await executor.run()

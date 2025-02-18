@@ -8,8 +8,10 @@ import pytest
 from framework.im.adapter import IMAdapter
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
+from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.core.dispatch.dispatcher import WorkflowDispatcher
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
+from tests.utils.test_block_registry import create_test_block_registry
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,6 +38,7 @@ def adapter(config):
     container.register(WorkflowRegistry, WorkflowRegistry(container))
     container.register(DispatchRuleRegistry, DispatchRuleRegistry(container))
     container.register(WorkflowDispatcher, FakeWorkflowDispatcher(container))
+    container.register(BlockRegistry, create_test_block_registry())
     adapter = HttpLegacyAdapter(config)
     adapter.dispatcher = container.resolve(WorkflowDispatcher)
     return adapter
