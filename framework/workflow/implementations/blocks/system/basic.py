@@ -61,12 +61,13 @@ class TextExtractByRegexBlock(Block):
     ):
         self.regex = regex
 
-    def execute(self) -> Dict[str, Any]:
+    def execute(self, text: str) -> Dict[str, Any]:
         # 使用正则表达式提取文本
-        regex = re.compile(self.regex.value)
-        match = regex.search(self.text.value)
-        if match:
-            return {"text": match.group(0)}
+        regex = re.compile(self.regex)
+        match = regex.search(text)
+        # 如果匹配到，则返回匹配到的文本，否则返回空字符串
+        if match and len(match.groups()) > 0:
+            return {"text": match.group(1)}
         else:
             return {"text": ""}
         

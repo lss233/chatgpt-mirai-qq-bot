@@ -1,5 +1,6 @@
 from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.implementations.blocks.im.basic import ExtractChatSender
+from framework.workflow.implementations.blocks.llm.basic import LLMResponseToText
 from framework.workflow.implementations.blocks.llm.image import SimpleStableDiffusionWebUI
 from framework.workflow.implementations.blocks.memory.clear_memory import ClearMemory
 from framework.workflow.implementations.blocks.system.basic import (TextBlock, TextConcatBlock, TextExtractByRegexBlock,
@@ -7,7 +8,7 @@ from framework.workflow.implementations.blocks.system.basic import (TextBlock, T
 
 from .game.dice import DiceRoll
 from .game.gacha import GachaSimulator
-from .im.messages import GetIMMessage, SendIMMessage
+from .im.messages import AppendIMMessage, GetIMMessage, IMMessageToText, SendIMMessage, TextToIMMessage
 from .im.states import ToggleEditState
 from .llm.chat import ChatCompletion, ChatMessageConstructor, ChatResponseConverter
 from .memory.chat_memory import ChatMemoryQuery, ChatMemoryStore
@@ -31,6 +32,9 @@ def register_system_blocks(registry: BlockRegistry):
     registry.register(
         "extract_chat_sender", "internal", ExtractChatSender, "IM: 提取消息发送者"
     )
+    registry.register("append_im_message", "internal", AppendIMMessage, "IM: 补充消息")
+    registry.register("im_message_to_text", "internal", IMMessageToText, "IM: 消息转文本")
+    registry.register("text_to_im_message", "internal", TextToIMMessage, "文本: 文本转消息")
 
     # LLM 相关 blocks
     registry.register("chat_memory_query", "internal", ChatMemoryQuery, "LLM: 查询记忆")
@@ -48,6 +52,7 @@ def register_system_blocks(registry: BlockRegistry):
         "LLM->IM: 转换消息",
     )
     registry.register("chat_memory_store", "internal", ChatMemoryStore, "LLM: 存储记忆")
+    registry.register("llm_response_to_text", "internal", LLMResponseToText, "LLM: 响应转文本")
 
     # 画图相关 blocks
     registry.register(
