@@ -2,12 +2,12 @@
 
 ------------------------------------
 <p align="center">
-  <h2 align="center">ChatGPT for Bot</h2>
+  <h2 align="center">Kirara AI</h2>
   <p align="center">
     一款支持主流大语言模型、主流聊天平台的聊天的机器人！
     <br/>
     <br/>
-    <a href="https://chatgpt-qq.lss233.com/"><strong>» 查看使用教程 »</strong></a>
+    <a href="https://kirara-docs.app.lss233.com/"><strong>» 查看项目手册 »</strong></a>
     <br/>
   </p>
 </p>
