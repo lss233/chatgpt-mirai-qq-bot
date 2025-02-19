@@ -75,7 +75,7 @@ class IMManager:
         删除指定名称的 adapter。
         :param name: adapter 的名称
         """
-        self.adapters.pop(name)
+        self.adapters.pop(name, None)
         self.config.ims = [im for im in self.config.ims if im.name != name]
 
     @pydantic_validation_wrapper

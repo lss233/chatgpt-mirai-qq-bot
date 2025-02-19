@@ -123,7 +123,7 @@ class WebServer:
             f"监听地址：http://{self.config.web.host}:{self.config.web.port}/"
         )
         self.logger.info(
-            f"WebUI 本地访问地址：http://127.0.0.1:{self.config.web.port}/"
+            f"WebUI 管理平台本地访问地址：http://127.0.0.1:{self.config.web.port}/"
         )
 
     async def stop(self):

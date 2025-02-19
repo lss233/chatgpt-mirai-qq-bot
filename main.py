@@ -173,7 +173,8 @@ def main():
 
     try:
         # 保持程序运行
-        logger.info("Application started. Waiting for events...")
+        logger.success("Kirara AI 启动完毕，等待消息中...")
+        logger.success("Application started. Waiting for events...")
         loop.run_forever()
     except GracefulExit:
         logger.info("Graceful exit requested")
