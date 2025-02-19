@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import Field
 
-from framework.im.message import IMMessage
+from framework.im.message import IMMessage, MentionElement
 from framework.im.sender import ChatSender
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 
@@ -90,7 +90,7 @@ class BotMentionMatchRule(DispatchRule):
 
     def match(self, message: IMMessage) -> bool:
         bot_sender = ChatSender.get_bot_sender()
-        return any(element.type == "mention" and element.target == bot_sender for element in message.message_elements)
+        return any(isinstance(element, MentionElement) and element.target == bot_sender for element in message.message_elements)
 
     def get_config(self) -> RuleConfig: 
         return RuleConfig()

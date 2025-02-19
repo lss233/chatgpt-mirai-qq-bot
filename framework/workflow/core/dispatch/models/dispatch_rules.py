@@ -4,9 +4,11 @@ from pydantic import BaseModel
 
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
+from framework.logger import get_logger
 from framework.workflow.core.workflow import Workflow
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 
+logger = get_logger("DispatchRule")
 
 class SimpleDispatchRule(BaseModel):
     """简单规则，包含规则类型和配置"""
@@ -56,6 +58,7 @@ class CombinedDispatchRule(BaseModel):
                     rule_results.append(rule_instance.match(message))
                 except Exception as e:
                     # 如果规则创建或匹配过程出错，视为不匹配
+                    logger.error(f"Rule {rule.type} from config {rule.config} creation or matching failed: {e}")
                     continue
 
             # 根据操作符确定组的匹配结果
