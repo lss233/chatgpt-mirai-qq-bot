@@ -1,7 +1,6 @@
 from quart import Blueprint, g, jsonify, request
 
-from framework.workflow.core.dispatch import DispatchRuleRegistry
-from framework.workflow.core.dispatch.rule import CombinedDispatchRule, DispatchRule
+from framework.workflow.core.dispatch import CombinedDispatchRule, DispatchRule, DispatchRuleRegistry
 from framework.workflow.core.workflow import WorkflowRegistry
 
 from ...auth.middleware import require_auth

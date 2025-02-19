@@ -5,8 +5,13 @@ from ruamel.yaml import YAML
 
 from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
-from framework.workflow.core.dispatch.rule import CombinedDispatchRule, DispatchRule, RuleGroup, SimpleDispatchRule
 from framework.workflow.core.workflow.registry import WorkflowRegistry
+
+from .models.dispatch_rules import CombinedDispatchRule, RuleGroup, SimpleDispatchRule
+from .rules.base import DispatchRule
+from .rules.message_rules import KeywordMatchRule, PrefixMatchRule, RegexMatchRule
+from .rules.sender_rules import ChatSenderMatchRule, ChatSenderMismatchRule
+from .rules.system_rules import FallbackMatchRule, RandomChanceMatchRule
 
 
 class DispatchRuleRegistry:
@@ -166,3 +171,12 @@ class DispatchRuleRegistry:
         file_path = os.path.join(rules_dir, "rules.yaml")
         with open(file_path, "w", encoding="utf-8") as f:
             yaml.dump(rules_data, f)
+
+# 注册所有规则类型
+DispatchRule.register_rule_type(RegexMatchRule)
+DispatchRule.register_rule_type(PrefixMatchRule)
+DispatchRule.register_rule_type(KeywordMatchRule)
+DispatchRule.register_rule_type(RandomChanceMatchRule)
+DispatchRule.register_rule_type(ChatSenderMatchRule)
+DispatchRule.register_rule_type(ChatSenderMismatchRule)
+DispatchRule.register_rule_type(FallbackMatchRule)

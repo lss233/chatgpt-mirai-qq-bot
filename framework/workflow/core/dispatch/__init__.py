@@ -1,6 +1,7 @@
 from .dispatcher import WorkflowDispatcher, WorkflowExecutor, WorkflowRegistry
+from .models.dispatch_rules import CombinedDispatchRule, RuleGroup, SimpleDispatchRule
 from .registry import DispatchRuleRegistry
-from .rule import CombinedDispatchRule, DispatchRule
+from .rules.base import DispatchRule, RuleConfig
 
 __all__ = [
     "CombinedDispatchRule",
@@ -9,4 +10,9 @@ __all__ = [
     "WorkflowDispatcher",
     "WorkflowExecutor",
     "WorkflowRegistry",
+    "RuleGroup",
+    "SimpleDispatchRule",
+    "RuleGroup",
+    "SimpleDispatchRule",
+    "RuleConfig",
 ]

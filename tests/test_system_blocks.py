@@ -4,8 +4,7 @@ import pytest
 
 from framework.im.message import IMMessage
 from framework.ioc.container import DependencyContainer
-from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
-from framework.workflow.core.dispatch.rule import CombinedDispatchRule, RuleGroup, SimpleDispatchRule
+from framework.workflow.core.dispatch import CombinedDispatchRule, DispatchRuleRegistry, RuleGroup, SimpleDispatchRule
 from framework.workflow.implementations.blocks.system.help import GenerateHelp
 
 

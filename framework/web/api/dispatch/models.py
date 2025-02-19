@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal
 
 from pydantic import BaseModel
 
-from framework.workflow.core.dispatch.rule import CombinedDispatchRule
+from framework.workflow.core.dispatch import CombinedDispatchRule
 
 
 class SimpleRule(BaseModel):

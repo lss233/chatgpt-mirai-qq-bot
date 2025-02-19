@@ -4,7 +4,7 @@ from framework.ioc.container import DependencyContainer
 from framework.logger import get_logger
 from framework.workflow.core.block.registry import BlockRegistry
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
-from framework.workflow.core.dispatch.rule import DispatchRule
+from framework.workflow.core.dispatch.rules.base import DispatchRule
 from framework.workflow.core.execution.executor import WorkflowExecutor
 from framework.workflow.core.workflow.base import Workflow
 from framework.workflow.core.workflow.registry import WorkflowRegistry
