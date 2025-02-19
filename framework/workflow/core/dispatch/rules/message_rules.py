@@ -4,6 +4,7 @@ from typing import List
 from pydantic import Field
 
 from framework.im.message import IMMessage
+from framework.im.sender import ChatSender
 from framework.workflow.core.workflow.registry import WorkflowRegistry
 
 from .base import DispatchRule, RuleConfig
@@ -77,4 +78,23 @@ class KeywordMatchRule(DispatchRule):
 
     @classmethod
     def from_config(cls, config: KeywordRuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "KeywordMatchRule":
-        return cls(config.keywords, workflow_registry, workflow_id) 
+        return cls(config.keywords, workflow_registry, workflow_id)
+    
+class BotMentionMatchRule(DispatchRule):
+    """根据机器人被提及匹配的规则"""
+    config_class = RuleConfig
+    type_name = "bot_mention"
+
+    def __init__(self, workflow_registry: WorkflowRegistry, workflow_id: str):
+        super().__init__(workflow_registry, workflow_id)
+
+    def match(self, message: IMMessage) -> bool:
+        bot_sender = ChatSender.get_bot_sender()
+        return any(element.type == "mention" and element.target == bot_sender for element in message.message_elements)
+
+    def get_config(self) -> RuleConfig: 
+        return RuleConfig()
+
+    @classmethod
+    def from_config(cls, config: RuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "BotMentionMatchRule":
+        return cls(workflow_registry, workflow_id)

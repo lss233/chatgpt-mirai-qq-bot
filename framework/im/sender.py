@@ -17,7 +17,7 @@ class ChatSender:
     chat_type: ChatType
     group_id: Optional[str] = None
     raw_metadata: Dict[str, Any] = None
-
+    
     @classmethod
     def from_group_chat(
         cls,
@@ -61,3 +61,13 @@ class ChatSender:
             return f"{self.group_id}:{self.user_id}"
         else:
             return f"c2c:{self.user_id}"
+        
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, ChatSender):
+            return self.user_id == other.user_id and \
+                self.chat_type == other.chat_type and \
+                self.group_id == other.group_id
+        return False
+    
+    def __hash__(self) -> int:
+        return hash((self.user_id, self.chat_type, self.group_id))

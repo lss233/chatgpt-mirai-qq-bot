@@ -111,8 +111,8 @@ class ImageMessage(MediaMessage):
     def __repr__(self):
         return f"ImageMessage(url={self.url}, path={self.path}, format={self.format})"
 
-
 # 定义@消息元素
+# :deprecated
 class AtElement(MessageElement):
 
     def __init__(self, user_id: str, nickname: str = ""):
@@ -128,6 +128,19 @@ class AtElement(MessageElement):
     def __repr__(self):
         return f"AtElement(user_id={self.user_id}, nickname={self.nickname})"
 
+# 定义@消息元素
+class MentionElement(MessageElement):
+    def __init__(self, target: ChatSender):
+        self.target = target
+
+    def to_dict(self):
+        return {"type": "mention", "data": {"target": self.target}}
+
+    def to_plain(self):
+        return f"@{self.target.display_name or self.target.user_id}"
+    
+    def __repr__(self):
+        return f"MentionElement(target={self.target})"
 
 # 定义回复消息元素
 class ReplyElement(MessageElement):

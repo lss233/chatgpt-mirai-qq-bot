@@ -4,11 +4,11 @@ from functools import lru_cache
 
 import telegramify_markdown
 from pydantic import BaseModel, ConfigDict, Field
-from telegram import Update, User
+from telegram import Bot, Update, User
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 from framework.im.adapter import EditStateAdapter, IMAdapter, UserProfileAdapter
-from framework.im.message import ImageMessage, IMMessage, TextMessage, VoiceMessage
+from framework.im.message import ImageMessage, IMMessage, MentionElement, TextMessage, VoiceMessage
 from framework.im.profile import Gender, UserProfile
 from framework.im.sender import ChatSender, ChatType
 from framework.logger import get_logger
@@ -46,9 +46,9 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
     def __init__(self, config: TelegramConfig):
         self.config = config
         self.application = Application.builder().token(config.token).build()
-
+        self.bot = Bot(token=config.token)
         # 注册命令处理器和消息处理器
-        self.application.add_handler(CommandHandler("start", self.start))
+        self.application.add_handler(CommandHandler("start", self.command_start))
         self.application.add_handler(
             MessageHandler(
                 filters.TEXT | filters.VOICE | filters.PHOTO, self.handle_message
@@ -56,7 +56,7 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
         )
         self.logger = get_logger("Telegram-Adapter")
 
-    async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def command_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """处理 /start 命令"""
         await update.message.reply_text("Welcome! I am ready to receive your messages.")
 
@@ -94,11 +94,41 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
 
         message_elements = []
         raw_message_dict = raw_message.message.to_dict()
-
         # 处理文本消息
         if raw_message.message.text:
-            text_element = TextMessage(text=raw_message.message.text)
-            message_elements.append(text_element)
+            text = raw_message.message.text
+            offset = 0
+            for entity in raw_message.message.entities or []:
+                if entity.type in ("mention", "text_mention"):
+                    # Extract mention text
+                    mention_text = text[entity.offset:entity.offset + entity.length]
+
+                    # Add preceding text as TextMessage
+                    if entity.offset > offset:
+                        message_elements.append(TextMessage(text=text[offset:entity.offset]))
+
+                    # Create ChatSender for MentionElement
+                    if entity.type == "text_mention" and entity.user:
+                        if entity.user.id == self.me.id:
+                            mention_element = MentionElement(target=ChatSender.get_bot_sender())
+                        else:
+                            mention_element = MentionElement(target=ChatSender.from_c2c_chat(user_id=entity.user.id, display_name=mention_text))
+                    elif entity.type == "mention":
+                        # 这里需要从 adapter 实例中获取 bot 的 username
+                        if mention_text == f'@{self.me.username}':
+                            mention_element = MentionElement(target=ChatSender.get_bot_sender())
+                        else:
+                            mention_element = MentionElement(target=ChatSender.from_c2c_chat(user_id=f'unknown_id:{mention_text}', display_name=mention_text))
+                    else:
+                        # Fallback in case of unknown entity type
+                        mention_element = TextMessage(text=mention_text)  # Or handle as needed
+                    message_elements.append(mention_element)
+
+                    offset = entity.offset + entity.length
+
+            # Add remaining text as TextMessage
+            if offset < len(text):
+                message_elements.append(TextMessage(text=text[offset:]))
 
         # 处理语音消息
         if raw_message.message.voice:
@@ -115,13 +145,14 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
             photo_url = photo_file.file_path
             photo_element = ImageMessage(url=photo_url)
             message_elements.append(photo_element)
-
+            
         # 创建 Message 对象
         message = IMMessage(
             sender=sender,
             message_elements=message_elements,
             raw_message=raw_message_dict,
         )
+        print(message)
         return message
 
     async def send_message(self, message: IMMessage, recipient: ChatSender):
@@ -171,6 +202,7 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
         """启动 Bot"""
         await self.application.initialize()
         await self.application.start()
+        self.me = await self.bot.get_me()
         await self.application.updater.start_polling(drop_pending_updates=True)
 
     async def stop(self):

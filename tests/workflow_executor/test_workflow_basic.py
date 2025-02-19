@@ -1,6 +1,5 @@
 
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input, Output
+from framework.workflow.core.block import Block, Input, Output
 from framework.workflow.core.workflow import Wire, Workflow
 
 # Define test blocks
