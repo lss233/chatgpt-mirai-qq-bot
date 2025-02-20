@@ -8,13 +8,13 @@ on:
       - 'master'
       - 'dev'
       - 'refactoring-v3-mvp'
+    tags:
+      - '**'
   pull_request:
     branches:
       - 'master'
       - 'dev'
       - 'refactoring-v3-mvp'
-  tags:
-    - '**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
