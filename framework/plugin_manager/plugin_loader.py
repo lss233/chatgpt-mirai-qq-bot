@@ -295,6 +295,7 @@ class PluginLoader:
             return True
 
         except Exception as e:
+            plugin_info.requires_restart = True
             self.logger.error(f"Failed to enable plugin {plugin_name}: {e}")
             return False
 
@@ -326,6 +327,7 @@ class PluginLoader:
             return True
 
         except Exception as e:
+            plugin_info.requires_restart = True
             self.logger.error(f"Failed to disable plugin {plugin_name}: {e}")
             return False
 

@@ -55,6 +55,7 @@ async def enrich_plugin_data(plugins: list, loader: PluginLoader) -> list:
             else False
         )
         plugin["isEnabled"] = installed_plugin.is_enabled if installed_plugin else False
+        plugin["requiresRestart"] = installed_plugin.requires_restart if installed_plugin else False
 
     return plugins
 
