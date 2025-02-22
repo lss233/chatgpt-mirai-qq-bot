@@ -67,6 +67,7 @@ async def MOCK_PLUGIN_SEARCH_RESPONSE():
                 "installedVersion": "1.0.0",
                 "isUpgradable": False,
                 "isEnabled": True,
+                "requiresRestart": False,
             }
         ],
         "totalCount": 1,
@@ -175,6 +176,7 @@ class TestPlugin:
 
             # assert response.status_code == 200
             data = await response.get_json()
+            del data["requiresRestart"]
             assert data == await MOCK_PLUGIN_INFO_RESPONSE()
 
     @pytest.mark.asyncio

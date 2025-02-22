@@ -16,3 +16,4 @@ logs/
 dist/
 build/
 *.egg-info/
+.coverage
