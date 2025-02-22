@@ -3,10 +3,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.im.message import IMMessage, TextMessage
-from framework.im.sender import ChatSender
-from framework.llm.format.response import Message
-from framework.memory.composes import DefaultMemoryComposer, DefaultMemoryDecomposer
+from kirara_ai.im.message import IMMessage, TextMessage
+from kirara_ai.im.sender import ChatSender
+from kirara_ai.llm.format.response import Message
+from kirara_ai.memory.composes import DefaultMemoryComposer, DefaultMemoryDecomposer
 
 
 @pytest.fixture

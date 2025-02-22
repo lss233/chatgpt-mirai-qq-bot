@@ -2,13 +2,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from framework.config.global_config import GlobalConfig, WebConfig
-from framework.im.manager import IMManager
-from framework.ioc.container import DependencyContainer
-from framework.llm.llm_manager import LLMManager
-from framework.plugin_manager.plugin_loader import PluginLoader
-from framework.web.app import create_app
-from framework.workflow.core.workflow import WorkflowRegistry
+from kirara_ai.config.global_config import GlobalConfig, WebConfig
+from kirara_ai.im.manager import IMManager
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.llm.llm_manager import LLMManager
+from kirara_ai.plugin_manager.plugin_loader import PluginLoader
+from kirara_ai.web.app import create_app
+from kirara_ai.workflow.core.workflow import WorkflowRegistry
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================
@@ -76,7 +76,7 @@ class TestSystemStatus:
         mock_process.cpu_percent.return_value = 1.2
 
         with patch(
-            "framework.web.api.system.routes.psutil.Process", return_value=mock_process
+            "kirara_ai.web.api.system.routes.psutil.Process", return_value=mock_process
         ):
             response = await test_client.get(
                 "/backend-api/api/system/status", headers=auth_headers

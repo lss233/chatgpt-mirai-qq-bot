@@ -1,4 +1,4 @@
-from framework.workflow.core.block.input_output import Input, Output
+from kirara_ai.workflow.core.block.input_output import Input, Output
 
 
 def test_input_validation():

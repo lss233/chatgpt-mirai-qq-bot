@@ -2,10 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.im.message import IMMessage, TextMessage
-from framework.ioc.container import DependencyContainer
-from framework.workflow.implementations.blocks.game.dice import DiceRoll
-from framework.workflow.implementations.blocks.game.gacha import GachaSimulator
+from kirara_ai.im.message import IMMessage, TextMessage
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.workflow.implementations.blocks.game.dice import DiceRoll
+from kirara_ai.workflow.implementations.blocks.game.gacha import GachaSimulator
 
 
 @pytest.fixture

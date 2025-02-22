@@ -1,5 +1,5 @@
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input, Output
+from kirara_ai.workflow.core.block import Block
+from kirara_ai.workflow.core.block.input_output import Input, Output
 
 # Define test inputs and outputs
 input_data = Input(

@@ -3,7 +3,7 @@ from unittest.mock import mock_open, patch
 
 from pydantic import BaseModel
 
-from framework.config.config_loader import ConfigLoader
+from kirara_ai.config.config_loader import ConfigLoader
 
 
 class TestConfig(BaseModel):

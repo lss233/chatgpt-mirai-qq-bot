@@ -1,13 +1,13 @@
 
 import pytest
 
-from framework.config.global_config import GlobalConfig, WebConfig
-from framework.ioc.container import DependencyContainer
-from framework.web.app import create_app
-from framework.workflow.core.block import Block, BlockRegistry
-from framework.workflow.core.block.input_output import Input, Output
-from framework.workflow.core.workflow import WorkflowRegistry
-from framework.workflow.core.workflow.builder import WorkflowBuilder
+from kirara_ai.config.global_config import GlobalConfig, WebConfig
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.web.app import create_app
+from kirara_ai.workflow.core.block import Block, BlockRegistry
+from kirara_ai.workflow.core.block.input_output import Input, Output
+from kirara_ai.workflow.core.workflow import WorkflowRegistry
+from kirara_ai.workflow.core.workflow.builder import WorkflowBuilder
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================

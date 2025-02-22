@@ -1,7 +1,7 @@
 import pytest
 
-from framework.im.sender import ChatSender
-from framework.memory.scopes import GlobalScope, GroupScope, MemberScope
+from kirara_ai.im.sender import ChatSender
+from kirara_ai.memory.scopes import GlobalScope, GroupScope, MemberScope
 
 # ==================== 常量区 ====================
 TEST_USER_1 = "user1"

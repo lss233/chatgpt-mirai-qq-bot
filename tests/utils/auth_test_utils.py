@@ -1,7 +1,7 @@
 import pytest_asyncio
 
-from framework.ioc.container import DependencyContainer
-from framework.web.auth.services import AuthService, MockAuthService
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.web.auth.services import AuthService, MockAuthService
 
 # ==================== 常量区 ====================
 TEST_PASSWORD = "test-password"
