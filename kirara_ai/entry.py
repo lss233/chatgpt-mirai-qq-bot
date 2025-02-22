@@ -69,6 +69,9 @@ def init_application() -> DependencyContainer:
 
     # 加载配置文件
     logger.info(f"Loading configuration from {config_path}")
+    # check data directory
+    if not os.path.exists("./data"):
+        os.makedirs("./data")
     if os.path.exists(config_path):
         config = ConfigLoader.load_config(config_path, GlobalConfig)
         logger.info("Configuration loaded successfully")

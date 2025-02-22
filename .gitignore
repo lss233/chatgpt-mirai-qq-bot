@@ -11,6 +11,8 @@ venv/
 .vscode/
 config.yaml
 config.yaml.bak
+data/config.yaml
+data/config.yaml.bak
 logs/
 **/password.hash
 dist/
