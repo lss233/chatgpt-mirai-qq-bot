@@ -1,8 +1,4 @@
 # For embedded python
-import sys
-
-sys.path.insert(0, ".")
-
 import asyncio
 import os
 import signal
