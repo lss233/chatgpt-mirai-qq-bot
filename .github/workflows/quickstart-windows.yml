@@ -3,109 +3,119 @@ name: Windows Quickstart
 on:
   workflow_dispatch:
   push:
-    branches:
-      - 'browser-version-dev'
-      - 'master'
-      - 'dev'
-      - 'refactoring-v3-mvp'
-    tags:
-      - '**'
+    branches: ['browser-version-dev', 'master', 'dev', 'refactoring-v3-mvp']
+    tags: ['**']
   pull_request:
-    branches:
-      - 'master'
-      - 'dev'
-      - 'refactoring-v3-mvp'
+    branches: ['master', 'dev', 'refactoring-v3-mvp']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHON_VERSION: "3.11.2"
+  DIST_DIR: "C:/dist"
+  BUILD_DIR: "C:/build"
+  PACKAGE_NAME: "quickstart-windows-kirara-ai-amd64"
+
 jobs:
   build:
     name: Windows Quickstart
-    runs-on: Windows-latest
-
+    runs-on: windows-latest
+    
     steps:
-    - name: Checkout
+    - name: Checkout repository
       uses: actions/checkout@v4
-    - name: Generate files
+
+    - name: Set up Python for building
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Build wheel package
       run: |
-        mkdir C:/generated_files
-        mkdir C:/tmp_files
-        echo "Creating folders..."
-        cd C:/generated_files
-        mkdir kirara_ai
-        mkdir ffmpeg
+        python -m pip install build
+        python -m build
+        # 获取生成的wheel文件名
+        $WheelFile = Get-ChildItem -Path "dist" -Filter "*.whl" | Select-Object -First 1 -ExpandProperty Name
+        echo "WHEEL_FILE=$WheelFile" >> $env:GITHUB_ENV
 
-        cp -r D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\* C:\generated_files\kirara_ai\
-
-        echo "Downloading ffmpeg ..."
-        Invoke-WebRequest  https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.0.2-essentials_build.7z -OutFile C:/tmp_files/ffmpeg.7z
-        echo "Appreciate the contribution of gyan.dev"
-
-        7z x C:/tmp_files/ffmpeg.7z -r -oC:/generated_files/ffmpeg
-
-        echo "Downloading Python3.11 ..."
-        Invoke-WebRequest https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip -OutFile C:/tmp_files/python.zip
-        7z x C:/tmp_files/python.zip -r -oC:/generated_files/python3.11
-
-        echo "Downloading get-pip.py ..."
-        Invoke-WebRequest -URI https://bootstrap.pypa.io/get-pip.py -OutFile C:/generated_files/python3.11/get-pip.py
-        echo "import site" >> C:/generated_files/python3.11/python311._pth
-
-        echo "Moving files..."
-        mv D:\a\chatgpt-mirai-qq-bot\chatgpt-mirai-qq-bot\.github\quickstarts\windows\ C:/generated_files/files/
-
-        echo "Replacing..."
-        dir C:/generated_files/files/scripts/
+    - name: Prepare distribution environment
+      run: |
+        # 创建必要的目录
+        mkdir ${{ env.DIST_DIR }}
+        mkdir ${{ env.BUILD_DIR }}
         
-        cp C:/generated_files/files/scripts/初始化.cmd C:/generated_files/
+        # 下载嵌入式Python
+        $pythonUrl = "https://www.python.org/ftp/python/${{ env.PYTHON_VERSION }}/python-${{ env.PYTHON_VERSION }}-embed-amd64.zip"
+        Invoke-WebRequest -Uri $pythonUrl -OutFile "${{ env.BUILD_DIR }}/python.zip"
+        Expand-Archive "${{ env.BUILD_DIR }}/python.zip" -DestinationPath "${{ env.DIST_DIR }}/python3.11"
+        
+        # 配置Python环境
+        echo "import site" >> "${{ env.DIST_DIR }}/python3.11/python311._pth"
+        Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "${{ env.DIST_DIR }}/python3.11/get-pip.py"
 
-        echo "Downloading vc_redist.exe..."
-        Invoke-WebRequest -URI https://aka.ms/vs/17/release/vc_redist.x64.exe -OutFile "C:\generated_files\【语音功能依赖】vc_redist.x64.exe"
-
-        echo "Downloading packages..."
-        cd C:/generated_files/kirara_ai
-        ..\python3.11\python.exe C:/generated_files/python3.11/get-pip.py
-        ..\python3.11\python.exe -m pip install -r requirements.txt
-        ..\python3.11\python.exe -c exec("""from pycloudflared import try_cloudflare \ntry: try_cloudflare(-1)\nexcept:... """)
-
-        cd C:/generated_files
-
-    - name: Download and extract web dist.zip
-      shell: pwsh
-      env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Install project and dependencies
       run: |
-        # 获取最新的 release 信息
-        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases" -Headers @{ Authorization = "Bearer $($env:GH_TOKEN)" }
-        $zipUrl = $latestRelease[0].assets[0].browser_download_url
+        cd ${{ env.DIST_DIR }}
+        ./python3.11/python.exe python3.11/get-pip.py
+        ./python3.11/python.exe -m pip install "${{ github.workspace }}/dist/${{ env.WHEEL_FILE }}"
 
-        # 下载 dist.zip 文件
-        Invoke-WebRequest -Uri $zipUrl -OutFile "C:\generated_files\dist.zip"
+    - name: Download and setup FFmpeg
+      run: |
+        Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-7.0.2-essentials_build.7z" -OutFile "${{ env.BUILD_DIR }}/ffmpeg.7z"
+        7z x "${{ env.BUILD_DIR }}/ffmpeg.7z" -o"${{ env.DIST_DIR }}/ffmpeg"
+        mv "${{ env.DIST_DIR }}/ffmpeg/ffmpeg-7.0.2-essentials_build" "${{ env.DIST_DIR }}/ffmpeg/bin"
 
-        # 解压 dist.zip 文件到 C:/generated_files 目录
-        Expand-Archive -Path "C:\generated_files\dist.zip" -DestinationPath "C:\generated_files\kirara_ai\web"
-        rm C:\generated_files\dist.zip
-    - name: Archive production artifacts
+    - name: Download VC++ Runtime
+      run: |
+        Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "${{ env.DIST_DIR }}/【语音功能依赖】vc_redist.x64.exe"
+
+    - name: Setup Web UI
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # 下载 Web UI 压缩包到临时目录
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases" -Headers @{Authorization = "Bearer $env:GH_TOKEN"}
+        $web_ui_url = $release[0].assets[0].browser_download_url
+        $zip_file = "${{ env.BUILD_DIR }}/webui.zip"
+        Invoke-WebRequest -Uri $web_ui_url -OutFile $zip_file
+
+        # 解压到临时目录
+        $temp_dir = "${{ env.BUILD_DIR }}/webui_temp"
+        mkdir $temp_dir
+        Expand-Archive -Path $zip_file -DestinationPath $temp_dir
+
+        New-Item -ItemType Directory -Force -Path "${{ env.DIST_DIR }}/web"
+
+        # 移动 dist 文件夹到目标位置
+        Copy-Item -Path "$temp_dir/dist/*" -Destination "${{ env.DIST_DIR }}/web" -Force -Recurse
+
+    - name: Copy startup scripts
+      run: |
+        Copy-Item ".github/quickstarts/windows/scripts/*" -Destination "${{ env.DIST_DIR }}/" -Recurse
+        # 拷贝 data 文件夹
+        Copy-Item -Path "${{ github.workspace }}/data" -Destination "${{ env.DIST_DIR }}/" -Recurse
+
+    - name: Upload workflow artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: quickstart-windows-kirara-ai-amd64
-        path: |
-          C:\generated_files\
-    - name: Create Release Archive
+        name: ${{ env.PACKAGE_NAME }}
+        path: ${{ env.DIST_DIR }}
+
+    - name: Create release archive
       if: startsWith(github.ref, 'refs/tags/')
-      shell: pwsh
       run: |
-        Write-Host "Creating archive for release..."
-        Compress-Archive -Path C:\generated_files\* -DestinationPath C:\generated_files\quickstart-windows-kirara-ai-amd64.zip
-    - name: Upload compressed files to release
+        Compress-Archive -Path "${{ env.DIST_DIR }}/*" -DestinationPath "${{ env.BUILD_DIR }}/${{ env.PACKAGE_NAME }}.zip"
+
+    - name: Upload release archive
       if: startsWith(github.ref, 'refs/tags/')
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: C:\generated_files\quickstart-windows-kirara-ai-amd64.zip
+        file: ${{ env.BUILD_DIR }}/${{ env.PACKAGE_NAME }}.zip
         asset_name: Windows-quickstart-kirara-ai-${{ github.ref_name }}.zip
         tag: ${{ github.ref_name }}
         overwrite: false
-        body: "quickstart-windows-kirara-ai-amd64.zip 是为 Windows x64 用户准备的快速启动包"
+        body: "Windows x64 用户的快速启动包"

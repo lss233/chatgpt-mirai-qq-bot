@@ -8,7 +8,7 @@ TITLE [Kirara AI] AI 系统正在运行...
 
 SET PATH=%cd%\python3.11;%cd%\ffmpeg\bin;%PATH%
 
-cd kirara_ai && python main.py
+python -m kirara_ai
 
 TITLE [Kirara AI] AI 系统已停止运行
 
