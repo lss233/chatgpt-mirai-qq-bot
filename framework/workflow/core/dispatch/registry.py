@@ -10,7 +10,7 @@ from framework.workflow.core.workflow.registry import WorkflowRegistry
 from .models.dispatch_rules import CombinedDispatchRule, RuleGroup, SimpleDispatchRule
 from .rules.base import DispatchRule
 from .rules.message_rules import BotMentionMatchRule, KeywordMatchRule, PrefixMatchRule, RegexMatchRule
-from .rules.sender_rules import ChatSenderMatchRule, ChatSenderMismatchRule
+from .rules.sender_rules import ChatSenderMatchRule, ChatSenderMismatchRule, ChatTypeMatchRule
 from .rules.system_rules import FallbackMatchRule, RandomChanceMatchRule
 
 
@@ -180,4 +180,5 @@ DispatchRule.register_rule_type(BotMentionMatchRule)
 DispatchRule.register_rule_type(RandomChanceMatchRule)
 DispatchRule.register_rule_type(ChatSenderMatchRule)
 DispatchRule.register_rule_type(ChatSenderMismatchRule)
+DispatchRule.register_rule_type(ChatTypeMatchRule)
 DispatchRule.register_rule_type(FallbackMatchRule)
