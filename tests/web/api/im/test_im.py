@@ -5,16 +5,16 @@ from unittest.mock import MagicMock
 import pytest
 from pydantic import BaseModel, Field
 
-from framework.config.config_loader import ConfigLoader
-from framework.config.global_config import GlobalConfig, IMConfig, WebConfig
-from framework.im.adapter import IMAdapter
-from framework.im.im_registry import IMRegistry
-from framework.im.manager import IMManager
-from framework.im.message import IMMessage, TextMessage
-from framework.im.sender import ChatSender
-from framework.ioc.container import DependencyContainer
-from framework.web.api.im.models import IMAdapterConfig
-from framework.web.app import create_app
+from kirara_ai.config.config_loader import ConfigLoader
+from kirara_ai.config.global_config import GlobalConfig, IMConfig, WebConfig
+from kirara_ai.im.adapter import IMAdapter
+from kirara_ai.im.im_registry import IMRegistry
+from kirara_ai.im.manager import IMManager
+from kirara_ai.im.message import IMMessage, TextMessage
+from kirara_ai.im.sender import ChatSender
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.web.api.im.models import IMAdapterConfig
+from kirara_ai.web.app import create_app
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================

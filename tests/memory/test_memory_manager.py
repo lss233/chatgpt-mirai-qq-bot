@@ -4,13 +4,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.config.global_config import GlobalConfig
-from framework.ioc.container import DependencyContainer
-from framework.memory.composes import MemoryComposer, MemoryDecomposer
-from framework.memory.entry import MemoryEntry
-from framework.memory.memory_manager import MemoryManager
-from framework.memory.persistences.base import MemoryPersistence
-from framework.memory.scopes import MemoryScope
+from kirara_ai.config.global_config import GlobalConfig
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.memory.composes import MemoryComposer, MemoryDecomposer
+from kirara_ai.memory.entry import MemoryEntry
+from kirara_ai.memory.memory_manager import MemoryManager
+from kirara_ai.memory.persistences.base import MemoryPersistence
+from kirara_ai.memory.scopes import MemoryScope
 
 
 # ==================== Dummy Persistence ====================

@@ -4,11 +4,11 @@ from typing import Any, Dict
 
 import pytest
 
-from framework.ioc.container import DependencyContainer
-from framework.workflow.core.block import Block
-from framework.workflow.core.block.input_output import Input, Output
-from framework.workflow.core.block.registry import BlockRegistry
-from framework.workflow.core.workflow.builder import WorkflowBuilder
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.workflow.core.block import Block
+from kirara_ai.workflow.core.block.input_output import Input, Output
+from kirara_ai.workflow.core.block.registry import BlockRegistry
+from kirara_ai.workflow.core.workflow.builder import WorkflowBuilder
 
 
 # 测试用的 Block 类

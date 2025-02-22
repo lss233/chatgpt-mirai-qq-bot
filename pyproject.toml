@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kirara-agent-framework"
-version = "0.1.0"
+name = "kirara-ai"
+version = "3.0.0"
 authors = [
     { name="Lss233", email="i@lss233.com" },
 ]
 description = "A framework for building AI agents"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -20,3 +20,6 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/lss233/chatgpt-mirai-qq-bot"
 "Bug Tracker" = "https://github.com/lss233/chatgpt-mirai-qq-bot/issues" 
+"Documentation" = "https://kirara-docs.app.lss233.com"
+[tool.setuptools.packages.find]
+where = ["kirara_ai/"]

@@ -1,4 +1,4 @@
-from framework.workflow.core.block.registry import BlockRegistry
+from kirara_ai.workflow.core.block.registry import BlockRegistry
 
 
 def create_test_block_registry() -> BlockRegistry:

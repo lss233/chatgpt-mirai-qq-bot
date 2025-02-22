@@ -2,10 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.im.message import IMMessage
-from framework.ioc.container import DependencyContainer
-from framework.workflow.core.dispatch import CombinedDispatchRule, DispatchRuleRegistry, RuleGroup, SimpleDispatchRule
-from framework.workflow.implementations.blocks.system.help import GenerateHelp
+from kirara_ai.im.message import IMMessage
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.workflow.core.dispatch import CombinedDispatchRule, DispatchRuleRegistry, RuleGroup, SimpleDispatchRule
+from kirara_ai.workflow.implementations.blocks.system.help import GenerateHelp
 
 
 @pytest.fixture

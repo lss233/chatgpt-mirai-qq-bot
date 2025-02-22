@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from framework.im.sender import ChatSender, ChatType
-from framework.memory.entry import MemoryEntry
-from framework.memory.persistences import FileMemoryPersistence, RedisMemoryPersistence
+from kirara_ai.im.sender import ChatSender, ChatType
+from kirara_ai.memory.entry import MemoryEntry
+from kirara_ai.memory.persistences import FileMemoryPersistence, RedisMemoryPersistence
 
 # ==================== 常量区 ====================
 TEST_USER_1 = "user1"
@@ -112,7 +112,7 @@ class TestRedisMemoryPersistence:
         # Mock Redis 返回数据
         import json
 
-        from framework.memory.persistences.codecs import MemoryJSONEncoder
+        from kirara_ai.memory.persistences.codecs import MemoryJSONEncoder
 
         sender, _ = chat_senders
         serialized_data = [

@@ -1,6 +1,6 @@
 
-from framework.workflow.core.block import Block, Input, Output
-from framework.workflow.core.workflow import Wire, Workflow
+from kirara_ai.workflow.core.block import Block, Input, Output
+from kirara_ai.workflow.core.workflow import Wire, Workflow
 
 # Define test blocks
 input_block = Block(

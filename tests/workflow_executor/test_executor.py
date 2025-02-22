@@ -1,8 +1,8 @@
 import pytest
 
-from framework.workflow.core.block import Block, Input, Output
-from framework.workflow.core.execution.executor import WorkflowExecutor
-from framework.workflow.core.workflow import Wire, Workflow
+from kirara_ai.workflow.core.block import Block, Input, Output
+from kirara_ai.workflow.core.execution.executor import WorkflowExecutor
+from kirara_ai.workflow.core.workflow import Wire, Workflow
 from tests.utils.test_block_registry import create_test_block_registry
 
 # 创建测试用的 BlockRegistry

@@ -2,9 +2,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from framework.ioc.container import DependencyContainer
-from framework.workflow.implementations.factories.game_factory import GameWorkflowFactory
-from framework.workflow.implementations.factories.system_factory import SystemWorkflowFactory
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.workflow.implementations.factories.game_factory import GameWorkflowFactory
+from kirara_ai.workflow.implementations.factories.system_factory import SystemWorkflowFactory
 
 
 @pytest.fixture

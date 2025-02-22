@@ -2,20 +2,20 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from framework.config.global_config import GlobalConfig, PluginConfig, WebConfig
-from framework.im.im_registry import IMRegistry
-from framework.im.manager import IMManager
-from framework.ioc.container import DependencyContainer
-from framework.llm.llm_registry import LLMBackendRegistry
-from framework.plugin_manager.models import PluginInfo
-from framework.plugin_manager.plugin import Plugin
-from framework.plugin_manager.plugin_event_bus import PluginEventBus
-from framework.plugin_manager.plugin_loader import PluginLoader
-from framework.web.app import create_app
-from framework.workflow.core.block import BlockRegistry
-from framework.workflow.core.dispatch import WorkflowDispatcher
-from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
-from framework.workflow.core.workflow.registry import WorkflowRegistry
+from kirara_ai.config.global_config import GlobalConfig, PluginConfig, WebConfig
+from kirara_ai.im.im_registry import IMRegistry
+from kirara_ai.im.manager import IMManager
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.llm.llm_registry import LLMBackendRegistry
+from kirara_ai.plugin_manager.models import PluginInfo
+from kirara_ai.plugin_manager.plugin import Plugin
+from kirara_ai.plugin_manager.plugin_event_bus import PluginEventBus
+from kirara_ai.plugin_manager.plugin_loader import PluginLoader
+from kirara_ai.web.app import create_app
+from kirara_ai.workflow.core.block import BlockRegistry
+from kirara_ai.workflow.core.dispatch import WorkflowDispatcher
+from kirara_ai.workflow.core.dispatch.registry import DispatchRuleRegistry
+from kirara_ai.workflow.core.workflow.registry import WorkflowRegistry
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 from tests.utils.test_block_registry import create_test_block_registry
 
@@ -222,7 +222,7 @@ class TestPlugin:
         """测试启用插件"""
         # Mock 配置文件保存
         with patch(
-            "framework.config.config_loader.ConfigLoader.save_config_with_backup"
+            "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
         ) as mock_save:
             response = await test_client.post(
                 f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable",
@@ -239,7 +239,7 @@ class TestPlugin:
         """测试禁用插件"""
         # Mock 配置文件保存
         with patch(
-            "framework.config.config_loader.ConfigLoader.save_config_with_backup"
+            "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
         ) as mock_save:
             response = await test_client.post(
                 f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable",
@@ -255,7 +255,7 @@ class TestPlugin:
     async def test_install_plugin(self, test_client, auth_headers):
         """测试安装插件"""
         with patch(
-            "framework.web.api.plugin.routes.PluginLoader.install_plugin"
+            "kirara_ai.web.api.plugin.routes.PluginLoader.install_plugin"
         ) as mock_install_plugin:
             mock_install_plugin.return_value = PluginInfo(
                 name="test-plugin",
@@ -269,7 +269,7 @@ class TestPlugin:
 
             # Mock 配置文件保存
             with patch(
-                "framework.config.config_loader.ConfigLoader.save_config_with_backup"
+                "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
             ) as mock_save:
                 response = await test_client.post(
                     "/backend-api/api/plugin/plugins",

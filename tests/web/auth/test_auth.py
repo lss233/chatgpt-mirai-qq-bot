@@ -2,8 +2,8 @@
 import pytest
 import pytest_asyncio
 
-from framework.ioc.container import DependencyContainer
-from framework.web.app import create_app
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.web.app import create_app
 from tests.utils.auth_test_utils import TEST_PASSWORD, setup_auth_service
 
 # ==================== 常量区 ====================
