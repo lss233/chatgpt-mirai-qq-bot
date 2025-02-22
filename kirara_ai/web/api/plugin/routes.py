@@ -142,7 +142,7 @@ async def install_plugin():
         # 更新配置
         if plugin_info.package_name not in config.plugins.enable:
             config.plugins.enable.append(plugin_info.package_name)
-            ConfigLoader.save_config_with_backup("config.yaml", config)
+            ConfigLoader.save_config_with_backup("data/config.yaml", config)
 
         return PluginResponse(plugin=plugin_info).model_dump()
     except Exception as e:
@@ -172,7 +172,7 @@ async def uninstall_plugin(plugin_name: str):
         # 更新配置
         if plugin_info.package_name in config.plugins.enable:
             config.plugins.enable.remove(plugin_info.package_name)
-            ConfigLoader.save_config_with_backup("config.yaml", config)
+            ConfigLoader.save_config_with_backup("data/config.yaml", config)
 
         return jsonify({"message": "Plugin uninstalled successfully"})
     except Exception as e:
@@ -202,7 +202,7 @@ async def enable_plugin(plugin_name: str):
             and not plugin_info.is_internal
         ):
             config.plugins.enable.append(plugin_name)
-        ConfigLoader.save_config_with_backup("config.yaml", config)
+        ConfigLoader.save_config_with_backup("data/config.yaml", config)
 
         return PluginResponse(plugin=plugin_info).model_dump()
     except Exception as e:
@@ -234,7 +234,7 @@ async def disable_plugin(plugin_name: str):
         ):
             config.plugins.enable.remove(plugin_name)
 
-        ConfigLoader.save_config_with_backup("config.yaml", config)
+        ConfigLoader.save_config_with_backup("data/config.yaml", config)
 
         return PluginResponse(plugin=plugin_info).model_dump()
     except Exception as e:

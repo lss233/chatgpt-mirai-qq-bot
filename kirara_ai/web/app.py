@@ -1,4 +1,5 @@
 import asyncio
+import os
 from pathlib import Path
 
 from hypercorn.asyncio import serve
@@ -23,9 +24,9 @@ from .auth.routes import auth_bp
 
 ERROR_MESSAGE = """
 <h1>WebUI launch failed!</h1>
-<p lang="en">Web UI not found. Please download from <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>here</a> and extract to the <span>web</span> folder, make sure the <span>web/index.html</span> file exists.</p>
+<p lang="en">Web UI not found. Please download from <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>here</a> and extract to the <span>TARGET_DIR</span> folder, make sure the <span>TARGET_DIR/index.html</span> file exists.</p>
 <h1>WebUI 启动失败！</h1>
-<p lang="zh-CN">Web UI 未找到。请从 <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>这里</a> 下载并解压到 <span>web</span> 文件夹，确保 <span>web/index.html</span> 文件存在。</p>
+<p lang="zh-CN">Web UI 未找到。请从 <a href='https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases' target='_blank'>这里</a> 下载并解压到 <span>TARGET_DIR</span> 文件夹，确保 <span>TARGET_DIR/index.html</span> 文件存在。</p>
 
 <style>
     body {
@@ -53,14 +54,15 @@ ERROR_MESSAGE = """
 
 def create_app(container: DependencyContainer) -> Quart:
     app = Quart(__name__)
-    app.static_folder = "../../web"
+    cwd = os.getcwd()
+    app.static_folder = f"{cwd}/web"
 
     @app.route("/")
     async def index():
         try:
             return await app.send_static_file("index.html")
         except Exception as e:
-            return ERROR_MESSAGE
+            return ERROR_MESSAGE.replace("TARGET_DIR", f"{cwd}/web")
 
     @app.route("/<path:path>")
     async def serve_static(path):

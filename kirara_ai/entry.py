@@ -65,7 +65,7 @@ def init_application() -> DependencyContainer:
     logger.info("Initializing application...")
     
     # 配置文件路径
-    config_path = "config.yaml"
+    config_path = "./data/config.yaml"
 
     # 加载配置文件
     logger.info(f"Loading configuration from {config_path}")

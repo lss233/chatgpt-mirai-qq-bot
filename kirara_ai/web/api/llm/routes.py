@@ -107,7 +107,7 @@ async def create_backend():
         if backend.enable:
             manager.load_backend(backend.name)
 
-        ConfigLoader.save_config_with_backup("config.yaml", config)
+        ConfigLoader.save_config_with_backup("data/config.yaml", config)
         return LLMBackendResponse(data=backend).model_dump()
     except Exception as e:
         return LLMBackendResponse(error=str(e)).model_dump()
@@ -155,7 +155,7 @@ async def update_backend(backend_name: str):
         # 如果新配置启用则加载后端
         if updated_backend.enable:
             manager.load_backend(updated_backend.name)
-        ConfigLoader.save_config_with_backup("config.yaml", config)
+        ConfigLoader.save_config_with_backup("data/config.yaml", config)
         return LLMBackendResponse(data=updated_backend).model_dump()
     except Exception as e:
         return LLMBackendResponse(error=str(e)).model_dump()
@@ -188,7 +188,7 @@ async def delete_backend(backend_name: str):
         # 从配置中删除
         deleted_backend = config.llms.api_backends.pop(backend_index)
 
-        ConfigLoader.save_config_with_backup("config.yaml", config)
+        ConfigLoader.save_config_with_backup("data/config.yaml", config)
 
         return LLMBackendResponse(
             data=LLMBackendInfo(
