@@ -7,6 +7,20 @@ class ChatType(Enum):
     C2C = "c2c"
     GROUP = "group"
 
+    @classmethod
+    def from_str(cls, value: str) -> "ChatType":
+        if value == "c2c" or value == "私聊":
+            return cls.C2C
+        elif value == "group" or value == "群聊":
+            return cls.GROUP
+        raise ValueError(f"Invalid chat type: {value}")
+    
+    def to_str(self) -> str:
+        if self == self.C2C:
+            return "私聊"
+        elif self == self.GROUP:
+            return "群聊"
+        raise ValueError(f"Invalid chat type: {self}")
 
 @dataclass
 class ChatSender:

@@ -1,22 +1,8 @@
-from typing import Any, Dict, List, Literal
+from typing import List
 
 from pydantic import BaseModel
 
 from framework.workflow.core.dispatch import CombinedDispatchRule
-
-
-class SimpleRule(BaseModel):
-    """简单调度规则（单一条件）"""
-
-    type: str
-    config: Dict[str, Any] = {}  # 规则类型特定的配置
-
-
-class RuleGroup(BaseModel):
-    """规则组"""
-
-    operator: Literal["and", "or"] = "or"
-    rules: List[SimpleRule]
 
 
 class DispatchRuleList(BaseModel):

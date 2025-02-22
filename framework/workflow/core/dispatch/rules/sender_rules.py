@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import Field
 
@@ -88,13 +88,13 @@ class ChatSenderMismatchRule(DispatchRule):
         workflow_registry: WorkflowRegistry,
         workflow_id: str,
     ) -> "ChatSenderMismatchRule":
-        return cls(config.sender_id, config.sender_group, workflow_registry, workflow_id) 
-    
-    
+        return cls(config.sender_id, config.sender_group, workflow_registry, workflow_id)
+
+
 class ChatTypeMatchRuleConfig(RuleConfig):
     """聊天类型规则配置"""
-    chat_type: ChatType = Field(title="聊天类型", description="聊天类型")
-    
+    chat_type: Literal["私聊", "群聊"] = Field(title="聊天类型", description="聊天类型")
+
 class ChatTypeMatchRule(DispatchRule):
     """根据聊天类型匹配的规则"""
     config_class = ChatTypeMatchRuleConfig
@@ -106,11 +106,12 @@ class ChatTypeMatchRule(DispatchRule):
 
     def match(self, message: IMMessage) -> bool:
         return message.sender.chat_type == self.chat_type
-    
+
     def get_config(self) -> ChatTypeMatchRuleConfig:
         return ChatTypeMatchRuleConfig(chat_type=self.chat_type)
 
     @classmethod
     def from_config(cls, config: ChatTypeMatchRuleConfig, workflow_registry: WorkflowRegistry, workflow_id: str) -> "ChatTypeMatchRule":
-        return cls(config.chat_type, workflow_registry, workflow_id)
-    
+        chat_type = ChatType.from_str(config.chat_type)
+        return cls(chat_type, workflow_registry, workflow_id)
+

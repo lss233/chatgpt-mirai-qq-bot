@@ -4,7 +4,38 @@ from framework.im.message import IMMessage, TextMessage
 from framework.im.sender import ChatSender
 from framework.ioc.container import DependencyContainer
 from framework.workflow.core.block import Block, Output
+from framework.workflow.core.dispatch.models.dispatch_rules import RuleGroup
 from framework.workflow.core.dispatch.registry import DispatchRuleRegistry
+
+
+def _format_rule_condition(rule_type: str, config: Dict[str, Any]) -> str:
+    """格式化单个规则的条件描述"""
+    if rule_type == "prefix":
+        return f"输入以 {config['prefix']} 开头"
+    elif rule_type == "keyword":
+        keywords = config.get("keywords", [])
+        return f"输入包含 {' 或 '.join(keywords)}"
+    elif rule_type == "regex":
+        return f"输入匹配正则 {config['pattern']}"
+    elif rule_type == "fallback":
+        return "任意输入"
+    elif rule_type == "bot_mention":
+        return f"@我"
+    elif rule_type == "chat_type":
+        return f"使用 {config['chat_type']} 聊天类型"
+    return f"使用 {rule_type} 规则"
+
+
+def _format_rule_group(group: RuleGroup) -> str:
+    """格式化规则组的条件描述"""
+    rule_conditions = []
+    for rule in group.rules:
+        rule_conditions.append(
+            _format_rule_condition(rule.type, rule.config)
+        )
+
+    operator = " 且 " if group.operator == "and" else " 或 "
+    return operator.join(rule_conditions)
 
 
 class GenerateHelp(Block):
@@ -14,30 +45,6 @@ class GenerateHelp(Block):
     inputs = {}  # 不需要输入
     outputs = {"response": Output("response", "帮助信息", IMMessage, "帮助信息")}
     container: DependencyContainer
-
-    def _format_rule_condition(self, rule_type: str, config: Dict[str, Any]) -> str:
-        """格式化单个规则的条件描述"""
-        if rule_type == "prefix":
-            return f"输入以 {config['prefix']} 开头"
-        elif rule_type == "keyword":
-            keywords = config.get("keywords", [])
-            return f"输入包含 {' 或 '.join(keywords)}"
-        elif rule_type == "regex":
-            return f"输入匹配正则 {config['pattern']}"
-        elif rule_type == "fallback":
-            return "任意输入"
-        return f"使用 {rule_type} 规则"
-
-    def _format_rule_group(self, group: Dict[str, Any]) -> str:
-        """格式化规则组的条件描述"""
-        rule_conditions = []
-        for rule in group["rules"]:
-            rule_conditions.append(
-                self._format_rule_condition(rule["type"], rule["config"])
-            )
-
-        operator = " 且 " if group["operator"] == "and" else " 或 "
-        return operator.join(rule_conditions)
 
     def execute(self) -> Dict[str, Any]:
         # 从容器获取调度规则注册表
@@ -55,7 +62,7 @@ class GenerateHelp(Block):
             # 格式化规则组条件
             conditions = []
             for group in rule.rule_groups:
-                conditions.append(self._format_rule_group(group.model_dump()))
+                conditions.append(_format_rule_group(group))
 
             # 组合所有条件（规则组之间是 AND 关系）
             rule_format = " 并且 ".join(f"({condition})" for condition in conditions)
