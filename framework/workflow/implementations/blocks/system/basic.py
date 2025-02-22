@@ -28,7 +28,7 @@ class TextConcatBlock(Block):
     outputs = {"text": Output("text", "拼接后的文本", str, "拼接后的文本")}
 
     def execute(self) -> Dict[str, Any]:
-        return {"text": self.text1.value + self.text2.value}
+        return {"text": self.text1 + self.text2}
 
 
 # 替换输入文本中的某一块文字为变量
