@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 from framework.im.message import IMMessage
 from framework.im.sender import ChatSender
@@ -8,6 +8,10 @@ from framework.logger import get_logger
 from framework.memory.memory_manager import MemoryManager
 from framework.memory.registry import ComposerRegistry, DecomposerRegistry, ScopeRegistry
 from framework.workflow.core.block import Block, Input, Output, ParamMeta
+
+
+def scope_type_options_provider(container: DependencyContainer, block: Block) -> List[str]:
+    return ["global", "user", "group"]
 
 
 class ChatMemoryQuery(Block):
@@ -23,7 +27,12 @@ class ChatMemoryQuery(Block):
     def __init__(
         self,
         scope_type: Annotated[
-            Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")
+            Optional[str],
+            ParamMeta(
+                label="级别",
+                description="要查询记忆的级别",
+                options_provider=scope_type_options_provider,
+            ),
         ],
     ):
         self.scope_type = scope_type
@@ -63,7 +72,12 @@ class ChatMemoryStore(Block):
     def __init__(
         self,
         scope_type: Annotated[
-            Optional[str], ParamMeta(label="级别", description="要查询记忆的级别")
+            Optional[str],
+            ParamMeta(
+                label="级别",
+                description="要查询记忆的级别",
+                options_provider=scope_type_options_provider,
+            ),
         ],
     ):
         self.scope_type = scope_type

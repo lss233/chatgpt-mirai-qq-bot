@@ -16,7 +16,8 @@ def extract_block_param(param: Parameter, type_system: TypeSystem) -> BlockConfi
     param_type = param.annotation
     label = param.name
     description = None
-
+    has_options = False
+    options_provider = None
     if get_origin(param_type) is Annotated:
         args = get_args(param_type)
         if len(args) > 0:
@@ -26,6 +27,8 @@ def extract_block_param(param: Parameter, type_system: TypeSystem) -> BlockConfi
             if isinstance(metadata, ParamMeta):
                 label = metadata.label
                 description = metadata.description
+                has_options = metadata.options_provider is not None
+                options_provider = metadata.options_provider
 
             # 递归调用 extract_block_param 处理实际类型
             block_config = extract_block_param(
@@ -54,6 +57,9 @@ def extract_block_param(param: Parameter, type_system: TypeSystem) -> BlockConfi
         required=required,
         default=default,
         label=label,
+        has_options=has_options,
+        options=[],
+        options_provider=options_provider,
     )
 
 
@@ -145,7 +151,7 @@ class BlockRegistry:
         for name, input_info in getattr(block_type, "inputs", {}).items():
             type_name = self._type_system.get_type_name(input_info.data_type)
             self._type_system.register_type(type_name, input_info.data_type)
-            
+
             inputs[name] = BlockInput(
                 name=name,
                 label=input_info.label,
@@ -158,7 +164,7 @@ class BlockRegistry:
         for name, output_info in getattr(block_type, "outputs", {}).items():
             type_name = self._type_system.get_type_name(output_info.data_type)
             self._type_system.register_type(type_name, output_info.data_type)
-            
+
             outputs[name] = BlockOutput(
                 name=name,
                 label=output_info.label,

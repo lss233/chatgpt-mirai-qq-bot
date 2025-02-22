@@ -14,6 +14,10 @@ from framework.workflow.core.block import Block, Input, Output, ParamMeta
 from framework.workflow.core.execution.executor import WorkflowExecutor
 
 
+def model_name_options_provider(container: DependencyContainer, block: Block) -> List[str]:
+    llm_manager: LLMManager = container.resolve(LLMManager)
+    return llm_manager.get_supported_models(LLMAbility.TextChat)
+
 class ChatMessageConstructor(Block):
     name = "chat_message_constructor"
     inputs = {
@@ -124,7 +128,8 @@ class ChatCompletion(Block):
     def __init__(
         self,
         model_name: Annotated[
-            Optional[str], ParamMeta(label="模型 ID", description="要使用的模型 ID")
+            Optional[str],
+            ParamMeta(label="模型 ID", description="要使用的模型 ID", options_provider=model_name_options_provider),
         ] = None,
     ):
         self.model_name = model_name

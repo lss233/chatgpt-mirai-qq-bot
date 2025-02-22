@@ -18,17 +18,21 @@ async def list_block_types():
     for block_type in registry.get_all_types():
         inputs, outputs, configs = registry.extract_block_info(block_type)
         type_name = registry.get_block_type_name(block_type)
-        types.append(
-            BlockType(
-                type_name=type_name,
+
+        for config in configs.values():
+            if config.has_options:
+                config.options = config.options_provider(g.container, block_type)
+
+        block_type_info = BlockType(
+            type_name=type_name,
                 name=block_type.name,
                 label=registry.get_localized_name(type_name),
                 description=getattr(block_type, "description", ""),
                 inputs=inputs.values(),
                 outputs=outputs.values(),
                 configs=configs.values(),
-            )
         )
+        types.append(block_type_info)
 
     return BlockTypeList(types=types).model_dump()
 
@@ -69,6 +73,8 @@ async def get_block_type(type_name: str):
 
     configs = []
     for name, info in block_type.get_configs().items():
+        if info.has_options:
+            info.options = info.options_provider(g.container, block_type)
         configs.append(
             BlockConfig(
                 name=name,

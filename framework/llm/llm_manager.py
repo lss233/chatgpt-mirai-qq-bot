@@ -145,12 +145,11 @@ class LLMManager:
             return None
         # TODO: 后续考虑支持更多的选择策略
         return random.choice(backends)
-
-    def get_llm_id_by_ability(self, ability: LLMAbility) -> str:
+    
+    def get_supported_models(self, ability: LLMAbility) -> List[str]:
         """
-        根据指定的能力获取严格符合要求的 LLM 适配器列表。
-        :param ability: 指定的能力。
-        :return: 符合要求的 LLM 适配器列表。
+        获取所有支持的模型
+        :return: 支持的模型列表
         """
         adapter_types = self.backend_registry.search_adapter_by_ability(ability)
         matched_backends = set()
@@ -162,5 +161,16 @@ class LLMManager:
                         break
 
         if not matched_backends:
+            return []
+        return list(matched_backends)
+
+    def get_llm_id_by_ability(self, ability: LLMAbility) -> str:
+        """
+        根据指定的能力获取严格符合要求的 LLM 适配器列表。
+        :param ability: 指定的能力。
+        :return: 符合要求的 LLM 适配器列表。
+        """
+        supported_models = self.get_supported_models(ability)
+        if not supported_models:
             return None
-        return random.choice(list(matched_backends))
+        return random.choice(supported_models)
