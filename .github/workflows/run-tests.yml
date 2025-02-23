@@ -1,12 +1,13 @@
 name: Run Tests
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - refactoring-v3-mvp
+      - '**'
   pull_request:
     branches:
-      - refactoring-v3-mvp
+      - master
 
 jobs:
   test:

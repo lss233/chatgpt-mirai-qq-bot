@@ -3,10 +3,10 @@ name: Windows Quickstart
 on:
   workflow_dispatch:
   push:
-    branches: ['browser-version-dev', 'master', 'dev', 'refactoring-v3-mvp']
+    branches: ['master']
     tags: ['**']
   pull_request:
-    branches: ['master', 'dev', 'refactoring-v3-mvp']
+    branches: ['master']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

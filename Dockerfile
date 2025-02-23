@@ -17,21 +17,14 @@ COPY ./data/fonts/sarasa-mono-sc-regular.ttf /usr/share/fonts/
 # 安装系统依赖
 RUN apt-get -yqq update && \
     apt-get -yqq install --no-install-recommends \
-        xvfb \
-        qtbase5-dev \
         wkhtmltopdf \
         ffmpeg \
-        dbus \
         curl \
         jq \
         unzip && \
-    (strip --remove-section=.note.ABI-tag /usr/lib/x86_64-linux-gnu/libQt5Core.so.5 || true) && \
     apt-get -yq clean && \
     apt-get -yq purge --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/*
-
-# 配置dbus
-RUN export DBUS_SESSION_BUS_ADDRESS=`dbus-daemon --fork --config-file=/usr/share/dbus-1/session.conf --print-address`
 
 # 创建应用目录
 WORKDIR /app
@@ -42,8 +35,10 @@ COPY --from=builder /build/dist/*.whl /app/
 # 下载Web UI并安装依赖
 RUN LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/DarkSkyTeam/chatgpt-for-bot-webui/releases | jq -r '.[0].assets[] | select(.name == "dist.zip") | .browser_download_url') \
     && curl -L -o dist.zip "$LATEST_RELEASE_URL" \
-    && unzip dist.zip -d web \
+    && unzip dist.zip -d /tmp/web_dist \
     && rm dist.zip && \
+    mkdir -p /app/web && \
+    mv /tmp/web_dist/web/* /app/web && \
     pip install --no-cache-dir *.whl && \
     pip cache purge && \
     python -c "from pycloudflared import try_cloudflare; try_cloudflare(-1)" || true && \
