@@ -1,9 +1,6 @@
 #!/bin/bash
 cd /app
 
-# Installing fonts
-cp data/fonts/* /usr/share/fonts/
-
 # Copy default data
 # check if data directory exists
 if [ ! -d "/app/data" ]; then
