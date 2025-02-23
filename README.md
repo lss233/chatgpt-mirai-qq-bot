@@ -78,57 +78,13 @@
 
 ## 🔧 搭建
 
-<details>
-    <summary>Windows: 快速部署包启动</summary>
-
-> 本教程适用于 Windows 平台。
-
-1.  下载 Release 页面中的 zip 文件并解压，双击启动 **初始化.cmd**，按照提示操作即可。
-
-</details>
-
-
-<details>
-    <summary>源码部署教程</summary>
-
-> 本教程适用于 Windows、Linux 等平台。
-
-1. 克隆项目:
-
-```
-git clone -b v3.0.0-alpha5 https://github.com/lss233/chatgpt-mirai-qq-bot
-cd chatgpt-mirai-qq-bot
-```
-
-2. 安装依赖:
-
-```
-pip3 install -r requirements.txt
-```
-
-3. 拉取并解压 WebUI:
-
-```
-wget https://github.com/DarkSkyTeam/chatgpt-for-bot-webui/releases/download/v0.0.2/dist.zip
-unzip dist.zip -d web
-```
-
-4. 启动:
-
-```
-python3 main.py
-```
-
-</details>
-
-**[广告]**  
-~~广告位招租~~
+请移步至 [快速开始](https://kirara-docs.app.lss233.com/guide/getting-started.html)
 
 ## 🕸 HTTP API
 
 <details>
     <summary>HTTP API 可用于接入其他平台。</summary>
-启动后将提供以下接口：  
+在聊天平台管理中启动 http-legacy 适配器后，将提供以下接口：  
 
 **POST**    `/v1/chat`  
 
