@@ -6,11 +6,9 @@ import sys
 import tarfile
 import tempfile
 import time
-from pathlib import Path
 
 import aiohttp
 import psutil
-import tomli
 from packaging import version
 from quart import Blueprint, current_app, g, request
 
@@ -105,16 +103,18 @@ async def update_registry_config():
         return {"error": str(e)}, 500
 
 def get_version() -> str:
-    """从 pyproject.toml 读取版本号"""
+    """获取当前安装的版本号"""
     try:
-        pyproject_path = (
-            Path(__file__).parent.parent.parent.parent.parent / "pyproject.toml"
-        )
-        with open(pyproject_path, "rb") as f:
-            pyproject = tomli.load(f)
-            return pyproject["project"]["version"]
+        # 使用 importlib.metadata 获取已安装的包版本
+        from importlib.metadata import PackageNotFoundError, version
+        try:
+            return version("kirara_ai")
+        except PackageNotFoundError:
+            # 如果包未安装，尝试从 pkg_resources 获取
+            from pkg_resources import get_distribution
+            return get_distribution("kirara_ai").version
     except Exception:
-        return "0.0.0"  # 如果读取失败，返回默认版本号
+        return "0.0.0"  # 如果所有方法都失败，返回默认版本号
 
 
 async def get_latest_pypi_version(package_name: str, registry: str = "https://pypi.org/pypi") -> tuple[str, str]:
