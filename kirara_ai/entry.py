@@ -184,12 +184,16 @@ def run_application(container: DependencyContainer):
         # 停止Web服务器
         logger.info("Stopping web server...")
 
-        # 停止所有 adapter
-        im_manager.stop_adapters(loop=loop)
-        # 停止插件
-        plugin_loader.stop_plugins()
         # 停止Web服务器
         loop.run_until_complete(web_server.stop())
+        try:
+            # 停止所有 adapter
+            im_manager.stop_adapters(loop=loop)
+            # 停止插件
+            plugin_loader.stop_plugins()
+        except Exception as e:
+            logger.error(f"Error stopping adapters: {e}")
+        
         # 关闭事件循环
         loop.close()
         logger.info("Application stopped gracefully")
