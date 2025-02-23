@@ -1,4 +1,4 @@
-![cover](https://user-images.githubusercontent.com/117586514/230783378-34ddb86a-c8d3-47a6-baa5-86e39200b258.png)
+![cover](https://raw.githubusercontent.com/Haibersut/cnblog/refs/heads/main/230783378-34ddb86a-c8d3-47a6-baa5-86e39200b258.jpg)
 
 ------------------------------------
 <p align="center">
