@@ -108,11 +108,11 @@ def get_version() -> str:
         # 使用 importlib.metadata 获取已安装的包版本
         from importlib.metadata import PackageNotFoundError, version
         try:
-            return version("kirara_ai")
+            return version("kirara-ai")
         except PackageNotFoundError:
             # 如果包未安装，尝试从 pkg_resources 获取
             from pkg_resources import get_distribution
-            return get_distribution("kirara_ai").version
+            return get_distribution("kirara-ai").version
     except Exception:
         return "0.0.0"  # 如果所有方法都失败，返回默认版本号
 
