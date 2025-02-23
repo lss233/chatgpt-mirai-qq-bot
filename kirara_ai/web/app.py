@@ -161,3 +161,8 @@ class WebServer:
                 pass
             except Exception as e:
                 self.logger.error(f"Error during server shutdown: {e}")
+        try:
+            await self.app.shutdown()
+        except Exception as e:
+            self.logger.error(f"Error during app shutdown: {e}")
+
