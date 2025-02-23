@@ -71,7 +71,7 @@ class PluginConfig(BaseModel):
 
 
 class UpdateConfig(BaseModel):
-    pypi_registry: str = Field(default="https://pypi.org/pypi", description="PyPI 服务器 URL")
+    pypi_registry: str = Field(default="https://pypi.org/simple", description="PyPI 服务器 URL")
     npm_registry: str = Field(default="https://registry.npmjs.org", description="npm 服务器 URL")
 
 

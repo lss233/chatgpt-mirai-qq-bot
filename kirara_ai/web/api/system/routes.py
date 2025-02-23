@@ -93,8 +93,8 @@ async def update_registry_config():
         if not hasattr(config, "update"):
             config.update = {}
         
-        config.update["pypi_registry"] = data["pypi_registry"]
-        config.update["npm_registry"] = data["npm_registry"]
+        config.update.pypi_registry = data["pypi_registry"]
+        config.update.npm_registry = data["npm_registry"]
         
         # 保存配置
         ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
@@ -117,7 +117,7 @@ def get_version() -> str:
         return "0.0.0"  # 如果所有方法都失败，返回默认版本号
 
 
-async def get_latest_pypi_version(package_name: str, registry: str = "https://pypi.org/pypi") -> tuple[str, str]:
+async def get_latest_pypi_version(package_name: str, registry: str = "https://pypi.org/simple") -> tuple[str, str]:
     """获取包的最新版本和下载URL"""
     try:
         async with aiohttp.ClientSession() as session:
