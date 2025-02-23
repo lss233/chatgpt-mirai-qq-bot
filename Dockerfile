@@ -38,7 +38,7 @@ RUN LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/DarkSkyTeam/chatgp
     && unzip dist.zip -d /tmp/web_dist \
     && rm dist.zip && \
     mkdir -p /app/web && \
-    mv /tmp/web_dist/web/* /app/web && \
+    mv /tmp/web_dist/dist/* /app/web && \
     pip install --no-cache-dir *.whl && \
     pip cache purge && \
     python -c "from pycloudflared import try_cloudflare; try_cloudflare(-1)" || true && \
