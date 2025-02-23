@@ -27,9 +27,3 @@ def register_system_workflows(registry: WorkflowRegistry):
     registry.register_preset_workflow(
         "chat", "normal", DefaultWorkflowFactory.create_default_workflow()
     )
-    registry.register_preset_workflow(
-        "chat", "creative", DefaultWorkflowFactory.create_default_workflow()
-    )
-    registry.register_preset_workflow(
-        "chat", "roleplay", DefaultWorkflowFactory.create_default_workflow()
-    )

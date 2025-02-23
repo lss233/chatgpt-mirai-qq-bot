@@ -1,5 +1,5 @@
 import asyncio
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
 from kirara_ai.im.adapter import IMAdapter
 from kirara_ai.im.manager import IMManager
@@ -8,6 +8,9 @@ from kirara_ai.im.sender import ChatSender
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.workflow.core.block import Block, Input, Output, ParamMeta
 
+
+def im_adapter_options_provider(container: DependencyContainer, block: Block) -> List[str]:
+    return [key for key, _ in container.resolve(IMManager).adapters.items()]
 
 class GetIMMessage(Block):
     """获取 IM 消息"""
@@ -42,7 +45,7 @@ class SendIMMessage(Block):
     container: DependencyContainer
 
     def __init__(
-        self, im_name: Annotated[Optional[str], ParamMeta(label="IM 适配器名称")] = None
+        self, im_name: Annotated[Optional[str], ParamMeta(label="聊天平台适配器名称", options_provider=im_adapter_options_provider)] = None
     ):
         self.im_name = im_name
 

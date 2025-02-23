@@ -80,14 +80,14 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
 
 请注意，下面这些符号只是标记：
 1. `<break>` 用于表示聊天时发送消息的操作。
-2. `<@llm>` 开头的内容表示你当前扮演角色的回答，禁止在回答中使用这个标记。
+2. `<@llm>` 开头的内容表示你当前扮演角色的回答，你的回答中不能带上这个标记。
 
 接下来，请基于以上的信息，与用户继续扮演角色。
 """.strip()
 
         user_prompt = """{user_name}说：{user_msg}"""
 
-        return (
+        builder = (
             WorkflowBuilder("默认 - 角色扮演")
             .use(GetIMMessage, name="get_message")
             .parallel(
@@ -121,3 +121,5 @@ A：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>�
                 ]
             )
         )
+        builder.description = "扮演刘思思的角色和大家聊天~"
+        return builder

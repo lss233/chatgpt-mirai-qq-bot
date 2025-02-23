@@ -6,9 +6,9 @@ from typing import Type
 from pydantic import BaseModel, ValidationError
 from ruamel.yaml import YAML
 
-from kirara_ai.logger import get_logger
+from ..logger import get_logger
 
-
+CONFIG_FILE = "data/config.yaml"
 class ConfigLoader:
     """
     配置文件加载器，支持加载和保存 YAML 文件，并保留注释。

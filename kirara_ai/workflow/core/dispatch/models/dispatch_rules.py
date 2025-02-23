@@ -42,6 +42,11 @@ class CombinedDispatchRule(BaseModel):
 
         # 所有规则组都必须匹配（AND 关系）
         for group in self.rule_groups:
+            
+            # 如果组内没有规则，视为匹配
+            if len(group.rules) == 0:
+                return True
+
             # 获取组内所有规则的匹配结果
             rule_results = []
             for rule in group.rules:

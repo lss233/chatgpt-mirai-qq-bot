@@ -193,7 +193,7 @@ class PluginLoader:
         """安装插件"""
         try:
             # 构建安装命令
-            cmd = [sys.executable, "-m", "pip", "install"]
+            cmd = [sys.executable, "-m", "pip", "install", "--index-url", self.config.update.pypi_registry]
             if version:
                 cmd.append(f"{package_name}=={version}")
             else:
@@ -352,6 +352,8 @@ class PluginLoader:
                 "pip",
                 "install",
                 "--upgrade",
+                "--index-url",
+                self.config.update.pypi_registry,
                 plugin_info.package_name,
             ]
 

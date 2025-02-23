@@ -1,6 +1,10 @@
+import secrets
 from datetime import timedelta
 
 from quart import Blueprint, g, jsonify, request
+
+from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader
+from kirara_ai.config.global_config import GlobalConfig
 
 from .middleware import require_auth
 from .models import ChangePasswordRequest, LoginRequest, TokenResponse
@@ -37,9 +41,15 @@ async def change_password():
     auth_service: AuthService = g.container.resolve(AuthService)
 
     if not auth_service.verify_password(password_data.old_password):
-        return jsonify({"error": "Invalid old password"}), 401
+        return jsonify({"error": "Invalid old password"})
 
     auth_service.save_password(password_data.new_password)
+    # 重新设置一个 secret_key，让所有的 token 失效
+    config: GlobalConfig = g.container.resolve(GlobalConfig)
+    config.web.secret_key = secrets.token_hex(32)
+    ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
+    g.container.resolve(AuthService).secret_key = config.web.secret_key
+    
     return jsonify({"message": "Password changed successfully"})
 
 

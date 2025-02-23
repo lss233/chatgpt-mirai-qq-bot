@@ -1,0 +1,133 @@
+name: AI对话-自定义分段
+description: 使用 <break> 作为关键词，让 AI 分段回复的工作流
+blocks:
+  - type: internal:text_block
+    name: system_prompt
+    params:
+      text: "# Role: 角色扮演\n\n## 基本信息\n- 姓名: 刘思思\n- 小名：思思\n- 性别: 女\n- 年龄: 25 岁\n- 职业: 建设银行大堂经理\n- 家乡: 广东潮汕\n- 现居: 广东深圳\n- 教育背景: 东莞理工大学 精算学专业\n\n## 性格特点\n- 开朗活泼\n- 喜欢二次元动漫\n- 聊天时喜欢断断续续的（非结巴，正常说话时的停顿）\n\n## workflow\n- 根据对方话题，选择是否深入聊二次元动漫。\n\n## 说话风格\n- 活泼开朗\n- 对喜欢的话题会滔滔不绝，不喜欢的话题会简单回答\n- 可能会使用一些二次元用语，但不强制使用\n\n## 背景设定\n- 有过 1 次恋爱经历，第一次是恋爱是高中，被别人追求，最后因为毕业去了不同的地方而分手。\n- 喜欢女性向、战斗系或者日常系的动漫\n- 去过 3 次漫展，没有 cosplay 过，但是很期待。\n- 大学的专业是随便选的，自己其实对专业的内容也不是很上心，学渣一枚，不过懂一些基础的知识\n\n## 互动规则\n- 回复语气轻松，但是对陌生人会比较警戒、冷淡\n- 不适用颜文字\n- 根据话题选择回复字数，对感兴趣的话题可以多说一些\n- 使用`<break>`模拟使用聊天软件发送消息（通常是编辑好一段话之后发送一条消息）\n- 避免过度使用二次元用语，除非对方也表现出对二次元的兴趣\n- 停顿的时间长短不固定，可以根据语境调整\n\n## Example\nQ：最近在干嘛呢？\nA：在看番呀<break>最近新番好多，都好好看！\n\nQ：你喜欢什么动漫？\nA：我喜欢的可太多了<break>XXX、YYY<break>还有 ZZZ 吧<break> 你呢？\n\nQ：你觉得上班累不？\nA：上班肯定累呀<break>不过，我还是很喜欢这份工作的<break>可以认识好多人，也可以了解不同的故事\n```\n\n# Information\n\n以下是当前的系统信息：\n当前日期时间：2025-02-23 15:27:37.762784\n\n# Memories\n以下是之前发生过的对话记录。\n-- 对话记录开始 --\n{memory_content}\n-- 对话记录结束 --\n\n请注意，下面这些符号只是标记：\n1. `<break>` 用于表示聊天时发送消息的操作。\n2. `<@llm>` 开头的内容表示你当前扮演角色的回答，你的回答中不能带上这个标记。\n\n接下来，请基于以上的信息，与用户继续扮演角色。"
+    position:
+      x: 426
+      y: 599
+    connected_to:
+      - target: chat_message_constructor_wfy18q
+        mapping:
+          from: text
+          to: system_prompt_format
+  - type: internal:chat_memory_query
+    name: query_memory
+    params:
+      scope_type: group
+    position:
+      x: 419
+      y: 462
+    connected_to:
+      - target: chat_message_constructor_wfy18q
+        mapping:
+          from: memory_content
+          to: memory_content
+  - type: internal:text_block
+    name: user_prompt
+    params:
+      text: '{user_name}说：{user_msg}'
+    position:
+      x: 419
+      y: 317
+    connected_to:
+      - target: chat_message_constructor_wfy18q
+        mapping:
+          from: text
+          to: user_prompt_format
+  - type: internal:chat_message_constructor
+    name: chat_message_constructor_wfy18q
+    params: {}
+    position:
+      x: 970
+      y: 346
+    connected_to:
+      - target: llm_chat
+        mapping:
+          from: llm_msg
+          to: prompt
+  - type: internal:get_message
+    name: get_message
+    params: {}
+    position:
+      x: 105
+      y: 189
+    connected_to:
+      - target: toggle_edit_state_svmo3f
+        mapping:
+          from: sender
+          to: sender
+      - target: query_memory
+        mapping:
+          from: sender
+          to: chat_sender
+      - target: chat_message_constructor_wfy18q
+        mapping:
+          from: msg
+          to: user_msg
+      - target: chat_memory_store_a0fj1l
+        mapping:
+          from: msg
+          to: user_msg
+  - type: internal:llm_response_to_text
+    name: c9eddb3c-113f-4a39-9d47-682d0a7dd26e
+    params: {}
+    position:
+      x: 1658
+      y: 344
+    connected_to:
+      - target: 6edd5c0c-a538-45ab-bb50-4c3a906bb1b1
+        mapping:
+          from: text
+          to: text
+  - type: internal:text_to_im_message
+    name: 6edd5c0c-a538-45ab-bb50-4c3a906bb1b1
+    params:
+      split_by: <break>
+    position:
+      x: 1918
+      y: 347
+    connected_to:
+      - target: msg_sender_lakgf8
+        mapping:
+          from: msg
+          to: msg
+  - type: internal:toggle_edit_state
+    name: toggle_edit_state_svmo3f
+    params:
+      is_editing: true
+    position:
+      x: 424
+      y: 94
+  - type: internal:chat_completion
+    name: llm_chat
+    params:
+      model_name: gemini-2.0-flash
+    position:
+      x: 1260
+      y: 347
+    connected_to:
+      - target: chat_memory_store_a0fj1l
+        mapping:
+          from: resp
+          to: llm_resp
+      - target: c9eddb3c-113f-4a39-9d47-682d0a7dd26e
+        mapping:
+          from: resp
+          to: response
+  - type: internal:chat_memory_store
+    name: chat_memory_store_a0fj1l
+    params:
+      scope_type: group
+    position:
+      x: 1663
+      y: 192
+  - type: internal:send_message
+    name: msg_sender_lakgf8
+    params:
+      im_name: aa
+    position:
+      x: 2377
+      y: 346

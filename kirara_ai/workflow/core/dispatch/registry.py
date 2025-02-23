@@ -99,7 +99,7 @@ class DispatchRuleRegistry:
         simple_rule = SimpleDispatchRule(type=rule_type, config=rule_config)
 
         # 创建规则组
-        rule_group = RuleGroup(operator="and", rules=[simple_rule])
+        rule_group = RuleGroup(operator="or", rules=[simple_rule])
 
         # 创建组合规则
         return CombinedDispatchRule(

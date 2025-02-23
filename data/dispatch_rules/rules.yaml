@@ -1,54 +1,42 @@
 - rule_id: chat_normal
-  name: 普通聊天
-  description: 普通聊天，使用默认参数
+  name: 群聊AI对话
+  description: 群聊中使用 /chat 开头对话或者 被@ 时触发聊天
   workflow_id: chat:normal
   priority: 5
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
     - type: prefix
       config:
         prefix: /chat
+    - type: bot_mention
+      config: {}
+  - operator: or
+    rules:
+    - type: chat_type
+      config:
+        chat_type: 群聊
   metadata:
     category: chat
     permission: user
     temperature: 0.7
 - rule_id: chat_creative
-  name: 创意聊天
-  description: 创意聊天，使用更高的温度参数
-  workflow_id: chat:creative
+  name: 私聊AI对话
+  description: 私聊时直接发送内容触发对话
+  workflow_id: chat:normal
   priority: 5
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
-    - type: keyword
+    - type: chat_type
       config:
-        keywords:
-        - 创意
-        - 发散
-        - brainstorm
+        chat_type: 私聊
   metadata:
     category: chat
     permission: user
     temperature: 0.9
-- rule_id: chat_roleplay
-  name: 角色扮演
-  description: 角色扮演聊天，自动提取角色设定
-  workflow_id: chat:roleplay
-  priority: 8
-  enabled: true
-  rule_groups:
-  - operator: and
-    rules:
-    - type: regex
-      config:
-        pattern: ^扮演(.+?)[:：]
-  metadata:
-    category: chat
-    permission: user
-    temperature: 0.8
 - rule_id: game_dice
   name: 骰子
   description: 骰子游戏，支持 XdY 格式
@@ -56,7 +44,7 @@
   priority: 5
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
     - type: regex
       config:
@@ -69,7 +57,7 @@
   priority: 5
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
     - type: keyword
       config:
@@ -85,7 +73,7 @@
   priority: 10
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
     - type: prefix
       config:
@@ -100,7 +88,7 @@
   priority: 10
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
     - type: prefix
       config:
@@ -115,7 +103,7 @@
   priority: 0
   enabled: true
   rule_groups:
-  - operator: and
+  - operator: or
     rules:
     - type: fallback
       config: {}

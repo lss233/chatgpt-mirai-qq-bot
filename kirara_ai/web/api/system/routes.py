@@ -14,6 +14,8 @@ import tomli
 from packaging import version
 from quart import Blueprint, current_app, g, request
 
+from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader
+from kirara_ai.config.global_config import GlobalConfig
 from kirara_ai.im.manager import IMManager
 from kirara_ai.llm.llm_manager import LLMManager
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
@@ -27,6 +29,80 @@ system_bp = Blueprint("system", __name__)
 # 记录启动时间
 start_time = time.time()
 
+@system_bp.route("/config", methods=["GET"])
+@require_auth
+async def get_system_config():
+    """获取系统配置"""
+    try:
+        config: GlobalConfig = g.container.resolve(GlobalConfig)
+        return {
+            "web": {
+                "host": config.web.host,
+                "port": config.web.port
+            },
+            "plugins": {
+                "market_base_url": config.plugins.market_base_url
+            },
+            "update": {
+                "pypi_registry": config.update.pypi_registry,
+                "npm_registry": config.update.npm_registry
+            }
+        }
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@system_bp.route("/config/web", methods=["POST"])
+@require_auth
+async def update_web_config():
+    """更新Web配置"""
+    try:
+        data = await request.get_json()
+        config: GlobalConfig = g.container.resolve(GlobalConfig)
+        
+        config.web.host = data["host"]
+        config.web.port = data["port"]
+        
+        # 保存配置
+        ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
+        return {"status": "success", "restart_required": True}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@system_bp.route("/config/plugins", methods=["POST"])
+@require_auth
+async def update_plugins_config():
+    """更新插件配置"""
+    try:
+        data = await request.get_json()
+        config: GlobalConfig = g.container.resolve(GlobalConfig)
+        
+        config.plugins.market_base_url = data["market_base_url"]
+        
+        # 保存配置
+        ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
+        return {"status": "success"}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@system_bp.route("/config/update", methods=["POST"])
+@require_auth
+async def update_registry_config():
+    """更新更新源配置"""
+    try:
+        data = await request.get_json()
+        config: GlobalConfig = g.container.resolve(GlobalConfig)
+        
+        if not hasattr(config, "update"):
+            config.update = {}
+        
+        config.update["pypi_registry"] = data["pypi_registry"]
+        config.update["npm_registry"] = data["npm_registry"]
+        
+        # 保存配置
+        ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
+        return {"status": "success"}
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 def get_version() -> str:
     """从 pyproject.toml 读取版本号"""
@@ -151,8 +227,9 @@ async def get_system_status():
 @require_auth
 async def check_update():
     """检查系统更新"""
-    pypi_registry = request.args.get("pypi_registry", "https://pypi.org/pypi")
-    npm_registry = request.args.get("npm_registry", "https://registry.npmjs.org")
+    config: GlobalConfig = g.container.resolve(GlobalConfig)
+    pypi_registry = config.update.pypi_registry
+    npm_registry = config.update.npm_registry
     
     current_backend_version = get_version()
     latest_backend_version, backend_download_url = await get_latest_pypi_version("kirara-ai", pypi_registry)
