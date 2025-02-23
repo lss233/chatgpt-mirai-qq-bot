@@ -17,4 +17,15 @@ if [ -z "$(ls -A /app/data)" ]; then
     cp -r /tmp/data /app/data
 fi
 
+# create default config
+if [ ! -f "/app/data/config.yaml" ]; then
+    echo "Config file does not exist, creating..."
+    # 必须配置 web，否则无法访问
+    cat <<EOF > /app/data/config.yaml
+web:
+    host: 0.0.0.0
+    port: 8080
+EOF
+fi
+
 python -m kirara_ai
