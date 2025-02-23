@@ -21,4 +21,4 @@ jobs:
         docker build -t test-image .
     - name: Run tests in Docker
       run: |
-        docker run test-image sh -c "python -m pip install pytest coverage pytest-cov && python -m pytest -v --cov=framework --cov-report=term-missing"
+        docker run -v $(pwd):/app test-image sh -c "python -m pip install pytest coverage pytest-cov && python -m pytest /app/tests -v --cov=kirara_ai --cov-report=term-missing"
