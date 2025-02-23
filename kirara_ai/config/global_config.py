@@ -70,6 +70,11 @@ class PluginConfig(BaseModel):
     )
 
 
+class UpdateConfig(BaseModel):
+    pypi_registry: str = Field(default="https://pypi.org/pypi", description="PyPI 服务器 URL")
+    npm_registry: str = Field(default="https://registry.npmjs.org", description="npm 服务器 URL")
+
+
 class GlobalConfig(BaseModel):
     ims: List[IMConfig] = Field(default=[], description="IM配置列表")
     llms: LLMConfig = LLMConfig()
@@ -77,3 +82,4 @@ class GlobalConfig(BaseModel):
     memory: MemoryConfig = MemoryConfig()
     web: WebConfig = WebConfig()
     plugins: PluginConfig = PluginConfig()
+    update: UpdateConfig = UpdateConfig()

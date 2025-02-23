@@ -2,7 +2,7 @@ import asyncio
 
 from quart import Blueprint, g, jsonify, request
 
-from kirara_ai.config.config_loader import ConfigLoader
+from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
@@ -91,7 +91,7 @@ async def create_adapter():
     manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
 
     # 保存配置到文件
-    ConfigLoader.save_config_with_backup("data/config.yaml", config)
+    ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
 
     return IMAdapterResponse(
         adapter=IMAdapterStatus(
@@ -128,7 +128,7 @@ async def update_adapter(adapter_id: str):
     manager.update_adapter_config(adapter_id, adapter_config)
 
     # 保存配置到文件
-    ConfigLoader.save_config_with_backup("data/config.yaml", config)
+    ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
 
     # 如果适配器正在运行，需要重启
     is_running = manager.is_adapter_running(adapter_id)
@@ -162,7 +162,7 @@ async def delete_adapter(adapter_id: str):
     manager.delete_adapter(adapter_id)
 
     # 保存配置到文件
-    ConfigLoader.save_config_with_backup("data/config.yaml", config)
+    ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
 
     return jsonify({"message": "Adapter deleted successfully"})
 

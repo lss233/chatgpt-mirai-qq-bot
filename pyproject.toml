@@ -40,6 +40,9 @@ dependencies = [
     "pre-commit",
 ]
 
+[project.scripts]
+kirara_ai = "kirara_ai.__main__:main"
+
 [project.urls]
 "Homepage" = "https://github.com/lss233/chatgpt-mirai-qq-bot"
 "Bug Tracker" = "https://github.com/lss233/chatgpt-mirai-qq-bot/issues" 

@@ -1,4 +1,5 @@
 import asyncio
+import mimetypes
 import os
 from pathlib import Path
 
@@ -56,6 +57,17 @@ def create_app(container: DependencyContainer) -> Quart:
     app = Quart(__name__)
     cwd = os.getcwd()
     app.static_folder = f"{cwd}/web"
+    
+    # 强制设置 MIME 类型
+    mimetypes.add_type("text/html", ".html")
+    mimetypes.add_type("text/css", ".css")
+    mimetypes.add_type("text/javascript", ".js")
+    mimetypes.add_type("image/svg+xml", ".svg")
+    mimetypes.add_type("image/png", ".png")
+    mimetypes.add_type("image/jpeg", ".jpg")
+    mimetypes.add_type("image/gif", ".gif")
+    mimetypes.add_type("image/webp", ".webp")
+    
 
     @app.route("/")
     async def index():
@@ -114,8 +126,22 @@ class WebServer:
         self.hypercorn_config = Config()
         self.hypercorn_config.bind = [f"{self.config.web.host}:{self.config.web.port}"]
         self.hypercorn_config._log = Logger(self.hypercorn_config)
-        # 这些是 logging.Logger，需要转换成 loguru.Logger 的格式
-        self.hypercorn_config._log.access_logger = HypercornLoggerWrapper(self.logger)
+        
+        # 创建自定义的日志包装器，添加 URL 过滤
+        class FilteredLoggerWrapper(HypercornLoggerWrapper):
+            def info(self, message, *args, **kwargs):
+                # 过滤掉不需要记录的URL请求日志
+                ignored_paths = [
+                    '/backend-api/api/system/status',  # 添加需要过滤的URL路径
+                    '/favicon.ico',
+                ]
+                for path in ignored_paths:
+                    if path in str(args):
+                        return
+                super().info(message, *args, **kwargs)
+        
+        # 使用新的过滤日志包装器
+        self.hypercorn_config._log.access_logger = FilteredLoggerWrapper(self.logger)
         self.hypercorn_config._log.error_logger = HypercornLoggerWrapper(self.logger)
 
     async def start(self):

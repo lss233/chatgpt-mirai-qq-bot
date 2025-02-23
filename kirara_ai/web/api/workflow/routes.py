@@ -104,6 +104,7 @@ async def create_workflow(group_id: str, workflow_id: str):
     try:
         # 创建工作流构建器
         builder = WorkflowBuilder(workflow_def.name)
+        builder.description = workflow_def.description
 
         # 根据定义添加块和连接
         for block_def in workflow_def.blocks:
@@ -162,6 +163,7 @@ async def update_workflow(group_id: str, workflow_id: str):
     try:
         # 创建新的工作流构建器
         builder = WorkflowBuilder(workflow_def.name)
+        builder.description = workflow_def.description
 
         # 根据定义添加块和连接
         for block_def in workflow_def.blocks:

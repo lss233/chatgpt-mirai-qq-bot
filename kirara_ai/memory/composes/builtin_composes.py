@@ -19,7 +19,7 @@ class DefaultMemoryComposer(MemoryComposer):
             if isinstance(msg, IMMessage):
                 composed_message += f"{sender.display_name} 说: {msg.content}\n"
             elif isinstance(msg, LLMChatMessage) or isinstance(msg, Message):
-                composed_message += f"<@LLM> 说: {msg.content}\n"
+                composed_message += f"你回答: {msg.content}\n"
 
         composed_message = composed_message.strip()
         composed_at = datetime.now()
