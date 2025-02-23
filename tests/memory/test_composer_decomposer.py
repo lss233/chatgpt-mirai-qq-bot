@@ -59,7 +59,7 @@ class TestDefaultMemoryComposer:
 
         entry = composer.compose(c2c_sender, [chat_message])
 
-        assert f"<@LLM> 说: {chat_message.content}" in entry.content
+        assert f"你回答: {chat_message.content}" in entry.content
         assert isinstance(entry.timestamp, datetime)
 
 
