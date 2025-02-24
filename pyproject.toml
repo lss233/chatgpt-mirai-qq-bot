@@ -38,7 +38,10 @@ dependencies = [
     "setuptools",
     "tomli>=2.0.0",
     "pre-commit",
+    "python-magic",
+    "python-magic-bin ; platform_system == 'Windows'",
 ]
+
 
 [project.scripts]
 kirara_ai = "kirara_ai.__main__:main"
