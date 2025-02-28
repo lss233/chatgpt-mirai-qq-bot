@@ -38,7 +38,7 @@ dependencies = [
     "setuptools",
     "tomli>=2.0.0",
     "pre-commit",
-    "python-magic",
+    "python-magic ; platform_system != 'Windows'",
     "python-magic-bin ; platform_system == 'Windows'",
 ]
 
