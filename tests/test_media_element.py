@@ -50,11 +50,14 @@ async def test_media_element_from_url():
     # 测试获取原始URL
     url = await media.get_url()
     assert url == TEST_URL
-    
+
     # 测试获取临时文件路径
     path = await media.get_path()
-    assert os.path.exists(path)
-    assert os.path.isfile(path)
+    try:
+        assert os.path.exists(path)
+        assert os.path.isfile(path)
+    finally:
+        os.remove(path)
 
 @pytest.mark.asyncio
 async def test_media_element_from_data():
