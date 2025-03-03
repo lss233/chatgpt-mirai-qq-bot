@@ -94,7 +94,9 @@ class GeminiAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
             async with session.get(
                 api_url, headers={"x-goog-api-key": self.config.api_key}
             ) as response:
-                response.raise_for_status()
+                if response.status != 200:
+                    self.logger.error(f"获取模型列表失败: {await response.text()}")                    
+                    response.raise_for_status()
                 response_data = await response.json()
                 return [
                     model["name"].removeprefix("models/")
