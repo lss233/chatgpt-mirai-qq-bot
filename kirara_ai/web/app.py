@@ -151,7 +151,7 @@ def create_app(container: DependencyContainer) -> FastAPI:
                 raise HTTPException(status_code=404, detail="Access denied")
             
             # 如果文件存在，返回文件
-            if file_path.exists() and file_path.is_file():
+            if file_path.is_file():
                 return FileResponse(file_path)
                 
             # 否则返回 index.html（SPA 路由）

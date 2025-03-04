@@ -64,9 +64,8 @@ async def get_adapter(adapter_id: str):
     adapter_config = manager.get_adapter_config(adapter_id)
     adapter = manager.get_adapter(adapter_id)
     bot_profile = None
-    if manager.is_adapter_running(adapter_id):
-        if isinstance(adapter, BotProfileAdapter):
-            bot_profile = await adapter.get_bot_profile()
+    if manager.is_adapter_running(adapter_id) and isinstance(adapter, BotProfileAdapter):
+        bot_profile = await adapter.get_bot_profile()
         
     return IMAdapterResponse(
         adapter=IMAdapterStatus(
@@ -101,7 +100,7 @@ async def create_adapter():
     # 更新配置
     _create_adapter(manager, adapter_info.name, adapter_info.adapter, adapter_info.config)
     if adapter_info.enable:
-        manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
+        await manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
         
     config.ims.append(adapter_info)
     # 保存配置到文件
