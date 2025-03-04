@@ -25,4 +25,12 @@ web:
 EOF
 fi
 
+# create data/venv
+if [ ! -d "/app/data/venv" ]; then
+    echo "Venv directory does not exist, creating..."
+    python -m venv /app/data/venv --system-site-packages
+fi
+
+# activate venv
+source /app/data/venv/bin/activate
 python -m kirara_ai
