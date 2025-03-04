@@ -11,7 +11,7 @@ fi
 # check if data directory empty
 if [ -z "$(ls -A /app/data)" ]; then
     echo "Data directory is empty, copying default data..."
-    cp -r /tmp/data /app/data
+    cp -r /tmp/data/. /app/data
 fi
 
 # create default config
