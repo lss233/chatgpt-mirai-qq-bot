@@ -17,8 +17,7 @@ class QQBotAdapterPlugin(Plugin):
         pass
 
     def on_load(self):
-        self.im_registry.register("qqbot", QQBotAdapter, QQBotConfig, "QQBot 机器人", "QQ 开放平台机器人，支持群聊、私聊和 QQ 频道。")
-        # 添加当前文件夹下的 assets/telegram.svg 文件夹到 web 服务器
+        self.im_registry.register("qqbot", QQBotAdapter, QQBotConfig, "QQ 开放平台机器人", "QQ 官方机器人，支持基本的聊天功能，但不支持分段回复，群聊中需要被 @ 触发。")
         local_logo_path = os.path.join(os.path.dirname(__file__), "assets", "qqbot.svg")
         self.web_server.add_static_assets("/assets/icons/im/qqbot.svg", local_logo_path)
 
