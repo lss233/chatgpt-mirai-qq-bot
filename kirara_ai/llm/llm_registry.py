@@ -70,7 +70,10 @@ class LLMBackendRegistry:
         :param adapter_type: 适配器类型
         :return: 适配器类,如果没有找到则返回None
         """
-        return self._adapters.get(adapter_type)
+        return next(
+            (adapter for key, adapter in self._adapters.items() if key.lower() == adapter_type.lower()),
+            None
+        )
 
     def get_config_class(self, adapter_type: str) -> Optional[Type[LLMBackendConfig]]:
         """
@@ -78,7 +81,10 @@ class LLMBackendRegistry:
         :param adapter_type: 适配器类型
         :return: 配置类,如果没有找到则返回None
         """
-        return self._configs.get(adapter_type)
+        return next(
+            (config for key, config in self._configs.items() if key.lower() == adapter_type.lower()),
+            None
+        )
 
     def get_adapter_types(self) -> list[str]:
         """

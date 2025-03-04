@@ -1,7 +1,11 @@
 import base64
-import os
+import tempfile
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
+import aiofiles
+import aiohttp
+import magic
 
 from kirara_ai.im.sender import ChatSender
 
@@ -46,30 +50,96 @@ class MediaMessage(MessageElement):
         self.path = path
         self.data = data
         self.format = format
+        self.resource_type = "media"  # 由子类重写为具体类型
 
         # 根据传入的参数计算其他属性
         if url:
-            self._from_url(url)
+            self._from_url(url, format)
         elif path:
-            self._from_path(path)
+            self._from_path(path, format)
         elif data and format:
             self._from_data(data, format)
         else:
             raise ValueError("Must provide either url, path, or data + format.")
 
-    def _from_url(self, url: str):
+    async def _load_data_from_path(self) -> None:
+        """异步从文件路径读取数据并赋值给self.data"""
+        async with aiofiles.open(self.path, "rb") as f:
+            self.data = await f.read()
+        await self._detect_format()
+
+    async def _load_data_from_url(self) -> None:
+        """异步从URL下载数据并赋值给self.data"""
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.url) as resp:
+                self.data = await resp.read()
+        await self._detect_format()
+
+    async def _detect_format(self) -> None:
+        """使用python-magic检测数据格式并赋值给self.format"""
+        if self.format:
+            return
+            
+        mime_type = magic.from_buffer(self.data, mime=True)
+        self.format = mime_type.split('/')[-1]
+        self.resource_type = mime_type.split('/')[0]
+
+    async def get_url(self) -> str:
+        """获取媒体资源的URL"""
+        if self.url:
+            return self.url
+            
+        if not self.data:
+            if self.path:
+                await self._load_data_from_path()
+            else:
+                raise ValueError("No available media source")
+
+        return f"data:{self.resource_type}/{self.format};base64,{base64.b64encode(self.data).decode()}"
+
+    async def get_path(self) -> str:
+        """获取媒体资源的文件路径"""
+        if self.path:
+            return self.path
+            
+        if not self.data:
+            if self.url:
+                await self._load_data_from_url()
+            else:
+                raise ValueError("No available media source")
+
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(self.data)
+            self.path = f.name
+        return self.path
+
+    async def get_data(self) -> bytes:
+        """获取媒体资源的二进制数据"""
+        if self.data:
+            return self.data
+            
+        if self.path:
+            await self._load_data_from_path()
+            return self.data
+        if self.url:
+            await self._load_data_from_url()
+            return self.data
+            
+        raise ValueError("No available media source")
+
+    def _from_url(self, url: str, format: Optional[str] = None):
         """从 URL 计算其他属性"""
         self.url = url
         self.path = None
         self.data = None
-        self.format = url.split(".")[-1] if "." in url else None
+        self.format = format
 
-    def _from_path(self, path: str):
+    def _from_path(self, path: str, format: Optional[str] = None):
         """从文件路径计算其他属性"""
         self.path = path
         self.url = None
         self.data = None
-        self.format = os.path.splitext(path)[-1].lstrip(".")
+        self.format = format
 
     def _from_data(self, data: bytes, format: str):
         """从数据和格式计算其他属性"""
@@ -77,10 +147,21 @@ class MediaMessage(MessageElement):
         self.format = format
         self.url = None
         self.path = None
+        
+    def to_dict(self):
+        return {
+            "type": self.resource_type,
+            "url": self.url,
+            "path": self.path,
+            "data": base64.b64encode(self.data).decode() if self.data else None,
+            "format": self.format,
+        }
 
 
 # 定义语音消息
 class VoiceMessage(MediaMessage):
+    resource_type = "audio"
+    
     def to_dict(self):
         return {
             "type": "voice",
@@ -96,6 +177,8 @@ class VoiceMessage(MediaMessage):
 
 # 定义图片消息
 class ImageMessage(MediaMessage):
+    resource_type = "image"
+    
     def to_dict(self):
         return {
             "type": "image",
@@ -114,7 +197,6 @@ class ImageMessage(MediaMessage):
 # 定义@消息元素
 # :deprecated
 class AtElement(MessageElement):
-
     def __init__(self, user_id: str, nickname: str = ""):
         self.user_id = user_id
         self.nickname = nickname
@@ -161,7 +243,8 @@ class ReplyElement(MessageElement):
 
 # 定义文件消息元素
 class FileElement(MediaMessage):
-
+    resource_type = "file"
+    
     def to_dict(self):
         return {
             "type": "file",
@@ -212,12 +295,10 @@ class FaceElement(MessageElement):
 
 
 # 定义视频消息元素
-class VideoElement(MessageElement):
-    def __init__(self, file: str):
-        self.file = file
-
+class VideoElement(MediaMessage):
+    resource_type = "video"
+    
     def to_dict(self):
-
         return {"type": "video", "data": {"file": self.file}}
 
     def to_plain(self):

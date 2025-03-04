@@ -113,7 +113,6 @@ async def get_plugin_details(plugin_name: str):
     """获取已安装插件的详细信息"""
     loader: PluginLoader = g.container.resolve(PluginLoader)
     print(f"Getting plugin details for {plugin_name}")
-    print(loader.plugin_infos)
     plugin_info = loader.get_plugin_info(plugin_name)
     if not plugin_info:
         return jsonify({"error": "Plugin not found"}), 404

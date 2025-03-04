@@ -21,6 +21,7 @@ RUN apt-get -yqq update && \
         ffmpeg \
         curl \
         jq \
+        libmagic1 \
         unzip && \
     apt-get -yq clean && \
     apt-get -yq purge --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \

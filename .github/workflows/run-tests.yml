@@ -11,15 +11,43 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     
     steps:
     - uses: actions/checkout@v3
     - name: Set up Docker
+      if: matrix.os == 'ubuntu-latest'
       uses: docker/setup-docker-action@v4
     - name: Build Docker image
+      if: matrix.os == 'ubuntu-latest'
       run: |
         docker build -t test-image .
     - name: Run tests in Docker
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        docker run -v $(pwd):/app test-image sh -c "python -m pip install pytest coverage pytest-cov && python -m pytest /app/tests -v --cov=kirara_ai --cov-report=term-missing"
+        docker run -v $(pwd):/app test-image sh -c "python -m pip install pytest coverage pytest-cov && python -m pytest /app/tests -v --cov=kirara_ai --cov-report=xml:/app/coverage.xml --cov-report=term-missing --junitxml=/app/junit.xml -o junit_family=legacy"
+    - name: Upload test results to Codecov
+      if: matrix.os == 'ubuntu-latest'
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      if: matrix.os == 'ubuntu-latest'
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Set up Python 3.13
+      if: matrix.os == 'windows-latest'
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - name: Run tests on Windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        python -m pip install -e .
+        python -m pip install pytest
+        chcp 65001
+        python -m pytest ./tests -vs

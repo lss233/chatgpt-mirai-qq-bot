@@ -17,19 +17,19 @@ class LLMPresetAdaptersPlugin(Plugin):
 
     def on_load(self):
         self.llm_registry.register(
-            "openai", OpenAIAdapter, OpenAIConfig, LLMAbility.TextChat
+            "OpenAI", OpenAIAdapter, OpenAIConfig, LLMAbility.TextChat
         )
         self.llm_registry.register(
-            "deepseek", DeepSeekAdapter, DeepSeekConfig, LLMAbility.TextChat
+            "DeepSeek", DeepSeekAdapter, DeepSeekConfig, LLMAbility.TextChat
         )
         self.llm_registry.register(
-            "gemini", GeminiAdapter, GeminiConfig, LLMAbility.TextChat
+            "Gemini", GeminiAdapter, GeminiConfig, LLMAbility.TextChat
         )
         self.llm_registry.register(
-            "ollama", OllamaAdapter, OllamaConfig, LLMAbility.TextChat
+            "Ollama", OllamaAdapter, OllamaConfig, LLMAbility.TextChat
         )
         self.llm_registry.register(
-            "claude", ClaudeAdapter, ClaudeConfig, LLMAbility.TextChat
+            "Claude", ClaudeAdapter, ClaudeConfig, LLMAbility.TextChat
         )
         logger.info("LLMPresetAdaptersPlugin loaded")
 
