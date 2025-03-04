@@ -27,8 +27,8 @@ class TextConcatBlock(Block):
     }
     outputs = {"text": Output("text", "拼接后的文本", str, "拼接后的文本")}
 
-    def execute(self) -> Dict[str, Any]:
-        return {"text": self.text1 + self.text2}
+    def execute(self,text1,text2) -> Dict[str, Any]:
+        return {"text": text1 + text2}
 
 
 # 替换输入文本中的某一块文字为变量
@@ -70,4 +70,3 @@ class TextExtractByRegexBlock(Block):
             return {"text": match.group(1)}
         else:
             return {"text": ""}
-        
