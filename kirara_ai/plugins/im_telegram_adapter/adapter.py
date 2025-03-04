@@ -1,13 +1,14 @@
 import asyncio
 import random
 from functools import lru_cache
+from typing import Optional
 
 import telegramify_markdown
 from pydantic import BaseModel, ConfigDict, Field
 from telegram import Bot, Update, User
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-from kirara_ai.im.adapter import EditStateAdapter, IMAdapter, UserProfileAdapter
+from kirara_ai.im.adapter import BotProfileAdapter, EditStateAdapter, IMAdapter, UserProfileAdapter
 from kirara_ai.im.message import ImageMessage, IMMessage, MentionElement, TextMessage, VoiceMessage
 from kirara_ai.im.profile import Gender, UserProfile
 from kirara_ai.im.sender import ChatSender, ChatType
@@ -16,10 +17,10 @@ from kirara_ai.workflow.core.dispatch import WorkflowDispatcher
 
 
 def get_display_name(user: User):
-    if user.username:
+    if user.first_name or user.last_name:
+        return f"{user.first_name or ''} {user.last_name or ''}".strip()
+    elif user.username:
         return user.username
-    elif user.first_name or user.last_name:
-        return f"{user.first_name} {user.last_name}".strip()
     else:
         return user.id
 
@@ -29,14 +30,14 @@ class TelegramConfig(BaseModel):
     Telegram 配置文件模型。
     """
 
-    token: str = Field(description="Telegram Bot Token")
+    token: str = Field(description="Telegram 机器人的 Token，从 @BotFather 获取。")
     model_config = ConfigDict(extra="allow")
 
     def __repr__(self):
         return f"TelegramConfig(token={self.token})"
 
 
-class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
+class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter, BotProfileAdapter):
     """
     Telegram Adapter，包含 Telegram Bot 的所有逻辑。
     """
@@ -48,7 +49,8 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
         self.application = Application.builder().token(config.token).build()
         self.bot = Bot(token=config.token)
         # 注册命令处理器和消息处理器
-        self.application.add_handler(CommandHandler("start", self.command_start))
+        self.application.add_handler(
+            CommandHandler("start", self.command_start))
         self.application.add_handler(
             MessageHandler(
                 filters.TEXT | filters.VOICE | filters.PHOTO, self.handle_message
@@ -105,23 +107,29 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
 
                     # Add preceding text as TextMessage
                     if entity.offset > offset:
-                        message_elements.append(TextMessage(text=text[offset:entity.offset]))
+                        message_elements.append(TextMessage(
+                            text=text[offset:entity.offset]))
 
                     # Create ChatSender for MentionElement
                     if entity.type == "text_mention" and entity.user:
                         if entity.user.id == self.me.id:
-                            mention_element = MentionElement(target=ChatSender.get_bot_sender())
+                            mention_element = MentionElement(
+                                target=ChatSender.get_bot_sender())
                         else:
-                            mention_element = MentionElement(target=ChatSender.from_c2c_chat(user_id=entity.user.id, display_name=mention_text))
+                            mention_element = MentionElement(target=ChatSender.from_c2c_chat(
+                                user_id=entity.user.id, display_name=mention_text))
                     elif entity.type == "mention":
                         # 这里需要从 adapter 实例中获取 bot 的 username
                         if mention_text == f'@{self.me.username}':
-                            mention_element = MentionElement(target=ChatSender.get_bot_sender())
+                            mention_element = MentionElement(
+                                target=ChatSender.get_bot_sender())
                         else:
-                            mention_element = MentionElement(target=ChatSender.from_c2c_chat(user_id=f'unknown_id:{mention_text}', display_name=mention_text))
+                            mention_element = MentionElement(target=ChatSender.from_c2c_chat(
+                                user_id=f'unknown_id:{mention_text}', display_name=mention_text))
                     else:
                         # Fallback in case of unknown entity type
-                        mention_element = TextMessage(text=mention_text)  # Or handle as needed
+                        mention_element = TextMessage(
+                            text=mention_text)  # Or handle as needed
                     message_elements.append(mention_element)
 
                     offset = entity.offset + entity.length
@@ -145,7 +153,7 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
             photo_url = photo_file.file_path
             photo_element = ImageMessage(url=photo_url)
             message_elements.append(photo_element)
-            
+
         # 创建 Message 对象
         message = IMMessage(
             sender=sender,
@@ -177,7 +185,8 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
                 # 如果是非首条消息，适当停顿，模拟打字
                 if message.message_elements.index(element) > 0:
                     # 停顿通常和字数有关，但是会带一些随机
-                    duration = len(element.text) * 0.1 + random.uniform(0, 1) * 0.1
+                    duration = len(element.text) * 0.1 + \
+                        random.uniform(0, 1) * 0.1
                     await asyncio.sleep(duration)
                 await self.application.bot.send_message(
                     chat_id=chat_id, text=text, parse_mode="MarkdownV2"
@@ -293,3 +302,24 @@ class TelegramAdapter(IMAdapter, UserProfileAdapter, EditStateAdapter):
             return UserProfile(
                 user_id=str(chat_sender.user_id), display_name=chat_sender.display_name
             )
+
+    async def get_bot_profile(self) -> Optional[UserProfile]:
+        """
+        获取机器人资料
+        :return: 机器人资料
+        """
+        profile_photos = await self.me.get_profile_photos()
+        if profile_photos.photos:
+            file_id = profile_photos.photos[0][-1].file_id
+            file = await self.bot.get_file(file_id)
+            photo_url = file.file_path
+        else:
+            photo_url = None
+            
+        return UserProfile(
+            user_id=str(self.me.id), 
+            username=self.me.username, 
+            display_name=get_display_name(self.me), 
+            full_name=f"{self.me.first_name or ''} {self.me.last_name or ''}".strip(), 
+            avatar_url=photo_url
+        )

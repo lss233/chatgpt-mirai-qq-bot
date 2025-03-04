@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 from kirara_ai.config.config_loader import ConfigLoader
@@ -11,7 +12,7 @@ from kirara_ai.llm.format.request import LLMChatRequest
 from kirara_ai.llm.format.response import LLMChatResponse
 from kirara_ai.llm.llm_manager import LLMManager
 from kirara_ai.llm.llm_registry import LLMAbility, LLMBackendRegistry
-from kirara_ai.web.app import create_app
+from kirara_ai.web.app import WebServer
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================
@@ -82,15 +83,15 @@ def app():
 
     manager.load_config()
 
-    app = create_app(container)
-    app.container = container
-    return app
+    web_server = WebServer(container)
+    container.register(WebServer, web_server)
+    return web_server.app
 
 
 @pytest.fixture
 def test_client(app):
     """创建测试客户端"""
-    return app.test_client()
+    return TestClient(app)
 
 
 # ==================== 测试用例 ====================
@@ -98,22 +99,22 @@ class TestLLMBackend:
     @pytest.mark.asyncio
     async def test_get_adapter_types(self, test_client, auth_headers):
         """测试获取适配器类型列表"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/llm/types", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "types" in data
         assert TEST_ADAPTER_TYPE in data.get("types")
 
     @pytest.mark.asyncio
     async def test_list_backends(self, test_client, auth_headers):
         """测试获取后端列表"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/llm/backends", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "data" in data
         assert "backends" in data.get("data")
         backends = data.get("data").get("backends")
@@ -124,11 +125,11 @@ class TestLLMBackend:
     @pytest.mark.asyncio
     async def test_get_backend(self, test_client, auth_headers):
         """测试获取指定后端"""
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/llm/backends/{TEST_BACKEND_NAME}", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "data" in data
         backend = data.get("data")
         assert backend.get("name") == TEST_BACKEND_NAME
@@ -149,13 +150,13 @@ class TestLLMBackend:
         with patch(
             "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
         ) as mock_save:
-            response = await test_client.post(
+            response = test_client.post(
                 "/backend-api/api/llm/backends",
                 headers=auth_headers,
                 json=new_backend.model_dump(),
             )
 
-            data = await response.get_json()
+            data = response.json()
             assert "data" in data
             backend = data.get("data")
             assert backend.get("name") == "new-backend"
@@ -177,13 +178,13 @@ class TestLLMBackend:
 
         # Mock 配置文件保存
         ConfigLoader.save_config_with_backup = MagicMock()
-        response = await test_client.put(
+        response = test_client.put(
             f"/backend-api/api/llm/backends/{TEST_BACKEND_NAME}",
             headers=auth_headers,
             json=updated_config.model_dump(),
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert not data.get("error")
         assert "data" in data
         backend = data.get("data")
@@ -197,11 +198,11 @@ class TestLLMBackend:
     async def test_delete_backend(self, test_client, auth_headers):
         """测试删除后端"""
         ConfigLoader.save_config_with_backup = MagicMock()
-        response = await test_client.delete(
+        response = test_client.delete(
             f"/backend-api/api/llm/backends/{TEST_BACKEND_NAME}", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert not data.get("error")
         assert "data" in data
         backend = data.get("data")
@@ -209,21 +210,21 @@ class TestLLMBackend:
         ConfigLoader.save_config_with_backup.assert_called_once()
 
         # 验证后端已被删除
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/llm/backends/{TEST_BACKEND_NAME}", headers=auth_headers
         )
-        data = await response.get_json()
+        data = response.json()
         assert "error" in data
 
     @pytest.mark.asyncio
     async def test_get_adapter_config_schema(self, test_client, auth_headers):
         """测试获取适配器配置模式"""
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/llm/types/{TEST_ADAPTER_TYPE}/config-schema",
             headers=auth_headers,
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "configSchema" in data
         schema = data.get("configSchema")
         assert schema.get("title") == "TestConfig"
@@ -243,9 +244,7 @@ class TestLLMBackend:
     @pytest.mark.asyncio
     async def test_get_adapter_config_schema_not_found(self, test_client, auth_headers):
         """测试获取不存在的适配器配置模式"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/llm/types/not-exist/config-schema", headers=auth_headers
         )
-
         assert response.status_code == 404
-        await response.get_json()

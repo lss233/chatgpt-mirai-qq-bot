@@ -2,8 +2,9 @@ import asyncio
 
 from quart import Blueprint, g, jsonify, request
 
-from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader
+from kirara_ai.config.config_loader import CONFIG_FILE, ConfigJsonSchema, ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
+from kirara_ai.im.adapter import BotProfileAdapter
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
 
@@ -13,14 +14,22 @@ from .models import (IMAdapterConfig, IMAdapterConfigSchema, IMAdapterList, IMAd
 
 im_bp = Blueprint("im", __name__)
 
+def _create_adapter(manager: IMManager, name: str, adapter: str, config: dict):
+    registry: IMRegistry = g.container.resolve(IMRegistry)
+    adapter_info = registry.get_all_adapters()[adapter]
+    adapter_class = adapter_info.adapter_class
+    adapter_config_class = adapter_info.config_class
+    adapter_config = adapter_config_class(**config)
+    manager.create_adapter(name, adapter_class, adapter_config)
 
 @im_bp.route("/types", methods=["GET"])
 @require_auth
 async def get_adapter_types():
     """获取所有可用的适配器类型"""
     registry: IMRegistry = g.container.resolve(IMRegistry)
-    types = list(registry.get_all_adapters().keys())
-    return IMAdapterTypes(types=types).model_dump()
+    adapters = registry.get_all_adapters()
+    types = [info.name for info in adapters.values()]
+    return IMAdapterTypes(types=types, adapters=adapters).model_dump()
 
 
 @im_bp.route("/adapters", methods=["GET"])
@@ -53,12 +62,18 @@ async def get_adapter(adapter_id: str):
         return jsonify({"error": "Adapter not found"}), 404
 
     adapter_config = manager.get_adapter_config(adapter_id)
+    adapter = manager.get_adapter(adapter_id)
+    bot_profile = None
+    if manager.is_adapter_running(adapter_id) and isinstance(adapter, BotProfileAdapter):
+        bot_profile = await adapter.get_bot_profile()
+        
     return IMAdapterResponse(
         adapter=IMAdapterStatus(
             name=adapter_id,
             adapter=adapter_config.adapter,
             is_running=manager.is_adapter_running(adapter_id),
             config=adapter_config.config,
+            bot_profile=bot_profile
         )
     ).model_dump()
 
@@ -83,13 +98,11 @@ async def create_adapter():
         return jsonify({"error": "Adapter ID already exists"}), 400
 
     # 更新配置
+    _create_adapter(manager, adapter_info.name, adapter_info.adapter, adapter_info.config)
+    if adapter_info.enable:
+        await manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
+        
     config.ims.append(adapter_info)
-    adapter_class = registry.get_all_adapters()[adapter_info.adapter]
-    adapter_config_class = registry.get_config_class(adapter_info.adapter)
-    adapter_config = adapter_config_class(**adapter_info.config)
-    manager.create_adapter(adapter_info.name, adapter_class, adapter_config)
-    manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
-
     # 保存配置到文件
     ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
 
@@ -134,6 +147,10 @@ async def update_adapter(adapter_id: str):
     is_running = manager.is_adapter_running(adapter_id)
     if is_running:
         await manager.stop_adapter(adapter_id, loop)
+        
+    _create_adapter(manager, adapter_id, adapter_info.adapter, adapter_info.config)
+        
+    if adapter_info.enable:
         await manager.start_adapter(adapter_id, loop)
 
     return IMAdapterResponse(
@@ -212,7 +229,7 @@ async def get_adapter_config_schema(adapter_type: str):
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
 
-        schema = config_class.model_json_schema()
+        schema = config_class.model_json_schema(schema_generator=ConfigJsonSchema)
         return IMAdapterConfigSchema(configSchema=schema).model_dump()
     except Exception as e:
         return IMAdapterConfigSchema(error=str(e)).model_dump()

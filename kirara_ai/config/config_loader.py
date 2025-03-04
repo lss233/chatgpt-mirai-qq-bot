@@ -1,9 +1,10 @@
 import os
 import shutil
 from functools import wraps
-from typing import Type
+from typing import Optional, Type
 
 from pydantic import BaseModel, ValidationError
+from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from ruamel.yaml import YAML
 
 from ..logger import get_logger
@@ -77,3 +78,10 @@ def pydantic_validation_wrapper(func):
             raise  # 可以选择重新抛出异常，或者处理异常后返回一个默认值
 
     return wrapper
+
+class ConfigJsonSchema(GenerateJsonSchema):
+    def sort(
+        self, value: JsonSchemaValue, parent_key: Optional[str] = None
+    ) -> JsonSchemaValue:
+        """No-op, we don't want to sort schema values at all."""
+        return value

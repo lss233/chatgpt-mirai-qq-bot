@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
 
 from kirara_ai.config.global_config import GlobalConfig, PluginConfig, WebConfig
 from kirara_ai.im.im_registry import IMRegistry
@@ -11,7 +12,7 @@ from kirara_ai.plugin_manager.models import PluginInfo
 from kirara_ai.plugin_manager.plugin import Plugin
 from kirara_ai.plugin_manager.plugin_event_bus import PluginEventBus
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
-from kirara_ai.web.app import create_app
+from kirara_ai.web.app import WebServer
 from kirara_ai.workflow.core.block import BlockRegistry
 from kirara_ai.workflow.core.dispatch import WorkflowDispatcher
 from kirara_ai.workflow.core.dispatch.registry import DispatchRuleRegistry
@@ -129,15 +130,15 @@ def app():
     plugin_loader.register_plugin(make_test_plugin(), TEST_PLUGIN_NAME)
     container.register(PluginLoader, plugin_loader)
 
-    app = create_app(container)
-    app.container = container
-    return app
+    web_server = WebServer(container)
+    container.register(WebServer, web_server)
+    return web_server.app
 
 
 @pytest.fixture
 def test_client(app):
     """创建测试客户端"""
-    return app.test_client()
+    return TestClient(app)
 
 
 # ==================== 测试用例 ====================
@@ -151,13 +152,13 @@ class TestPlugin:
             mock_response.json.return_value = MOCK_PLUGIN_SEARCH_RESPONSE()
             mock_get.return_value.__aenter__.return_value = mock_response
 
-            response = await test_client.get(
+            response = test_client.get(
                 "/backend-api/api/plugin/v1/search?query=test&page=1&pageSize=10",
                 headers=auth_headers,
             )
 
-            # assert response.status_code == 200
-            data = await response.get_json()
+            assert response.status_code == 200
+            data = response.json()
             assert data == await MOCK_PLUGIN_SEARCH_RESPONSE()
 
     @pytest.mark.asyncio
@@ -169,24 +170,24 @@ class TestPlugin:
             mock_response.json.return_value = MOCK_PLUGIN_INFO_RESPONSE()
             mock_get.return_value.__aenter__.return_value = mock_response
 
-            response = await test_client.get(
+            response = test_client.get(
                 f"/backend-api/api/plugin/v1/info/{TEST_PLUGIN_NAME}",
                 headers=auth_headers,
             )
 
-            # assert response.status_code == 200
-            data = await response.get_json()
+            assert response.status_code == 200
+            data = response.json()
             del data["requiresRestart"]
             assert data == await MOCK_PLUGIN_INFO_RESPONSE()
 
     @pytest.mark.asyncio
     async def test_get_plugin_details(self, test_client, auth_headers):
         """测试获取插件详情"""
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "error" not in data
         assert "plugin" in data
         plugin = data["plugin"]
@@ -197,24 +198,24 @@ class TestPlugin:
     @pytest.mark.asyncio
     async def test_get_nonexistent_plugin(self, test_client, auth_headers):
         """测试获取不存在的插件"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/plugin/plugins/nonexistent", headers=auth_headers
         )
 
         assert response.status_code == 404
-        data = await response.get_json()
+        data = response.json()
         assert "error" in data
 
     @pytest.mark.asyncio
     async def test_update_plugin(self, test_client, auth_headers):
         """测试更新插件"""
         # 由于是内部插件，更新应该失败
-        response = await test_client.put(
+        response = test_client.put(
             f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}", headers=auth_headers
         )
 
         assert response.status_code == 400  # 内部插件不支持更新
-        data = await response.get_json()
+        data = response.json()
         assert "error" in data
 
     @pytest.mark.asyncio
@@ -224,13 +225,13 @@ class TestPlugin:
         with patch(
             "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
         ) as mock_save:
-            response = await test_client.post(
+            response = test_client.post(
                 f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}/enable",
                 headers=auth_headers,
             )
 
             assert response.status_code == 200
-            data = await response.get_json()
+            data = response.json()
             assert "error" not in data
             assert data["plugin"]["is_enabled"] is True
 
@@ -241,13 +242,13 @@ class TestPlugin:
         with patch(
             "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
         ) as mock_save:
-            response = await test_client.post(
+            response = test_client.post(
                 f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}/disable",
                 headers=auth_headers,
             )
 
             assert response.status_code == 200
-            data = await response.get_json()
+            data = response.json()
             assert "error" not in data
             assert data["plugin"]["is_enabled"] is False
 
@@ -271,13 +272,13 @@ class TestPlugin:
             with patch(
                 "kirara_ai.config.config_loader.ConfigLoader.save_config_with_backup"
             ) as mock_save:
-                response = await test_client.post(
+                response = test_client.post(
                     "/backend-api/api/plugin/plugins",
                     headers=auth_headers,
                     json={"package_name": "test-plugin-package", "version": "1.0.0"},
                 )
 
-                data = await response.get_json()
+                data = response.json()
                 assert "error" not in data
                 assert data["plugin"]["package_name"] == "test-plugin-package"
 
@@ -288,10 +289,10 @@ class TestPlugin:
     async def test_uninstall_plugin(self, test_client, auth_headers):
         """测试卸载插件"""
         # 由于是内部插件，卸载应该失败
-        response = await test_client.delete(
+        response = test_client.delete(
             f"/backend-api/api/plugin/plugins/{TEST_PLUGIN_NAME}", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "error" in data
         assert response.status_code == 400  # 内部插件不能卸载

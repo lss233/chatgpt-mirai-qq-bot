@@ -157,7 +157,7 @@ class HttpLegacyAdapter(IMAdapter):
                 await self.handle_message_elements(bot_request.result, resp_message)
                 bot_request.response_event.set()
 
-            message.sender.callback = handle_response
+            message.sender.raw_metadata["callback_func"] = handle_response
             asyncio.create_task(self.dispatcher.dispatch(self, message))
             return request_time
 
@@ -183,10 +183,9 @@ class HttpLegacyAdapter(IMAdapter):
 
             return response
 
-    async def send_message(self, message: IMMessage, recipient: Any):
+    async def send_message(self, message: IMMessage, recipient: ChatSender):
         """此处负责 HTTP 的响应逻辑"""
-        if isinstance(recipient, Sender):
-            await recipient(message)
+        await recipient.raw_metadata["callback_func"](message)
 
     async def start(self):
         """启动HTTP服务器"""

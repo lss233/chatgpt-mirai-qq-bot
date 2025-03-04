@@ -20,3 +20,4 @@ build/
 *.egg-info/
 .coverage
 /web/
+botpy.log

@@ -20,10 +20,10 @@ def setup_auth_service(container: DependencyContainer) -> None:
 async def auth_headers(test_client):
     """获取认证头"""
 
-    response = await test_client.post(
+    response = test_client.post(
         "/backend-api/api/auth/login", json={"password": TEST_PASSWORD}
     )
-    data = await response.get_json()
+    data = response.json()
     assert "error" not in data
     token = data["access_token"]
     return {"Authorization": f"Bearer {token}"}

@@ -165,6 +165,8 @@ def run_application(container: DependencyContainer):
     # 注册信号处理函数
     signal.signal(signal.SIGINT, _signal_handler)
     signal.signal(signal.SIGTERM, _signal_handler)
+    # 阻止信号处理函数被覆盖
+    signal.signal = lambda *args: None
     
     try:
         logger.success("Kirara AI 启动完毕，等待消息中...")
@@ -195,5 +197,5 @@ def run_application(container: DependencyContainer):
             logger.error(f"Error stopping adapters: {e}")
         
         # 关闭事件循环
-        loop.close()
+        loop.stop()
         logger.info("Application stopped gracefully")

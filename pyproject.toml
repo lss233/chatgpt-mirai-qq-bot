@@ -18,6 +18,7 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.0.0",
+    "pydantic-core>=2.27.2",
     "ruamel.yaml",
     "pytest",
     "pytest-asyncio",
@@ -28,6 +29,7 @@ dependencies = [
     "requests",
     "quart>=0.18.4",
     "quart-cors>=0.7.0",
+    "fastapi>=0.110.0",
     "wechatpy",
     "pycryptodome",
     "redis[hiredis]",
