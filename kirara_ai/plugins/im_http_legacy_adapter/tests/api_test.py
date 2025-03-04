@@ -49,7 +49,7 @@ async def test_chat_endpoint(adapter):
     test_client = adapter.app.test_client()
 
     # Test text message
-    response = await test_client.post(
+    response = test_client.post(
         "/v1/chat",
         json={
             "session_id": "test_session",
@@ -65,7 +65,7 @@ async def test_chat_endpoint(adapter):
     assert isinstance(data["message"], list)
 
     # Test with missing fields (should use defaults)
-    response = await test_client.post("/v1/chat", json={"message": "Test message"})
+    response = test_client.post("/v1/chat", json={"message": "Test message"})
     assert response.status_code == 200
 
 

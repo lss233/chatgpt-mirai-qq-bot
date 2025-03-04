@@ -3,6 +3,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
 from kirara_ai.config.config_loader import ConfigLoader
@@ -14,7 +15,7 @@ from kirara_ai.im.message import IMMessage, TextMessage
 from kirara_ai.im.sender import ChatSender
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.web.api.im.models import IMAdapterConfig
-from kirara_ai.web.app import create_app
+from kirara_ai.web.app import WebServer
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
 # ==================== 常量区 ====================
@@ -98,9 +99,6 @@ def app():
     container.register(GlobalConfig, config)
     container.register(DependencyContainer, container)
 
-    # 设置认证服务
-    setup_auth_service(container)
-
     # 创建并注册 IMRegistry
     registry = IMRegistry()
     try:
@@ -114,15 +112,18 @@ def app():
     container.register(IMManager, manager)
 
     manager.start_adapters(loop=loop)
-    app = create_app(container)
-    app.container = container
-    return app
+    web_server = WebServer(container)
+    container.register(WebServer, web_server)
+    
+    # 设置认证服务
+    setup_auth_service(container)
+    return web_server.app
 
 
 @pytest.fixture(scope="session")
 def test_client(app):
     """创建测试客户端"""
-    return app.test_client()
+    return TestClient(app)
 
 
 # ==================== 测试用例 ====================
@@ -130,22 +131,22 @@ class TestIMAdapter:
     @pytest.mark.asyncio
     async def test_get_adapter_types(self, test_client, auth_headers):
         """测试获取适配器类型列表"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/im/types", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "types" in data
         assert TEST_ADAPTER_TYPE in data.get("types")
 
     @pytest.mark.asyncio
     async def test_list_adapters(self, test_client, auth_headers):
         """测试获取适配器列表"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/im/adapters", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "adapters" in data
         adapters = data.get("adapters")
         assert len(adapters) == 2  # 应该有两个适配器
@@ -156,11 +157,11 @@ class TestIMAdapter:
     @pytest.mark.asyncio
     async def test_get_adapter(self, test_client, auth_headers):
         """测试获取特定适配器"""
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "adapter" in data
         adapter = data.get("adapter")
         assert adapter.get("name") == TEST_ADAPTER_ID
@@ -176,13 +177,13 @@ class TestIMAdapter:
 
         # Mock 配置文件保存
         ConfigLoader.save_config_with_backup = MagicMock()
-        response = await test_client.post(
+        response = test_client.post(
             "/backend-api/api/im/adapters",
             headers=auth_headers,
             json=adapter_data.model_dump(),
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "adapter" in data
         adapter = data.get("adapter")
         assert adapter.get("name") == "new-adapter"
@@ -203,13 +204,13 @@ class TestIMAdapter:
 
         # Mock 配置文件保存
         ConfigLoader.save_config_with_backup = MagicMock()
-        response = await test_client.put(
+        response = test_client.put(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}",
             headers=auth_headers,
             json=adapter_data.model_dump(),
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "adapter" in data
         adapter = data.get("adapter")
         assert adapter.get("name") == TEST_ADAPTER_ID
@@ -223,37 +224,37 @@ class TestIMAdapter:
     @pytest.mark.asyncio
     async def test_stop_adapter(self, test_client, auth_headers):
         """测试停止适配器"""
-        response = await test_client.post(
+        response = test_client.post(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}/stop", headers=auth_headers
         )
-        data = await response.get_json()
+        data = response.json()
         assert "message" in data
         assert data.get("message") == "Adapter stopped successfully"
 
         # 验证适配器状态
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}", headers=auth_headers
         )
-        data = await response.get_json()
+        data = response.json()
         assert "adapter" in data
         assert data.get("adapter").get("is_running") is False
 
     @pytest.mark.asyncio
     async def test_start_adapter(self, test_client, auth_headers):
         """测试启动适配器"""
-        response = await test_client.post(
+        response = test_client.post(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}/start",
             headers=auth_headers,
         )
-        data = await response.get_json()
+        data = response.json()
         assert "message" in data
         assert data.get("message") == "Adapter started successfully"
 
         # 验证适配器状态
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}", headers=auth_headers
         )
-        data = await response.get_json()
+        data = response.json()
         assert "adapter" in data
         assert data.get("adapter").get("is_running") is True
 
@@ -261,18 +262,18 @@ class TestIMAdapter:
     async def test_delete_adapter(self, test_client, auth_headers):
         """测试删除适配器"""
         # 先启动适配器
-        await test_client.post(
+        test_client.post(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}/start",
             headers=auth_headers,
         )
 
         # Mock 配置文件保存
         ConfigLoader.save_config_with_backup = MagicMock()
-        response = await test_client.delete(
+        response = test_client.delete(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}", headers=auth_headers
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "message" in data
         assert data.get("message") == "Adapter deleted successfully"
 
@@ -282,12 +283,12 @@ class TestIMAdapter:
     @pytest.mark.asyncio
     async def test_get_adapter_config_schema(self, test_client, auth_headers):
         """测试获取适配器配置模式"""
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/im/types/{TEST_ADAPTER_TYPE}/config-schema",
             headers=auth_headers,
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "configSchema" in data
         schema = data.get("configSchema")
         assert schema.get("title") == "DummyConfig"
@@ -308,10 +309,9 @@ class TestIMAdapter:
     @pytest.mark.asyncio
     async def test_get_adapter_config_schema_not_found(self, test_client, auth_headers):
         """测试获取不存在的适配器配置模式"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/im/types/not-exist/config-schema", headers=auth_headers
         )
-
         assert response.status_code == 404
-        data = await response.get_json()
+        data = response.json()
         assert "error" in data

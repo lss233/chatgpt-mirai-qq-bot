@@ -61,6 +61,8 @@ class IMRegistry:
         :param name: adapter 的名称。
         :return: adapter 的配置类。
         """
+        if name not in self._registry:
+            raise ValueError(f"IMAdapter with name '{name}' is not registered.")
         adapter_info = self._registry[name]
         return adapter_info.config_class
 

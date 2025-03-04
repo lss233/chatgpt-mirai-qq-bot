@@ -1,13 +1,14 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
 
 from kirara_ai.config.global_config import GlobalConfig, WebConfig
 from kirara_ai.im.manager import IMManager
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.llm.llm_manager import LLMManager
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
-from kirara_ai.web.app import create_app
+from kirara_ai.web.app import WebServer
 from kirara_ai.workflow.core.workflow import WorkflowRegistry
 from tests.utils.auth_test_utils import auth_headers, setup_auth_service  # noqa
 
@@ -52,14 +53,15 @@ def app():
     workflow_registry._workflows = {"workflow1": MagicMock(), "workflow2": MagicMock()}
     container.register(WorkflowRegistry, workflow_registry)
 
-    app = create_app(container)
-    return app
+    web_server = WebServer(container)
+    container.register(WebServer, web_server)
+    return web_server.app
 
 
 @pytest.fixture
 def test_client(app):
     """创建测试客户端"""
-    return app.test_client()
+    return TestClient(app)
 
 
 # ==================== 测试用例 ====================
@@ -78,12 +80,12 @@ class TestSystemStatus:
         with patch(
             "kirara_ai.web.api.system.routes.psutil.Process", return_value=mock_process
         ):
-            response = await test_client.get(
+            response = test_client.get(
                 "/backend-api/api/system/status", headers=auth_headers
             )
 
             assert response.status_code == 200
-            data = await response.get_json()
+            data = response.json()
 
             assert "status" in data
             status = data["status"]
@@ -107,8 +109,8 @@ class TestSystemStatus:
     @pytest.mark.asyncio
     async def test_get_system_status_unauthorized(self, test_client):
         """测试未认证时获取系统状态"""
-        response = await test_client.get("/backend-api/api/system/status")
+        response = test_client.get("/backend-api/api/system/status")
 
         assert response.status_code == 401
-        data = await response.get_json()
+        data = response.json()
         assert "error" in data
