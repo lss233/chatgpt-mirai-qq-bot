@@ -17,7 +17,16 @@ class HttpLegacyAdapterPlugin(Plugin):
         pass
 
     def on_load(self):
-        self.im_registry.register("http_legacy", HttpLegacyAdapter, HttpLegacyConfig, "HTTP API", "HTTP 消息 API，可用于接入第三方程序。")
+        self.im_registry.register(
+            "http_legacy", 
+            HttpLegacyAdapter, 
+            HttpLegacyConfig, 
+            "HTTP API", 
+            "HTTP 消息 API，可用于接入第三方程序。",
+            """
+HTTP API 可用于接入第三方程序，接口文档请见项目 [README](https://github.com/lss233/chatgpt-mirai-qq-bot/blob/master/README.md#-http-api)。            
+            """
+        )
         self.web_server.add_static_assets("/assets/icons/im/http_legacy.svg", os.path.join(os.path.dirname(__file__), "assets", "http_legacy.svg"))
 
     def on_start(self):

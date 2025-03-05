@@ -7,12 +7,13 @@ from kirara_ai.im.adapter import IMAdapter
 
 class IMAdapterInfo(BaseModel):
     """IM适配器信息"""
-    
+
     name: str
     config_class: Type[BaseModel] = Field(exclude=True)
     adapter_class: Type[IMAdapter] = Field(exclude=True)
     localized_name: Optional[str] = None
     localized_description: Optional[str] = None
+    detail_info_markdown: Optional[str] = None
 
 class IMRegistry:
     """
@@ -22,13 +23,19 @@ class IMRegistry:
     _registry: Dict[str, IMAdapterInfo] = {}
 
     def register(
-        self, name: str, adapter_class: Type[IMAdapter], config_class: Type[BaseModel], localized_name: Optional[str] = None, localized_description: Optional[str] = None
+        self, name: str,
+        adapter_class: Type[IMAdapter],
+        config_class: Type[BaseModel],
+        localized_name: Optional[str] = None,
+        localized_description: Optional[str] = None,
+        detail_info_markdown: Optional[str] = None
     ):
         """
         注册一个新的 adapter 及其配置类。
         :param name: adapter 的名称。
         :param adapter_class: adapter 的类。
         :param config_class: adapter 的配置类。
+        :param detail_info_markdown: adapter 详情页展示的 Markdown 信息。
         """
         self._registry[name] = IMAdapterInfo(
             name=name,
@@ -36,6 +43,7 @@ class IMRegistry:
             config_class=config_class,
             localized_name=localized_name,
             localized_description=localized_description,
+            detail_info_markdown=detail_info_markdown,
         )
 
     def unregister(self, name: str):
@@ -52,7 +60,8 @@ class IMRegistry:
         :return: adapter 的类。
         """
         if name not in self._registry:
-            raise ValueError(f"IMAdapter with name '{name}' is not registered.")
+            raise ValueError(
+                f"IMAdapter with name '{name}' is not registered.")
         return self._registry[name].adapter_class
 
     def get_config_class(self, name: str) -> Type[BaseModel]:
@@ -62,7 +71,8 @@ class IMRegistry:
         :return: adapter 的配置类。
         """
         if name not in self._registry:
-            raise ValueError(f"IMAdapter with name '{name}' is not registered.")
+            raise ValueError(
+                f"IMAdapter with name '{name}' is not registered.")
         adapter_info = self._registry[name]
         return adapter_info.config_class
 
