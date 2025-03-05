@@ -54,7 +54,7 @@ class WecomConfig(BaseModel):
     encoding_aes_key: str = Field(
         title="EncodingAESKey", description="请通过微信侧随机生成")
     corp_id: Optional[str] = Field(
-        title="企业ID", description="企业微信后台显示的企业ID，微信公众号等场景无需填写。")
+        title="企业ID", description="企业微信后台显示的企业ID，微信公众号等场景无需填写。", default=None)
     webhook_url: str = Field(
         title="微信端回调地址",
         description="填写在微信端，自动生成请勿修改",
