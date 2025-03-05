@@ -31,6 +31,7 @@ class ChatSender:
     chat_type: ChatType
     group_id: Optional[str] = None
     raw_metadata: Dict[str, Any] = None
+    callback = None
     
     @classmethod
     def from_group_chat(

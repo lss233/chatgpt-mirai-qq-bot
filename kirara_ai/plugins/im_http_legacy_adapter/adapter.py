@@ -57,15 +57,6 @@ class MessageHandler(Protocol):
     async def __call__(self, message: IMMessage) -> None: ...
 
 
-class Sender:
-    def __init__(self, username: str, callback: MessageHandler):
-        self.username = username
-        self.callback = callback
-
-    async def __call__(self, message: IMMessage):
-        await self.callback(message)
-
-
 class V2Request:
     def __init__(self, session_id: str, username: str, message: str, request_time: str):
         self.session_id = session_id
@@ -147,7 +138,7 @@ class HttpLegacyAdapter(IMAdapter):
 
             bot_request = V2Request(
                 session_id,
-                message.sender.username,
+                message.sender.display_name,
                 data.get("message", ""),
                 request_time,
             )
@@ -185,8 +176,8 @@ class HttpLegacyAdapter(IMAdapter):
 
     async def send_message(self, message: IMMessage, recipient: Any):
         """此处负责 HTTP 的响应逻辑"""
-        if isinstance(recipient, Sender):
-            await recipient(message)
+        if isinstance(recipient, ChatSender):
+            await recipient.callback(message)
 
     async def start(self):
         """启动HTTP服务器"""
