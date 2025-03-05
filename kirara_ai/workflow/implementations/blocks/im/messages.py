@@ -93,7 +93,7 @@ class TextToIMMessage(Block):
 
     def execute(self, text: str) -> Dict[str, Any]:
         if self.split_by:
-            return {"msg": IMMessage(sender=ChatSender.get_bot_sender(), message_elements=[TextMessage(line.strip()) for line in text.split(self.split_by)])}
+            return {"msg": IMMessage(sender=ChatSender.get_bot_sender(), message_elements = [TextMessage(line.strip()) for line in text.split(self.split_by) if line.strip()])}
         else:
             return {"msg": IMMessage(sender=ChatSender.get_bot_sender(), message_elements=[TextMessage(text)])}
 
