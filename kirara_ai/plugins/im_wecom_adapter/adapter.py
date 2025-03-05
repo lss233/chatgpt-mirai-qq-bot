@@ -244,7 +244,7 @@ class WecomAdapter(IMAdapter):
         if res:
             print(res)
 
-    async def _start_server(self):
+    async def _start_standalone_server(self):
         """启动服务"""
         from hypercorn.asyncio import serve
         from hypercorn.config import Config
@@ -260,7 +260,7 @@ class WecomAdapter(IMAdapter):
 
         self.server_task = asyncio.create_task(serve(self.app, config))
 
-    async def _stop_server(self):
+    async def _stop_standalone_server(self):
         """停止服务"""
         if hasattr(self, "server_task"):
             self.server_task.cancel()
@@ -274,10 +274,10 @@ class WecomAdapter(IMAdapter):
     async def start(self):
         if "host" in self.config.__pydantic_extra__:
             self.logger.warning("正在使用过时的启动模式，请尽快更新为 Webhook 模式。")
-            await self._start_server()
+            await self._start_standalone_server()
         self.setup_routes()
 
     async def stop(self):
         if "host" in self.config.__pydantic_extra__:
-            await self._stop_server()
+            await self._stop_standalone_server()
         self.is_running = False

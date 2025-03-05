@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from types import FunctionType
 
 from kirara_ai.im.sender import ChatSender, ChatType
 
@@ -19,6 +20,15 @@ class MemoryJSONEncoder(json.JSONEncoder):
             return obj.value
         elif isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, FunctionType):
+            return {
+                "__type__": "function",
+                "name": obj.__name__,
+                "args": obj.__code__.co_varnames[:obj.__code__.co_argcount],
+                "defaults": obj.__defaults__,
+                "kwdefaults": obj.__kwdefaults__,
+                "doc": obj.__doc__,
+            }
         return super().default(obj)
 
 

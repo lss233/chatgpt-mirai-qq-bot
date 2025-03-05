@@ -165,6 +165,9 @@ def create_app(container: DependencyContainer) -> FastAPI:
 
 
 class WebServer:
+    app: FastAPI
+    web_api_app: Quart
+    
     def __init__(self, container: DependencyContainer):
         self.app = create_app(container)
         self.web_api_app = create_web_api_app(container)
