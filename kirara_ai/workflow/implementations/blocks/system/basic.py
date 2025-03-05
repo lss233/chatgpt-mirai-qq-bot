@@ -27,7 +27,7 @@ class TextConcatBlock(Block):
     }
     outputs = {"text": Output("text", "拼接后的文本", str, "拼接后的文本")}
 
-    def execute(self,text1,text2) -> Dict[str, Any]:
+    def execute(self, text1: str, text2: str) -> Dict[str, Any]:
         return {"text": text1 + text2}
 
 
