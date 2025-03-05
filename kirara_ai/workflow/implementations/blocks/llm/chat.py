@@ -170,6 +170,7 @@ class ChatResponseConverter(Block):
         # 通过 <break> 将回答分为不同的 TextMessage
         message_elements = []
         for element in content.split("<break>"):
-            message_elements.append(TextMessage(element.strip()))
+            if element.strip():
+                message_elements.append(TextMessage(element.strip()))
         msg = IMMessage(sender="<@llm>", message_elements=message_elements)
         return {"msg": msg}
