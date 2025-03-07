@@ -1,4 +1,5 @@
 import os
+from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -50,11 +51,14 @@ async def test_media_element_from_url():
     # 测试获取原始URL
     url = await media.get_url()
     assert url == TEST_URL
-    
+
     # 测试获取临时文件路径
     path = await media.get_path()
-    assert os.path.exists(path)
-    assert os.path.isfile(path)
+    try:
+        assert os.path.exists(path)
+        assert os.path.isfile(path)
+    finally:
+        os.remove(path)
 
 @pytest.mark.asyncio
 async def test_media_element_from_data():
@@ -97,5 +101,8 @@ async def test_media_element_errors():
         TestMediaMessage(data=b"test")  # 提供数据但没有格式
         
     with pytest.raises(aiohttp.ClientError):
-        media = TestMediaMessage(url="https://invalid-url-that-does-not-exist.com/image.jpg")
-        await media.get_data()  # 无效的URL 
+        # 使用mock模拟网络请求失败
+        with patch('aiohttp.ClientSession.get') as mock_get:
+            mock_get.side_effect = aiohttp.ClientError("Mocked network error")
+            media = TestMediaMessage(url="https://valid-url-but-will-fail.com/image.jpg")
+            await media.get_data()  # 模拟网络请求失败

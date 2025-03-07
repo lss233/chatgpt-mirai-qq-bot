@@ -2,9 +2,6 @@ name: Docker build latest
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'master'
 
 jobs:
   docker:

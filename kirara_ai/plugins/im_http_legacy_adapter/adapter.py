@@ -59,15 +59,6 @@ class MessageHandler(Protocol):
     async def __call__(self, message: IMMessage) -> None: ...
 
 
-class Sender:
-    def __init__(self, username: str, callback: MessageHandler):
-        self.username = username
-        self.callback = callback
-
-    async def __call__(self, message: IMMessage):
-        await self.callback(message)
-
-
 class V2Request:
     def __init__(self, session_id: str, username: str, message: str, request_time: str):
         self.session_id = session_id
@@ -174,7 +165,7 @@ class HttpLegacyAdapter(IMAdapter):
 
             bot_request = V2Request(
                 session_id,
-                message.sender.username,
+                message.sender.display_name,
                 data.get("message", ""),
                 request_time,
             )
@@ -224,6 +215,7 @@ class HttpLegacyAdapter(IMAdapter):
 
     async def _start_standalone_server(self):
         """启动独立HTTP服务器"""
+        
         # 使用 hypercorn 配置来正确处理关闭信号
         from hypercorn.asyncio import serve
         from hypercorn.config import Config
