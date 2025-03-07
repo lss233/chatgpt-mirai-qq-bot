@@ -105,10 +105,13 @@ class IMManager:
                         )
                     )
             except Exception as e:
-                logger.error(f"Failed to start adapter {im.name}: {e}")
+                logger.opt(exception=e).error(f"Failed to start adapter {im.name}: {e}")
                 continue
-        if len(tasks) > 0:
-            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+        if tasks:
+            results = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+            for result in results:
+                if isinstance(result, Exception):
+                    logger.opt(exception=result).error(f"Failed to start adapter: {result}")
         else:
             logger.warning("No adapters to start, please check your config")
 

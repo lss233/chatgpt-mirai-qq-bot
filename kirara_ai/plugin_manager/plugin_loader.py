@@ -160,6 +160,7 @@ class PluginLoader:
         for plugin_name, plugin in self.plugins.items():
             try:
                 plugin.on_start()
+                self.plugin_infos[plugin_name].is_enabled = True
                 self.logger.info(f"Plugin {plugin.__class__.__name__} started")
             except Exception as e:
                 self.logger.error(
@@ -297,7 +298,7 @@ class PluginLoader:
         except Exception as e:
             plugin_info.requires_restart = True
             self.logger.error(f"Failed to enable plugin {plugin_name}: {e}")
-            return False
+            raise e
 
     async def disable_plugin(self, plugin_name: str) -> bool:
         """禁用插件"""
@@ -420,7 +421,7 @@ class PluginLoader:
                             version=metadata["version"],
                             author=metadata["author"],
                             is_internal=False,
-                            is_enabled=ep.name in self.config.plugins.enable,
+                            is_enabled=False,
                             metadata=None,
                         )
 

@@ -1,8 +1,9 @@
 import threading
 from abc import ABC, abstractmethod
-from queue import Queue
+from queue import Empty, Queue
 from typing import List
 
+from kirara_ai.logger import get_logger
 from kirara_ai.memory.entry import MemoryEntry
 
 
@@ -21,7 +22,7 @@ class MemoryPersistence(ABC):
     def flush(self) -> None:
         """确保所有数据都已持久化"""
 
-
+logger = get_logger("MemoryPersistence")
 class AsyncMemoryPersistence:
     """异步持久化管理器"""
 
@@ -39,7 +40,10 @@ class AsyncMemoryPersistence:
                 self.persistence.save(scope_key, entries)
                 self.queue.task_done()
                 print(f"Saved {scope_key} with {len(entries)} entries")
-            except:
+            except Empty:
+                continue
+            except Exception as e:
+                logger.error(f"Error saving memory: {e}")
                 continue
 
     def load(self, scope_key: str) -> List[MemoryEntry]:

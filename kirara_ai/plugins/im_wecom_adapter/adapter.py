@@ -1,6 +1,8 @@
+import uuid
 from typing import Any, Optional
 
 from kirara_ai.im.sender import ChatSender
+from kirara_ai.web.app import WebServer
 from kirara_ai.workflow.core.dispatch.dispatcher import WorkflowDispatcher
 
 # 兼容新旧版本的 wechatpy 导入
@@ -30,20 +32,51 @@ from kirara_ai.im.message import FileElement, ImageMessage, IMMessage, TextMessa
 from kirara_ai.logger import HypercornLoggerWrapper, get_logger
 
 WECOM_TEMP_DIR = os.path.join(os.getcwd(), 'data', 'temp', 'wecom')
+
+WEBHOOK_URL_PREFIX = "/im/webhook/wechat"
+
+
+def make_webhook_url():
+    return f"{WEBHOOK_URL_PREFIX}/{str(uuid.uuid4())[:8]}"
+
+
+def auto_generate_webhook_url(s: dict):
+    s["readOnly"] = True
+    s["default"] = make_webhook_url()
+    s["textType"] = True
+
+
 class WecomConfig(BaseModel):
     """企业微信配置
     文档： https://work.weixin.qq.com/api/doc/90000/90136/91770
     """
 
-    corp_id: str = Field(description="企业ID")
-    agent_id: int = Field(description="应用ID")
-    secret: str = Field(description="应用Secret")
-    token: str = Field(description="Token")
-    encoding_aes_key: str = Field(description="EncodingAESKey")
-    host: str = Field(default="127.0.0.1", description="HTTP服务器监听地址")
-    port: int = Field(default=8080, description="HTTP服务器监听端口")
-    debug: bool = Field(default=False, description="是否开启调试模式")
+    app_id: str = Field(title="应用ID", description="见微信侧显示")
+    secret: str = Field(title="应用Secret", description="见微信侧显示")
+    token: str = Field(title="Token", description="与微信侧填写保持一致")
+    encoding_aes_key: str = Field(
+        title="EncodingAESKey", description="请通过微信侧随机生成")
+    corp_id: Optional[str] = Field(
+        title="企业ID", description="企业微信后台显示的企业ID，微信公众号等场景无需填写。", default=None)
+    webhook_url: str = Field(
+        title="微信端回调地址",
+        description="供微信端请求的 Webhook URL，填写在微信端，由系统自动生成，无法修改。",
+        default_factory=make_webhook_url,
+        json_schema_extra=auto_generate_webhook_url
+    )
+
+    host: Optional[str] = Field(title="HTTP 服务地址", description="已过时，请删除并使用 webhook_url 代替。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+    port: Optional[int] = Field(title="HTTP 服务端口", description="已过时，请删除并使用 webhook_url 代替。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+
     model_config = ConfigDict(extra="allow")
+
+    def __init__(self, **kwargs: Any):
+        # 如果 agent_id 存在，则自动使用 agent_id 作为 app_id
+        if "agent_id" in kwargs:
+            kwargs["app_id"] = str(kwargs["agent_id"])
+        super().__init__(**kwargs)
 
 
 class WeComUtils:
@@ -75,7 +108,8 @@ class WeComUtils:
                 async with session.get(url) as response:
                     if response.status == 200:
                         return await response.read()
-                    self.logger.error(f"Failed to download media: {response.status}")
+                    self.logger.error(
+                        f"Failed to download media: {response.status}")
         except Exception as e:
             self.logger.error(f"Failed to download media: {str(e)}")
         return None
@@ -85,21 +119,40 @@ class WecomAdapter(IMAdapter):
     """企业微信适配器"""
 
     dispatcher: WorkflowDispatcher
+    web_server: WebServer
 
     def __init__(self, config: WecomConfig):
         self.config = config
-        self.app = Quart(__name__)
+        if "host" in config.__pydantic_extra__ and config.__pydantic_extra__["host"] is not None:
+            self.app = Quart(__name__)
+        else:
+            self.app = self.web_server.app
+
         self.crypto = WeChatCrypto(
-            config.token, config.encoding_aes_key, config.corp_id
+            config.token, config.encoding_aes_key, config.corp_id or config.agent_id
         )
         self.client = WeChatClient(config.corp_id, config.secret)
         self.logger = get_logger("Wecom-Adapter")
-        self.setup_routes()
+        self.is_running = False
+        if not self.config.host:
+            self.config.host = None
+            self.config.port = None
+        elif not self.config.port:
+            self.config.port = 15650
+        if not self.config.webhook_url:
+            self.config.webhook_url = make_webhook_url()
 
     def setup_routes(self):
-        @self.app.get("/wechat")
+        if "host" in self.config.__pydantic_extra__:
+            webhook_url = '/wechat'
+        else:
+            webhook_url = self.config.webhook_url
+
+        @self.app.get(webhook_url)
         async def handle_check_request():
             """处理 GET 请求"""
+            if not self.is_running:
+                return abort(404)
             signature = request.args.get("msg_signature", "")
             timestamp = request.args.get("timestamp", "")
             nonce = request.args.get("nonce", "")
@@ -108,13 +161,15 @@ class WecomAdapter(IMAdapter):
                 echo_str = self.crypto.check_signature(
                     signature, timestamp, nonce, echo_str
                 )
+                return echo_str
             except InvalidSignatureException:
-                abort(403)
-            return echo_str
-        
-        @self.app.post("/wechat")
+                return abort(403)
+
+        @self.app.post(webhook_url)
         async def handle_message():
             """处理 POST 请求"""
+            if not self.is_running:
+                return abort(404)
             signature = request.args.get("msg_signature", "")
             timestamp = request.args.get("timestamp", "")
             nonce = request.args.get("nonce", "")
@@ -123,16 +178,16 @@ class WecomAdapter(IMAdapter):
                     await request.data, signature, timestamp, nonce
                 )
             except (InvalidSignatureException, InvalidCorpIdException):
-                abort(403)
+                return abort(403)
             msg = parse_message(msg)
-            
+
             # 预处理媒体消息
             media_path = None
             if msg.type in ["voice", "video", "file"]:
                 media_id = msg.media_id
                 file_name = f"temp_{msg.type}_{media_id}.{msg.type}"
                 media_path = await self.wecom_utils.download_and_save_media(media_id, file_name)
-            
+
             # 转换消息
             message = self.convert_to_message(msg, media_path)
             # 分发消息
@@ -142,8 +197,9 @@ class WecomAdapter(IMAdapter):
     def convert_to_message(self, raw_message: Any, media_path: Optional[str] = None) -> IMMessage:
         """将企业微信消息转换为统一消息格式"""
         # 企业微信应用似乎没有群聊的概念，所以这里只能用单聊
-        sender = ChatSender.from_c2c_chat(raw_message.source, raw_message.source)
-        
+        sender = ChatSender.from_c2c_chat(
+            raw_message.source, raw_message.source)
+
         message_elements = []
         raw_message_dict = raw_message.__dict__
 
@@ -164,7 +220,8 @@ class WecomAdapter(IMAdapter):
             link_text = f"[Link] {raw_message.title}: {raw_message.description} ({raw_message.url})"
             message_elements.append(TextMessage(text=link_text))
         else:
-            message_elements.append(TextMessage(text=f"Unsupported message type: {raw_message.type}"))
+            message_elements.append(TextMessage(
+                text=f"Unsupported message type: {raw_message.type}"))
 
         return IMMessage(
             sender=sender,
@@ -183,7 +240,8 @@ class WecomAdapter(IMAdapter):
         """发送媒体消息的通用方法"""
         try:
             media_bytes = BytesIO(base64.b64decode(media_data))
-            media_id = self.client.media.upload(media_type, media_bytes)["media_id"]
+            media_id = self.client.media.upload(
+                media_type, media_bytes)["media_id"]
             send_method = getattr(self.client.message, f"send_{media_type}")
             return send_method(self.config.agent_id, user_id, media_id)
         except Exception as e:
@@ -206,7 +264,8 @@ class WecomAdapter(IMAdapter):
                 res = await self._send_media(user_id, element.path, "file")
         if res:
             print(res)
-    async def start(self):
+
+    async def _start_standalone_server(self):
         """启动服务"""
         from hypercorn.asyncio import serve
         from hypercorn.config import Config
@@ -222,7 +281,7 @@ class WecomAdapter(IMAdapter):
 
         self.server_task = asyncio.create_task(serve(self.app, config))
 
-    async def stop(self):
+    async def _stop_standalone_server(self):
         """停止服务"""
         if hasattr(self, "server_task"):
             self.server_task.cancel()
@@ -232,3 +291,14 @@ class WecomAdapter(IMAdapter):
                 pass
             except Exception as e:
                 self.logger.error(f"Error during server shutdown: {e}")
+
+    async def start(self):
+        if self.config.host:
+            self.logger.warning("正在使用过时的启动模式，请尽快更新为 Webhook 模式。")
+            await self._start_standalone_server()
+        self.setup_routes()
+
+    async def stop(self):
+        if self.config.host:
+            await self._stop_standalone_server()
+        self.is_running = False

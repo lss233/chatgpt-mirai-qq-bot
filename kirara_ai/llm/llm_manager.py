@@ -88,13 +88,17 @@ class LLMManager:
         backend = next(
             (b for b in self.config.llms.api_backends if b.name == backend_name), None
         )
+        backend = self.backends.get(backend_name)
         if not backend:
             raise ValueError(f"Backend {backend_name} not found in config")
 
         # 从所有模型中移除这个后端的适配器
-        for model in backend.models:
-            if model in self.active_backends:
-                self.active_backends[model] = []
+        all_models = list(self.active_backends.keys())
+        for model in all_models:
+            if backend in self.active_backends[model]:
+                self.active_backends[model].remove(backend)
+            if len(self.active_backends[model]) == 0:
+                self.active_backends.pop(model)
         self.backends.pop(backend_name)
 
     async def reload_backend(self, backend_name: str):

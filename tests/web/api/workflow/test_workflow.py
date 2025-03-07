@@ -1,9 +1,9 @@
-
 import pytest
+from fastapi.testclient import TestClient
 
 from kirara_ai.config.global_config import GlobalConfig, WebConfig
 from kirara_ai.ioc.container import DependencyContainer
-from kirara_ai.web.app import create_app
+from kirara_ai.web.app import WebServer
 from kirara_ai.workflow.core.block import Block, BlockRegistry
 from kirara_ai.workflow.core.block.input_output import Input, Output
 from kirara_ai.workflow.core.workflow import WorkflowRegistry
@@ -85,15 +85,15 @@ def app():
     registry.register(TEST_GROUP_ID, TEST_WORKFLOW_ID, builder)
     container.register(WorkflowRegistry, registry)
 
-    app = create_app(container)
-    app.container = container
-    return app
+    web_server = WebServer(container)
+    container.register(WebServer, web_server)
+    return web_server.app
 
 
 @pytest.fixture
 def test_client(app):
     """创建测试客户端"""
-    return app.test_client()
+    return TestClient(app)
 
 
 # ==================== 测试用例 ====================
@@ -101,10 +101,10 @@ class TestWorkflow:
     @pytest.mark.asyncio
     async def test_list_workflows(self, test_client, auth_headers):
         """测试获取工作流列表"""
-        response = await test_client.get(
+        response = test_client.get(
             "/backend-api/api/workflow", headers=auth_headers
         )
-        data = await response.get_json()
+        data = response.json()
         assert "error" not in data
         assert "workflows" in data
         workflows = data["workflows"]
@@ -117,11 +117,11 @@ class TestWorkflow:
     @pytest.mark.asyncio
     async def test_get_workflow(self, test_client, auth_headers):
         """测试获取单个工作流"""
-        response = await test_client.get(
+        response = test_client.get(
             f"/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}",
             headers=auth_headers,
         )
-        data = await response.get_json()
+        data = response.json()
         assert "error" not in data
         assert "workflow" in data
         workflow = data["workflow"]
@@ -150,13 +150,13 @@ class TestWorkflow:
             "wires": [],
         }
 
-        response = await test_client.post(
+        response = test_client.post(
             f"/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID_NEW}",
             headers=auth_headers,
             json=workflow_data,
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "error" not in data
         assert data["workflow_id"] == TEST_WORKFLOW_ID_NEW
         assert data["group_id"] == TEST_GROUP_ID
@@ -183,13 +183,13 @@ class TestWorkflow:
             "wires": [],
         }
 
-        response = await test_client.put(
+        response = test_client.put(
             f"/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}",
             headers=auth_headers,
             json=workflow_data,
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "error" not in data
         assert data["workflow_id"] == TEST_WORKFLOW_ID
         assert data["group_id"] == TEST_GROUP_ID
@@ -201,12 +201,12 @@ class TestWorkflow:
     @pytest.mark.asyncio
     async def test_delete_workflow(self, test_client, auth_headers):
         """测试删除工作流"""
-        response = await test_client.delete(
+        response = test_client.delete(
             f"/backend-api/api/workflow/{TEST_GROUP_ID}/{TEST_WORKFLOW_ID}",
             headers=auth_headers,
         )
 
-        data = await response.get_json()
+        data = response.json()
         assert "error" not in data
         assert "message" in data
         assert data["message"] == "Workflow deleted successfully"

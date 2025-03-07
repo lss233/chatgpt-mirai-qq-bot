@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Protocol
+from typing import Any, Optional, Protocol
 
+from pydantic import BaseModel
 from typing_extensions import runtime_checkable
 
 from kirara_ai.im.message import IMMessage
@@ -9,6 +10,14 @@ from kirara_ai.llm.llm_manager import LLMManager
 
 from .profile import UserProfile
 
+
+class BotStatus(BaseModel):
+    """
+    机器人状态
+    """
+
+    username: str
+    avatar_url: str
 
 @runtime_checkable
 class EditStateAdapter(Protocol):
@@ -39,6 +48,17 @@ class UserProfileAdapter(Protocol):
         :return: 用户资料
         """
 
+@runtime_checkable
+class BotProfileAdapter(Protocol):
+    """
+    支持获取当前适配器对应的机器人资料
+    """
+
+    async def get_bot_profile(self) -> Optional[UserProfile]:
+        """
+        获取机器人资料
+        :return: 机器人资料
+        """
 
 class IMAdapter(ABC):
     """
