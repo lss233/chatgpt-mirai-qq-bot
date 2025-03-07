@@ -37,7 +37,8 @@ class QQBotConfig(BaseModel):
     webhook_url: str = Field(
         title="Webhook 回调 URL", description="机器人回调 URL，用于接收消息。",
         default_factory=make_webhook_url,
-        json_schema_extra=auto_generate_webhook_url
+        json_schema_extra=auto_generate_webhook_url,
+        webhook_url=True
     )
     model_config = ConfigDict(extra="allow")
 

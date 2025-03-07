@@ -59,9 +59,20 @@ class WecomConfig(BaseModel):
         title="微信端回调地址",
         description="填写在微信端，自动生成请勿修改",
         default_factory=make_webhook_url,
-        json_schema_extra=auto_generate_webhook_url)
+        json_schema_extra=auto_generate_webhook_url,
+        webhook_url=True
+    )
+    
+    host: Optional[str] = Field(title="HTTP 服务地址", description="已过时，请删除并使用 webhook_url 代替。", default=None, hidden_unset=True)
+    port: Optional[int] = Field(title="HTTP 服务端口", description="已过时，请删除并使用 webhook_url 代替。", default=None, hidden_unset=True)
+    
     model_config = ConfigDict(extra="allow")
 
+    def __init__(self, **kwargs: Any):
+        # 如果 agent_id 存在，则自动使用 agent_id 作为 app_id
+        if "agent_id" in kwargs:
+            kwargs["app_id"] = str(kwargs["agent_id"])
+        super().__init__(**kwargs)
 
 class WeComUtils:
     """企业微信相关的工具类"""
@@ -118,6 +129,11 @@ class WecomAdapter(IMAdapter):
         self.client = WeChatClient(config.corp_id, config.secret)
         self.logger = get_logger("Wecom-Adapter")
         self.is_running = False
+        if not self.config.host:
+            self.config.host = None
+            self.config.port = None
+        elif not self.config.port:
+            self.config.port = 15650
         if not self.config.webhook_url:
             self.config.webhook_url = make_webhook_url()
 
@@ -272,12 +288,12 @@ class WecomAdapter(IMAdapter):
                 self.logger.error(f"Error during server shutdown: {e}")
 
     async def start(self):
-        if "host" in self.config.__pydantic_extra__:
+        if self.config.host:
             self.logger.warning("正在使用过时的启动模式，请尽快更新为 Webhook 模式。")
             await self._start_standalone_server()
         self.setup_routes()
 
     async def stop(self):
-        if "host" in self.config.__pydantic_extra__:
+        if self.config.host:
             await self._stop_standalone_server()
         self.is_running = False

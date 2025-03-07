@@ -60,6 +60,7 @@ custom_static_assets = {}
 def create_web_api_app(container: DependencyContainer) -> Quart:
     """创建 Web API 应用（Quart）"""
     app = Quart(__name__)
+    app.json.sort_keys = False
     
     # 注册蓝图
     app.register_blueprint(auth_bp, url_prefix="/api/auth")

@@ -17,9 +17,18 @@ class QQBotAdapterPlugin(Plugin):
         pass
 
     def on_load(self):
-        self.im_registry.register("qqbot", QQBotAdapter, QQBotConfig, "QQ 开放平台机器人", "QQ 官方机器人，支持基本的聊天功能，但不支持分段回复，群聊中需要被 @ 触发。")
-        local_logo_path = os.path.join(os.path.dirname(__file__), "assets", "qqbot.svg")
-        self.web_server.add_static_assets("/assets/icons/im/qqbot.svg", local_logo_path)
+        self.im_registry.register(
+            "qqbot", 
+            QQBotAdapter, 
+            QQBotConfig, 
+            "QQ 开放平台机器人", 
+            "QQ 官方机器人，需要服务器支持接收 QQ 的 Webhook 请求，支持基本的聊天功能，但不支持分段回复，群聊中需要被 @ 触发。",
+            """
+QQ 开放平台机器人，需要服务器支持接收 QQ 的 Webhook 请求，配置流程可参考 [QQ 开放平台文档](https://q.qq.com/wiki/) 和 [Kirara AI 文档](https://kirara-docs.app.lss233.com/guide/configuration/im.html)。
+            """
+        )
+        local_logo_path = os.path.join(os.path.dirname(__file__), "assets", "qqbot.png")
+        self.web_server.add_static_assets("/assets/icons/im/qqbot.png", local_logo_path)
 
     def on_start(self):
         pass

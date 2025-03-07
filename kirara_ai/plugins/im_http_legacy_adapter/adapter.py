@@ -3,8 +3,9 @@ import re
 import time
 from typing import Any, Dict, List, Optional, Protocol
 
+from fastapi import Body, FastAPI, Query, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
-from quart import Quart, request
 
 from kirara_ai.im.adapter import IMAdapter
 from kirara_ai.im.message import ImageMessage, IMMessage, TextMessage, VoiceMessage
@@ -23,6 +24,8 @@ class HttpLegacyConfig(BaseModel):
     """HTTP Legacy API 配置"""
 
     api_key: Optional[str] = Field(description="自定义的API密钥，设置后，请求接口时需要带上这个密钥，若填空则不校验。", default=None)
+    host: Optional[str] = Field(description="已废弃，HTTP API 服务器地址，设置后将启动独立服务器。", default=None, hidden_unset=True)
+    port: Optional[int] = Field(description="已废弃，HTTP API 服务器端口，设置后将启动独立服务器。", default=None, hidden_unset=True)
     model_config = ConfigDict(extra="allow")
 
 
@@ -78,7 +81,7 @@ class HttpLegacyAdapter(IMAdapter):
 
     def __init__(self, config: HttpLegacyConfig):
         self.config = config
-        self.app = Quart(__name__, static_folder=None)
+        self.app = FastAPI(title="HTTP Legacy API")
         self.request_dic: Dict[str, V2Request] = {}
         self.logger = get_logger("HTTP-Legacy-Adapter")
 
@@ -116,7 +119,7 @@ class HttpLegacyAdapter(IMAdapter):
             elif isinstance(element, ImageMessage):
                 result.image.append(element.url)
 
-    def verify_api_key(self) -> bool:
+    def verify_api_key(self, request: Request) -> bool:
         """验证API密钥"""
         if not self.config.api_key:
             return True
@@ -130,16 +133,25 @@ class HttpLegacyAdapter(IMAdapter):
 
     def create_auth_error_response(self):
         """创建认证失败的响应"""
-        return ResponseResult(message="认证失败", result_status="FAILED").to_dict(), 401
+        return JSONResponse(
+            content=ResponseResult(message="认证失败", result_status="FAILED").to_dict(),
+            status_code=401
+        )
 
-    def setup_routes(self):
-        @self.app.route("/v1/chat", methods=["POST"])
-        async def v1_chat():
-            # 验证 API Key
-            if not self.verify_api_key():
+    def setup_routes(self, target_app=None):
+        app = target_app if target_app else self.app
+        
+        async def verify_auth(request: Request):
+            if not self.verify_api_key(request):
                 return self.create_auth_error_response()
-
-            data = await request.get_json()
+            return None
+        
+        @app.post("/v1/chat")
+        async def v1_chat(request: Request, data: dict = Body(...)):
+            auth_response = await verify_auth(request)
+            if auth_response:
+                return auth_response
+                
             message = self.convert_to_message(data)
             result = ResponseResult()
 
@@ -151,13 +163,12 @@ class HttpLegacyAdapter(IMAdapter):
             await self.dispatcher.dispatch(self, message)
             return result.to_dict()
 
-        @self.app.route("/v2/chat", methods=["POST"])
-        async def v2_chat():
-            # 验证 API Key
-            if not self.verify_api_key():
-                return self.create_auth_error_response()
-
-            data = await request.get_json()
+        @app.post("/v2/chat")
+        async def v2_chat(request: Request, data: dict = Body(...)):
+            auth_response = await verify_auth(request)
+            if auth_response:
+                return auth_response
+                
             request_time = str(int(time.time() * 1000))
 
             message = self.convert_to_message(data)
@@ -179,13 +190,12 @@ class HttpLegacyAdapter(IMAdapter):
             asyncio.create_task(self.dispatcher.dispatch(self, message))
             return request_time
 
-        @self.app.route("/v2/chat/response", methods=["GET"])
-        async def v2_chat_response():
-            # 验证 API Key
-            if not self.verify_api_key():
-                return self.create_auth_error_response()
-
-            request_id = request.args.get("request_id", "")
+        @app.get("/v2/chat/response")
+        async def v2_chat_response(request: Request, request_id: str = Query(...)):
+            auth_response = await verify_auth(request)
+            if auth_response:
+                return auth_response
+                
             request_id = re.sub(r'^[%22%27"\'"]*|[%22%27"\'"]*$', "", request_id)
 
             bot_request = self.request_dic.get(request_id)
@@ -211,7 +221,7 @@ class HttpLegacyAdapter(IMAdapter):
         
     @property
     def is_standalone(self):
-        return "host" in self.config.__pydantic_extra__ and self.config.__pydantic_extra__["host"] is not None
+        return self.config.host
 
     async def _start_standalone_server(self):
         """启动独立HTTP服务器"""
@@ -224,12 +234,12 @@ class HttpLegacyAdapter(IMAdapter):
         from kirara_ai.logger import HypercornLoggerWrapper
 
         config = Config()
-        host = self.config.__pydantic_extra__["host"]
-        port = self.config.__pydantic_extra__.get("port", 8080)
+        host = self.config.host
+        port = self.config.port or 18560
         config.bind = [f"{host}:{port}"]
         config._log = Logger(config)
-        config._log.access_logger = HypercornLoggerWrapper(self.app.logger)
-        config._log.error_logger = HypercornLoggerWrapper(self.app.logger)
+        config._log.access_logger = HypercornLoggerWrapper(self.logger)
+        config._log.error_logger = HypercornLoggerWrapper(self.logger)
         self.server_task = asyncio.create_task(serve(self.app, config))
 
     async def start(self):
@@ -241,11 +251,10 @@ class HttpLegacyAdapter(IMAdapter):
             await self._start_standalone_server()
             self.setup_routes()
         else:
-            # 通过 FastAPI 的 mount 方法挂载 Quart 应用，需要修改路由以适配 sub-path
             # 为所有的路由添加前缀
             if _is_first_setup:
-                self.setup_routes()
-                self.web_server.mount_app("/api", self.app)
+                # 直接往 self.web_server.app 注册路由，而不是mount_app
+                self.setup_routes(target_app=self.web_server.app)
                 _is_first_setup = False
             else:
                 if self.config.api_key and self.config.api_key not in _authorized_api_keys:
@@ -282,7 +291,7 @@ class HttpLegacyAdapter(IMAdapter):
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                self.app.logger.error(f"Error during server shutdown: {e}")
+                self.logger.error(f"Error during server shutdown: {e}")
 
         if hasattr(self, "cleanup_task"):
             self.cleanup_task.cancel()

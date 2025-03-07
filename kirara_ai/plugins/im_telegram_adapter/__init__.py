@@ -17,10 +17,19 @@ class TelegramAdapterPlugin(Plugin):
         pass
 
     def on_load(self):
-        self.im_registry.register("telegram", TelegramAdapter, TelegramConfig, "Telegram 机器人", "原生 Telegram 机器人，支持私聊、群聊、 Markdown 格式消息。")
+        self.im_registry.register(
+            "telegram",
+            TelegramAdapter,
+            TelegramConfig,
+            "Telegram 机器人",
+            "Telegram 官方机器人，支持私聊、群聊、 Markdown 格式消息。",
+            """
+Telegram 机器人,配置流程可参考 [Telegram 官方文档](https://core.telegram.org/bots/tutorial) 和 [Kirara AI 文档](https://kirara-docs.app.lss233.com/guide/configuration/im.html)。
+            """
+        )
         # 添加当前文件夹下的 assets/telegram.svg 文件夹到 web 服务器
-        local_logo_path = os.path.join(os.path.dirname(__file__), "assets", "telegram.svg")
-        self.web_server.add_static_assets("/assets/icons/im/telegram.svg", local_logo_path)
+        local_logo_path = os.path.join(os.path.dirname(__file__), "assets", "telegram.png")
+        self.web_server.add_static_assets("/assets/icons/im/telegram.png", local_logo_path)
 
     def on_start(self):
         pass

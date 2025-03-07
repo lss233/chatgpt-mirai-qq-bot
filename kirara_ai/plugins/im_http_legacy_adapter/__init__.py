@@ -27,7 +27,7 @@ class HttpLegacyAdapterPlugin(Plugin):
 HTTP API 可用于接入第三方程序，接口文档请见项目 [README](https://github.com/lss233/chatgpt-mirai-qq-bot/blob/master/README.md#-http-api)。            
             """
         )
-        self.web_server.add_static_assets("/assets/icons/im/http_legacy.svg", os.path.join(os.path.dirname(__file__), "assets", "http_legacy.svg"))
+        self.web_server.add_static_assets("/assets/icons/im/http_legacy.png", os.path.join(os.path.dirname(__file__), "assets", "http_legacy.png"))
 
     def on_start(self):
         pass
