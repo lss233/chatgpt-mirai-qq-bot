@@ -33,10 +33,17 @@
   如果不能解决，把遇到的问题、**日志**和配置文件准备好后再提问。
 * [调试群](https://jq.qq.com/?_wv=1027&k=TBX8Saq7) 这个群里有很多 ChatGPT QQ 机器人，不解答技术问题。 
 
+
+**📷 Showcases**  
+
 | ![猫娘问答](https://img.shields.io/badge/-%E7%8C%AB%E5%A8%98%E9%97%AE%E7%AD%94-E2CDBC?style=for-the-badge)                     | ![生活助手](https://img.shields.io/badge/-生活助手-E2CDBC?style=for-the-badge)                   | ![文字 RPG](https://img.shields.io/badge/-文字RPG-E2CDBC?style=for-the-badge)            |
 |------------------------------|------------------------------|------------------------------|
 | ![image](https://user-images.githubusercontent.com/8984680/230702158-73967aa9-01be-44d6-bbd9-24437e333140.png) | ![image](https://user-images.githubusercontent.com/8984680/230702177-de96f89b-053e-4313-a131-715af969db04.png) | ![image](https://user-images.githubusercontent.com/8984680/230702635-fb1de3bf-acbd-46ca-8d6f-caa47368b4d4.png) |
 
+
+| ![模型管理](https://img.shields.io/badge/-%E6%A8%A1%E5%9E%8B%E7%AE%A1%E7%90%86-E2CDBC?style=for-the-badge)                     | ![工作流](https://img.shields.io/badge/-%E5%B7%A5%E4%BD%9C%E6%B5%81-E2CDBC?style=for-the-badge)                   | ![插件市场](https://img.shields.io/badge/-%E6%8F%92%E4%BB%B6%E5%B8%82%E5%9C%BA-E2CDBC?style=for-the-badge)            |
+|------------------------------|------------------------------|------------------------------|
+| ![image](https://github.com/user-attachments/assets/322e6fb0-307a-458b-8fa6-970a6344ee1f) | ![image](https://github.com/user-attachments/assets/4f259269-e06e-4bad-a97c-58b92cfb38cd) | ![image](https://github.com/user-attachments/assets/f41278ed-ab25-4a13-9e15-e12a3373b5be) |
 
 **⚡ 核心特性**   
 * [x] 图片发送
@@ -55,6 +62,7 @@
 * [x] 支持跨平台消息发送
 * [x] 支持自定义工作流
 * [x] 支持 Web 管理后台
+* [x] 内置 Frpc 内网穿透
 
 **🤖 聊天平台**  
 
