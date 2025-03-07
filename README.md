@@ -26,6 +26,7 @@
   [QQ 三群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=urlhCH8y7Ro2S-iXt63X4s5eILUny4Iw&authKey=ejiwoNa4Yez6IMLyf2vj%2FeRiC1frdFrNNekbRfaPnSQbcD7bgebo5y5A7rPaRKBq&noverify=0&group_code=533109074)、
   [QQ 四群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Ibiu6EmXof30Fa7MJ5j8nJFwaUGTf5bM&authKey=YKx5a%2BK5qnWkk5VlsxxDfYl0nCrKSekQm%2FoLQVqr%2FcO%2FQY2S6N24XdI23XugBrF0&noverify=0&group_code=799737883)、
   [QQ 五群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=lDkVPDAeiz6M-ig9cdS9tqhSH6_topox&authKey=B%2FRPYVUjk3dYPw5D4o6C2TpqeoKTG0nXEiKDCG%2Bh4JYY2RPqDQGt37SGl32j0hHw&noverify=0&group_code=805081636)、
+  [QQ 六群](https://qm.qq.com/q/UpvYm3jccg)、
   [QQ 开发群](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=lisyXibhUj93DgIZptQu3VZ4ka3F5-rW&authKey=PBCzRQX4Zei%2BB6n5Tdyp9p5bqcF0tLBlfGANT4dSSKQIFYR66WwaZSMEDahWo%2FzZ&noverify=0&group_code=701933732)  
   会发布最新的项目动态、视频教程、问题答疑和交流。 
   加群之前先看[这里](https://github.com/lss233/chatgpt-mirai-qq-bot/issues)的内容能不能解决你的问题。  
@@ -37,37 +38,36 @@
 | ![image](https://user-images.githubusercontent.com/8984680/230702158-73967aa9-01be-44d6-bbd9-24437e333140.png) | ![image](https://user-images.githubusercontent.com/8984680/230702177-de96f89b-053e-4313-a131-715af969db04.png) | ![image](https://user-images.githubusercontent.com/8984680/230702635-fb1de3bf-acbd-46ca-8d6f-caa47368b4d4.png) |
 
 
-
-
 **⚡ 核心特性**   
 * [x] 图片发送
 * [x] 关键词触发回复
 * [x] 多账号支持
-* [x] 百度云内容审核
-* [x] 额度限制 
 * [x] 人格设定
 * [x] 支持 QQ、Telegram、Discord、微信  
 * [x] 可作为 HTTP 服务端提供 Web API
-* [x] 支持 OpenAI、DeepSeek、Claude、Gemini、Qwen 等主流大模型
+* [x] 支持 OpenAI、DeepSeek、Claude、Gemini、Qwen、Mistral、豆包、Minimax、Kimi、Mistral 等主流大模型
 * [x] 支持插件机制
 * [x] 支持条件触发
 * [x] 支持管理员指令
-* [x] 支持 Stable Diffusion、Midjourney 等绘图模型
+* [x] 支持 Stable Diffusion、Flux、Midjourney 等绘图模型
 * [x] 支持语音回复
 * [x] 支持多轮对话
 * [x] 支持跨平台消息发送
 * [x] 支持自定义工作流
 * [x] 支持 Web 管理后台
 
-**🤖 技术架构**  
+**🤖 聊天平台**  
 
 我们支持多种聊天平台。  
 
 | 平台       | 群聊回复 | 私聊回复 | 条件触发 | 管理员指令 | 绘图  | 语音回复 |
 |----------|------|------|------|-------|-----|------|
-| Telegram | 支持   | 支持   | 部分支持 | 部分支持  | 支持  | 支持   |
-| Discord  | 支持   | 支持   | 部分支持 | 不支持   | 支持  | 支持   |
+| Telegram | 支持   | 支持   | 支持 | 支持  | 支持  | 支持   |
+| QQ 机器人 | 支持   | 支持   | 支持 | 支持  | 支持  | 平台不支持   |
+| Discord  | 重构中   | 重构中   | 重构中 | 重构中  | 重构中  | 重构中   |
+| 飞书机器人  | 重构中   | 重构中   | 重构中 | 重构中  | 重构中  | 重构中   |
 | 企业微信 | 支持   | 支持   | 支持 | 不支持  | 支持  | 支持   |
+| 微信公众号 | 支持   | 支持   | 支持 | 不支持  | 支持  | 支持   |
 | OneBot   | 插件支持   | 插件支持   | 插件支持   | 插件支持    | 插件支持  | 插件支持   |
 | 微信 | 第三方支持   | 第三方支持   | 第三方支持 | 不支持  | 第三方支持  | 第三方支持   |
 
@@ -216,6 +216,11 @@
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
+
+## 📕 相关项目
+
+- [Kirara Registry](https://github.com/DarkSkyTeam/kirara-registry) - Kirara AI 插件市场
+- [Kirara WebUI](https://github.com/DarkSkyTeam/kirara-webui) - Kirara AI 的 WebUI 前端项目
 
 ## 💪 支持我们
 
