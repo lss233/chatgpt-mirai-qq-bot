@@ -42,6 +42,7 @@ def make_webhook_url():
 def auto_generate_webhook_url(s: dict):
     s["readOnly"] = True
     s["default"] = make_webhook_url()
+    s["textType"] = True
 
 class WecomConfig(BaseModel):
     """企业微信配置
@@ -57,10 +58,9 @@ class WecomConfig(BaseModel):
         title="企业ID", description="企业微信后台显示的企业ID，微信公众号等场景无需填写。", default=None)
     webhook_url: str = Field(
         title="微信端回调地址",
-        description="填写在微信端，自动生成请勿修改",
+        description="供微信端请求的 Webhook URL，填写在微信端，由系统自动生成，无法修改。",
         default_factory=make_webhook_url,
-        json_schema_extra=auto_generate_webhook_url,
-        webhook_url=True
+        json_schema_extra=auto_generate_webhook_url
     )
     
     host: Optional[str] = Field(title="HTTP 服务地址", description="已过时，请删除并使用 webhook_url 代替。", default=None, hidden_unset=True)

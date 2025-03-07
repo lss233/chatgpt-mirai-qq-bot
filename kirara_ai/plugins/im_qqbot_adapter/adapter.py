@@ -23,7 +23,7 @@ def make_webhook_url():
 def auto_generate_webhook_url(s: dict):
     s["readOnly"] = True
     s["default"] = make_webhook_url()
-
+    s["textType"] = True
 
 class QQBotConfig(BaseModel):
     """
@@ -35,10 +35,9 @@ class QQBotConfig(BaseModel):
         title="Token", description="机器人令牌，用于调用 QQ 机器人的 OpenAPI。")
     sandbox: bool = Field(title="沙盒环境", description="是否为沙盒环境。")
     webhook_url: str = Field(
-        title="Webhook 回调 URL", description="机器人回调 URL，用于接收消息。",
+        title="Webhook 回调 URL", description="供 QQ 机器人回调的 URL，由系统自动生成，无法修改。",
         default_factory=make_webhook_url,
-        json_schema_extra=auto_generate_webhook_url,
-        webhook_url=True
+        json_schema_extra=auto_generate_webhook_url
     )
     model_config = ConfigDict(extra="allow")
 
