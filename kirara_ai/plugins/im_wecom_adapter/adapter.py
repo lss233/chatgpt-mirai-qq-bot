@@ -39,10 +39,12 @@ WEBHOOK_URL_PREFIX = "/im/webhook/wechat"
 def make_webhook_url():
     return f"{WEBHOOK_URL_PREFIX}/{str(uuid.uuid4())[:8]}"
 
+
 def auto_generate_webhook_url(s: dict):
     s["readOnly"] = True
     s["default"] = make_webhook_url()
     s["textType"] = True
+
 
 class WecomConfig(BaseModel):
     """企业微信配置
@@ -62,10 +64,12 @@ class WecomConfig(BaseModel):
         default_factory=make_webhook_url,
         json_schema_extra=auto_generate_webhook_url
     )
-    
-    host: Optional[str] = Field(title="HTTP 服务地址", description="已过时，请删除并使用 webhook_url 代替。", default=None, hidden_unset=True)
-    port: Optional[int] = Field(title="HTTP 服务端口", description="已过时，请删除并使用 webhook_url 代替。", default=None, hidden_unset=True)
-    
+
+    host: Optional[str] = Field(title="HTTP 服务地址", description="已过时，请删除并使用 webhook_url 代替。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+    port: Optional[int] = Field(title="HTTP 服务端口", description="已过时，请删除并使用 webhook_url 代替。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+
     model_config = ConfigDict(extra="allow")
 
     def __init__(self, **kwargs: Any):
@@ -73,6 +77,7 @@ class WecomConfig(BaseModel):
         if "agent_id" in kwargs:
             kwargs["app_id"] = str(kwargs["agent_id"])
         super().__init__(**kwargs)
+
 
 class WeComUtils:
     """企业微信相关的工具类"""
@@ -142,7 +147,7 @@ class WecomAdapter(IMAdapter):
             webhook_url = '/wechat'
         else:
             webhook_url = self.config.webhook_url
-            
+
         @self.app.get(webhook_url)
         async def handle_check_request():
             """处理 GET 请求"""

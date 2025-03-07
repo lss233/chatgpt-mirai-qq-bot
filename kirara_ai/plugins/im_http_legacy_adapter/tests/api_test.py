@@ -1,9 +1,9 @@
 import asyncio
-import json
 import os
 import sys
 
 import pytest
+from fastapi.testclient import TestClient
 
 from kirara_ai.im.adapter import IMAdapter
 from kirara_ai.im.message import IMMessage
@@ -40,14 +40,14 @@ def adapter(config):
     container.register(WorkflowDispatcher, FakeWorkflowDispatcher(container))
     container.register(BlockRegistry, create_test_block_registry())
     adapter = HttpLegacyAdapter(config)
+    adapter.setup_routes()
     adapter.dispatcher = container.resolve(WorkflowDispatcher)
     return adapter
 
 
 @pytest.mark.asyncio
 async def test_chat_endpoint(adapter):
-    test_client = adapter.app.test_client()
-
+    test_client = TestClient(adapter.app)
     # Test text message
     response = test_client.post(
         "/v1/chat",
@@ -59,7 +59,7 @@ async def test_chat_endpoint(adapter):
     )
 
     assert response.status_code == 200
-    data = json.loads(await response.get_data())
+    data = response.json()
     assert "result" in data
     assert "message" in data
     assert isinstance(data["message"], list)
@@ -73,7 +73,7 @@ async def test_chat_endpoint(adapter):
 async def test_response_result():
     # Test single message
     result = ResponseResult(message="Test message")
-    json_data = json.loads(result.to_json())
+    json_data = result.to_dict()
     assert json_data["message"] == ["Test message"]
     assert json_data["voice"] == []
     assert json_data["image"] == []
@@ -84,7 +84,7 @@ async def test_response_result():
         voice=["voice1.mp3"],
         image=["image1.jpg", "image2.jpg"],
     )
-    json_data = json.loads(result.to_json())
+    json_data = result.to_dict()
     assert len(json_data["message"]) == 2
     assert len(json_data["voice"]) == 1
     assert len(json_data["image"]) == 2

@@ -23,9 +23,12 @@ _authorized_api_keys: List[str] = []
 class HttpLegacyConfig(BaseModel):
     """HTTP Legacy API 配置"""
 
-    api_key: Optional[str] = Field(description="自定义的API密钥，设置后，请求接口时需要带上这个密钥，若填空则不校验。", default=None)
-    host: Optional[str] = Field(description="已废弃，HTTP API 服务器地址，设置后将启动独立服务器。", default=None, hidden_unset=True)
-    port: Optional[int] = Field(description="已废弃，HTTP API 服务器端口，设置后将启动独立服务器。", default=None, hidden_unset=True)
+    api_key: Optional[str] = Field(
+        description="自定义的API密钥，设置后，请求接口时需要带上这个密钥，若填空则不校验。", default=None)
+    host: Optional[str] = Field(description="已废弃，HTTP API 服务器地址，设置后将启动独立服务器。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+    port: Optional[int] = Field(description="已废弃，HTTP API 服务器端口，设置后将启动独立服务器。",
+                                default=None, json_schema_extra={"hidden_unset": True})
     model_config = ConfigDict(extra="allow")
 
 
@@ -38,10 +41,12 @@ class ResponseResult:
             else message if isinstance(message, list) else [message]
         )
         self.voice = (
-            [] if voice is None else voice if isinstance(voice, list) else [voice]
+            [] if voice is None else voice if isinstance(voice, list) else [
+                voice]
         )
         self.image = (
-            [] if image is None else image if isinstance(image, list) else [image]
+            [] if image is None else image if isinstance(image, list) else [
+                image]
         )
 
     def to_dict(self):
@@ -102,7 +107,8 @@ class HttpLegacyAdapter(IMAdapter):
                 user_id=ids[1], group_id=ids[0], display_name=username
             )
         else:
-            sender = ChatSender.from_c2c_chat(user_id=session_id, display_name=username)
+            sender = ChatSender.from_c2c_chat(
+                user_id=session_id, display_name=username)
 
         return IMMessage(
             sender=sender,
@@ -123,35 +129,36 @@ class HttpLegacyAdapter(IMAdapter):
         """验证API密钥"""
         if not self.config.api_key:
             return True
-            
+
         auth_header = request.headers.get("Authorization", "")
         # 支持 Bearer 认证和直接传递 API Key
         if auth_header.startswith("Bearer "):
             auth_header = auth_header[7:]  # 移除 "Bearer " 前缀
-            
+
         return auth_header == self.config.api_key or auth_header in _authorized_api_keys
 
     def create_auth_error_response(self):
         """创建认证失败的响应"""
         return JSONResponse(
-            content=ResponseResult(message="认证失败", result_status="FAILED").to_dict(),
+            content=ResponseResult(
+                message="认证失败", result_status="FAILED").to_dict(),
             status_code=401
         )
 
     def setup_routes(self, target_app=None):
         app = target_app if target_app else self.app
-        
+
         async def verify_auth(request: Request):
             if not self.verify_api_key(request):
                 return self.create_auth_error_response()
             return None
-        
+
         @app.post("/v1/chat")
         async def v1_chat(request: Request, data: dict = Body(...)):
             auth_response = await verify_auth(request)
             if auth_response:
                 return auth_response
-                
+
             message = self.convert_to_message(data)
             result = ResponseResult()
 
@@ -168,7 +175,7 @@ class HttpLegacyAdapter(IMAdapter):
             auth_response = await verify_auth(request)
             if auth_response:
                 return auth_response
-                
+
             request_time = str(int(time.time() * 1000))
 
             message = self.convert_to_message(data)
@@ -195,8 +202,9 @@ class HttpLegacyAdapter(IMAdapter):
             auth_response = await verify_auth(request)
             if auth_response:
                 return auth_response
-                
-            request_id = re.sub(r'^[%22%27"\'"]*|[%22%27"\'"]*$', "", request_id)
+
+            request_id = re.sub(
+                r'^[%22%27"\'"]*|[%22%27"\'"]*$', "", request_id)
 
             bot_request = self.request_dic.get(request_id)
             if bot_request is None:
@@ -218,14 +226,14 @@ class HttpLegacyAdapter(IMAdapter):
     async def send_message(self, message: IMMessage, recipient: ChatSender):
         """此处负责 HTTP 的响应逻辑"""
         await recipient.raw_metadata["callback_func"](message)
-        
+
     @property
     def is_standalone(self):
         return self.config.host
 
     async def _start_standalone_server(self):
         """启动独立HTTP服务器"""
-        
+
         # 使用 hypercorn 配置来正确处理关闭信号
         from hypercorn.asyncio import serve
         from hypercorn.config import Config
@@ -245,7 +253,7 @@ class HttpLegacyAdapter(IMAdapter):
     async def start(self):
         """启动HTTP服务器"""
         global _is_first_setup, _authorized_api_keys
-        
+
         if self.is_standalone:
             self.logger.warning("正在使用过时的独立模式，请尽快更新为集成模式。")
             await self._start_standalone_server()
@@ -261,7 +269,8 @@ class HttpLegacyAdapter(IMAdapter):
                     _authorized_api_keys.append(self.config.api_key)
 
         # 启动清理过期请求的任务
-        self.cleanup_task = asyncio.create_task(self.cleanup_expired_requests())
+        self.cleanup_task = asyncio.create_task(
+            self.cleanup_expired_requests())
 
     async def cleanup_expired_requests(self):
         """清理过期的请求"""
@@ -279,11 +288,11 @@ class HttpLegacyAdapter(IMAdapter):
     async def stop(self):
         """停止HTTP服务器"""
         global _authorized_api_keys
-        
+
         # 如果有API密钥，从授权列表中移除
         if self.config.api_key and self.config.api_key in _authorized_api_keys:
             _authorized_api_keys.remove(self.config.api_key)
-            
+
         if self.is_standalone and hasattr(self, "server_task"):
             self.server_task.cancel()
             try:
