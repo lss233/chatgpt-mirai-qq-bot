@@ -45,7 +45,8 @@ async def list_backends():
             data=LLMBackendList(backends=backends)
         ).model_dump()
     except Exception as e:
-        return LLMBackendListResponse(error=str(e)).model_dump()
+        logger.opt(exception=e).error("Failed to list backends")
+        return jsonify({"error": str(e)}), 500
 
 
 @llm_bp.route("/backends/<backend_name>", methods=["GET"])
@@ -70,7 +71,8 @@ async def get_backend(backend_name: str):
             )
         ).model_dump()
     except Exception as e:
-        return LLMBackendResponse(error=str(e)).model_dump()
+        logger.opt(exception=e).error("Failed to get backend")
+        return jsonify({"error": str(e)}), 500
 
 
 @llm_bp.route("/backends", methods=["POST"])
@@ -110,7 +112,8 @@ async def create_backend():
         ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
         return LLMBackendResponse(data=backend).model_dump()
     except Exception as e:
-        return LLMBackendResponse(error=str(e)).model_dump()
+        logger.opt(exception=e).error("Failed to create backend")
+        return jsonify({"error": str(e)}), 500
 
 
 @llm_bp.route("/backends/<backend_name>", methods=["PUT"])
@@ -158,7 +161,8 @@ async def update_backend(backend_name: str):
         ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
         return LLMBackendResponse(data=updated_backend).model_dump()
     except Exception as e:
-        return LLMBackendResponse(error=str(e)).model_dump()
+        logger.opt(exception=e).error("Failed to update backend")
+        return jsonify({"error": str(e)}), 500
 
 
 @llm_bp.route("/backends/<backend_name>", methods=["DELETE"])
@@ -181,15 +185,15 @@ async def delete_backend(backend_name: str):
         if backend_index == -1:
             return jsonify({"error": f"Backend {backend_name} not found"}), 404
 
-        # 如果后端已启用，先卸载
-        if config.llms.api_backends[backend_index].enable:
-            await manager.unload_backend(backend_name)
-
         # 从配置中删除
         deleted_backend = config.llms.api_backends.pop(backend_index)
 
         ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
 
+        # 如果后端已启用，要卸载
+        if config.llms.api_backends[backend_index].enable:
+            await manager.unload_backend(backend_name)
+            
         return LLMBackendResponse(
             data=LLMBackendInfo(
                 name=deleted_backend.name,
@@ -200,7 +204,8 @@ async def delete_backend(backend_name: str):
             )
         ).model_dump()
     except Exception as e:
-        return LLMBackendResponse(error=str(e)).model_dump()
+        logger.opt(exception=e).error("Failed to delete backend")
+        return jsonify({"error": str(e)}), 500
 
 
 @llm_bp.route("/types/<adapter_type>/config-schema", methods=["GET"])
@@ -216,7 +221,8 @@ async def get_adapter_config_schema(adapter_type: str):
         schema = config_class.model_json_schema()
         return LLMAdapterConfigSchema(configSchema=schema).model_dump()
     except Exception as e:
-        return LLMAdapterConfigSchema(error=str(e)).model_dump()
+        logger.opt(exception=e).error("Failed to get adapter config schema")
+        return jsonify({"error": str(e)}), 500
 
 
 @llm_bp.route("/types/<adapter_type>/supports-auto-detect-models", methods=["GET"])
@@ -239,6 +245,7 @@ async def supports_auto_detect_models(adapter_type: str):
             )
         return jsonify({"supportsAutoDetectModels": True})
     except Exception as e:
+        logger.opt(exception=e).error("Failed to check if adapter supports auto-detect models")
         return jsonify({"error": str(e)}), 500
 
 
@@ -263,4 +270,5 @@ async def auto_detect_models(backend_name: str):
         models = await adapter.auto_detect_models()
         return jsonify({"models": models})
     except Exception as e:
+        logger.opt(exception=e).error("Failed to auto-detect models")
         return jsonify({"error": str(e)}), 500

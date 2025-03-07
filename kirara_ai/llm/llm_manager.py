@@ -38,7 +38,10 @@ class LLMManager:
         for backend in self.config.llms.api_backends:
             if backend.enable:
                 self.logger.info(f"Loading backend: {backend.name}")
-                self.load_backend(backend.name)
+                try:
+                    self.load_backend(backend.name)
+                except Exception as e:
+                    self.logger.error(f"Failed to load backend {backend.name}: {e}")
 
     def load_backend(self, backend_name: str):
         """
