@@ -1,6 +1,7 @@
 import asyncio
 import mimetypes
 import os
+import socket
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -213,8 +214,23 @@ class WebServer:
         """挂载子应用到指定路径前缀"""
         self.app.mount(prefix, app)
 
+    def _check_port_available(self, host: str, port: int) -> bool:
+        """检查端口是否可用"""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind((host, port))
+                return True
+            except socket.error:
+                return False
+
     async def start(self):
         """启动Web服务器"""
+        # 检查端口是否被占用
+        if not self._check_port_available(self.config.web.host, self.config.web.port):
+            error_msg = f"端口 {self.config.web.port} 已被占用，无法启动服务器，请修改端口或关闭其他占用端口的程序。"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+            
         self.server_task = asyncio.create_task(serve(self.app, self.hypercorn_config))
         logger.info(
             f"监听地址：http://{self.config.web.host}:{self.config.web.port}/"
