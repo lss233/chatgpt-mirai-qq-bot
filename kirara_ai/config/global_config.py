@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class IMConfig(BaseModel):
@@ -75,6 +75,15 @@ class UpdateConfig(BaseModel):
     npm_registry: str = Field(default="https://registry.npmjs.org", description="npm 服务器 URL")
 
 
+class FrpcConfig(BaseModel):
+    """FRPC 配置"""
+    
+    enable: bool = Field(default=False, description="是否启用 FRPC")
+    server_addr: str = Field(default="", description="FRPC 服务器地址")
+    server_port: int = Field(default=7000, description="FRPC 服务器端口")
+    token: str = Field(default="", description="FRPC 连接令牌")
+    remote_port: int = Field(default=0, description="远程端口，0 表示随机分配")
+
 class GlobalConfig(BaseModel):
     ims: List[IMConfig] = Field(default=[], description="IM配置列表")
     llms: LLMConfig = LLMConfig()
@@ -83,3 +92,6 @@ class GlobalConfig(BaseModel):
     web: WebConfig = WebConfig()
     plugins: PluginConfig = PluginConfig()
     update: UpdateConfig = UpdateConfig()
+    frpc: FrpcConfig = FrpcConfig()
+
+    model_config = ConfigDict(extra="allow")
