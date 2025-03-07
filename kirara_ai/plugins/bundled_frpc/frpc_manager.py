@@ -162,6 +162,7 @@ class FrpcManager:
                     self._frpc_path = frpc_path
                     if progress_callback:
                         await progress_callback(100)
+                    self._get_frpc_version()
                     return True
                 finally:
                     shutil.rmtree(extract_dir)
@@ -190,7 +191,6 @@ class FrpcManager:
                 check=True
             )
             self._frpc_version = result.stdout.strip()
-            logger.info(f"FRPC 版本: {self._frpc_version}")
         except Exception as e:
             logger.error(f"获取 FRPC 版本失败: {e}")
             self._frpc_version = "未知"
@@ -357,6 +357,8 @@ local_port = {web_port}
             if stderr:
                 self._error_message = stderr
             self._frpc_process = None
+        
+        self._get_frpc_version()
         
         return (
             is_running,
