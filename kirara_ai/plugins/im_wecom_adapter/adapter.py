@@ -39,9 +39,12 @@ WEBHOOK_URL_PREFIX = "/im/webhook/wechat"
 def make_webhook_url():
     return f"{WEBHOOK_URL_PREFIX}/{str(uuid.uuid4())[:8]}"
 
+
 def auto_generate_webhook_url(s: dict):
     s["readOnly"] = True
     s["default"] = make_webhook_url()
+    s["textType"] = True
+
 
 class WecomConfig(BaseModel):
     """企业微信配置
@@ -57,10 +60,23 @@ class WecomConfig(BaseModel):
         title="企业ID", description="企业微信后台显示的企业ID，微信公众号等场景无需填写。", default=None)
     webhook_url: str = Field(
         title="微信端回调地址",
-        description="填写在微信端，自动生成请勿修改",
+        description="供微信端请求的 Webhook URL，填写在微信端，由系统自动生成，无法修改。",
         default_factory=make_webhook_url,
-        json_schema_extra=auto_generate_webhook_url)
+        json_schema_extra=auto_generate_webhook_url
+    )
+
+    host: Optional[str] = Field(title="HTTP 服务地址", description="已过时，请删除并使用 webhook_url 代替。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+    port: Optional[int] = Field(title="HTTP 服务端口", description="已过时，请删除并使用 webhook_url 代替。",
+                                default=None, json_schema_extra={"hidden_unset": True})
+
     model_config = ConfigDict(extra="allow")
+
+    def __init__(self, **kwargs: Any):
+        # 如果 agent_id 存在，则自动使用 agent_id 作为 app_id
+        if "agent_id" in kwargs:
+            kwargs["app_id"] = str(kwargs["agent_id"])
+        super().__init__(**kwargs)
 
 
 class WeComUtils:
@@ -118,6 +134,11 @@ class WecomAdapter(IMAdapter):
         self.client = WeChatClient(config.corp_id, config.secret)
         self.logger = get_logger("Wecom-Adapter")
         self.is_running = False
+        if not self.config.host:
+            self.config.host = None
+            self.config.port = None
+        elif not self.config.port:
+            self.config.port = 15650
         if not self.config.webhook_url:
             self.config.webhook_url = make_webhook_url()
 
@@ -126,7 +147,7 @@ class WecomAdapter(IMAdapter):
             webhook_url = '/wechat'
         else:
             webhook_url = self.config.webhook_url
-            
+
         @self.app.get(webhook_url)
         async def handle_check_request():
             """处理 GET 请求"""
@@ -272,12 +293,12 @@ class WecomAdapter(IMAdapter):
                 self.logger.error(f"Error during server shutdown: {e}")
 
     async def start(self):
-        if "host" in self.config.__pydantic_extra__:
+        if self.config.host:
             self.logger.warning("正在使用过时的启动模式，请尽快更新为 Webhook 模式。")
             await self._start_standalone_server()
         self.setup_routes()
 
     async def stop(self):
-        if "host" in self.config.__pydantic_extra__:
+        if self.config.host:
             await self._stop_standalone_server()
         self.is_running = False

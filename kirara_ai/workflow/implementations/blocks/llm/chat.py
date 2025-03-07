@@ -171,6 +171,6 @@ class ChatResponseConverter(Block):
         message_elements = []
         for element in content.split("<break>"):
             if element.strip():
-                message_elements.append(TextMessage(element))
+                message_elements.append(TextMessage(element.strip()))
         msg = IMMessage(sender="<@llm>", message_elements=message_elements)
         return {"msg": msg}
