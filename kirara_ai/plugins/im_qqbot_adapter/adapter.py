@@ -1,13 +1,15 @@
 
 import asyncio
 import uuid
+from typing import Optional
 
 import ymbotpy as botpy
 import ymbotpy.message
 from pydantic import BaseModel, ConfigDict, Field
 
-from kirara_ai.im.adapter import IMAdapter
+from kirara_ai.im.adapter import BotProfileAdapter, IMAdapter
 from kirara_ai.im.message import ImageMessage, IMMessage, MentionElement, TextMessage, VoiceMessage
+from kirara_ai.im.profile import UserProfile
 from kirara_ai.im.sender import ChatSender, ChatType
 from kirara_ai.logger import get_logger
 from kirara_ai.web.app import WebServer
@@ -33,7 +35,7 @@ class QQBotConfig(BaseModel):
     app_secret: str = Field(title="App Secret", description="机器人的 App Secret。")
     token: str = Field(
         title="Token", description="机器人令牌，用于调用 QQ 机器人的 OpenAPI。")
-    sandbox: bool = Field(title="沙盒环境", description="是否为沙盒环境。")
+    sandbox: bool = Field(title="沙盒环境", description="是否为沙盒环境，通常只有正式发布的机器人才会关闭此选项。", default=False)
     webhook_url: str = Field(
         title="Webhook 回调 URL", description="供 QQ 机器人回调的 URL，由系统自动生成，无法修改。",
         default_factory=make_webhook_url,
@@ -42,7 +44,7 @@ class QQBotConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class QQBotAdapter(botpy.WebHookClient, IMAdapter):
+class QQBotAdapter(botpy.WebHookClient, IMAdapter, BotProfileAdapter):
     """
     QQBot Adapter，包含 QQBot Bot 的所有逻辑。
     """
@@ -61,6 +63,7 @@ class QQBotAdapter(botpy.WebHookClient, IMAdapter):
             ext_handlers=True,
         )
         self.loop = self._loop
+        self.user = None
 
     def convert_to_message(self, raw_message: ymbotpy.message.BaseMessage) -> IMMessage:
         """
@@ -121,13 +124,27 @@ class QQBotAdapter(botpy.WebHookClient, IMAdapter):
         # 这个逆天的 Webhook 居然不包含 mention 字段，这里要手动补上
         message.message_elements.append(MentionElement(target=ChatSender.get_bot_sender()))
         await self.dispatcher.dispatch(self, message)
+        
+    async def get_bot_profile(self) -> Optional[UserProfile]:
+        """
+        获取机器人资料
+        :return: 机器人资料
+        """
+        if self.user is None:
+            return None
+        return UserProfile(
+            user_id=self.user['id'],
+            username=self.user['username'],
+            display_name=self.user['username'],
+            avatar_url=self.user['avatar']
+        )
 
     async def start(self):
         """启动 Bot"""
         
         token = botpy.Token(self.config.app_id, self.config.app_secret)
-        user = await self.http.login(token)
-        self.robot = botpy.Robot(user)
+        self.user = await self.http.login(token)
+        self.robot = botpy.Robot(self.user)
 
         bot_webhook = botpy.BotWebHook(
             self.config.app_id, 

@@ -100,7 +100,11 @@ async def create_adapter():
     # 更新配置
     _create_adapter(manager, adapter_info.name, adapter_info.adapter, adapter_info.config)
     if adapter_info.enable:
-        await manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
+        try:
+            await manager.start_adapter(adapter_info.name, asyncio.get_event_loop())
+        except Exception as e:
+            manager.delete_adapter(adapter_info.name)
+            return jsonify({"error": str(e)}), 500
         
     config.ims.append(adapter_info)
     # 保存配置到文件

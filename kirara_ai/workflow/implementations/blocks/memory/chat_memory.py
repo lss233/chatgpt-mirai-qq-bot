@@ -11,7 +11,7 @@ from kirara_ai.workflow.core.block import Block, Input, Output, ParamMeta
 
 
 def scope_type_options_provider(container: DependencyContainer, block: Block) -> List[str]:
-    return ["global", "user", "group"]
+    return ["global", "member", "group"]
 
 
 class ChatMemoryQuery(Block):
