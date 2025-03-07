@@ -14,6 +14,7 @@ from llm_preset_adapters.volcengine_adapter import VolcengineAdapter, Volcengine
 from kirara_ai.llm.llm_registry import LLMAbility
 from kirara_ai.logger import get_logger
 from kirara_ai.plugin_manager.plugin import Plugin
+from kirara_ai.plugins.llm_preset_adapters.mistral_adapter import MistralAdapter, MistralConfig
 
 logger = get_logger("LLMPresetAdapters")
 
@@ -58,6 +59,9 @@ class LLMPresetAdaptersPlugin(Plugin):
         )
         self.llm_registry.register(
             "Volcengine", VolcengineAdapter, VolcengineConfig, LLMAbility.TextChat
+        )
+        self.llm_registry.register(
+            "Mistral", MistralAdapter, MistralConfig, LLMAbility.TextChat
         )
         logger.info("LLMPresetAdaptersPlugin loaded")
 
