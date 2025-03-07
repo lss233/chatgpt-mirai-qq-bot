@@ -35,8 +35,8 @@ COPY --from=builder /build/dist/*.whl /app/
 
 # 下载Web UI并安装依赖
 RUN PACKAGE_INFO=$(curl -s https://registry.npmjs.org/kirara-ai-webui) && \
-    LATEST_VERSION=$(echo $PACKAGE_INFO | jq -r '.["dist-tags"].latest') && \
-    TARBALL_URL=$(echo $PACKAGE_INFO | jq -r --arg VERSION "$LATEST_VERSION" '.versions[$VERSION].dist.tarball') && \
+    LATEST_VERSION=$(printf %s $PACKAGE_INFO | jq -r '.["dist-tags"].latest') && \
+    TARBALL_URL=$(printf %s $PACKAGE_INFO | jq -r --arg VERSION "$LATEST_VERSION" '.versions[$VERSION].dist.tarball') && \
     curl -L -o webui.tgz "$TARBALL_URL" && \
     mkdir -p /tmp/webui && \
     tar -xzf webui.tgz -C /tmp/webui && \
