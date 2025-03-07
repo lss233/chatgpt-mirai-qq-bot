@@ -21,3 +21,4 @@ build/
 .coverage
 /web/
 botpy.log
+data/frpc/
