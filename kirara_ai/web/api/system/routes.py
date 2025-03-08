@@ -44,6 +44,9 @@ async def get_system_config():
             "update": {
                 "pypi_registry": config.update.pypi_registry,
                 "npm_registry": config.update.npm_registry
+            },
+            "system": {
+                "timezone": config.system.timezone
             }
         }
     except Exception as e:
@@ -98,6 +101,32 @@ async def update_registry_config():
         
         # 保存配置
         ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
+        return {"status": "success"}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@system_bp.route("/config/system", methods=["POST"])
+@require_auth
+async def update_system_config():
+    """更新系统配置"""
+    try:
+        data = await request.get_json()
+        config: GlobalConfig = g.container.resolve(GlobalConfig)
+        
+        # 检查时区是否变化
+        timezone_changed = False
+        if "timezone" in data and data["timezone"] != config.system.timezone:
+            config.system.timezone = data["timezone"]
+            timezone_changed = True
+        
+        # 保存配置
+        ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
+        
+        # 如果时区变化，设置系统时区并调用 tzset
+        if timezone_changed and hasattr(time, "tzset"):
+            os.environ["TZ"] = config.system.timezone
+            time.tzset()
+            
         return {"status": "success"}
     except Exception as e:
         return {"error": str(e)}, 500

@@ -84,6 +84,11 @@ class FrpcConfig(BaseModel):
     token: str = Field(default="", description="FRPC 连接令牌")
     remote_port: int = Field(default=0, description="远程端口，0 表示随机分配")
 
+class SystemConfig(BaseModel):
+    """系统配置"""
+
+    timezone: str = Field(default="Asia/Shanghai", description="时区")
+
 class GlobalConfig(BaseModel):
     ims: List[IMConfig] = Field(default=[], description="IM配置列表")
     llms: LLMConfig = LLMConfig()
@@ -93,5 +98,6 @@ class GlobalConfig(BaseModel):
     plugins: PluginConfig = PluginConfig()
     update: UpdateConfig = UpdateConfig()
     frpc: FrpcConfig = FrpcConfig()
+    system: SystemConfig = SystemConfig()
 
     model_config = ConfigDict(extra="allow")
