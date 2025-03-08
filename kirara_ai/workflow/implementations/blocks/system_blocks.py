@@ -3,8 +3,8 @@ from kirara_ai.workflow.implementations.blocks.im.basic import ExtractChatSender
 from kirara_ai.workflow.implementations.blocks.llm.basic import LLMResponseToText
 from kirara_ai.workflow.implementations.blocks.llm.image import SimpleStableDiffusionWebUI
 from kirara_ai.workflow.implementations.blocks.memory.clear_memory import ClearMemory
-from kirara_ai.workflow.implementations.blocks.system.basic import (TextBlock, TextConcatBlock, TextExtractByRegexBlock,
-                                                                    TextReplaceBlock)
+from kirara_ai.workflow.implementations.blocks.system.basic import (CurrentTimeBlock, TextBlock, TextConcatBlock,
+                                                                    TextExtractByRegexBlock, TextReplaceBlock)
 
 from .game.dice import DiceRoll
 from .game.gacha import GachaSimulator
@@ -22,6 +22,7 @@ def register_system_blocks(registry: BlockRegistry):
     registry.register("text_concat_block", "internal", TextConcatBlock, "基础：拼接文本")
     registry.register("text_replace_block", "internal", TextReplaceBlock, "基础：替换文本")
     registry.register("text_extract_by_regex_block", "internal", TextExtractByRegexBlock, "基础：正则表达式提取文本")
+    registry.register("current_time_block", "internal", CurrentTimeBlock, "基础：当前时间")
 
     # IM 相关 blocks
     registry.register("get_message", "internal", GetIMMessage, "IM: 获取最新消息")
