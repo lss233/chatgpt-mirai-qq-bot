@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from kirara_ai.config.config_loader import ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig, IMConfig, WebConfig
+from kirara_ai.events.event_bus import EventBus
 from kirara_ai.im.adapter import IMAdapter
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
@@ -98,7 +99,7 @@ def app():
     ]
     container.register(GlobalConfig, config)
     container.register(DependencyContainer, container)
-
+    container.register(EventBus, EventBus())
     # 创建并注册 IMRegistry
     registry = IMRegistry()
     try:

@@ -1,6 +1,9 @@
 import pytest
 
+from kirara_ai.events.event_bus import EventBus
+from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.workflow.core.block import Block, Input, Output
+from kirara_ai.workflow.core.block.registry import BlockRegistry
 from kirara_ai.workflow.core.execution.executor import WorkflowExecutor
 from kirara_ai.workflow.core.workflow import Wire, Workflow
 from tests.utils.test_block_registry import create_test_block_registry
@@ -111,7 +114,12 @@ failing_workflow = Workflow(
 @pytest.mark.asyncio
 async def test_executor_run():
     """Test workflow executor run."""
-    executor = WorkflowExecutor(workflow, test_registry)
+    container = DependencyContainer()
+    container.register(DependencyContainer, container)
+    container.register(EventBus, EventBus())
+    container.register(BlockRegistry, test_registry)
+    container.register(Workflow, workflow)
+    executor = WorkflowExecutor(container)
     result = await executor.run()
 
     assert result["input1"]["output1"] == "test_input"
@@ -122,7 +130,12 @@ async def test_executor_run():
 @pytest.mark.asyncio
 async def test_executor_with_failing_block():
     """Test workflow executor with a failing block."""
-    executor = WorkflowExecutor(failing_workflow, test_registry)
+    container = DependencyContainer()
+    container.register(DependencyContainer, container)
+    container.register(EventBus, EventBus())
+    container.register(BlockRegistry, test_registry)
+    container.register(Workflow, failing_workflow)
+    executor = WorkflowExecutor(container)
     with pytest.raises(RuntimeError, match="Block failing1 execution failed: Test error"):
         await executor.run()
 
@@ -130,8 +143,13 @@ async def test_executor_with_failing_block():
 @pytest.mark.asyncio
 async def test_executor_with_no_blocks():
     """Test workflow executor with no blocks."""
+    container = DependencyContainer()
+    container.register(DependencyContainer, container)
+    container.register(EventBus, EventBus())
+    container.register(BlockRegistry, test_registry)
     empty_workflow = Workflow(name="empty_workflow", blocks=[], wires=[])
-    executor = WorkflowExecutor(empty_workflow, test_registry)
+    container.register(Workflow, empty_workflow)
+    executor = WorkflowExecutor(container)
     result = await executor.run()
     assert result == {}
 
@@ -174,6 +192,11 @@ async def test_executor_with_multiple_outputs():
         ],
     )
 
-    executor = WorkflowExecutor(multi_output_workflow, test_registry)
+    container = DependencyContainer()
+    container.register(DependencyContainer, container)
+    container.register(EventBus, EventBus())
+    container.register(BlockRegistry, test_registry)
+    container.register(Workflow, multi_output_workflow)
+    executor = WorkflowExecutor(container)
     result = await executor.run()
     assert "MultiOutputBlock" in result

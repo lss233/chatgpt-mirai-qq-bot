@@ -4,13 +4,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from kirara_ai.config.global_config import GlobalConfig, PluginConfig, WebConfig
+from kirara_ai.events.event_bus import EventBus
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.llm.llm_registry import LLMBackendRegistry
 from kirara_ai.plugin_manager.models import PluginInfo
 from kirara_ai.plugin_manager.plugin import Plugin
-from kirara_ai.plugin_manager.plugin_event_bus import PluginEventBus
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
 from kirara_ai.web.app import WebServer
 from kirara_ai.workflow.core.block import BlockRegistry
@@ -116,13 +116,13 @@ def app():
     setup_auth_service(container)
 
     # 注册必要的组件
+    container.register(EventBus, EventBus())
     container.register(LLMBackendRegistry, LLMBackendRegistry())
     container.register(IMRegistry, IMRegistry())
     container.register(IMManager, IMManager(container))
     container.register(WorkflowRegistry, WorkflowRegistry(container))
     container.register(DispatchRuleRegistry, DispatchRuleRegistry(container))
     container.register(WorkflowDispatcher, WorkflowDispatcher(container))
-    container.register(PluginEventBus, PluginEventBus())
     container.register(BlockRegistry, create_test_block_registry())
 
     # 创建插件加载器并注册测试插件

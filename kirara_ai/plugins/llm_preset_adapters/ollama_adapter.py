@@ -81,4 +81,4 @@ class OllamaAdapter(LLMBackendAdapter, AutoDetectModelsProtocol):
             async with session.get(api_url) as response:
                 response.raise_for_status()
                 response_data = await response.json()
-                return [tag["name"] for tag in response_data]
+                return [tag["name"] for tag in response_data["models"]]

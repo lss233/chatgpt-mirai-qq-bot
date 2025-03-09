@@ -4,6 +4,9 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List
 
+from kirara_ai.events.event_bus import EventBus
+from kirara_ai.ioc.container import DependencyContainer
+from kirara_ai.ioc.inject import Inject
 from kirara_ai.logger import get_logger
 from kirara_ai.workflow.core.block import Block, ConditionBlock, LoopBlock
 from kirara_ai.workflow.core.block.registry import BlockRegistry
@@ -11,16 +14,20 @@ from kirara_ai.workflow.core.workflow import Workflow
 
 
 class WorkflowExecutor:
-    def __init__(self, workflow: Workflow, registry: BlockRegistry):
+    
+    @Inject()
+    def __init__(self, container: DependencyContainer, workflow: Workflow, registry: BlockRegistry, event_bus: EventBus):
         """
         初始化 WorkflowExecutor 实例。
 
         :param workflow: 要执行的工作流对象
         :param registry: Block注册表，用于类型检查
         """
+        self.container = container
         self.logger = get_logger("WorkflowExecutor")
         self.workflow = workflow
         self.registry = registry
+        self.event_bus = event_bus
         self.results = defaultdict(dict)
         self.variables = {}  # 存储工作流变量
         self.logger.info(
@@ -65,6 +72,8 @@ class WorkflowExecutor:
 
         :return: 包含每个块执行结果的字典，键为块名，值为块的输出
         """
+        from kirara_ai.events import WorkflowExecutionBegin, WorkflowExecutionEnd
+        self.event_bus.post(WorkflowExecutionBegin(self.workflow, self))
         self.logger.info("Starting workflow execution")
         loop = asyncio.get_event_loop()
         with ThreadPoolExecutor() as executor:
@@ -74,6 +83,7 @@ class WorkflowExecutor:
             await self._execute_nodes(entry_blocks, executor, loop)
 
         self.logger.info("Workflow execution completed")
+        self.event_bus.post(WorkflowExecutionEnd(self.workflow, self, self.results))
         return self.results
 
     async def _execute_nodes(self, blocks: List[Block], executor, loop):

@@ -5,6 +5,8 @@ import sys
 from typing import Dict, List, Optional, Type
 
 from kirara_ai.config.global_config import GlobalConfig
+from kirara_ai.events.event_bus import EventBus
+from kirara_ai.events.plugin import PluginLoaded, PluginStarted, PluginStopped
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.ioc.inject import Inject
 from kirara_ai.logger import get_logger
@@ -23,6 +25,7 @@ class PluginLoader:
         self.plugin_dir = plugin_dir
         self.internal_plugins = []
         self.config = self.container.resolve(GlobalConfig)
+        self.event_bus = self.container.resolve(EventBus)
 
     def register_plugin(self, plugin_class: Type[Plugin], plugin_name: str = None):
         """注册一个插件类，主要用于测试"""
@@ -148,8 +151,9 @@ class PluginLoader:
     def instantiate_plugin(self, plugin_class):
         """Instantiates a plugin class using dependency injection."""
         self.logger.debug(f"Instantiating plugin class: {plugin_class.__name__}")
+        event_bus = self.container.resolve(EventBus)
         with self.container.scoped() as scoped_container:
-            scoped_container.register(PluginEventBus, PluginEventBus())
+            scoped_container.register(EventBus, PluginEventBus(event_bus))
             return Inject(scoped_container).create(plugin_class)()
 
     def load_plugins(self):
@@ -159,6 +163,7 @@ class PluginLoader:
             try:
                 plugin.on_load()
                 self.logger.info(f"Plugin {plugin.__class__.__name__} initialized")
+                self.event_bus.post(PluginLoaded(plugin))
             except Exception as e:
                 self.logger.error(
                     f"Failed to initialize plugin {plugin.__class__.__name__}: {e}"
@@ -172,6 +177,7 @@ class PluginLoader:
                 plugin.on_start()
                 self.plugin_infos[plugin_name].is_enabled = True
                 self.logger.info(f"Plugin {plugin.__class__.__name__} started")
+                self.event_bus.post(PluginStarted(plugin))
             except Exception as e:
                 self.logger.error(
                     f"Failed to start plugin {plugin.__class__.__name__}: {e}"
@@ -185,6 +191,7 @@ class PluginLoader:
                 plugin.on_stop()
                 plugin.event_bus.unregister_all()
                 self.logger.info(f"Plugin {plugin.__class__.__name__} stopped")
+                self.event_bus.post(PluginStopped(plugin))
             except Exception as e:
                 self.logger.error(
                     f"Failed to stop plugin {plugin.__class__.__name__}: {e}"
@@ -323,7 +330,10 @@ class PluginLoader:
             # 找到并停止插件实例
             if plugin_name in self.plugins:
                 plugin = self.plugins[plugin_name]
-                print(isinstance(plugin, Plugin))
+                
+                if isinstance(plugin.event_bus, PluginEventBus):
+                    plugin.event_bus.unregister_all()
+                    
                 plugin.on_stop()
                 del self.plugins[plugin_name]
 
