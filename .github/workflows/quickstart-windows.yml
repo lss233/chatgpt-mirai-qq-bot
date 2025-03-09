@@ -56,6 +56,7 @@ jobs:
       run: |
         cd ${{ env.DIST_DIR }}
         ./WPy64-31320/python/python.exe -m pip install "${{ github.workspace }}/dist/${{ env.WHEEL_FILE }}"
+        ./WPy64-31320/python/python.exe -m pip install --upgrade pip
 
     - name: Download and setup FFmpeg
       run: |
