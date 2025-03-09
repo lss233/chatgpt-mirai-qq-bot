@@ -13,7 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.11.2"
+  PYTHON_VERSION: "3.13.2.0"
+  WINPYTHON_URL: "https://github.com/winpython/winpython/releases/download/13.1.202502222final/Winpython64-3.13.2.0dot.zip"
   DIST_DIR: "C:/dist"
   BUILD_DIR: "C:/build"
   PACKAGE_NAME: "quickstart-windows-kirara-ai-amd64"
@@ -47,20 +48,14 @@ jobs:
         mkdir ${{ env.DIST_DIR }}
         mkdir ${{ env.BUILD_DIR }}
         
-        # 下载嵌入式Python
-        $pythonUrl = "https://www.python.org/ftp/python/${{ env.PYTHON_VERSION }}/python-${{ env.PYTHON_VERSION }}-embed-amd64.zip"
-        Invoke-WebRequest -Uri $pythonUrl -OutFile "${{ env.BUILD_DIR }}/python.zip"
-        Expand-Archive "${{ env.BUILD_DIR }}/python.zip" -DestinationPath "${{ env.DIST_DIR }}/python3.11"
-        
-        # 配置Python环境
-        echo "import site" >> "${{ env.DIST_DIR }}/python3.11/python311._pth"
-        Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile "${{ env.DIST_DIR }}/python3.11/get-pip.py"
+        # 下载 WinPython
+        Invoke-WebRequest -Uri "${{ env.WINPYTHON_URL }}" -OutFile "${{ env.BUILD_DIR }}/winpython.zip"
+        Expand-Archive "${{ env.BUILD_DIR }}/winpython.zip" -DestinationPath "${{ env.DIST_DIR }}"
 
     - name: Install project and dependencies
       run: |
         cd ${{ env.DIST_DIR }}
-        ./python3.11/python.exe python3.11/get-pip.py
-        ./python3.11/python.exe -m pip install "${{ github.workspace }}/dist/${{ env.WHEEL_FILE }}"
+        ./WPy64-31320/python/python.exe -m pip install "${{ github.workspace }}/dist/${{ env.WHEEL_FILE }}"
 
     - name: Download and setup FFmpeg
       run: |

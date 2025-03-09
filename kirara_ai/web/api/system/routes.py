@@ -151,7 +151,7 @@ async def get_latest_pypi_version(package_name: str) -> tuple[str, str]:
     """获取包的最新版本和下载URL"""
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://pypi.org/pypi/{package_name}/simple") as response:
+            async with session.get(f"https://pypi.org/pypi/{package_name}/json") as response:
                 response.raise_for_status()
                 data = await response.json()
                 latest_version = data["info"]["version"]
@@ -258,7 +258,6 @@ async def get_system_status():
 async def check_update():
     """检查系统更新"""
     config: GlobalConfig = g.container.resolve(GlobalConfig)
-    pypi_registry = config.update.pypi_registry
     npm_registry = config.update.npm_registry
     
     current_backend_version = get_version()
