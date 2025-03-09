@@ -106,6 +106,7 @@ class PluginLoader:
 
     def _load_external_plugin(self, plugin_name: str):
         """加载外部插件"""
+        from importlib import reload
         from importlib.metadata import entry_points
 
         # 获取插件的 entry point
@@ -114,6 +115,15 @@ class PluginLoader:
 
         if not plugin_ep:
             raise ValueError(f"Unable to find entry point for plugin {plugin_name}")
+
+        try:
+            # 尝试重新加载 module
+            if plugin_ep.module in sys.modules:
+                module = sys.modules[plugin_ep.module]
+                self.logger.info(f"Reloading plugin {plugin_name} from {plugin_ep.module}")
+                reload(module)
+        except Exception as e:
+            self.logger.error(f"Failed to reload plugin {plugin_name}: {e}")
 
         try:
             # 加载插件类
