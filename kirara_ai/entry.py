@@ -8,6 +8,7 @@ from kirara_ai.config.global_config import GlobalConfig
 from kirara_ai.events.event_bus import EventBus
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
+from kirara_ai.internal import shutdown_event
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.llm.llm_manager import LLMManager
 from kirara_ai.llm.llm_registry import LLMBackendRegistry
@@ -25,16 +26,10 @@ from kirara_ai.workflow.implementations.workflows import register_system_workflo
 
 logger = get_logger("Entrypoint")
 
-
-# 定义优雅退出异常
-class GracefulExit(SystemExit):
-    code = 1
-
-
 # 注册信号处理函数
 def _signal_handler(*args):
     logger.warning("Interrupt signal received. Stopping application...")
-    raise GracefulExit()
+    shutdown_event.set()
 
 
 def init_container() -> DependencyContainer:
@@ -179,9 +174,7 @@ def run_application(container: DependencyContainer):
             f"WebUI 管理平台本地访问地址：http://127.0.0.1:{web_server.config.web.port}/"
         )
         logger.success("Application started. Waiting for events...")
-        loop.run_forever()
-    except GracefulExit:
-        logger.info("Graceful exit requested")
+        loop.run_until_complete(shutdown_event.wait())
     finally:
         # 关闭记忆系统
         memory_manager = container.resolve(MemoryManager)
@@ -193,6 +186,7 @@ def run_application(container: DependencyContainer):
 
         # 停止Web服务器
         loop.run_until_complete(web_server.stop())
+        logger.info("Web server terminated.")
         try:
             # 停止所有 adapter
             im_manager.stop_adapters(loop=loop)
@@ -204,3 +198,4 @@ def run_application(container: DependencyContainer):
         # 关闭事件循环
         loop.stop()
         logger.info("Application stopped gracefully")
+        logger.stop()

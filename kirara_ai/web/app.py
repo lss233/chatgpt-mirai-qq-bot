@@ -173,7 +173,8 @@ class WebServer:
     def __init__(self, container: DependencyContainer):
         self.app = create_app(container)
         self.web_api_app = create_web_api_app(container)
-        
+        self.server_task = None
+        self.shutdown_event = asyncio.Event()
         container.register(
             AuthService,
             FileBasedAuthService(
@@ -231,14 +232,15 @@ class WebServer:
             logger.error(error_msg)
             raise RuntimeError(error_msg)
             
-        self.server_task = asyncio.create_task(serve(self.app, self.hypercorn_config))
+        self.server_task = asyncio.create_task(serve(self.app, self.hypercorn_config, shutdown_trigger=self.shutdown_event.wait))
         logger.info(
             f"监听地址：http://{self.config.web.host}:{self.config.web.port}/"
         )
 
     async def stop(self):
         """停止Web服务器"""
-        if hasattr(self, "server_task"):
+        self.shutdown_event.set()
+        if self.server_task:
             self.server_task.cancel()
             try:
                 await self.server_task

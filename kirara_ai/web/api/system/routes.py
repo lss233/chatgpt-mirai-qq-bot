@@ -15,6 +15,7 @@ from quart import Blueprint, current_app, g, request
 from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
 from kirara_ai.im.manager import IMManager
+from kirara_ai.internal import set_restart_flag, shutdown_event
 from kirara_ai.llm.llm_manager import LLMManager
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
 from kirara_ai.workflow.core.workflow import WorkflowRegistry
@@ -146,11 +147,11 @@ def get_version() -> str:
         return "0.0.0"  # 如果所有方法都失败，返回默认版本号
 
 
-async def get_latest_pypi_version(package_name: str, registry: str = "https://pypi.org/simple") -> tuple[str, str]:
+async def get_latest_pypi_version(package_name: str) -> tuple[str, str]:
     """获取包的最新版本和下载URL"""
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{registry}/{package_name}/json") as response:
+            async with session.get(f"https://pypi.org/pypi/{package_name}/simple") as response:
                 response.raise_for_status()
                 data = await response.json()
                 latest_version = data["info"]["version"]
@@ -261,7 +262,7 @@ async def check_update():
     npm_registry = config.update.npm_registry
     
     current_backend_version = get_version()
-    latest_backend_version, backend_download_url = await get_latest_pypi_version("kirara-ai", pypi_registry)
+    latest_backend_version, backend_download_url = await get_latest_pypi_version("kirara-ai")
     
     # 获取前端最新版本信息，但不判断是否需要更新
     latest_webui_version, webui_download_url = await get_latest_npm_version("kirara-ai-webui", npm_registry)
@@ -322,4 +323,6 @@ async def perform_update():
 @require_auth
 async def restart_system():
     """重启系统"""
-    raise SystemExit("restart")
+    set_restart_flag()
+    shutdown_event.set()
+    return {"status": "success", "message": "重启请求已发送"}
