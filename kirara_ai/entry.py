@@ -1,7 +1,7 @@
-# For embedded python
 import asyncio
 import os
 import signal
+import time
 
 from kirara_ai.config.config_loader import ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
@@ -83,6 +83,11 @@ def init_application() -> DependencyContainer:
             "Please create a configuration file by copying config.yaml.example to config.yaml and modify it according to your needs"
         )
         config = GlobalConfig()
+        
+    # 设置时区
+    os.environ["TZ"] = config.system.timezone
+    if hasattr(time, "tzset"):
+        time.tzset()
 
     container = init_container()
     container.register(asyncio.AbstractEventLoop, asyncio.new_event_loop())

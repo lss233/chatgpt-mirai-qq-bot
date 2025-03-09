@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from typing import Annotated, Any, Dict
 
 from kirara_ai.workflow.core.block import Block, Output, ParamMeta
@@ -70,3 +71,12 @@ class TextExtractByRegexBlock(Block):
             return {"text": match.group(1)}
         else:
             return {"text": ""}
+
+
+# 获取当前时间
+class CurrentTimeBlock(Block):
+    name = "current_time_block"
+    outputs = {"time": Output("time", "当前时间", str, "当前时间")}
+
+    def execute(self) -> Dict[str, Any]:
+        return {"time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
