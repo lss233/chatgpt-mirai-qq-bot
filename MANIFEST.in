@@ -1,0 +1,4 @@
+recursive-include kirara_ai/plugins/im_http_legacy_adapter/assets *
+recursive-include kirara_ai/plugins/im_qqbot_adapter/assets *
+recursive-include kirara_ai/plugins/im_telegram_adapter/assets *
+recursive-include kirara_ai/plugins/im_wecom_adapter/assets *

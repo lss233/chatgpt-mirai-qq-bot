@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kirara-ai"
-version = "3.1.0"
+version = "3.1.1"
 authors = [
     { name="Lss233", email="i@lss233.com" },
 ]
@@ -58,3 +58,6 @@ kirara_ai = "kirara_ai.__main__:main"
 where = ["."]
 include = ["kirara_ai*"]
 namespaces = true
+
+[options]
+include_package_data = true
