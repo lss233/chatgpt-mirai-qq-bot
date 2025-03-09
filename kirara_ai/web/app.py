@@ -54,13 +54,17 @@ ERROR_MESSAGE = """
 </style>
 """
 
+
+cwd = os.getcwd()
+STATIC_FOLDER = f"{cwd}/web"
+
 logger = get_logger("WebServer")
 
 custom_static_assets = {}
 
 def create_web_api_app(container: DependencyContainer) -> Quart:
     """创建 Web API 应用（Quart）"""
-    app = Quart(__name__)
+    app = Quart(__name__, static_folder=STATIC_FOLDER)
     app.json.sort_keys = False
     
     # 注册蓝图
@@ -112,8 +116,6 @@ def create_app(container: DependencyContainer) -> FastAPI:
     mimetypes.add_type("image/gif", ".gif")
     mimetypes.add_type("image/webp", ".webp")
     
-    cwd = os.getcwd()
-    static_folder = f"{cwd}/web"
     
     # 自定义静态资源处理
     async def serve_custom_static(path: str):
@@ -124,13 +126,13 @@ def create_app(container: DependencyContainer) -> FastAPI:
     @app.get("/", response_class=HTMLResponse)
     async def index():
         try:
-            index_path = Path(static_folder) / "index.html"
+            index_path = Path(STATIC_FOLDER) / "index.html"
             if not index_path.exists():
-                return HTMLResponse(content=ERROR_MESSAGE.replace("TARGET_DIR", static_folder))
+                return HTMLResponse(content=ERROR_MESSAGE.replace("TARGET_DIR", STATIC_FOLDER))
             return FileResponse(index_path)
         except Exception as e:
             logger.error(f"Error serving index: {e}")
-            return HTMLResponse(content=ERROR_MESSAGE.replace("TARGET_DIR", static_folder))
+            return HTMLResponse(content=ERROR_MESSAGE.replace("TARGET_DIR", STATIC_FOLDER))
 
     @app.middleware("http")
     async def spa_middleware(request: Request, call_next):
@@ -147,9 +149,9 @@ def create_app(container: DependencyContainer) -> FastAPI:
             return await call_next(request)
 
         try:
-            file_path = Path(static_folder) / path.lstrip('/')
+            file_path = Path(STATIC_FOLDER) / path.lstrip('/')
             # 检查路径穿越
-            if not file_path.resolve().is_relative_to(Path(static_folder).resolve()):
+            if not file_path.resolve().is_relative_to(Path(STATIC_FOLDER).resolve()):
                 raise HTTPException(status_code=404, detail="Access denied")
             
             # 如果文件存在，返回文件
@@ -157,11 +159,11 @@ def create_app(container: DependencyContainer) -> FastAPI:
                 return FileResponse(file_path)
                 
             # 否则返回 index.html（SPA 路由）
-            return FileResponse(Path(static_folder) / "index.html")
+            return FileResponse(Path(STATIC_FOLDER) / "index.html")
             
         except Exception as e:
             logger.error(f"Error serving static file {path}: {e}")
-            return FileResponse(Path(static_folder) / "index.html")
+            return FileResponse(Path(STATIC_FOLDER) / "index.html")
     
     return app
 
