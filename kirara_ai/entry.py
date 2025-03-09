@@ -5,6 +5,7 @@ import time
 
 from kirara_ai.config.config_loader import ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
+from kirara_ai.events.application import ApplicationStarted, ApplicationStopping
 from kirara_ai.events.event_bus import EventBus
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
@@ -174,8 +175,11 @@ def run_application(container: DependencyContainer):
             f"WebUI 管理平台本地访问地址：http://127.0.0.1:{web_server.config.web.port}/"
         )
         logger.success("Application started. Waiting for events...")
+        event_bus = container.resolve(EventBus)
+        event_bus.post(ApplicationStarted())
         loop.run_until_complete(shutdown_event.wait())
     finally:
+        event_bus.post(ApplicationStopping())
         # 关闭记忆系统
         memory_manager = container.resolve(MemoryManager)
         logger.info("Shutting down memory system...")

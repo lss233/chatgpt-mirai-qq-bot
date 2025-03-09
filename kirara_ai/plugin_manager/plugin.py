@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
+from kirara_ai.events.event_bus import EventBus
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.im.manager import IMManager
 from kirara_ai.llm.llm_registry import LLMBackendRegistry
-from kirara_ai.plugin_manager.plugin_event_bus import PluginEventBus
 from kirara_ai.workflow.core.dispatch import WorkflowDispatcher
 
 
@@ -25,7 +25,7 @@ class Plugin(ABC):
 
     ENTRY_POINT_GROUP = "chatgpt_mirai.plugins"
 
-    event_bus: PluginEventBus
+    event_bus: EventBus
     workflow_dispatcher: WorkflowDispatcher
     llm_registry: LLMBackendRegistry
     im_registry: IMRegistry

@@ -4,7 +4,7 @@ from typing import Callable
 from kirara_ai.events.event_bus import EventBus
 
 
-def Event(event_bus: EventBus):
+def listen(event_bus: EventBus):
     def decorator(func: Callable):
         # 获取函数的参数签名
         signature = inspect.signature(func)

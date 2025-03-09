@@ -3,6 +3,8 @@ from typing import Dict, Type
 
 from kirara_ai.config.config_loader import pydantic_validation_wrapper
 from kirara_ai.config.global_config import GlobalConfig, IMConfig
+from kirara_ai.events.event_bus import EventBus
+from kirara_ai.events.im import IMAdapterStarted, IMAdapterStopped
 from kirara_ai.im.adapter import IMAdapter
 from kirara_ai.im.im_registry import IMRegistry
 from kirara_ai.ioc.container import DependencyContainer
@@ -22,6 +24,8 @@ class IMManager:
     config: GlobalConfig
 
     im_registry: IMRegistry
+    
+    event_bus: EventBus
 
     @Inject()
     def __init__(
@@ -29,10 +33,12 @@ class IMManager:
         container: DependencyContainer,
         config: GlobalConfig,
         adapter_registry: IMRegistry,
+        event_bus: EventBus,
     ):
         self.container = container
         self.config = config
         self.im_registry = adapter_registry
+        self.event_bus = event_bus
         self.adapters: Dict[str, IMAdapter] = {}
 
     def get_adapter_type(self, name: str) -> str:
@@ -146,12 +152,14 @@ class IMManager:
         await adapter.start()
         adapter.is_running = True
         logger.info(f"Started adapter: {key}")
+        self.event_bus.post(IMAdapterStarted(adapter))
 
     async def _stop_adapter(self, key: str, adapter: IMAdapter):
         logger.info(f"Stopping adapter: {key}")
         await adapter.stop()
         adapter.is_running = False
         logger.info(f"Stopped adapter: {key}")
+        self.event_bus.post(IMAdapterStopped(adapter))
 
     def stop_adapter(self, adapter_id: str, loop: asyncio.AbstractEventLoop):
         if adapter_id not in self.adapters:

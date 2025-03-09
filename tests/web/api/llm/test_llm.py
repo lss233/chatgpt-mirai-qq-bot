@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from kirara_ai.config.config_loader import ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig, LLMBackendConfig, WebConfig
+from kirara_ai.events.event_bus import EventBus
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.llm.adapter import LLMBackendAdapter
 from kirara_ai.llm.format.request import LLMChatRequest
@@ -53,6 +54,7 @@ def app():
     """创建测试应用实例"""
     container = DependencyContainer()
     container.register(DependencyContainer, container)
+    container.register(EventBus, EventBus())
 
     # 配置mock
     config = GlobalConfig()

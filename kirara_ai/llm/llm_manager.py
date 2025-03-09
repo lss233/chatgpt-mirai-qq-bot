@@ -2,6 +2,8 @@ import random
 from typing import Dict, List, Optional
 
 from kirara_ai.config.global_config import GlobalConfig
+from kirara_ai.events.event_bus import EventBus
+from kirara_ai.events.llm import LLMAdapterLoaded, LLMAdapterUnloaded
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.ioc.inject import Inject
 from kirara_ai.llm.adapter import LLMBackendAdapter
@@ -18,6 +20,7 @@ class LLMManager:
     config: GlobalConfig
     backend_registry: LLMBackendRegistry
     active_backends: Dict[str, List[LLMBackendAdapter]]
+    event_bus: EventBus
 
     @Inject()
     def __init__(
@@ -25,10 +28,12 @@ class LLMManager:
         container: DependencyContainer,
         config: GlobalConfig,
         backend_registry: LLMBackendRegistry,
+        event_bus: EventBus,
     ):
         self.container = container
         self.config = config
         self.backend_registry = backend_registry
+        self.event_bus = event_bus
         self.logger = get_logger("LLMAdapter")
         self.active_backends = {}
         self.backends: Dict[str, LLMBackendAdapter] = {}
@@ -77,7 +82,7 @@ class LLMManager:
                 if model not in self.active_backends:
                     self.active_backends[model] = []
                 self.active_backends[model].append(adapter)
-
+            self.event_bus.post(LLMAdapterLoaded(adapter))
         self.logger.info(f"Backend {backend_name} loaded successfully")
 
     async def unload_backend(self, backend_name: str):
@@ -99,8 +104,8 @@ class LLMManager:
                 self.active_backends[model].remove(backend)
             if len(self.active_backends[model]) == 0:
                 self.active_backends.pop(model)
-        self.backends.pop(backend_name)
-
+        backend = self.backends.pop(backend_name)
+        self.event_bus.post(LLMAdapterUnloaded(backend))
     async def reload_backend(self, backend_name: str):
         """
         重新加载指定的后端
