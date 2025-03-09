@@ -114,3 +114,17 @@ class TestSystemStatus:
         assert response.status_code == 401
         data = response.json()
         assert "error" in data
+
+
+    @pytest.mark.asyncio
+    async def test_check_update(self, test_client, auth_headers):
+        """测试检查更新"""
+        response = test_client.get("/backend-api/api/system/check-update", headers=auth_headers)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["current_backend_version"] != "0.0.0"
+        assert data["latest_backend_version"] != "0.0.0"
+        assert data["backend_update_available"] == False
+        assert data["latest_webui_version"] != "0.0.0"
+        assert data["webui_download_url"] != ""
