@@ -82,7 +82,7 @@ class LLMManager:
                 if model not in self.active_backends:
                     self.active_backends[model] = []
                 self.active_backends[model].append(adapter)
-            self.event_bus.post(LLMAdapterLoaded(adapter))
+        self.event_bus.post(LLMAdapterLoaded(adapter))
         self.logger.info(f"Backend {backend_name} loaded successfully")
 
     async def unload_backend(self, backend_name: str):

@@ -191,7 +191,7 @@ async def delete_backend(backend_name: str):
         ConfigLoader.save_config_with_backup(CONFIG_FILE, config)
 
         # 如果后端已启用，要卸载
-        if config.llms.api_backends[backend_index].enable:
+        if deleted_backend.enable:
             await manager.unload_backend(backend_name)
             
         return LLMBackendResponse(
