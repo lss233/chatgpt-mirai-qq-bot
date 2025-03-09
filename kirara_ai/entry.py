@@ -3,6 +3,8 @@ import os
 import signal
 import time
 
+from packaging import version
+
 from kirara_ai.config.config_loader import ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
 from kirara_ai.events.application import ApplicationStarted, ApplicationStopping
@@ -18,6 +20,7 @@ from kirara_ai.memory.composes import DefaultMemoryComposer, DefaultMemoryDecomp
 from kirara_ai.memory.memory_manager import MemoryManager
 from kirara_ai.memory.scopes import GlobalScope, GroupScope, MemberScope
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
+from kirara_ai.web.api.system.utils import get_installed_version, get_latest_pypi_version
 from kirara_ai.web.app import WebServer
 from kirara_ai.workflow.core.block import BlockRegistry
 from kirara_ai.workflow.core.dispatch import DispatchRuleRegistry, WorkflowDispatcher
@@ -26,6 +29,17 @@ from kirara_ai.workflow.implementations.blocks import register_system_blocks
 from kirara_ai.workflow.implementations.workflows import register_system_workflows
 
 logger = get_logger("Entrypoint")
+
+async def check_update():
+    """检查更新"""
+    running_version = get_installed_version()
+    logger.info("Checking for updates...")
+    latest_version, _ = await get_latest_pypi_version("kirara-ai")
+    logger.info(f"Running version: {running_version}, Latest version: {latest_version}")
+    backend_update_available = version.parse(latest_version) > version.parse(running_version)
+    if backend_update_available:
+        logger.warning(f"New version {latest_version} is available. Please update to the latest version.")
+        logger.warning(f"You can download the latest version from WebUI")
 
 # 注册信号处理函数
 def _signal_handler(*args):
@@ -59,7 +73,7 @@ def init_memory_system(container: DependencyContainer):
 def init_application() -> DependencyContainer:
     """初始化应用程序"""
     logger.info("Initializing application...")
-    
+        
     # 配置文件路径
     config_path = "./data/config.yaml"
 
@@ -175,6 +189,7 @@ def run_application(container: DependencyContainer):
             f"WebUI 管理平台本地访问地址：http://127.0.0.1:{web_server.config.web.port}/"
         )
         logger.success("Application started. Waiting for events...")
+        loop.create_task(check_update())
         event_bus = container.resolve(EventBus)
         event_bus.post(ApplicationStarted())
         loop.run_until_complete(shutdown_event.wait())
