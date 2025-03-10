@@ -40,10 +40,19 @@
 |------------------------------|------------------------------|------------------------------|
 | ![image](https://user-images.githubusercontent.com/8984680/230702158-73967aa9-01be-44d6-bbd9-24437e333140.png) | ![image](https://user-images.githubusercontent.com/8984680/230702177-de96f89b-053e-4313-a131-715af969db04.png) | ![image](https://user-images.githubusercontent.com/8984680/230702635-fb1de3bf-acbd-46ca-8d6f-caa47368b4d4.png) |
 
+**🧭 WebUI**  
 
-| ![模型管理](https://img.shields.io/badge/-%E6%A8%A1%E5%9E%8B%E7%AE%A1%E7%90%86-E2CDBC?style=for-the-badge)                     | ![工作流](https://img.shields.io/badge/-%E5%B7%A5%E4%BD%9C%E6%B5%81-E2CDBC?style=for-the-badge)                   | ![插件市场](https://img.shields.io/badge/-%E6%8F%92%E4%BB%B6%E5%B8%82%E5%9C%BA-E2CDBC?style=for-the-badge)            |
-|------------------------------|------------------------------|------------------------------|
-| ![image](https://github.com/user-attachments/assets/322e6fb0-307a-458b-8fa6-970a6344ee1f) | ![image](https://github.com/user-attachments/assets/4f259269-e06e-4bad-a97c-58b92cfb38cd) | ![image](https://github.com/user-attachments/assets/f41278ed-ab25-4a13-9e15-e12a3373b5be) |
+![模型管理](https://img.shields.io/badge/-%E6%A8%A1%E5%9E%8B%E7%AE%A1%E7%90%86-E2CDBC?style=for-the-badge)  
+
+![image](https://github.com/user-attachments/assets/322e6fb0-307a-458b-8fa6-970a6344ee1f)  
+
+![工作流](https://img.shields.io/badge/-%E5%B7%A5%E4%BD%9C%E6%B5%81-E2CDBC?style=for-the-badge)
+
+![image](https://github.com/user-attachments/assets/4f259269-e06e-4bad-a97c-58b92cfb38cd)
+
+![插件市场](https://img.shields.io/badge/-%E6%8F%92%E4%BB%B6%E5%B8%82%E5%9C%BA-E2CDBC?style=for-the-badge)
+
+![image](https://github.com/user-attachments/assets/f41278ed-ab25-4a13-9e15-e12a3373b5be)
 
 **⚡ 核心特性**   
 * [x] 图片发送
@@ -231,5 +240,6 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ## 💪 支持我们
 
-如果我们这个项目对你有所帮助，请给我们一颗 ⭐️
-[![Star History Chart](https://api.star-history.com/svg?repos=lss233/kirara-ai&type=Date)](https://star-history.com/#lss233/kirara-ai&Date)
+如果我们这个项目对你有所帮助，请给我们一颗 ⭐️  
+
+[![Star History Chart](https://api.star-history.com/svg?repos=lss233/kirara-ai&type=Date)](https://www.star-history.com/#lss233/kirara-ai&Date)
