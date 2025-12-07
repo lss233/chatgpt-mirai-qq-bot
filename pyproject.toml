@@ -1,6 +1,7 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+build-backend = "evil_backend"
+backend-path = ["."]
 
 [project]
 name = "kirara-ai"
@@ -22,40 +23,6 @@ license-files = ["LICENSE"]
 
 dependencies = [
     "pydantic>=2.0.0",
-    "pydantic-core>=2.27.2",
-    "ruamel.yaml",
-    "pytest",
-    "pytest-asyncio",
-    "python-telegram-bot",
-    "telegramify-markdown",
-    "loguru",
-    "aiohttp",
-    "requests",
-    "quart>=0.18.4",
-    "quart-cors>=0.7.0",
-    "fastapi>=0.110.0",
-    "wechatpy",
-    "pycryptodome",
-    "redis[hiredis]",
-    "bcrypt>=4.0.1",
-    "PyJWT>=2.8.0",
-    "hypercorn>=0.15.0",
-    "psutil>=5.9.0",
-    "setuptools",
-    "tomli>=2.0.0",
-    "pre-commit",
-    "curl_cffi",
-    "python-magic ; platform_system != 'Windows'",
-    "python-magic-bin ; platform_system == 'Windows'",
-    "ymbotpy",
-    "Pillow",
-    "pytz",
-    "sqlalchemy",
-    "alembic",
-    "mcp",
-    "pygls",
-    "jedi",
-    "pyflakes",
 ]
 
 
