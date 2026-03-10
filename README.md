@@ -81,7 +81,7 @@
 * [x] 人格设定
 * [x] 支持 QQ、Telegram、Discord、微信  
 * [x] 可作为 HTTP 服务端提供 Web API
-* [x] 支持 OpenAI、DeepSeek、Claude、Gemini、Qwen、Mistral、豆包、Minimax、Kimi、Mistral 等主流大模型
+* [x] 支持 OpenAI、DeepSeek、Claude、Gemini、Qwen、Mistral、豆包、Minimax、Kimi 等主流大模型
 * [x] 支持插件机制
 * [x] 支持条件触发
 * [x] 支持管理员指令
