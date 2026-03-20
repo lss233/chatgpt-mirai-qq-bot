@@ -6,6 +6,7 @@ from .minimax_adapter import MinimaxAdapter, MinimaxConfig
 from .moonshot_adapter import MoonshotAdapter, MoonshotConfig
 from .ollama_adapter import OllamaAdapter, OllamaConfig
 from .openai_adapter import OpenAIAdapter, OpenAIConfig
+from .ofoxai_adapter import OfoxAIAdapter, OfoxAIConfig
 from .openrouter_adapter import OpenRouterAdapter, OpenRouterConfig
 from .siliconflow_adapter import SiliconFlowAdapter, SiliconFlowConfig
 from .tencentcloud_adapter import TencentCloudAdapter, TencentCloudConfig
@@ -53,6 +54,9 @@ class LLMPresetAdaptersPlugin(Plugin):
         )
         self.llm_registry.register(
             "OpenRouter", OpenRouterAdapter, OpenRouterConfig
+        )
+        self.llm_registry.register(
+            "OfoxAI", OfoxAIAdapter, OfoxAIConfig
         )
         self.llm_registry.register(
             "Minimax", MinimaxAdapter, MinimaxConfig
