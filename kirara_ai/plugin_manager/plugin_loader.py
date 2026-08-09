@@ -13,6 +13,7 @@ from kirara_ai.logger import get_logger
 from kirara_ai.plugin_manager.models import PluginInfo
 from kirara_ai.plugin_manager.plugin import Plugin
 from kirara_ai.plugin_manager.plugin_event_bus import PluginEventBus
+from kirara_ai.plugin_manager.utils import build_package_manager_command
 
 
 class PluginLoader:
@@ -212,11 +213,10 @@ class PluginLoader:
         """安装插件"""
         try:
             # 构建安装命令
-            cmd = [sys.executable, "-m", "pip", "install", "--index-url", self.config.update.pypi_registry]
-            if version:
-                cmd.append(f"{package_name}=={version}")
-            else:
-                cmd.append(package_name)
+            package_spec = f"{package_name}=={version}" if version else package_name
+            cmd = build_package_manager_command(
+                "install", "--index-url", self.config.update.pypi_registry, package_spec
+            )
 
             # 执行安装
             self.logger.info(f"Installing plugin: {package_name}")
@@ -275,14 +275,7 @@ class PluginLoader:
             assert plugin_info.package_name is not None
             
             # 执行卸载
-            cmd = [
-                sys.executable,
-                "-m",
-                "pip",
-                "uninstall",
-                "-y",
-                plugin_info.package_name,
-            ]
+            cmd = build_package_manager_command("uninstall", plugin_info.package_name)
             
             self.logger.info(f"Uninstalling plugin: {plugin_info.package_name}")
             process = await asyncio.create_subprocess_exec(
@@ -406,16 +399,13 @@ class PluginLoader:
             await self.uninstall_plugin(plugin_name)
             
             # 执行更新
-            cmd = [
-                sys.executable,
-                "-m",
-                "pip",
+            cmd = build_package_manager_command(
                 "install",
                 "--upgrade",
                 "--index-url",
                 self.config.update.pypi_registry,
                 new_package_name or plugin_info.package_name,
-            ]      
+            )
 
             self.logger.info(f"Updating plugin: {plugin_info.package_name}")
             process = await asyncio.create_subprocess_exec(

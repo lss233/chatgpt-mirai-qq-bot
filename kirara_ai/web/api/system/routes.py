@@ -18,6 +18,7 @@ from kirara_ai.internal import set_restart_flag, shutdown_event
 from kirara_ai.llm.llm_manager import LLMManager
 from kirara_ai.logger import WebSocketLogHandler, get_logger
 from kirara_ai.plugin_manager.plugin_loader import PluginLoader
+from kirara_ai.plugin_manager.utils import build_package_manager_command
 from kirara_ai.web.api.system.utils import (download_file, get_cpu_info, get_cpu_usage, get_installed_version,
                                             get_latest_npm_version, get_latest_pypi_version, get_memory_usage)
 from kirara_ai.web.auth.services import AuthService
@@ -286,7 +287,7 @@ async def perform_update():
             backend_url = data["backend_download_url"]
             backend_file, backend_hash = await download_file(backend_url, temp_dir)
             # 安装后端
-            subprocess.run([sys.executable, "-m", "pip", "install", backend_file], check=True)
+            subprocess.run(build_package_manager_command("install", backend_file), check=True)
         
         if update_webui:
             webui_url = data["webui_download_url"]

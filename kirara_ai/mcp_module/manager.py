@@ -229,7 +229,7 @@ class MCPServerManager:
             
             return True
         except McpError as e:
-            if e.error == "Method not found":
+            if e.error.code == types.METHOD_NOT_FOUND:
                 logger.warning(f"Server {server_id} does not support tools")
                 return True
         except Exception as e:
@@ -335,7 +335,7 @@ class MCPServerManager:
             self.prompts_cache[server_id] = prompts.prompts
             return True
         except McpError as e:
-            if e.error == "Method not found":
+            if e.error.code == types.METHOD_NOT_FOUND:
                 self.prompts_cache[server_id] = []
                 logger.warning(f"Server {server_id} does not support prompts")
                 return True
@@ -396,7 +396,7 @@ class MCPServerManager:
             self.resources_cache[server_id] = resources.resources
             return True
         except McpError as e:
-            if e.error == "Method not found":
+            if e.error.code == types.METHOD_NOT_FOUND:
                 self.resources_cache[server_id] = []
                 logger.warning(f"Server {server_id} does not support resources")
                 return True

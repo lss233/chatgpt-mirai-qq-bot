@@ -21,8 +21,8 @@ async def login():
     auth_service: AuthService = g.container.resolve(AuthService)
 
     if auth_service.is_first_time():
-        auth_service.save_password(login_data.password)
         token = auth_service.create_access_token(timedelta(days=1))
+        auth_service.save_password(login_data.password)
         return TokenResponse(access_token=token).model_dump()
 
     if not auth_service.verify_password(login_data.password):

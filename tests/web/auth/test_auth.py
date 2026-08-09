@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from kirara_ai.config.global_config import GlobalConfig, WebConfig
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.web.app import WebServer
+from kirara_ai.web.auth.services import AuthService
 from tests.utils.auth_test_utils import TEST_PASSWORD, setup_auth_service
 
 # ==================== 常量区 ====================
@@ -29,6 +30,23 @@ def app():
 def test_client(app):
     """创建测试客户端"""
     return TestClient(app)
+
+
+def test_first_login_with_default_secret(tmp_path):
+    container = DependencyContainer()
+    config = GlobalConfig(
+        web=WebConfig(password_file=str(tmp_path / "password.hash"))
+    )
+    container.register(GlobalConfig, config)
+    web_server = WebServer(container)
+
+    response = TestClient(web_server.app).post(
+        "/backend-api/api/auth/login", json={"password": TEST_PASSWORD}
+    )
+
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    assert container.resolve(AuthService).verify_token(token)
 
 
 @pytest_asyncio.fixture
