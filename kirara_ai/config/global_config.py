@@ -1,4 +1,3 @@
-import secrets
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -109,10 +108,7 @@ class MemoryConfig(BaseModel):
 class WebConfig(BaseModel):
     host: str = Field(default="127.0.0.1", description="Web服务绑定的IP地址")
     port: int = Field(default=8080, description="Web服务端口号")
-    secret_key: str = Field(
-        default_factory=lambda: secrets.token_hex(32),
-        description="Web服务的密钥，用于JWT等加密",
-    )
+    secret_key: str = Field(default="", description="Web服务的密钥，用于JWT等加密")
     password_file: str = Field(
         default="./data/web/password.hash", description="密码哈希存储路径"
     )

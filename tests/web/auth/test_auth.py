@@ -2,7 +2,9 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 
+from kirara_ai.config.config_loader import ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig, WebConfig
+from kirara_ai.entry import _ensure_web_secret
 from kirara_ai.ioc.container import DependencyContainer
 from kirara_ai.web.app import WebServer
 from kirara_ai.web.auth.services import AuthService
@@ -32,11 +34,13 @@ def test_client(app):
     return TestClient(app)
 
 
-def test_first_login_with_default_secret(tmp_path):
+def test_first_login_with_persisted_default_secret(tmp_path):
     container = DependencyContainer()
+    config_path = tmp_path / "config.yaml"
     config = GlobalConfig(
         web=WebConfig(password_file=str(tmp_path / "password.hash"))
     )
+    _ensure_web_secret(config, str(config_path))
     container.register(GlobalConfig, config)
     web_server = WebServer(container)
 
@@ -47,6 +51,10 @@ def test_first_login_with_default_secret(tmp_path):
     assert response.status_code == 200
     token = response.json()["access_token"]
     assert container.resolve(AuthService).verify_token(token)
+    saved = ConfigLoader.load_config(str(config_path), GlobalConfig)
+    assert saved.web.secret_key == config.web.secret_key
+    _ensure_web_secret(saved, str(config_path))
+    assert saved.web.secret_key == config.web.secret_key
 
 
 @pytest_asyncio.fixture

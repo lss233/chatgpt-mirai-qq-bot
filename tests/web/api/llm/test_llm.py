@@ -177,7 +177,7 @@ class TestLLMBackend:
             mock_save.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_backend(self, test_client, auth_headers):
+    async def test_update_backend(self, test_client, auth_headers, monkeypatch):
         """测试更新后端"""
         updated_config = LLMBackendConfig(
             name=TEST_BACKEND_NAME,
@@ -188,7 +188,8 @@ class TestLLMBackend:
         )
 
         # Mock 配置文件保存
-        ConfigLoader.save_config_with_backup = MagicMock()
+        mock_save = MagicMock()
+        monkeypatch.setattr(ConfigLoader, "save_config_with_backup", mock_save)
         response = test_client.put(
             f"/backend-api/api/llm/backends/{TEST_BACKEND_NAME}",
             headers=auth_headers,
@@ -203,12 +204,13 @@ class TestLLMBackend:
         assert backend.get("config").get("api_key") == "updated-key"
 
         # 验证配置保存
-        ConfigLoader.save_config_with_backup.assert_called_once()
+        mock_save.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_delete_backend(self, test_client, auth_headers):
+    async def test_delete_backend(self, test_client, auth_headers, monkeypatch):
         """测试删除后端"""
-        ConfigLoader.save_config_with_backup = MagicMock()
+        mock_save = MagicMock()
+        monkeypatch.setattr(ConfigLoader, "save_config_with_backup", mock_save)
         response = test_client.delete(
             f"/backend-api/api/llm/backends/{TEST_BACKEND_NAME}", headers=auth_headers
         )
@@ -218,7 +220,7 @@ class TestLLMBackend:
         assert "data" in data
         backend = data.get("data")
         assert backend.get("name") == TEST_BACKEND_NAME
-        ConfigLoader.save_config_with_backup.assert_called_once()
+        mock_save.assert_called_once()
 
         # 验证后端已被删除
         response = test_client.get(

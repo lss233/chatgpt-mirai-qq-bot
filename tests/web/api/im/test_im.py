@@ -170,14 +170,15 @@ class TestIMAdapter:
         assert adapter.get("config") == TEST_ADAPTER_CONFIG
 
     @pytest.mark.asyncio
-    async def test_create_adapter(self, test_client, auth_headers):
+    async def test_create_adapter(self, test_client, auth_headers, monkeypatch):
         """测试创建适配器"""
         adapter_data = IMAdapterConfig(
             name="new-adapter", adapter=TEST_ADAPTER_TYPE, config=TEST_ADAPTER_CONFIG
         )
 
         # Mock 配置文件保存
-        ConfigLoader.save_config_with_backup = MagicMock()
+        mock_save = MagicMock()
+        monkeypatch.setattr(ConfigLoader, "save_config_with_backup", mock_save)
         response = test_client.post(
             "/backend-api/api/im/adapters",
             headers=auth_headers,
@@ -192,10 +193,10 @@ class TestIMAdapter:
         assert adapter.get("config") == TEST_ADAPTER_CONFIG
 
         # 验证配置保存
-        ConfigLoader.save_config_with_backup.assert_called_once()
+        mock_save.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_adapter(self, test_client, auth_headers):
+    async def test_update_adapter(self, test_client, auth_headers, monkeypatch):
         """测试更新适配器"""
         adapter_data = IMAdapterConfig(
             name=TEST_ADAPTER_ID,
@@ -204,7 +205,8 @@ class TestIMAdapter:
         )
 
         # Mock 配置文件保存
-        ConfigLoader.save_config_with_backup = MagicMock()
+        mock_save = MagicMock()
+        monkeypatch.setattr(ConfigLoader, "save_config_with_backup", mock_save)
         response = test_client.put(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}",
             headers=auth_headers,
@@ -220,7 +222,7 @@ class TestIMAdapter:
         assert adapter.get("config").get("name") == "Updated Bot"
 
         # 验证配置保存
-        ConfigLoader.save_config_with_backup.assert_called_once()
+        mock_save.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_stop_adapter(self, test_client, auth_headers):
@@ -260,7 +262,7 @@ class TestIMAdapter:
         assert data.get("adapter").get("is_running") is True
 
     @pytest.mark.asyncio
-    async def test_delete_adapter(self, test_client, auth_headers):
+    async def test_delete_adapter(self, test_client, auth_headers, monkeypatch):
         """测试删除适配器"""
         # 先启动适配器
         test_client.post(
@@ -269,7 +271,8 @@ class TestIMAdapter:
         )
 
         # Mock 配置文件保存
-        ConfigLoader.save_config_with_backup = MagicMock()
+        mock_save = MagicMock()
+        monkeypatch.setattr(ConfigLoader, "save_config_with_backup", mock_save)
         response = test_client.delete(
             f"/backend-api/api/im/adapters/{TEST_ADAPTER_ID}", headers=auth_headers
         )
@@ -279,7 +282,7 @@ class TestIMAdapter:
         assert data.get("message") == "Adapter deleted successfully"
 
         # 验证配置保存
-        ConfigLoader.save_config_with_backup.assert_called_once()
+        mock_save.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_adapter_config_schema(self, test_client, auth_headers):

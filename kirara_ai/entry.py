@@ -1,11 +1,12 @@
 import asyncio
 import os
+import secrets
 import signal
 import time
 
 from packaging import version
 
-from kirara_ai.config.config_loader import ConfigLoader
+from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader
 from kirara_ai.config.global_config import GlobalConfig
 from kirara_ai.database import DatabaseManager
 from kirara_ai.events.application import ApplicationStarted, ApplicationStopping
@@ -112,29 +113,34 @@ def init_tracing_system(container: DependencyContainer):
     logger.info("Tracing system initialized")
     return tracing_manager
 
+
+def _ensure_web_secret(config: GlobalConfig, config_path: str) -> None:
+    if config.web.secret_key and os.path.exists(config_path):
+        return
+    if not config.web.secret_key:
+        config.web.secret_key = secrets.token_hex(32)
+    ConfigLoader.save_config_with_backup(config_path, config)
+
+
 def init_application() -> DependencyContainer:
     """初始化应用程序"""
     logger.info("Initializing application...")
 
     # 配置文件路径
-    config_path = "./data/config.yaml"
+    config_path = CONFIG_FILE
 
     # 加载配置文件
     logger.info(f"Loading configuration from {config_path}")
-    # check data directory
-    if not os.path.exists("./data"):
-        os.makedirs("./data")
     if os.path.exists(config_path):
         config: GlobalConfig = ConfigLoader.load_config(config_path, GlobalConfig)
         logger.info("Configuration loaded successfully")
     else:
         logger.warning(
-            f"Configuration file {config_path} not found, using default configuration"
-        )
-        logger.warning(
-            "Please create a configuration file by copying config.yaml.example to config.yaml and modify it according to your needs"
+            f"Configuration file {config_path} not found, creating default configuration"
         )
         config = GlobalConfig()
+
+    _ensure_web_secret(config, config_path)
 
     # 设置时区
     os.environ["TZ"] = config.system.timezone
