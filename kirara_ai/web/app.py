@@ -219,11 +219,20 @@ class WebServer:
         self.server_task = None
         self.shutdown_event = asyncio.Event()
         self.container = container
+        # Security fix: an empty web.secret_key makes JWT verification accept
+        # tokens forged with an empty HMAC key (unauthenticated admin bypass).
+        # Generate a strong key on first startup and persist it to the config.
+        _config = container.resolve(GlobalConfig)
+        if not _config.web.secret_key:
+            import secrets as _secrets
+            from kirara_ai.config.config_loader import CONFIG_FILE, ConfigLoader as _CL
+            _config.web.secret_key = _secrets.token_hex(32)
+            _CL.save_config_with_backup(CONFIG_FILE, _config)
         container.register(
             AuthService,
             FileBasedAuthService(
-                password_file=Path(container.resolve(GlobalConfig).web.password_file),
-                secret_key=container.resolve(GlobalConfig).web.secret_key,
+                password_file=Path(_config.web.password_file),
+                secret_key=_config.web.secret_key,
             ),
         )
         self.config = container.resolve(GlobalConfig)
